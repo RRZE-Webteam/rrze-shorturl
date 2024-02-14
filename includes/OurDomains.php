@@ -55,6 +55,9 @@ class OurDomains
             $body = wp_remote_retrieve_body($response);
             $data = json_decode($body, true);
 
+            // Empty the table first
+            $wpdb->query( "TRUNCATE TABLE $table_name" );
+
             // Loop through the data and store servername if active = 1
             foreach ($data as $entry) {
                 if ($entry['aktiv'] == 1) {
