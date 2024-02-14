@@ -1,19 +1,44 @@
 <?php
 namespace RRZE\ShortURL;
 
+use RRZE\ShortURL\UniportalShortURL;
+
 class API {
     public function __construct() {
-        add_action('rest_api_init', array($this, 'register_rest_endpoint'));
+        add_action('rest_api_init', array($this, 'register_rest_endpoints'));
     }
 
-    public function register_rest_endpoint() {
-        register_rest_route('uniportal-short-url/v1', '/shorten-url', array(
+    public function register_rest_endpoints() {
+        register_rest_route('uniportal-short-url/v1', '/shorten', array(
             'methods' => 'POST',
             'callback' => array($this, 'uniportal_shorten_url_callback'),
             'permission_callback' => function () {
                 return current_user_can('edit_posts');
             },
         ));
+
+        register_rest_route('uniportal-short-url/v1', '/validate', array(
+            'methods' => 'POST',
+            'callback' => array($this, 'uniportal_validate_url_callback'),
+            'permission_callback' => function () {
+                return current_user_can('edit_posts');
+            },
+        ));
+    }
+
+    public function uniportal_validate_url_callback($request) {
+
+        // $parameters = $request->get_json_params(); // POST
+        $parameters = $request->get_params(); // GET
+
+        if (empty($parameters['url'])){
+            return rest_ensure_response('URL not given');
+        }
+
+        $validated_url = UniportalShortURL::isValidURL($parameters['url']);
+
+        // Return the shortened URL in the response
+        return rest_ensure_response($validated_url);
     }
 
     public function uniportal_shorten_url_callback($request) {

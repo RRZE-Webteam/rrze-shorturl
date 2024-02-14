@@ -9,11 +9,11 @@ export default function Edit({ attributes, setAttributes }) {
 
     const shortenUrl = () => {
         // Validate the URL
-        fetch('/wp-json/uniportal-short-url/v1/validate-url', {
+        fetch('/wp-json/uniportal-short-url/v1/validate', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-WP-Nonce': uniportalShortUrl.nonce // Make sure to include a nonce for security
+                // 'X-WP-Nonce': uniportalShortUrl.nonce // Make sure to include a nonce for security
             },
             body: JSON.stringify({ url })
         })
@@ -21,11 +21,11 @@ export default function Edit({ attributes, setAttributes }) {
         .then(data => {
             if (data.valid) {
                 // If URL is valid, shorten it
-                fetch('/wp-json/uniportal-short-url/v1/shorten-url', {
+                fetch('/wp-json/uniportal-short-url/v1/shorten', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-WP-Nonce': uniportalShortUrl.nonce // Make sure to include a nonce for security
+                        // 'X-WP-Nonce': uniportalShortUrl.nonce // Make sure to include a nonce for security
                     },
                     body: JSON.stringify({ url })
                 })
