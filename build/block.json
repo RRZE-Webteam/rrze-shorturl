@@ -6,7 +6,7 @@
   "title": "Shorten URL RRZE",
   "description": "A block to shorten URLs.",
   "category": "widgets",
-  "icon": "editor-help",
+  "icon": "admin-links",
   "keywords": [
     "url",
     "shorten"

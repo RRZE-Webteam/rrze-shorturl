@@ -4,6 +4,7 @@ namespace RRZE\ShortURL;
 
 defined('ABSPATH') || exit;
 
+use RRZE\ShortURL\OurDomains;
 use RRZE\ShortURL\API;
 use RRZE\ShortURL\UniportalShortURL;
 
@@ -34,6 +35,8 @@ class Main {
         // add_action( 'wp_enqueue_scripts', [$this, 'enqueueScripts'] );
         // add_action( 'enqueue_block_assets', [$this, 'enqueueScripts'] );
 
+
+        $ourDomains = new OurDomains(); 
 
         $shortURL = new UniportalShortURL(); 
 
