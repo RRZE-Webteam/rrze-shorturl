@@ -37,6 +37,3 @@ class UniportalShortURLServices {
     ];
 }
 
-// Example usage:
-// Access the services using UniportalShortURLServices::$Services
-echo UniportalShortURLServices::$Services['blog']['title']; // Outputs: Artikel in einem Blog

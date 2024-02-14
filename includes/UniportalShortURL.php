@@ -221,25 +221,25 @@ class UniportalShortURL {
         // Validate the URL
         $isValid = self::isValidUrl($url);
         if ($isValid !== true) {
-            return json_encode(['error' => $isValid]);
+            return ['error' => 'URL is not valid'];
         }
 
         // Get ID and type from the service URL
         [$id, $type] = self::getIdResourceByServiceURL($url);
         if (!$id || !$type) {
-            return json_encode(['error' => 'Unable to extract ID and type from the service URL']);
+            return ['error' => 'Unable to extract ID and type from the service URL'];
         }
 
         // Create target URL
         $targetURL = self::createTargetURL($type, $id);
         if (!$targetURL) {
-            return json_encode(['error' => 'Unable to create target URL']);
+            return ['error' => 'Unable to create target URL'];
         }
 
         // Generate short URL
         $shortURL = self::getShortURL($id, $type);
 
-        return json_encode(['shortened_url' => $shortURL, 'id' => $id, 'type' => $type]);
+        return ['shortened_url' => $shortURL, 'id' => $id, 'type' => $type];
     }
 }
 

@@ -44,13 +44,14 @@ function Edit({
         url
       })
     }).then(response => response.json()).then(data => {
+      console.log('Response:', data); // Log the response data to the console
       if (data.shortened_url) {
         // If URL is successfully shortened, set the shortened URL and clear error message
         setShortenedUrl(data.shortened_url);
         setErrorMessage('');
       } else {
         // If there's an error, set error message
-        setErrorMessage(__('Error occurred while shortening the URL'));
+        setErrorMessage('Error: ' + data.error);
         setShortenedUrl('');
       }
     }).catch(error => console.error('Error:', error));
@@ -113,7 +114,7 @@ module.exports = window["wp"]["blocks"];
   \************************/
 /***/ ((module) => {
 
-module.exports = JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":3,"name":"create-block/rrze-shorturl","version":"0.0.1","title":"Shorten URL RRZE","description":"A block to shorten URLs.","category":"widgets","icon":"editor-help","keywords":["url","shorten"],"textdomain":"rrze-shorturl","editorScript":"file:./index.js","supports":{"align":true},"example":{},"attributes":{"url":"https://example.com"}}');
+module.exports = JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":3,"name":"create-block/rrze-shorturl","version":"0.0.2","title":"Shorten URL RRZE","description":"A block to shorten URLs.","category":"widgets","icon":"editor-help","keywords":["url","shorten"],"textdomain":"rrze-shorturl","editorScript":"file:./index.js","supports":{"align":true},"example":{},"attributes":{"url":"https://example.com"}}');
 
 /***/ })
 

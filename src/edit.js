@@ -19,18 +19,19 @@ export default function Edit({ attributes, setAttributes }) {
         })
         .then(response => response.json())
         .then(data => {
+            console.log('Response:', data); // Log the response data to the console
             if (data.shortened_url) {
                 // If URL is successfully shortened, set the shortened URL and clear error message
                 setShortenedUrl(data.shortened_url);
                 setErrorMessage('');
             } else {
                 // If there's an error, set error message
-                setErrorMessage(__('Error occurred while shortening the URL'));
+                setErrorMessage('Error: ' + data.error);
                 setShortenedUrl('');
             }
         })
         .catch(error => console.error('Error:', error));
-    };
+    }
 
     return (
         <div>
