@@ -2,6 +2,10 @@
 
 // 2021-02-14 BK : this is a translation in PHP 8.2 of /proj/websource/docs/redirects/www.rrze.fau.info/cgi-bin/lib/Uniportal/ShortURL.pm
 
+namespace RRZE\ShortURL;
+
+use RRZE\ShortURL\UniportalShortURLServices; 
+
 class UniportalShortURL {
     public static array $CONFIG = [
         "ShortURLBase" => "http://go.fau.de/",
@@ -204,12 +208,6 @@ class UniportalShortURL {
             }
         }
     }
-}
-
-class UniportalShortURLServices {
-    public static array $Services = [
-        // Define your services here
-    ];
 }
 
 // Usage example:
