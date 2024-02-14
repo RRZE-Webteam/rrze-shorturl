@@ -33,8 +33,8 @@ function Edit({
   const [shortenedUrl, setShortenedUrl] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const shortenUrl = () => {
-    // Validate the URL
-    fetch('/wp-json/uniportal-short-url/v1/validate', {
+    // Shorten the URL
+    fetch('/wp-json/uniportal-short-url/v1/shorten', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -44,24 +44,13 @@ function Edit({
         url
       })
     }).then(response => response.json()).then(data => {
-      if (data.valid) {
-        // If URL is valid, shorten it
-        fetch('/wp-json/uniportal-short-url/v1/shorten', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-            // 'X-WP-Nonce': uniportalShortUrl.nonce // Make sure to include a nonce for security
-          },
-          body: JSON.stringify({
-            url
-          })
-        }).then(response => response.json()).then(data => {
-          setShortenedUrl(data.shortened_url);
-          setErrorMessage('');
-        }).catch(error => console.error('Error:', error));
+      if (data.shortened_url) {
+        // If URL is successfully shortened, set the shortened URL and clear error message
+        setShortenedUrl(data.shortened_url);
+        setErrorMessage('');
       } else {
-        // If URL is invalid, set error message
-        setErrorMessage(__('Invalid URL'));
+        // If there's an error, set error message
+        setErrorMessage(__('Error occurred while shortening the URL'));
         setShortenedUrl('');
       }
     }).catch(error => console.error('Error:', error));
