@@ -33,6 +33,13 @@ class UniportalShortURLServices {
             'servicestarturl' => 'http://webkongress.fau.de',
             'prefix' => 4,
             'targeturl' => 'http://webkongress.fau.de/?p=$p1',
+        ],
+        'ourdomains' => [
+            'title' => 'Our Domains',
+            'kurztitle' => 'Ourdomains',
+            'servicestarturl' => '',
+            'prefix' => 1,
+            'targeturl' => '',
         ]
     ];
 }

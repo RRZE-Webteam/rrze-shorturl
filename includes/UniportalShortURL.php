@@ -4,16 +4,19 @@
 
 namespace RRZE\ShortURL;
 
-use RRZE\ShortURL\UniportalShortURLServices; 
+use RRZE\ShortURL\UniportalShortURLServices;
 
-class UniportalShortURL {
+class UniportalShortURL
+{
     public static array $CONFIG = [
         "ShortURLBase" => "http://go.fau.de/",
         "ShortURLModChars" => "abcdefghijklmnopqrstuvwxyz0123456789-"
     ];
 
-    public static function getIdResourceByServiceURL($url) {
-        if (!$url) return;
+    public static function getIdResourceByServiceURL($url)
+    {
+        if (!$url)
+            return;
 
         $url = preg_replace('/[^a-z0-9\-\?\._\&:;\/\%\$!,\+=]/i', '', $url);
 
@@ -42,12 +45,15 @@ class UniportalShortURL {
         return [$id, $type];
     }
 
-    public static function createTargetURL($type, $id) {
-        if (!$type || !$id) return;
+    public static function createTargetURL($type, $id)
+    {
+        if (!$type || !$id)
+            return;
 
         $target = self::getTargetURLByPrefix($type);
 
-        if (!$target) return;
+        if (!$target)
+            return;
 
         $target = str_replace('$id', $id, $target);
 
@@ -62,7 +68,8 @@ class UniportalShortURL {
         return $target;
     }
 
-    public static function getIdResourceByShortURL($url) {
+    public static function getIdResourceByShortURL($url)
+    {
         $type = $result = '';
 
         if (preg_match('/^\/?([0-9])([a-z0-9\-]+)$/i', $url, $matches)) {
@@ -85,7 +92,8 @@ class UniportalShortURL {
         }
     }
 
-    public static function isValidUrl($url) {
+    public static function isValidUrl($url)
+    {
         // Use PHP's built-in filter_var function with FILTER_VALIDATE_URL flag
         if (filter_var($url, FILTER_VALIDATE_URL) === false) {
             return "invalid url";
@@ -93,8 +101,10 @@ class UniportalShortURL {
         return true;
     }
 
-    public static function calcResource($code) {
-        if (!$code) return;
+    public static function calcResource($code)
+    {
+        if (!$code)
+            return;
 
         $modchars = self::$CONFIG['ShortURLModChars'];
         $modbase = strlen($modchars);
@@ -121,7 +131,8 @@ class UniportalShortURL {
         return $result;
     }
 
-    public static function posShortURLModChar($char) {
+    public static function posShortURLModChar($char)
+    {
         $modchars = self::$CONFIG['ShortURLModChars'];
         $res = strpos($modchars, $char);
         if ($res !== false) {
@@ -131,15 +142,18 @@ class UniportalShortURL {
         return -1;
     }
 
-    public static function getShortURL($id, $resourcetype) {
+    public static function getShortURL($id, $resourcetype)
+    {
         $modchars = self::$CONFIG['ShortURLModChars'];
         $modbase = strlen($modchars);
 
-        if (!$resourcetype || !$id) return;
+        if (!$resourcetype || !$id)
+            return;
 
         $prefix = self::getPrefixByType($resourcetype);
 
-        if (!$prefix) return;
+        if (!$prefix)
+            return;
 
         $result = '';
 
@@ -159,14 +173,16 @@ class UniportalShortURL {
         return $resurl;
     }
 
-    public static function calcShortURLId($zahl) {
-        if (!$zahl) return;
+    public static function calcShortURLId($zahl)
+    {
+        if (!$zahl)
+            return;
 
         $modchars = self::$CONFIG['ShortURLModChars'];
         $modbase = strlen($modchars);
         $charlist = str_split($modchars);
         $result = '';
-        $base = (int)($zahl / $modbase);
+        $base = (int) ($zahl / $modbase);
         $rest = $zahl % $modbase;
 
         while ($base > 0) {
@@ -180,7 +196,7 @@ class UniportalShortURL {
             } else {
                 $result = $charlist[$base - 1] . $result;
             }
-            $base = (int)($base / $modbase);
+            $base = (int) ($base / $modbase);
         }
 
         if (($rest == 0) && (!$result)) {
@@ -191,8 +207,10 @@ class UniportalShortURL {
         return $result;
     }
 
-    public static function getParamByType($type, $param) {
-        if (!$type) return;
+    public static function getParamByType($type, $param)
+    {
+        if (!$type)
+            return;
 
         foreach (UniportalShortURLServices::$Services as $key => $service) {
             if (strtolower($key) == strtolower($type)) {
@@ -201,15 +219,18 @@ class UniportalShortURL {
         }
     }
 
-    public static function getPrefixByType($type) {
+    public static function getPrefixByType($type)
+    {
         return self::getParamByType($type, "prefix");
     }
 
-    public static function getTargetURLByType($type) {
+    public static function getTargetURLByType($type)
+    {
         return self::getParamByType($type, "targeturl");
     }
 
-    public static function getTargetURLByPrefix($prefix) {
+    public static function getTargetURLByPrefix($prefix)
+    {
         foreach (UniportalShortURLServices::$Services as $key => $service) {
             if ($prefix == $service['prefix']) {
                 return $service['targeturl'];
@@ -217,29 +238,75 @@ class UniportalShortURL {
         }
     }
 
-    public static function shorten($url) {
+    public static function shorten($url)
+    {
         // Validate the URL
         $isValid = self::isValidUrl($url);
         if ($isValid !== true) {
             return ['error' => 'URL is not valid'];
         }
 
-        // Get ID and type from the service URL
-        [$id, $type] = self::getIdResourceByServiceURL($url);
-        if (!$id || !$type) {
-            return ['error' => 'Unable to extract ID and type from the service URL'];
+        // A) is it one of our domains?
+        // Extract the domain from the provided URL
+        $domain = parse_url($url, PHP_URL_HOST);
+
+        // Get our domains from the database
+        $ourDomains = self::getOurDomains();
+
+        // Check if the extracted domain belongs to one of our domains
+        $isOurDomain = false;
+        foreach ($ourDomains as $ourDomain) {
+            if ($domain === $ourDomain) {
+                $isOurDomain = true;
+                $type = 'ourdomains';
+                $id = 1;
+                break;
+            }
         }
 
-        // Create target URL
-        $targetURL = self::createTargetURL($type, $id);
-        if (!$targetURL) {
-            return ['error' => 'Unable to create target URL'];
+        if (!$isOurDomain) {
+            // B) is it a service?
+
+            // Get ID and type from the service URL
+            [$id, $type] = self::getIdResourceByServiceURL($url);
+            if (!$id || !$type) {
+                return ['error' => 'Unable to extract ID and type from the service URL'];
+            }
+
+            // Create target URL
+            $targetURL = self::createTargetURL($type, $id);
+            if (!$targetURL) {
+                return ['error' => 'Unable to create target URL'];
+            }
         }
 
         // Generate short URL
         $shortURL = self::getShortURL($id, $type);
 
         return ['shortened_url' => $shortURL, 'id' => $id, 'type' => $type];
+    }
+
+    // Function to retrieve our domains from the database
+    public static function getOurDomains()
+    {
+        global $wpdb;
+
+        // Table name
+        $table_name = $wpdb->prefix . 'our_domains';
+
+        // Query to select servername from the our_domains table
+        $query = "SELECT servername FROM $table_name";
+
+        // Execute the query
+        $results = $wpdb->get_results($query);
+
+        // Extract servernames from the results
+        $domains = array();
+        foreach ($results as $result) {
+            $domains[] = $result->servername;
+        }
+
+        return $domains;
     }
 }
 
