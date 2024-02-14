@@ -7,7 +7,7 @@ defined('ABSPATH') || exit;
 class OurDomains
 {
 
-    public function __construct($pluginFile)
+    public function __construct()
     {
 
         register_activation_hook(__FILE__, 'create_custom_tables');
