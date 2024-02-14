@@ -22,7 +22,7 @@ class UniportalShortURL {
         foreach (UniportalShortURLServices::$Services as $key => $service) {
             $serviceurl = str_replace('$id', '', $service['targeturl']);
             $sslserviceurl = str_replace('http:', 'https:', $serviceurl);
-            $aliasurl = str_replace('$id', '', $service['aliasurl']);
+            $aliasurl = str_replace('$id', '', $service['servicestarturl']);
 
             if ($serviceurl && preg_match('/' . preg_quote($serviceurl, '/') . '([0-9]+)/', $url, $matches)) {
                 $id = $matches[1];
@@ -83,6 +83,14 @@ class UniportalShortURL {
         } else {
             return [0, 0];
         }
+    }
+
+    public static function isValidUrl($url) {
+        // Use PHP's built-in filter_var function with FILTER_VALIDATE_URL flag
+        if (filter_var($url, FILTER_VALIDATE_URL) === false) {
+            return "invalid url";
+        }
+        return true;
     }
 
     public static function calcResource($code) {
@@ -210,26 +218,26 @@ class UniportalShortURL {
     }
 }
 
-// Usage example:
-UniportalShortURL::$CONFIG = [
-    "ShortURLBase" => "http://go.fau.de/",
-    "ShortURLModChars" => "abcdefghijklmnopqrstuvwxyz0123456789-"
-];
+// // Usage example:
+// UniportalShortURL::$CONFIG = [
+//     "ShortURLBase" => "http://go.fau.de/",
+//     "ShortURLModChars" => "abcdefghijklmnopqrstuvwxyz0123456789-"
+// ];
 
-$url = "http://go.fau.de/example123";
-[$id, $type] = UniportalShortURL::getIdResourceByServiceURL($url);
-echo "ID: $id, Type: $type\n";
+// $url = "http://go.fau.de/example123";
+// [$id, $type] = UniportalShortURL::getIdResourceByServiceURL($url);
+// echo "ID: $id, Type: $type\n";
 
-$type = "example";
-$id = "123";
-$targetURL = UniportalShortURL::createTargetURL($type, $id);
-echo "Target URL: $targetURL\n";
+// $type = "example";
+// $id = "123";
+// $targetURL = UniportalShortURL::createTargetURL($type, $id);
+// echo "Target URL: $targetURL\n";
 
-$url = "/1abc";
-[$type, $result] = UniportalShortURL::getIdResourceByShortURL($url);
-echo "Type: $type, Result: $result\n";
+// $url = "/1abc";
+// [$type, $result] = UniportalShortURL::getIdResourceByShortURL($url);
+// echo "Type: $type, Result: $result\n";
 
-$id = "123";
-$resourcetype = "example";
-$shortURL = UniportalShortURL::getShortURL($id, $resourcetype);
-echo "Short URL: $shortURL\n";
+// $id = "123";
+// $resourcetype = "example";
+// $shortURL = UniportalShortURL::getShortURL($id, $resourcetype);
+// echo "Short URL: $shortURL\n";
