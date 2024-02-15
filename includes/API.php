@@ -1,7 +1,7 @@
 <?php
 namespace RRZE\ShortURL;
 
-use RRZE\ShortURL\UniportalShortURL;
+use RRZE\ShortURL\ShortURL;
 
 class API {
     public function __construct() {
@@ -9,7 +9,7 @@ class API {
     }
 
     public function register_rest_endpoints() {
-        register_rest_route('uniportal-short-url/v1', '/shorten', array(
+        register_rest_route('short-url/v1', '/shorten', array(
             'methods' => 'POST',
             'callback' => array($this, 'uniportal_shorten_url_callback'),
             // 'permission_callback' => function () {
@@ -34,7 +34,7 @@ class API {
         //     $shortened_url = $existing_row->shortened_url;
         // } else {
         //     // If the original URL doesn't exist, shorten it and insert a new row
-            $shortened_url = UniportalShortURL::shorten($url_to_shorten);
+            $shortened_url = ShortURL::shorten($url_to_shorten);
         //     $wpdb->insert($table_name, array(
         //         'original_url' => $url_to_shorten,
         //         'shortened_url' => $shortened_url,

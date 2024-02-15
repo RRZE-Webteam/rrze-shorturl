@@ -6,7 +6,7 @@ defined('ABSPATH') || exit;
 
 use RRZE\ShortURL\OurDomains;
 use RRZE\ShortURL\API;
-use RRZE\ShortURL\UniportalShortURL;
+use RRZE\ShortURL\ShortURL;
 
 /**
  * Hauptklasse (Main)
@@ -41,7 +41,7 @@ class Main {
         // var_dump($ourDomains);
         // exit;
 
-        $shortURL = new UniportalShortURL(); 
+        $shortURL = new ShortURL(); 
 
         $api = new API();
     }

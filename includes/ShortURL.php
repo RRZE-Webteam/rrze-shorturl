@@ -2,9 +2,9 @@
 
 namespace RRZE\ShortURL;
 
-use RRZE\ShortURL\UniportalShortURLServices;
+use RRZE\ShortURL\ShortURLServices;
 
-class UniportalShortURL
+class ShortURL
 {
     public static array $CONFIG = [];
 
@@ -26,7 +26,7 @@ class UniportalShortURL
 
         $id = $type = '';
 
-        foreach (UniportalShortURLServices::$Services as $key => $service) {
+        foreach (ShortURLServices::$Services as $key => $service) {
             $serviceurl = str_replace('$id', '', $service['targeturl']);
             $sslserviceurl = str_replace('http:', 'https:', $serviceurl);
             $aliasurl = str_replace('$id', '', $service['servicestarturl']);
@@ -216,7 +216,7 @@ class UniportalShortURL
         if (!$type)
             return;
 
-        foreach (UniportalShortURLServices::$Services as $key => $service) {
+        foreach (ShortURLServices::$Services as $key => $service) {
             if (strtolower($key) == strtolower($type)) {
                 return $service[$param] ?? null;
             }
@@ -235,7 +235,7 @@ class UniportalShortURL
 
     public static function getTargetURLByPrefix($prefix)
     {
-        foreach (UniportalShortURLServices::$Services as $key => $service) {
+        foreach (ShortURLServices::$Services as $key => $service) {
             if ($prefix == $service['prefix']) {
                 return $service['targeturl'];
             }

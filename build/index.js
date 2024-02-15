@@ -36,11 +36,11 @@ const Edit = ({
   const [errorMessage, setErrorMessage] = useState('');
   const shortenUrl = () => {
     // Shorten the URL
-    fetch('/wp-json/uniportal-short-url/v1/shorten', {
+    fetch('/wp-json/short-url/v1/shorten', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
-        // 'X-WP-Nonce': uniportalShortUrl.nonce // Make sure to include a nonce for security
+        // 'X-WP-Nonce': shortUrl.nonce // Make sure to include a nonce for security
       },
       body: JSON.stringify({
         url

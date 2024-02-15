@@ -4,7 +4,7 @@
 
 namespace RRZE\ShortURL;
 
-class UniportalShortURLServices {
+class ShortURLServices {
     public static array $Services = [
         'blog' => [
             'title' => 'Artikel in einem Blog',
