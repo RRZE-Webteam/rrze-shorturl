@@ -2,7 +2,7 @@
 
 namespace RRZE\ShortURL;
 
-use RRZE\ShortURL\ShortURLServices;
+use RRZE\ShortURL\Services;
 
 class ShortURL
 {
@@ -26,7 +26,7 @@ class ShortURL
 
         $id = $type = '';
 
-        foreach (ShortURLServices::$Services as $key => $service) {
+        foreach (Services::$Services as $key => $service) {
             $serviceurl = str_replace('$id', '', $service['targeturl']);
             $sslserviceurl = str_replace('http:', 'https:', $serviceurl);
             $aliasurl = str_replace('$id', '', $service['servicestarturl']);
@@ -216,7 +216,7 @@ class ShortURL
         if (!$type)
             return;
 
-        foreach (ShortURLServices::$Services as $key => $service) {
+        foreach (Services::$Services as $key => $service) {
             if (strtolower($key) == strtolower($type)) {
                 return $service[$param] ?? null;
             }
@@ -235,7 +235,7 @@ class ShortURL
 
     public static function getTargetURLByPrefix($prefix)
     {
-        foreach (ShortURLServices::$Services as $key => $service) {
+        foreach (Services::$Services as $key => $service) {
             if ($prefix == $service['prefix']) {
                 return $service['targeturl'];
             }
