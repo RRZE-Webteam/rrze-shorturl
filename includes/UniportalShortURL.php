@@ -10,7 +10,8 @@ class UniportalShortURL
 {
     public static array $CONFIG = [
         "ShortURLBase" => "http://go.fau.de/",
-        "ShortURLModChars" => "abcdefghijklmnopqrstuvwxyz0123456789-"
+        "ShortURLModChars" => "abcdefghijklmnopqrstuvwxyz0123456789-",
+        "OurDomains" => self::getOurDomains()
     ];
 
     public static function getIdResourceByServiceURL($url)
@@ -243,19 +244,16 @@ class UniportalShortURL
         // Validate the URL
         $isValid = self::isValidUrl($url);
         if ($isValid !== true) {
-            return ['error' => 'URL is not valid'];
+            return ['error' => true, 'txt' => 'URL is not valid'];
         }
 
         // A) is it one of our domains?
         // Extract the domain from the provided URL
-        $domain = parse_url($url, PHP_URL_HOST);
-
-        // Get our domains from the database
-        $ourDomains = self::getOurDomains();
+        $domain = wp_parse_url($url, PHP_URL_HOST);
 
         // Check if the extracted domain belongs to one of our domains
         $isOurDomain = false;
-        foreach ($ourDomains as $ourDomain) {
+        foreach (self::$CONFIG['OurDomains'] as $ourDomain) {
             if ($domain === $ourDomain) {
                 $isOurDomain = true;
                 $type = 'ourdomains';
@@ -270,20 +268,29 @@ class UniportalShortURL
             // Get ID and type from the service URL
             [$id, $type] = self::getIdResourceByServiceURL($url);
             if (!$id || !$type) {
-                return ['error' => 'Unable to extract ID and type from the service URL'];
+                return ['error' => true, 'txt' => 'Unable to extract ID and type from the service URL'];
             }
 
             // Create target URL
             $targetURL = self::createTargetURL($type, $id);
             if (!$targetURL) {
-                return ['error' => 'Unable to create target URL'];
+                return ['error' => true, 'txt' => 'Unable to create target URL'];
             }
         }
 
         // Generate short URL
-        $shortURL = self::getShortURL($id, $type);
+        if ($id == 1) {
+            // Generate SHA1 hash of $url if $id is 1
+            $shortId = sha1($url);
+        } else {
+            // Otherwise, calculate resource based on $id
+            $shortId = self::calcResource($id);
+        }
 
-        return ['shortened_url' => $shortURL, 'id' => $id, 'type' => $type];
+        // Combine the hashed value with ShortURLBase
+        $shortURL = self::$CONFIG['ShortURLBase'] . $shortId;
+
+        return ['error' => false, 'txt' => $shortURL];
     }
 
     // Function to retrieve our domains from the database

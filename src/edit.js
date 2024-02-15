@@ -20,13 +20,13 @@ export default function Edit({ attributes, setAttributes }) {
         .then(response => response.json())
         .then(data => {
             console.log('Response:', data); // Log the response data to the console
-            if (data.shortened_url) {
+            if (!data.error) {
                 // If URL is successfully shortened, set the shortened URL and clear error message
-                setShortenedUrl(data.shortened_url);
+                setShortenedUrl(data.txt);
                 setErrorMessage('');
             } else {
                 // If there's an error, set error message
-                setErrorMessage('Error: ' + data.error);
+                setErrorMessage('Error: ' + data.txt);
                 setShortenedUrl('');
             }
         })

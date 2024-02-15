@@ -22,22 +22,31 @@ class OurDomains
 
     // Define a function to create tables in WordPress database
     public static function create_custom_tables()
-    {
-        global $wpdb;
+{
+    global $wpdb;
 
-        // Table name
-        $table_name = $wpdb->prefix . 'our_domains';
+    $charset_collate = $wpdb->get_charset_collate();
 
-        // SQL query to create table
-        $sql = "CREATE TABLE IF NOT EXISTS $table_name (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        hostname VARCHAR(255) NOT NULL
-    )";
+    // Create the our_domains table
+    $our_domains_table_name = $wpdb->prefix . 'our_domains';
+    $our_domains_sql = "CREATE TABLE IF NOT EXISTS $our_domains_table_name (
+        id mediumint(9) NOT NULL AUTO_INCREMENT,
+        hostname varchar(255) NOT NULL,
+        PRIMARY KEY (id)
+    ) $charset_collate;";
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+    dbDelta($our_domains_sql);
 
-        // Execute SQL query
-        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-        dbDelta($sql);
-    }
+    // Create the links table
+    $links_table_name = $wpdb->prefix . 'links';
+    $links_sql = "CREATE TABLE IF NOT EXISTS $links_table_name (
+        id mediumint(9) NOT NULL AUTO_INCREMENT,
+        long_url varchar(255) UNIQUE NOT NULL,
+        short_url varchar(255) UNIQUE NOT NULL,
+        PRIMARY KEY (id)
+    ) $charset_collate;";
+    dbDelta($links_sql);
+}
 
     // Define a function to fetch data from REST API and store it in the database
     public static function fetch_and_store_data_from_api()
@@ -56,17 +65,13 @@ class OurDomains
                 $body = wp_remote_retrieve_body($response);
                 $data = json_decode($body, true);
     
-                // Empty the table first
-                $table_name = $wpdb->prefix . 'our_domains';
-                $wpdb->query("TRUNCATE TABLE $table_name");
-    
                 // Loop through the data and store servername if active = 1
                 foreach ($data as $entry) {
                     if ($entry['aktiv'] == 1) {
-                        $wpdb->insert(
-                            $table_name,
-                            array(
-                                'hostname' => $entry['hostname'],
+                        $wpdb->query(
+                            $wpdb->prepare(
+                                "INSERT IGNORE INTO {$wpdb->prefix}our_domains (hostname) VALUES (%s)",
+                                $entry['hostname']
                             )
                         );
                     }
@@ -77,6 +82,7 @@ class OurDomains
             error_log('An error occurred: ' . $e->getMessage());
         }
     }
+    
     
 
 
