@@ -31,7 +31,7 @@ class OurDomains
         // SQL query to create table
         $sql = "CREATE TABLE IF NOT EXISTS $table_name (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        servername VARCHAR(255) NOT NULL
+        hostname VARCHAR(255) NOT NULL
     )";
 
         // Execute SQL query
@@ -43,34 +43,41 @@ class OurDomains
     public static function fetch_and_store_data_from_api()
     {
         global $wpdb;
-
-        // REST API URL
-        $api_url = 'https://www.wmp.rrze.fau.de/api/ca/domains/cnf/1/type/1/';
-
-        // Make a GET request to the API
-        $response = wp_remote_get($api_url);
-
-        // Check if the request was successful
-        if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200) {
-            $body = wp_remote_retrieve_body($response);
-            $data = json_decode($body, true);
-
-            // Empty the table first
-            $wpdb->query( "TRUNCATE TABLE $table_name" );
-
-            // Loop through the data and store servername if active = 1
-            foreach ($data as $entry) {
-                if ($entry['aktiv'] == 1) {
-                    $wpdb->insert(
-                        $wpdb->prefix . 'our_domains',
-                        array(
-                            'servername' => $entry['servername'],
-                        )
-                    );
+    
+        try {
+            // REST API URL
+            $api_url = 'https://www.wmp.rrze.fau.de/api/server/type/1,2,16,18/active/1';
+    
+            // Make a GET request to the API
+            $response = wp_remote_get($api_url);
+    
+            // Check if the request was successful
+            if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200) {
+                $body = wp_remote_retrieve_body($response);
+                $data = json_decode($body, true);
+    
+                // Empty the table first
+                $table_name = $wpdb->prefix . 'our_domains';
+                $wpdb->query("TRUNCATE TABLE $table_name");
+    
+                // Loop through the data and store servername if active = 1
+                foreach ($data as $entry) {
+                    if ($entry['aktiv'] == 1) {
+                        $wpdb->insert(
+                            $table_name,
+                            array(
+                                'hostname' => $entry['hostname'],
+                            )
+                        );
+                    }
                 }
             }
+        } catch (Exception $e) {
+            // Handle the exception
+            error_log('An error occurred: ' . $e->getMessage());
         }
     }
+    
 
 
 }

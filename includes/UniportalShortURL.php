@@ -295,7 +295,7 @@ class UniportalShortURL
         $table_name = $wpdb->prefix . 'our_domains';
 
         // Query to select servername from the our_domains table
-        $query = "SELECT servername FROM $table_name";
+        $query = "SELECT hostname FROM $table_name";
 
         // Execute the query
         $results = $wpdb->get_results($query);
