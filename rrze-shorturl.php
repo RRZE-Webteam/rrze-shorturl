@@ -104,7 +104,6 @@ function create_custom_tables()
     ) $charset_collate;";
     dbDelta($shorturl_links_sql);
 
-    // Log success message to browser console
     // echo '<script>console.log("Tables created successfully.");</script>';
 }
 
