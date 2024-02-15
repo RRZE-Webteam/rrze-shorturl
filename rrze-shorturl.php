@@ -76,6 +76,38 @@ function system_requirements()
     return $error;
 }
 
+function create_custom_tables()
+{
+    // echo '<script>console.log("in create_custom_tables().");</script>';
+
+    global $wpdb;
+
+    $charset_collate = $wpdb->get_charset_collate();
+
+    // Create the shorturl_our_domains table
+    $shorturl_our_domains_table_name = $wpdb->prefix . 'shorturl_our_domains';
+    $shorturl_our_domains_sql = "CREATE TABLE IF NOT EXISTS $shorturl_our_domains_table_name (
+        id mediumint(9) NOT NULL AUTO_INCREMENT,
+        hostname varchar(255) NOT NULL,
+        PRIMARY KEY (id)
+    ) $charset_collate;";
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+    dbDelta($shorturl_our_domains_sql);
+
+    // Create the shorturl_links table
+    $shorturl_links_table_name = $wpdb->prefix . 'shorturl_links';
+    $shorturl_links_sql = "CREATE TABLE IF NOT EXISTS $shorturl_links_table_name (
+        id mediumint(9) NOT NULL AUTO_INCREMENT,
+        long_url varchar(255) UNIQUE NOT NULL,
+        short_url varchar(255) UNIQUE NOT NULL,
+        PRIMARY KEY (id)
+    ) $charset_collate;";
+    dbDelta($shorturl_links_sql);
+
+    // Log success message to browser console
+    // echo '<script>console.log("Tables created successfully.");</script>';
+}
+
 /**
  * Wird durchgeführt, nachdem das Plugin aktiviert wurde.
  */
@@ -94,6 +126,7 @@ function activation()
     // Ab hier können die Funktionen hinzugefügt werden,
     // die bei der Aktivierung des Plugins aufgerufen werden müssen.
     // Bspw. wp_schedule_event, flush_rewrite_rules, etc.
+    create_custom_tables();
 }
 
 /**

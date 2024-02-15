@@ -38,6 +38,9 @@ class Main {
 
         $ourDomains = new OurDomains(); 
 
+        // var_dump($ourDomains);
+        // exit;
+
         $shortURL = new UniportalShortURL(); 
 
         $api = new API();

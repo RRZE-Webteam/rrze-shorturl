@@ -1,18 +1,20 @@
 <?php
 
-// 2021-02-14 BK : this is a translation in PHP 8.2 of /proj/websource/docs/redirects/www.rrze.fau.info/cgi-bin/lib/Uniportal/ShortURL.pm
-
 namespace RRZE\ShortURL;
 
 use RRZE\ShortURL\UniportalShortURLServices;
 
 class UniportalShortURL
 {
-    public static array $CONFIG = [
-        "ShortURLBase" => "http://go.fau.de/",
-        "ShortURLModChars" => "abcdefghijklmnopqrstuvwxyz0123456789-",
-        "OurDomains" => self::getOurDomains()
-    ];
+    public static array $CONFIG = [];
+
+    public function __construct() {
+        self::$CONFIG = [
+            "ShortURLBase" => "http://go.fau.de/",
+            "ShortURLModChars" => "abcdefghijklmnopqrstuvwxyz0123456789-",
+            "OurDomains" => self::getOurDomains()
+        ];
+    }
 
     public static function getIdResourceByServiceURL($url)
     {
@@ -292,7 +294,7 @@ class UniportalShortURL
 
     // Store in the database
     global $wpdb;
-    $table_name = $wpdb->prefix . 'links';
+    $table_name = $wpdb->prefix . 'shorturl_links';
     $wpdb->query(
         $wpdb->prepare(
             "INSERT IGNORE INTO $table_name (long_url, short_url) VALUES (%s, %s)",
@@ -311,9 +313,9 @@ class UniportalShortURL
         global $wpdb;
 
         // Table name
-        $table_name = $wpdb->prefix . 'our_domains';
+        $table_name = $wpdb->prefix . 'shorturl_our_domains';
 
-        // Query to select servername from the our_domains table
+        // Query to select servername from the shorturl_our_domains table
         $query = "SELECT hostname FROM $table_name";
 
         // Execute the query
@@ -322,7 +324,7 @@ class UniportalShortURL
         // Extract servernames from the results
         $domains = array();
         foreach ($results as $result) {
-            $domains[] = $result->servername;
+            $domains[] = $result->hostname;
         }
 
         return $domains;
