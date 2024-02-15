@@ -1,18 +1,13 @@
-/**
- * Registers a new block provided a unique name and an object defining its behavior.
- *
- * @see https://developer.wordpress.org/block-editor/reference-guides/block-api/block-registration/
- */
+// Import necessary modules
 import { registerBlockType } from '@wordpress/blocks';
 
-/**
- * Internal dependencies
- */
+// Import Edit and Save components
 import metadata from './block.json';
 import Edit from './edit';
-import save from './save';
+// import Save from './save'; // Using Edit component for Save as requested
 
+// Register block type
 registerBlockType( metadata.name, {
-    edit: Edit,
-    save
-} );
+    edit: Edit, // Use the Edit component for editing
+    save: () => null, // Empty save function
+});

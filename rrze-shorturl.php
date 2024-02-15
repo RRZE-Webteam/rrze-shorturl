@@ -138,8 +138,23 @@ function deactivation()
     // Bspw. delete_option, wp_clear_scheduled_hook, flush_rewrite_rules, etc.
 }
 
+function render_url_form() {
+    $block_attributes = get_query_var( 'block_attributes', array() );
+    $url = isset( $block_attributes['url'] ) ? esc_url( $block_attributes['url'] ) : '';
+
+    ob_start();
+    ?>
+    <form action="#" method="post">
+        <label for="url">Enter URL:</label>
+        <input type="text" id="url" name="url" value="<?php echo $url; ?>">
+        <button type="submit">Submit</button>
+    </form>
+    <?php
+    return ob_get_clean();
+}
+
 function rrze_shorturl_init() {
-	register_block_type( __DIR__ . '/build' );
+	register_block_type( __DIR__ . '/build', ['render_callback' => 'render_url_form'] );
 }
 
 /**

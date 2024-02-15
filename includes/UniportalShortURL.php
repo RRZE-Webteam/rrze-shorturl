@@ -281,17 +281,11 @@ class UniportalShortURL
             if (!$targetURL) {
                 return ['error' => true, 'txt' => 'Unable to create target URL'];
             }
-        }
-
-        // Generate short URL
-        if ($id == 1) {
+        }else{
             $table_name = $wpdb->prefix . 'shorturl_links';
             // Query the links table to get the ID where long_url matches $url
             $link_id = $wpdb->get_var($wpdb->prepare("SELECT id FROM $table_name WHERE long_url = %s", $url));
-            if ($link_id !== null) {
-                // Use the retrieved ID to calculate the resource
-                $shortId = self::calcResource($link_id);
-            } else {
+            if ($link_id == null) {
                 // Insert into the links table
                 $wpdb->insert(
                     $table_name,
@@ -302,16 +296,14 @@ class UniportalShortURL
                 );
                 // Get the ID of the inserted row
                 $link_id = $wpdb->insert_id;
-                // Calculate resource based on the new ID
-                $shortId = self::calcResource($link_id);
             }
-        } else {
-            // Calculate resource based on $id
-            $shortId = self::calcResource($id);
+
+            $targetURL = self::createTargetURL($type, $link_id) . 'test' . $link_id;
+
         }
 
         // Combine the hashed value with ShortURLBase
-        $shortURL = self::$CONFIG['ShortURLBase'] . $shortId;
+        $shortURL = self::$CONFIG['ShortURLBase'] . $targetURL;
 
         // Store in the database
         $wpdb->update(

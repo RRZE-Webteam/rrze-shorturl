@@ -2,7 +2,8 @@ const { useState } = wp.element;
 const { TextControl, Button } = wp.components;
 const { __ } = wp.i18n;
 
-export default function Edit({ attributes, setAttributes }) {
+// Define the Edit component
+const Edit = ({ attributes, setAttributes }) => {
     const [url, setUrl] = useState('');
     const [shortenedUrl, setShortenedUrl] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
@@ -56,3 +57,5 @@ export default function Edit({ attributes, setAttributes }) {
         </div>
     );
 };
+
+export default Edit;

@@ -1,3 +1,7 @@
-export default function save() {
-	return null;
-}
+// save.js
+const Save = () => {
+    // Empty save component
+    return null;
+};
+
+export default Save;
