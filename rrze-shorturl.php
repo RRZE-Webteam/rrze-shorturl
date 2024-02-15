@@ -139,22 +139,52 @@ function deactivation()
 }
 
 function render_url_form() {
-    $block_attributes = get_query_var( 'block_attributes', array() );
-    $url = isset( $block_attributes['url'] ) ? esc_url( $block_attributes['url'] ) : '';
+    // Enqueue jQuery
+    wp_enqueue_script('jquery');
 
     ob_start();
     ?>
-    <form action="#" method="post">
+    <form id="urlForm">
         <label for="url">Enter URL:</label>
-        <input type="text" id="url" name="url" value="<?php echo $url; ?>">
-        <button type="submit">Submit</button>
+        <input type="text" id="url" name="url" value="">
+        <button type="button" id="submitBtn">Submit</button>
     </form>
+    <div id="response"></div>
+
+    <script>
+        jQuery(document).ready(function($) { // Ensure jQuery is ready
+            // Shorten the URL
+            $('#submitBtn').click(function() {
+                var url = $('#url').val(); // Get the URL from the input field
+
+                fetch('/wp-json/uniportal-short-url/v1/shorten', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        // 'X-WP-Nonce': uniportalShortUrl.nonce // Make sure to include a nonce for security
+                    },
+                    body: JSON.stringify({ url: url })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Response:', data); // Log the response data to the console
+                    if (!data.error) {
+                        $('#response').html(data.txt);
+                    } else {
+                        // If there's an error, set error message
+                        $('#response').html('Error: ' + data.txt);            
+                    }
+                })
+                .catch(error => console.error('Error:', error)); 
+            });
+        });
+    </script>
     <?php
     return ob_get_clean();
 }
 
 function rrze_shorturl_init() {
-	register_block_type( __DIR__ . '/build', ['render_callback' => 'render_url_form'] );
+	register_block_type( __DIR__ . '/build', ['render_callback' => __NAMESPACE__ . '\render_url_form'] );
 }
 
 /**
