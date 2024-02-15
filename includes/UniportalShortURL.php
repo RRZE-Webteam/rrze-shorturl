@@ -240,58 +240,70 @@ class UniportalShortURL
     }
 
     public static function shorten($url)
-    {
-        // Validate the URL
-        $isValid = self::isValidUrl($url);
-        if ($isValid !== true) {
-            return ['error' => true, 'txt' => 'URL is not valid'];
-        }
-
-        // A) is it one of our domains?
-        // Extract the domain from the provided URL
-        $domain = wp_parse_url($url, PHP_URL_HOST);
-
-        // Check if the extracted domain belongs to one of our domains
-        $isOurDomain = false;
-        foreach (self::$CONFIG['OurDomains'] as $ourDomain) {
-            if ($domain === $ourDomain) {
-                $isOurDomain = true;
-                $type = 'ourdomains';
-                $id = 1;
-                break;
-            }
-        }
-
-        if (!$isOurDomain) {
-            // B) is it a service?
-
-            // Get ID and type from the service URL
-            [$id, $type] = self::getIdResourceByServiceURL($url);
-            if (!$id || !$type) {
-                return ['error' => true, 'txt' => 'Unable to extract ID and type from the service URL'];
-            }
-
-            // Create target URL
-            $targetURL = self::createTargetURL($type, $id);
-            if (!$targetURL) {
-                return ['error' => true, 'txt' => 'Unable to create target URL'];
-            }
-        }
-
-        // Generate short URL
-        if ($id == 1) {
-            // Generate SHA1 hash of $url if $id is 1
-            $shortId = sha1($url);
-        } else {
-            // Otherwise, calculate resource based on $id
-            $shortId = self::calcResource($id);
-        }
-
-        // Combine the hashed value with ShortURLBase
-        $shortURL = self::$CONFIG['ShortURLBase'] . $shortId;
-
-        return ['error' => false, 'txt' => $shortURL];
+{
+    // Validate the URL
+    $isValid = self::isValidUrl($url);
+    if ($isValid !== true) {
+        return ['error' => true, 'txt' => 'URL is not valid'];
     }
+
+    // A) is it one of our domains?
+    // Extract the domain from the provided URL
+    $domain = wp_parse_url($url, PHP_URL_HOST);
+
+    // Check if the extracted domain belongs to one of our domains
+    $isOurDomain = false;
+    foreach (self::$CONFIG['OurDomains'] as $ourDomain) {
+        if ($domain === $ourDomain) {
+            $isOurDomain = true;
+            $type = 'ourdomains';
+            $id = 1;
+            break;
+        }
+    }
+
+    if (!$isOurDomain) {
+        // B) is it a service?
+
+        // Get ID and type from the service URL
+        [$id, $type] = self::getIdResourceByServiceURL($url);
+        if (!$id || !$type) {
+            return ['error' => true, 'txt' => 'Unable to extract ID and type from the service URL'];
+        }
+
+        // Create target URL
+        $targetURL = self::createTargetURL($type, $id);
+        if (!$targetURL) {
+            return ['error' => true, 'txt' => 'Unable to create target URL'];
+        }
+    }
+
+    // Generate short URL
+    if ($id == 1) {
+        // Generate SHA1 hash of $url if $id is 1
+        $shortId = sha1($url);
+    } else {
+        // Otherwise, calculate resource based on $id
+        $shortId = self::calcResource($id);
+    }
+
+    // Combine the hashed value with ShortURLBase
+    $shortURL = self::$CONFIG['ShortURLBase'] . $shortId;
+
+    // Store in the database
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'links';
+    $wpdb->query(
+        $wpdb->prepare(
+            "INSERT IGNORE INTO $table_name (long_url, short_url) VALUES (%s, %s)",
+            $url,
+            $shortURL
+        )
+    );
+
+    return ['error' => false, 'txt' => $shortURL];
+}
+
 
     // Function to retrieve our domains from the database
     public static function getOurDomains()
