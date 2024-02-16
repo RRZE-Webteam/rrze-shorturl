@@ -4,7 +4,7 @@ namespace RRZE\ShortURL;
 
 class Redirect
 {
-    public function getActiveShortURLs(): array
+    public static function getActiveShortURLs(): array
     {
         global $wpdb;
 
