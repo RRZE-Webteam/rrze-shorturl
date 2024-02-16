@@ -24,6 +24,20 @@ class API {
         ));
     }
 
+    public static function makeURL($url, $getParameter = '') {
+        if ($getParameter === '') {
+            return $url;
+        }
+
+        $getParameter = trim($getParameter, '?');
+
+        if (strpos($url, '?') !== false) {
+            return $url . '&' . $getParameter;
+        } else {
+            return $url . '?' . $getParameter;
+        }
+    }
+
     public function shorten_url_callback($request) {
         try {
             $parameters = $request->get_json_params();
@@ -34,7 +48,7 @@ class API {
             }
 
             // Get the URL to shorten from the request parameters
-            $url_to_shorten = $parameters['url'] . (empty($parameters['getparameter']) ? '' : '?' . $parameters['getparameter']);
+            $url_to_shorten = self::makeURL($parameters['url'], $parameters['getparameter']);
 
             // Shorten the URL
             $shortened_url = ShortURL::shorten($url_to_shorten);
