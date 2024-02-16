@@ -127,6 +127,7 @@ function create_custom_tables()
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             deleted_at TIMESTAMP DEFAULT NULL,
+            valid_until TIMESTAMP DEFAULT NULL,
             active BOOLEAN DEFAULT TRUE,
             PRIMARY KEY (id)
         ) $charset_collate;";
