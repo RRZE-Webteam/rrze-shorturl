@@ -500,7 +500,7 @@ class ShortURL
             }
 
             // Create shortURL
-            if ($aDomain['type_code'] == 'customerdomain') {
+            if ($aDomain['type_code'] == 'customerdomain' || $aDomain['type_code'] == 'zoom') {
                 // Customer domain
                 $targetURL = $aDomain['prefix'] . self::cryptNumber($aLink['id']);
                 $bUpdated = self::updateLink($aLink['id'], $targetURL);

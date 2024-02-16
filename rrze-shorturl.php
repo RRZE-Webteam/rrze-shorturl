@@ -139,7 +139,7 @@ function create_custom_tables()
         [
             'hostname' => 'www.helpdesk.rrze.fau.de',
             'type_code' => 'helpdesk',
-            'prefix' => 7,
+            'prefix' => 9,
             'servicestarturl' => 'https://www.helpdesk.rrze.fau.de',
             'targeturl' => 'https://www.helpdesk.rrze.fau.de/otrs/index.pl?Action=AgentZoom&TicketID=$id',
         ],
@@ -156,6 +156,13 @@ function create_custom_tables()
             'prefix' => 4,
             'servicestarturl' => 'http://webkongress.fau.de',
             'targeturl' => 'http://webkongress.fau.de/?p=$p1',
+        ],
+        [
+            'hostname' => 'fau.zoom-x.de',
+            'type_code' => 'wke',
+            'prefix' => 2,
+            'servicestarturl' => '',
+            'targeturl' => '',
         ],
     ];
 
