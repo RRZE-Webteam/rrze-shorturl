@@ -14,7 +14,7 @@ class API {
         // Register the /short-url/v1/shorten endpoint
         register_rest_route('short-url/v1', '/shorten', array(
             'methods' => 'POST',
-            'callback' => array($this, 'uniportal_shorten_url_callback'),
+            'callback' => array($this, 'shorten_url_callback'),
         ));
 
         // Register the /short-url/v1/active-short-urls endpoint
@@ -24,7 +24,7 @@ class API {
         ));
     }
 
-    public function uniportal_shorten_url_callback($request) {
+    public function shorten_url_callback($request) {
         try {
             $parameters = $request->get_json_params();
 
@@ -44,7 +44,7 @@ class API {
         } catch (\Exception $e) {
             // Handle any exceptions that occur
             // You can log the error, return a WP_Error, or handle it in any other way appropriate for your application
-            error_log('Error in uniportal_shorten_url_callback: ' . $e->getMessage());
+            error_log('Error in shorten_url_callback: ' . $e->getMessage());
             return new WP_Error('callback_error', 'Error processing request.');
         }
     }
