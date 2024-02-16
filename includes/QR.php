@@ -1,11 +1,11 @@
 <?php
 namespace RRZE\ShortURL;
 
+include_once '../php-qrcode/qrcode.php';
+
 class QR {
     public static function generateQRCode($url, $size = 150, $margin = 4) {
         try {
-            // Include the phpqrcode library
-            require_once 'phpqrcode/qrlib.php';
 
             // Check if the URL is provided
             if (empty($url)) {
@@ -21,7 +21,7 @@ class QR {
             }
 
             // Generate the QR code
-            $result = \QRcode::png($url, $temp_file, QR_ECLEVEL_L, $size, $margin);
+            $result = new \QRCode($url, NULL);
 
             // Check if QR code generation was successful
             if (!$result) {
