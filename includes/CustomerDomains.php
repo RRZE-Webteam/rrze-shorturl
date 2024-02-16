@@ -41,7 +41,7 @@ class CustomerDomains
                     }
                 }
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             // Handle the exception
             error_log('An error occurred: ' . $e->getMessage());
         }

@@ -32,8 +32,9 @@ const Edit = ({
   setAttributes
 }) => {
   const [url, setUrl] = useState('');
-  const [getParameter, setGetParameter] = useState(''); // New state for GET parameter
+  const [getparameter, setGetparameter] = useState(''); // New state for GET parameter
   const [shortenedUrl, setShortenedUrl] = useState('');
+  const [qr, setQR] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const shortenUrl = () => {
     // Shorten the URL
@@ -45,7 +46,7 @@ const Edit = ({
       },
       body: JSON.stringify({
         url,
-        getParameter
+        getparameter
       }) // Include getParameter in the body
     }).then(response => response.json()).then(data => {
       console.log('Response:', data); // Log the response data to the console
@@ -67,8 +68,8 @@ const Edit = ({
   }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(TextControl // New TextControl for GET parameter
   , {
     label: __('GET Parameter'),
-    value: getParameter,
-    onChange: setGetParameter
+    value: getparameter,
+    onChange: setGetparameter
   }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(Button, {
     onClick: shortenUrl
   }, __('Shorten URL')), errorMessage && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
@@ -107,7 +108,7 @@ module.exports = window["wp"]["blocks"];
   \************************/
 /***/ ((module) => {
 
-module.exports = JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":3,"name":"create-block/rrze-shorturl","version":"0.1.1","title":"Shorten URL RRZE","description":"A block to shorten URLs.","category":"widgets","icon":"admin-links","keywords":["url","shorten"],"textdomain":"rrze-shorturl","editorScript":"file:./index.js","supports":{"align":true},"example":{},"attributes":{"url":"https://example.com","getParameter":""}}');
+module.exports = JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":3,"name":"create-block/rrze-shorturl","version":"0.1.1","title":"Shorten URL RRZE","description":"A block to shorten URLs.","category":"widgets","icon":"admin-links","keywords":["url","shorten"],"textdomain":"rrze-shorturl","editorScript":"file:./index.js","supports":{"align":true},"example":{},"attributes":{"url":"https://example.com","getparameter":""}}');
 
 /***/ })
 

@@ -34,7 +34,7 @@ class API {
             }
 
             // Get the URL to shorten from the request parameters
-            $url_to_shorten = $parameters['url'];
+            $url_to_shorten = $parameters['url'] . (empty($parameters['getparameter']) ? '' : '?' . $parameters['getparameter']);
 
             // Shorten the URL
             $shortened_url = ShortURL::shorten($url_to_shorten);

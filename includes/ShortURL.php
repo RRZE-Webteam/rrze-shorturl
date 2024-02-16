@@ -46,7 +46,7 @@ class ShortURL
             }
 
             return [$id, $type];
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             error_log("Error in getIdResourceByServiceURL: " . $e->getMessage());
             return null;
         }
@@ -74,7 +74,7 @@ class ShortURL
             }
 
             return $target;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             error_log("Error in createTargetURL: " . $e->getMessage());
             return null;
         }
@@ -103,7 +103,7 @@ class ShortURL
             } else {
                 return [0, 0];
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             error_log("Error in getIdResourceByShortURL: " . $e->getMessage());
             return null;
         }
@@ -117,7 +117,7 @@ class ShortURL
                 return "invalid url";
             }
             return true;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             error_log("Error in isValidUrl: " . $e->getMessage());
             return null;
         }
@@ -152,7 +152,7 @@ class ShortURL
             }
 
             return $result;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             error_log("Error in calcResource: " . $e->getMessage());
             return null;
         }
@@ -168,7 +168,7 @@ class ShortURL
                 return $res;
             }
             return -1;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             error_log("Error in posShortURLModChar: " . $e->getMessage());
             return null;
         }
@@ -204,7 +204,7 @@ class ShortURL
             $resurl = self::$CONFIG['ShortURLBase'] . $prefix . $result;
 
             return $resurl;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             error_log("Error in getShortURL: " . $e->getMessage());
             return null;
         }
@@ -243,7 +243,7 @@ class ShortURL
             $result .= $charlist[$rest - 1];
 
             return $result;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             error_log("Error in calcShortURLId: " . $e->getMessage());
             return null;
         }
@@ -260,7 +260,7 @@ class ShortURL
                     return $service[$param] ?? null;
                 }
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             error_log("Error in getParamByType: " . $e->getMessage());
             return null;
         }
@@ -284,7 +284,7 @@ class ShortURL
                     return $service['targeturl'];
                 }
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             error_log("Error in getTargetURLByPrefix: " . $e->getMessage());
             return null;
         }
@@ -308,7 +308,7 @@ class ShortURL
             }
 
             return $cryptedString;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             error_log("Error in cryptNumber: " . $e->getMessage());
             return null;
         }
@@ -323,7 +323,7 @@ class ShortURL
 
             // Map the adjusted input to the corresponding character in the character set
             return self::$CONFIG['ShortURLModChars'][$adjustedInput - 1];
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             error_log("Error in cryptSingleDigit: " . $e->getMessage());
             return null;
         }
@@ -358,7 +358,7 @@ class ShortURL
                 // Return the array with id and short_url
                 return array('id' => $result[0]['id'], 'short_url' => $result[0]['short_url']);
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             error_log("Error in getLinkfromDB: " . $e->getMessage());
             return null;
         }
@@ -375,7 +375,7 @@ class ShortURL
                 array('short_url' => $shortURL),
                 array('id' => $link_id)
             );
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             error_log("Error in setShortURLinDB: " . $e->getMessage());
             return null;
         }
@@ -404,7 +404,7 @@ class ShortURL
             }
 
             return $aDomains;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             error_log("Error in getAllowedDomains: " . $e->getMessage());
             return null;
         }
@@ -428,7 +428,7 @@ class ShortURL
             }
 
             return $aRet;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             error_log("Error in checkDomain: " . $e->getMessage());
             return null;
         }
@@ -463,7 +463,7 @@ class ShortURL
 
             // Return true if the update was successful
             return true;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             // Handle the exception
             // You can log the error, return false, or throw a new exception
             // Here, we'll log the error message and return false
@@ -473,15 +473,13 @@ class ShortURL
     }
 
 
-    public static function shorten($long_url, $get_parameter)
+    public static function shorten($long_url)
     {
-        global $wpdb;
-
         try {
             // Validate the URL
             $isValid = self::isValidUrl($long_url);
             if ($isValid !== true) {
-                return ['error' => true, 'txt' => 'URL is not valid'];
+                return ['error' => true, 'txt' => 'URL is not valid', 'qr' => ''];
             }
 
 
@@ -489,23 +487,23 @@ class ShortURL
             $aDomain = self::checkDomain($long_url);
 
             if ($aDomain['prefix'] == 0) {
-                return ['error' => true, 'txt' => 'Domain is not allowed to use our shortening service.'];
+                return ['error' => true, 'txt' => 'Domain is not allowed to use our shortening service.', 'qr' => ''];
             }
 
-            $aLink = self::getLinkfromDB($long_url . $get_parameter); 
+            $aLink = self::getLinkfromDB($long_url); 
 
             if (!empty($aLink['short_url'])) {
                 // url found in DB => return it
-                return ['error' => false, 'txt' => $aLink['short_url']];
+                return ['error' => false, 'txt' => $aLink['short_url'], 'qr' => ''];
             }
 
             // Create shortURL
             if ($aDomain['type_code'] == 'customerdomain' || $aDomain['type_code'] == 'zoom') {
                 // Customer domain
-                $targetURL = $aDomain['prefix'] . self::cryptNumber($aLink['id']) . $get_parameter;
+                $targetURL = $aDomain['prefix'] . self::cryptNumber($aLink['id']);
                 $bUpdated = self::updateLink($aLink['id'], $targetURL);
                 if (!$bUpdated) {
-                    return ['error' => true, 'txt' => 'Unable to update database table'];
+                    return ['error' => true, 'txt' => 'Unable to update database table', 'qr' => ''];
                 }
             } else {
                 // return ['error' => true, 'txt' => 'prefix ist nicht 1'];
@@ -515,23 +513,25 @@ class ShortURL
                 // return ['error' => true, 'txt' => 'type = ' . $aDomain['type']];
 
                 if (!$id || !$aDomain['type']) {
-                    return ['error' => true, 'txt' => 'Unable to extract ID and type from the service URL'];
+                    return ['error' => true, 'txt' => 'Unable to extract ID and type from the service URL', 'qr' => ''];
                 }
 
                 // Create target URL
                 $targetURL = self::createTargetURL($aDomain['type'], $id);
                 if (!$targetURL) {
-                    return ['error' => true, 'txt' => 'Unable to create target URL'];
+                    return ['error' => true, 'txt' => 'Unable to create target URL', 'qr' => ''];
                 }
             }
 
             // Combine the hashed value with ShortURLBase
-            $shortURL = self::$CONFIG['ShortURLBase'] . $targetURL . $get_parameter;
+            $shortURL = self::$CONFIG['ShortURLBase'] . $targetURL;
+            // $qr = QR::generateQRCode($shortURL);
 
             self::setShortURLinDB($aLink['id'], $shortURL);
 
+            // return ['error' => false, 'txt' => $shortURL, 'qr' => $qr];
             return ['error' => false, 'txt' => $shortURL];
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             error_log("Error in shorten: " . $e->getMessage());
             return null;
         }

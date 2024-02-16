@@ -91,7 +91,7 @@ function drop_custom_tables() {
         if ($wpdb->get_var("SHOW TABLES LIKE '$table_links'") == $table_links) {
             $wpdb->query("DROP TABLE $table_links");
         }
-    } catch (Exception $e) {
+    } catch (\Exception $e) {
         // Handle the exception
         error_log("Error in drop_custom_tables: " . $e->getMessage());
     }
@@ -186,7 +186,7 @@ function create_custom_tables()
             );
         }        
 
-    } catch (Exception $e) {
+    } catch (\Exception $e) {
         // Handle the exception
         error_log("Error in create_custom_tables: " . $e->getMessage());
     }
