@@ -34,7 +34,7 @@ class CustomerDomains
                     if ($entry['aktiv'] == 1) {
                         $wpdb->query(
                             $wpdb->prepare(
-                                "INSERT IGNORE INTO {$wpdb->prefix}shorturl_domains (hostname, prefix) VALUES (%s, 1)",
+                                "INSERT IGNORE INTO {$wpdb->prefix}shorturl_domains (hostname, prefix, type_code, servicestarturl, targeturl) VALUES (%s, 1, 'customerdomain', '', '')",
                                 $entry['hostname']
                             )
                         );

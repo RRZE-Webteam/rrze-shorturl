@@ -31,15 +31,15 @@ class ShortURL
 
             if ($serviceurl && preg_match('/' . preg_quote($serviceurl, '/') . '([0-9]+)/', $url, $matches)) {
                 $id = $matches[1];
-                $type = $aService['type'];
+                $type = $aService['type_code'];
                 break;
             } elseif ($sslserviceurl && preg_match('/' . preg_quote($sslserviceurl, '/') . '([0-9]+)/', $url, $matches)) {
                 $id = $matches[1];
-                $type = $aService['type'];
+                $type = $aService['type_code'];
                 break;
             } elseif ($aliasurl && preg_match('/' . preg_quote($aliasurl, '/') . '([0-9]+)/', $url, $matches)) {
                 $id = $matches[1];
-                $type = $aService['type'];
+                $type = $aService['type_code'];
                 break;
             }
         }
@@ -303,7 +303,7 @@ class ShortURL
         $table_name = $wpdb->prefix . 'shorturl_domains';
 
         // Query to select servername from the shorturl_domains table
-        $query = "SELECT hostname, prefix FROM $table_name";
+        $query = "SELECT * FROM $table_name";
 
         // Execute the query
         $results = $wpdb->get_results($query);
@@ -311,7 +311,7 @@ class ShortURL
         // Extract servernames from the results
         $aDomains = [];
         foreach ($results as $result) {
-            $aDomains[$result->prefix] = $result->hostname;
+            $aDomains[] = $result;
         }
 
         return $aDomains;

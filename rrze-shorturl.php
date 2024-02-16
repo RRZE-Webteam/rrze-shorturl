@@ -89,7 +89,10 @@ function create_custom_tables()
     $shorturl_domains_sql = "CREATE TABLE IF NOT EXISTS $shorturl_domains_table_name (
         id mediumint(9) NOT NULL AUTO_INCREMENT,
         hostname varchar(255) NOT NULL,
+        type_code varchar(255) NOT NULL,
         prefix int(1) NOT NULL,
+        servicestarturl varchar(255) NOT NULL,
+        targeturl varchar(255) NOT NULL,
         PRIMARY KEY (id)
     ) $charset_collate;";
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
@@ -108,37 +111,44 @@ function create_custom_tables()
     // Insert Service domains
     $aEntries = [
         [
-            'type' => 'blog',
+            'hostname' => 'blogs.fau.de',
+            'type_code' => 'blog',
             'prefix' => 7,
             'servicestarturl' => 'http://blogs.fau.de',
             'targeturl' => 'http://blogs.fau.de/go/$p1/$p2',
         ],
         [
-            'type' => 'helpdesk',
+            'hostname' => 'www.helpdesk.rrze.fau.de',
+            'type_code' => 'helpdesk',
             'prefix' => 7,
             'servicestarturl' => 'https://www.helpdesk.rrze.fau.de',
             'targeturl' => 'https://www.helpdesk.rrze.fau.de/otrs/index.pl?Action=AgentZoom&TicketID=$id',
         ],
         [
-            'type' => 'faq',
+            'hostname' => 'www.faq.rrze.fau.de',
+            'type_code' => 'faq',
             'prefix' => 8,
             'servicestarturl' => 'https://www.faq.rrze.fau.de',
             'targeturl' => 'https://www.helpdesk.rrze.fau.de/otrs/public.pl?Action=PublicFAQ&ItemID=$id',
         ],
         [
-            'type' => 'wke',
+            'hostname' => 'webkongress.fau.de',
+            'type_code' => 'wke',
             'prefix' => 4,
             'servicestarturl' => 'http://webkongress.fau.de',
             'targeturl' => 'http://webkongress.fau.de/?p=$p1',
         ],
     ];
 
-    foreach ($entries as $entry) {
+    foreach ($aEntries as $entry) {
         $wpdb->query(
             $wpdb->prepare(
-                "INSERT IGNORE INTO {$wpdb->prefix}shorturl_domains (hostname, prefix) VALUES (%s, %d)",
-                $entry[0],
-                $entry[1]
+                "INSERT IGNORE INTO {$wpdb->prefix}shorturl_domains (hostname, type_code, prefix, servicestarturl, targeturl) VALUES (%s, %s, %d, %s, %s)",
+                $entry['hostname'],
+                $entry['type_code'],
+                $entry['prefix'],
+                $entry['servicestarturl'],
+                $entry['targeturl']
             )
         );
     }
