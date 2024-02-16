@@ -81,20 +81,19 @@ function drop_custom_tables() {
     $table_domains = $wpdb->prefix . 'shorturl_domains';
     $table_links = $wpdb->prefix . 'shorturl_links';
 
-    // Drop shorturl_domains table if it exists
-    if ($wpdb->get_var("SHOW TABLES LIKE '$table_domains'") == $table_domains) {
-        $wpdb->query("DROP TABLE $table_domains");
-        echo "Table $table_domains has been dropped.<br>";
-    } else {
-        echo "Table $table_domains does not exist.<br>";
-    }
+    try {
+        // Drop shorturl_domains table if it exists
+        if ($wpdb->get_var("SHOW TABLES LIKE '$table_domains'") == $table_domains) {
+            $wpdb->query("DROP TABLE $table_domains");
+        }
 
-    // Drop shorturl_links table if it exists
-    if ($wpdb->get_var("SHOW TABLES LIKE '$table_links'") == $table_links) {
-        $wpdb->query("DROP TABLE $table_links");
-        echo "Table $table_links has been dropped.<br>";
-    } else {
-        echo "Table $table_links does not exist.<br>";
+        // Drop shorturl_links table if it exists
+        if ($wpdb->get_var("SHOW TABLES LIKE '$table_links'") == $table_links) {
+            $wpdb->query("DROP TABLE $table_links");
+        }
+    } catch (Exception $e) {
+        // Handle the exception
+        error_log("Error in drop_custom_tables: " . $e->getMessage());
     }
 }
 
@@ -103,82 +102,93 @@ function create_custom_tables()
     global $wpdb;
     $charset_collate = $wpdb->get_charset_collate();
 
-    // Create the shorturl_domains table
-    $shorturl_domains_table_name = $wpdb->prefix . 'shorturl_domains';
-    $shorturl_domains_sql = "CREATE TABLE IF NOT EXISTS $shorturl_domains_table_name (
-        id mediumint(9) NOT NULL AUTO_INCREMENT,
-        hostname varchar(255) NOT NULL,
-        type_code varchar(255) NOT NULL,
-        prefix int(1) NOT NULL,
-        servicestarturl varchar(255) NOT NULL,
-        targeturl varchar(255) NOT NULL,
-        PRIMARY KEY (id)
-    ) $charset_collate;";
-    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-    dbDelta($shorturl_domains_sql);
+    try {
+        // Create the shorturl_domains table without the 'idm' field
+        $shorturl_domains_table_name = $wpdb->prefix . 'shorturl_domains';
+        $shorturl_domains_sql = "CREATE TABLE IF NOT EXISTS $shorturl_domains_table_name (
+            id mediumint(9) NOT NULL AUTO_INCREMENT,
+            hostname varchar(255) NOT NULL,
+            type_code varchar(255) NOT NULL,
+            prefix int(1) NOT NULL,
+            servicestarturl varchar(255) NOT NULL,
+            targeturl varchar(255) NOT NULL,
+            PRIMARY KEY (id)
+        ) $charset_collate;";
+        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        dbDelta($shorturl_domains_sql);
 
-    // Create the shorturl_links table
-    $shorturl_links_table_name = $wpdb->prefix . 'shorturl_links';
-    $shorturl_links_sql = "CREATE TABLE IF NOT EXISTS $shorturl_links_table_name (
-        id mediumint(9) NOT NULL AUTO_INCREMENT,
-        long_url varchar(255) UNIQUE NOT NULL,
-        short_url varchar(255) NOT NULL,
-        PRIMARY KEY (id)
-    ) $charset_collate;";
-    dbDelta($shorturl_links_sql);
+        // Add 'idm' field to the shorturl_links table
+        $shorturl_links_table_name = $wpdb->prefix . 'shorturl_links';
+        $shorturl_links_sql = "CREATE TABLE IF NOT EXISTS $shorturl_links_table_name (
+            id mediumint(9) NOT NULL AUTO_INCREMENT,
+            long_url varchar(255) UNIQUE NOT NULL,
+            short_url varchar(255) NOT NULL,
+            idm varchar(255) DEFAULT 'system', /* New field idm with default value 'system' */
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            deleted_at TIMESTAMP DEFAULT NULL,
+            active BOOLEAN DEFAULT TRUE,
+            PRIMARY KEY (id)
+        ) $charset_collate;";
+        dbDelta($shorturl_links_sql);
 
-    // Insert Service domains
-    $aEntries = [
-        [
-            'hostname' => 'blogs.fau.de',
-            'type_code' => 'blog',
-            'prefix' => 7,
-            'servicestarturl' => 'http://blogs.fau.de',
-            'targeturl' => 'http://blogs.fau.de/go/$p1/$p2',
-        ],
-        [
-            'hostname' => 'www.helpdesk.rrze.fau.de',
-            'type_code' => 'helpdesk',
-            'prefix' => 9,
-            'servicestarturl' => 'https://www.helpdesk.rrze.fau.de',
-            'targeturl' => 'https://www.helpdesk.rrze.fau.de/otrs/index.pl?Action=AgentZoom&TicketID=$id',
-        ],
-        [
-            'hostname' => 'www.faq.rrze.fau.de',
-            'type_code' => 'faq',
-            'prefix' => 8,
-            'servicestarturl' => 'https://www.faq.rrze.fau.de',
-            'targeturl' => 'https://www.helpdesk.rrze.fau.de/otrs/public.pl?Action=PublicFAQ&ItemID=$id',
-        ],
-        [
-            'hostname' => 'webkongress.fau.de',
-            'type_code' => 'wke',
-            'prefix' => 4,
-            'servicestarturl' => 'http://webkongress.fau.de',
-            'targeturl' => 'http://webkongress.fau.de/?p=$p1',
-        ],
-        [
-            'hostname' => 'fau.zoom-x.de',
-            'type_code' => 'wke',
-            'prefix' => 2,
-            'servicestarturl' => '',
-            'targeturl' => '',
-        ],
-    ];
+        // Insert Service domains
+        $aEntries = [
+            [
+                'hostname' => 'blogs.fau.de',
+                'type_code' => 'blog',
+                'prefix' => 7,
+                'servicestarturl' => 'http://blogs.fau.de',
+                'targeturl' => 'http://blogs.fau.de/go/$p1/$p2',
+            ],
+            [
+                'hostname' => 'www.helpdesk.rrze.fau.de',
+                'type_code' => 'helpdesk',
+                'prefix' => 9,
+                'servicestarturl' => 'https://www.helpdesk.rrze.fau.de',
+                'targeturl' => 'https://www.helpdesk.rrze.fau.de/otrs/index.pl?Action=AgentZoom&TicketID=$id',
+            ],
+            [
+                'hostname' => 'www.faq.rrze.fau.de',
+                'type_code' => 'faq',
+                'prefix' => 8,
+                'servicestarturl' => 'https://www.faq.rrze.fau.de',
+                'targeturl' => 'https://www.helpdesk.rrze.fau.de/otrs/public.pl?Action=PublicFAQ&ItemID=$id',
+            ],
+            [
+                'hostname' => 'webkongress.fau.de',
+                'type_code' => 'wke',
+                'prefix' => 4,
+                'servicestarturl' => 'http://webkongress.fau.de',
+                'targeturl' => 'http://webkongress.fau.de/?p=$p1',
+            ],
+            [
+                'hostname' => 'fau.zoom-x.de',
+                'type_code' => 'zoom',
+                'prefix' => 2,
+                'servicestarturl' => '',
+                'targeturl' => '',
+            ],
+        ];
 
-    foreach ($aEntries as $entry) {
-        $wpdb->query(
-            $wpdb->prepare(
-                "INSERT IGNORE INTO {$wpdb->prefix}shorturl_domains (hostname, type_code, prefix, servicestarturl, targeturl) VALUES (%s, %s, %d, %s, %s)",
-                $entry['hostname'],
-                $entry['type_code'],
-                $entry['prefix'],
-                $entry['servicestarturl'],
-                $entry['targeturl']
-            )
-        );
+        foreach ($aEntries as $entry) {
+            $wpdb->query(
+                $wpdb->prepare(
+                    "INSERT IGNORE INTO {$wpdb->prefix}shorturl_domains (hostname, type_code, prefix, servicestarturl, targeturl, idm) VALUES (%s, %s, %d, %s, %s)",
+                    $entry['hostname'],
+                    $entry['type_code'],
+                    $entry['prefix'],
+                    $entry['servicestarturl'],
+                    $entry['targeturl'],
+                    'system'
+                )
+            );
+        }        
+
+    } catch (Exception $e) {
+        // Handle the exception
+        error_log("Error in create_custom_tables: " . $e->getMessage());
     }
-    // echo '<script>console.log("Tables created successfully.");</script>';
 }
 
 /**
