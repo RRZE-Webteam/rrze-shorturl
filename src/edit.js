@@ -2,6 +2,9 @@ const { useState } = wp.element;
 const { TextControl, Button } = wp.components;
 const { __ } = wp.i18n;
 
+
+
+
 // Define the Edit component
 const Edit = ({ attributes, setAttributes }) => {
     const [url, setUrl] = useState('');
@@ -25,6 +28,10 @@ const Edit = ({ attributes, setAttributes }) => {
             console.log('Response:', data); // Log the response data to the console
             if (!data.error) {
                 // If URL is successfully shortened, set the shortened URL and clear error message
+                // var QRCode = require("qrcode-svg");
+                // var svg = new QRCode("Hello World!").svg();
+                // setQR(svg);
+                
                 setShortenedUrl(data.txt);
                 setErrorMessage('');
             } else {
@@ -59,6 +66,11 @@ const Edit = ({ attributes, setAttributes }) => {
             {shortenedUrl && (
                 <p>
                     {__('Shortened URL')}: {shortenedUrl}
+                </p>
+            )}
+            {qr && (
+                <p>
+                    {qr}
                 </p>
             )}
         </div>

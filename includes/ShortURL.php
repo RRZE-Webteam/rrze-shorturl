@@ -506,11 +506,9 @@ class ShortURL
                     return ['error' => true, 'txt' => 'Unable to update database table', 'qr' => ''];
                 }
             } else {
-                // return ['error' => true, 'txt' => 'prefix ist nicht 1'];
                 // Service domain
                 // Get ID and type from the service URL
                 [$id, $aDomain['type']] = self::getIdResourceByServiceURL($long_url);
-                // return ['error' => true, 'txt' => 'type = ' . $aDomain['type']];
 
                 if (!$id || !$aDomain['type']) {
                     return ['error' => true, 'txt' => 'Unable to extract ID and type from the service URL', 'qr' => ''];
@@ -529,7 +527,6 @@ class ShortURL
 
             self::setShortURLinDB($aLink['id'], $shortURL);
 
-            // return ['error' => false, 'txt' => $shortURL, 'qr' => $qr];
             return ['error' => false, 'txt' => $shortURL];
         } catch (\Exception $e) {
             error_log("Error in shorten: " . $e->getMessage());
