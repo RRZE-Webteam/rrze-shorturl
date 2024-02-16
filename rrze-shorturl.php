@@ -76,12 +76,31 @@ function system_requirements()
     return $error;
 }
 
+function drop_custom_tables() {
+    global $wpdb;
+    $table_domains = $wpdb->prefix . 'shorturl_domains';
+    $table_links = $wpdb->prefix . 'shorturl_links';
+
+    // Drop shorturl_domains table if it exists
+    if ($wpdb->get_var("SHOW TABLES LIKE '$table_domains'") == $table_domains) {
+        $wpdb->query("DROP TABLE $table_domains");
+        echo "Table $table_domains has been dropped.<br>";
+    } else {
+        echo "Table $table_domains does not exist.<br>";
+    }
+
+    // Drop shorturl_links table if it exists
+    if ($wpdb->get_var("SHOW TABLES LIKE '$table_links'") == $table_links) {
+        $wpdb->query("DROP TABLE $table_links");
+        echo "Table $table_links has been dropped.<br>";
+    } else {
+        echo "Table $table_links does not exist.<br>";
+    }
+}
+
 function create_custom_tables()
 {
-    // echo '<script>console.log("in create_custom_tables().");</script>';
-
     global $wpdb;
-
     $charset_collate = $wpdb->get_charset_collate();
 
     // Create the shorturl_domains table
@@ -184,6 +203,7 @@ function deactivation()
     // Hier können die Funktionen hinzugefügt werden, die
     // bei der Deaktivierung des Plugins aufgerufen werden müssen.
     // Bspw. delete_option, wp_clear_scheduled_hook, flush_rewrite_rules, etc.
+    drop_custom_tables();
 }
 
 function render_url_form()

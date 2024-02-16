@@ -4,15 +4,15 @@ namespace RRZE\ShortURL;
 
 class ShortURL
 {
-    public static array $CONFIG = [];
+    public static array $CONFIG = [
+        "ShortURLBase" => "http://go.fau.de/",
+        "ShortURLModChars" => "abcdefghijklmnopqrstuvwxyz0123456789-",
+        "AllowedDomains" => [] // Initialize empty, this will be populated later
+    ];
 
     public function __construct()
     {
-        self::$CONFIG = [
-            "ShortURLBase" => "http://go.fau.de/",
-            "ShortURLModChars" => "abcdefghijklmnopqrstuvwxyz0123456789-",
-            "AllowedDomains" => self::getAllowedDomains()
-        ];
+        self::$CONFIG['AllowedDomains'] = self::getAllowedDomains();
     }
 
     public static function getIdResourceByServiceURL($url)
@@ -263,7 +263,7 @@ class ShortURL
             return array('id' => $link_id, 'short_url' => '');
         } else {
             // Return the array with id and short_url
-            return $result[0];
+            return array('id' => $result['id'], 'short_url' => $result['short_url']);
         }
     }
     
@@ -278,21 +278,6 @@ class ShortURL
         );
     }
 
-    public static function checkDomain($long_url){
-        $aRet = ["prefix" => 0, "hostname" => ''];
-        $domain = wp_parse_url($long_url, PHP_URL_HOST);
-
-        // Check if the extracted domain belongs to one of our allowed domains
-        $isOurDomain = false;
-        foreach (self::$CONFIG['AllowedDomains'] as $prefix => $allowed_domain) {
-            if ($domain === $allowed_domain) {
-                $aRet = ["prefix" => 1, "hostname" => $domain];
-                break;
-            }
-        }
-
-        return $aRet;
-    }
     
     // Function to retrieve our domains from the database
     public static function getAllowedDomains()
@@ -306,7 +291,7 @@ class ShortURL
         $query = "SELECT * FROM $table_name";
 
         // Execute the query
-        $results = $wpdb->get_results($query);
+        $results = $wpdb->get_results($query, ARRAY_A);
 
         // Extract servernames from the results
         $aDomains = [];
@@ -317,16 +302,36 @@ class ShortURL
         return $aDomains;
     }
 
+    public static function checkDomain($long_url){
+
+
+        $aRet = ["prefix" => 0, "hostname" => ''];
+
+        $domain = wp_parse_url($long_url, PHP_URL_HOST);
+
+        // Check if the extracted domain belongs to one of our allowed domains
+        foreach (self::$CONFIG['AllowedDomains'] as $aEntry) {
+            if ($domain === $aEntry['hostname']) {
+                $aRet = ["prefix" => $aEntry['prefix'], "hostname" => $aEntry['hostname']];
+                break;
+            }
+        }
+
+        return $aRet;
+    }
+
     public static function shorten($long_url)
     {
         global $wpdb;
-        $aDomain = ['prefix' => 0, 'domainkey' => ''];
 
         // Validate the URL
         $isValid = self::isValidUrl($long_url);
         if ($isValid !== true) {
             return ['error' => true, 'txt' => 'URL is not valid'];
         }
+
+
+        // is it an allowed domain? If so, then get prefix, ... 
         $aDomain = self::checkDomain($long_url);
 
         if ($aDomain['prefix'] == 0){
@@ -347,9 +352,12 @@ class ShortURL
             // customer domain
             $targetURL = self::createTargetURL($aDomain['type'], $aLink['id']) . 'TEST-CustomDomain' . $aLink['id'];
         }else{
+            return ['error' => true, 'txt' => 'prefix ist nicht 1'];
             // service domain
             // Get ID and type from the service URL
             [$id, $aDomain['type']] = self::getIdResourceByServiceURL($long_url);
+            // return ['error' => true, 'txt' => 'type = ' . $aDomain['type']];
+
             if (!$id || !$aDomain['type']) {
                 return ['error' => true, 'txt' => 'Unable to extract ID and type from the service URL'];
             }
