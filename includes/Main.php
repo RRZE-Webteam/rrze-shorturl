@@ -38,9 +38,6 @@ class Main {
 
         $CustomerDomains = new CustomerDomains(); 
 
-        // var_dump($CustomerDomains);
-        // exit;
-
         $shortURL = new ShortURL(); 
 
         $api = new API();

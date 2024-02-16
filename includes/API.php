@@ -23,25 +23,8 @@ class API {
         // Get the URL to shorten from the request parameters
         $url_to_shorten = $parameters['url'];
 
-        // // Check if the original URL already exists in the database
-        // global $wpdb;
-        // $table_name = $wpdb->prefix . 'short_urls';
-        // $existing_row = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table_name WHERE original_url = %s", $url_to_shorten));
-
-        // if ($existing_row) {
-        //     // If the original URL exists, update the corresponding row
-        //     $wpdb->update($table_name, array('shortened_url' => $existing_row->shortened_url), array('id' => $existing_row->id));
-        //     $shortened_url = $existing_row->shortened_url;
-        // } else {
-        //     // If the original URL doesn't exist, shorten it and insert a new row
-            $shortened_url = ShortURL::shorten($url_to_shorten);
-        //     $wpdb->insert($table_name, array(
-        //         'original_url' => $url_to_shorten,
-        //         'shortened_url' => $shortened_url,
-        //         'created_at' => current_time('mysql'),
-        //     ));
-        // }
-
+        $shortened_url = ShortURL::shorten($url_to_shorten);
+        
         // Return the shortened URL in the response
         return rest_ensure_response($shortened_url);
     }
