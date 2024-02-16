@@ -4,7 +4,7 @@ namespace RRZE\ShortURL;
 
 defined('ABSPATH') || exit;
 
-use RRZE\ShortURL\OurDomains;
+use RRZE\ShortURL\CustomerDomains;
 use RRZE\ShortURL\API;
 use RRZE\ShortURL\ShortURL;
 
@@ -36,9 +36,9 @@ class Main {
         // add_action( 'enqueue_block_assets', [$this, 'enqueueScripts'] );
 
 
-        $ourDomains = new OurDomains(); 
+        $CustomerDomains = new CustomerDomains(); 
 
-        // var_dump($ourDomains);
+        // var_dump($CustomerDomains);
         // exit;
 
         $shortURL = new ShortURL(); 

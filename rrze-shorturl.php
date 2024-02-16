@@ -84,15 +84,16 @@ function create_custom_tables()
 
     $charset_collate = $wpdb->get_charset_collate();
 
-    // Create the shorturl_our_domains table
-    $shorturl_our_domains_table_name = $wpdb->prefix . 'shorturl_our_domains';
-    $shorturl_our_domains_sql = "CREATE TABLE IF NOT EXISTS $shorturl_our_domains_table_name (
+    // Create the shorturl_domains table
+    $shorturl_domains_table_name = $wpdb->prefix . 'shorturl_domains';
+    $shorturl_domains_sql = "CREATE TABLE IF NOT EXISTS $shorturl_domains_table_name (
         id mediumint(9) NOT NULL AUTO_INCREMENT,
         hostname varchar(255) NOT NULL,
+        prefix int(1) NOT NULL,
         PRIMARY KEY (id)
     ) $charset_collate;";
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-    dbDelta($shorturl_our_domains_sql);
+    dbDelta($shorturl_domains_sql);
 
     // Create the shorturl_links table
     $shorturl_links_table_name = $wpdb->prefix . 'shorturl_links';
@@ -104,6 +105,43 @@ function create_custom_tables()
     ) $charset_collate;";
     dbDelta($shorturl_links_sql);
 
+    // Insert Service domains
+    $aEntries = [
+        [
+            'type' => 'blog',
+            'prefix' => 7,
+            'servicestarturl' => 'http://blogs.fau.de',
+            'targeturl' => 'http://blogs.fau.de/go/$p1/$p2',
+        ],
+        [
+            'type' => 'helpdesk',
+            'prefix' => 7,
+            'servicestarturl' => 'https://www.helpdesk.rrze.fau.de',
+            'targeturl' => 'https://www.helpdesk.rrze.fau.de/otrs/index.pl?Action=AgentZoom&TicketID=$id',
+        ],
+        [
+            'type' => 'faq',
+            'prefix' => 8,
+            'servicestarturl' => 'https://www.faq.rrze.fau.de',
+            'targeturl' => 'https://www.helpdesk.rrze.fau.de/otrs/public.pl?Action=PublicFAQ&ItemID=$id',
+        ],
+        [
+            'type' => 'wke',
+            'prefix' => 4,
+            'servicestarturl' => 'http://webkongress.fau.de',
+            'targeturl' => 'http://webkongress.fau.de/?p=$p1',
+        ],
+    ];
+
+    foreach ($entries as $entry) {
+        $wpdb->query(
+            $wpdb->prepare(
+                "INSERT IGNORE INTO {$wpdb->prefix}shorturl_domains (hostname, prefix) VALUES (%s, %d)",
+                $entry[0],
+                $entry[1]
+            )
+        );
+    }
     // echo '<script>console.log("Tables created successfully.");</script>';
 }
 
@@ -138,7 +176,8 @@ function deactivation()
     // Bspw. delete_option, wp_clear_scheduled_hook, flush_rewrite_rules, etc.
 }
 
-function render_url_form() {
+function render_url_form()
+{
     // Enqueue jQuery
     wp_enqueue_script('jquery');
 
@@ -152,9 +191,9 @@ function render_url_form() {
     <div id="response"></div>
 
     <script>
-        jQuery(document).ready(function($) { // Ensure jQuery is ready
+        jQuery(document).ready(function ($) { // Ensure jQuery is ready
             // Shorten the URL
-            $('#submitBtn').click(function() {
+            $('#submitBtn').click(function () {
                 var url = $('#url').val(); // Get the URL from the input field
 
                 fetch('/wp-json/short-url/v1/shorten', {
@@ -165,17 +204,17 @@ function render_url_form() {
                     },
                     body: JSON.stringify({ url: url })
                 })
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Response:', data); // Log the response data to the console
-                    if (!data.error) {
-                        $('#response').html(data.txt);
-                    } else {
-                        // If there's an error, set error message
-                        $('#response').html('Error: ' + data.txt);            
-                    }
-                })
-                .catch(error => console.error('Error:', error)); 
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Response:', data); // Log the response data to the console
+                        if (!data.error) {
+                            $('#response').html(data.txt);
+                        } else {
+                            // If there's an error, set error message
+                            $('#response').html('Error: ' + data.txt);
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
             });
         });
     </script>
@@ -183,8 +222,9 @@ function render_url_form() {
     return ob_get_clean();
 }
 
-function rrze_shorturl_init() {
-	register_block_type( __DIR__ . '/build', ['render_callback' => __NAMESPACE__ . '\render_url_form'] );
+function rrze_shorturl_init()
+{
+    register_block_type(__DIR__ . '/build', ['render_callback' => __NAMESPACE__ . '\render_url_form']);
 }
 
 /**
@@ -211,6 +251,6 @@ function loaded()
         $main->onLoaded();
     }
 
-	add_action( 'init', __NAMESPACE__ . '\rrze_shorturl_init' );
-	
+    add_action('init', __NAMESPACE__ . '\rrze_shorturl_init');
+
 }

@@ -2,8 +2,6 @@
 
 namespace RRZE\ShortURL;
 
-use RRZE\ShortURL\Services;
-
 class ShortURL
 {
     public static array $CONFIG = [];
@@ -13,7 +11,7 @@ class ShortURL
         self::$CONFIG = [
             "ShortURLBase" => "http://go.fau.de/",
             "ShortURLModChars" => "abcdefghijklmnopqrstuvwxyz0123456789-",
-            "OurDomains" => self::getOurDomains()
+            "AllowedDomains" => self::getAllowedDomains()
         ];
     }
 
@@ -26,22 +24,22 @@ class ShortURL
 
         $id = $type = '';
 
-        foreach (Services::$Services as $key => $service) {
-            $serviceurl = str_replace('$id', '', $service['targeturl']);
+        foreach (self::$CONFIG['AllowedDomains'] as $aService) {
+            $serviceurl = str_replace('$id', '', $aService['targeturl']);
             $sslserviceurl = str_replace('http:', 'https:', $serviceurl);
-            $aliasurl = str_replace('$id', '', $service['servicestarturl']);
+            $aliasurl = str_replace('$id', '', $aService['servicestarturl']);
 
             if ($serviceurl && preg_match('/' . preg_quote($serviceurl, '/') . '([0-9]+)/', $url, $matches)) {
                 $id = $matches[1];
-                $type = $key;
+                $type = $aService['type'];
                 break;
             } elseif ($sslserviceurl && preg_match('/' . preg_quote($sslserviceurl, '/') . '([0-9]+)/', $url, $matches)) {
                 $id = $matches[1];
-                $type = $key;
+                $type = $aService['type'];
                 break;
             } elseif ($aliasurl && preg_match('/' . preg_quote($aliasurl, '/') . '([0-9]+)/', $url, $matches)) {
                 $id = $matches[1];
-                $type = $key;
+                $type = $aService['type'];
                 break;
             }
         }
@@ -216,7 +214,7 @@ class ShortURL
         if (!$type)
             return;
 
-        foreach (Services::$Services as $key => $service) {
+        foreach (self::$CONFIG['AllowedDomains'] as $key => $service) {
             if (strtolower($key) == strtolower($type)) {
                 return $service[$param] ?? null;
             }
@@ -235,7 +233,7 @@ class ShortURL
 
     public static function getTargetURLByPrefix($prefix)
     {
-        foreach (Services::$Services as $key => $service) {
+        foreach (self::$CONFIG['AllowedDomains'] as $key => $service) {
             if ($prefix == $service['prefix']) {
                 return $service['targeturl'];
             }
@@ -281,14 +279,14 @@ class ShortURL
     }
 
     public static function checkDomain($long_url){
-        $aRet = ["prefix" => 0, "domainkey" => ''];
+        $aRet = ["prefix" => 0, "hostname" => ''];
         $domain = wp_parse_url($long_url, PHP_URL_HOST);
 
-        // Check if the extracted domain belongs to one of our domains
+        // Check if the extracted domain belongs to one of our allowed domains
         $isOurDomain = false;
-        foreach (self::$CONFIG['OurDomains'] as $ourDomain) {
-            if ($domain === $ourDomain) {
-                $aRet = ["prefix" => 1, "domainkey" => 'ourdomains']; // 2DO blogs, etc in table speichern mit type
+        foreach (self::$CONFIG['AllowedDomains'] as $prefix => $allowed_domain) {
+            if ($domain === $allowed_domain) {
+                $aRet = ["prefix" => 1, "hostname" => $domain];
                 break;
             }
         }
@@ -296,6 +294,28 @@ class ShortURL
         return $aRet;
     }
     
+    // Function to retrieve our domains from the database
+    public static function getAllowedDomains()
+    {
+        global $wpdb;
+
+        // Table name
+        $table_name = $wpdb->prefix . 'shorturl_domains';
+
+        // Query to select servername from the shorturl_domains table
+        $query = "SELECT hostname, prefix FROM $table_name";
+
+        // Execute the query
+        $results = $wpdb->get_results($query);
+
+        // Extract servernames from the results
+        $aDomains = [];
+        foreach ($results as $result) {
+            $aDomains[$result->prefix] = $result->hostname;
+        }
+
+        return $aDomains;
+    }
 
     public static function shorten($long_url)
     {
@@ -323,7 +343,7 @@ class ShortURL
         }
 
         // Create shortURL
-        if ($aDomain['key'] == 1){
+        if ($aDomain['prefix'] == 1){
             // customer domain
             $targetURL = self::createTargetURL($aDomain['type'], $aLink['id']) . 'TEST-CustomDomain' . $aLink['id'];
         }else{
@@ -351,27 +371,5 @@ class ShortURL
 
 
 
-    // Function to retrieve our domains from the database
-    public static function getOurDomains()
-    {
-        global $wpdb;
-
-        // Table name
-        $table_name = $wpdb->prefix . 'shorturl_our_domains';
-
-        // Query to select servername from the shorturl_our_domains table
-        $query = "SELECT hostname FROM $table_name";
-
-        // Execute the query
-        $results = $wpdb->get_results($query);
-
-        // Extract servernames from the results
-        $domains = array();
-        foreach ($results as $result) {
-            $domains[] = $result->hostname;
-        }
-
-        return $domains;
-    }
 }
 

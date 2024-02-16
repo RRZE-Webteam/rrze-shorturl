@@ -1,7 +1,7 @@
 <?php
 namespace RRZE\ShortURL;
 
-class OurDomains
+class CustomerDomains
 {
     public function __construct()
     {
@@ -34,7 +34,7 @@ class OurDomains
                     if ($entry['aktiv'] == 1) {
                         $wpdb->query(
                             $wpdb->prepare(
-                                "INSERT IGNORE INTO {$wpdb->prefix}shorturl_our_domains (hostname) VALUES (%s)",
+                                "INSERT IGNORE INTO {$wpdb->prefix}shorturl_domains (hostname, prefix) VALUES (%s, 1)",
                                 $entry['hostname']
                             )
                         );
