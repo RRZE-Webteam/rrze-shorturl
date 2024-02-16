@@ -150,20 +150,6 @@ function create_custom_tables()
                 'targeturl' => 'https://www.helpdesk.rrze.fau.de/otrs/index.pl?Action=AgentZoom&TicketID=$id',
             ],
             [
-                'hostname' => 'www.faq.rrze.fau.de',
-                'type_code' => 'faq',
-                'prefix' => 8,
-                'servicestarturl' => 'https://www.faq.rrze.fau.de',
-                'targeturl' => 'https://www.helpdesk.rrze.fau.de/otrs/public.pl?Action=PublicFAQ&ItemID=$id',
-            ],
-            [
-                'hostname' => 'webkongress.fau.de',
-                'type_code' => 'wke',
-                'prefix' => 4,
-                'servicestarturl' => 'http://webkongress.fau.de',
-                'targeturl' => 'http://webkongress.fau.de/?p=$p1',
-            ],
-            [
                 'hostname' => 'fau.zoom-x.de',
                 'type_code' => 'zoom',
                 'prefix' => 2,
