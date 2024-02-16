@@ -240,6 +240,34 @@ class ShortURL
         }
     }
 
+    public static function cryptNumber($input) {
+        $cryptedString = '';
+    
+        // Convert input to string to handle each digit separately
+        $inputString = strval($input);
+    
+        // Iterate over each digit of the input number
+        for ($i = 0; $i < strlen($inputString); $i++) {
+            // Get the current digit
+            $digit = intval($inputString[$i]);
+    
+            // Map the digit to its corresponding character using the original cryptNumber function
+            $cryptedString .= self::cryptSingleDigit($digit);
+        }
+    
+        return $cryptedString;
+    }
+    
+    // Helper function to crypt a single digit
+    private  static function cryptSingleDigit($digit) {
+        // Adjust input to fit within the character set range (1-37)
+        $adjustedInput = ($digit - 1) % strlen(self::$CONFIG['ShortURLModChars']) + 1;
+    
+        // Map the adjusted input to the corresponding character in the character set
+        return self::$CONFIG['ShortURLModChars'][$adjustedInput - 1];
+    }
+    
+
     public static function getLinkfromDB($long_url){
         global $wpdb;
         $table_name = $wpdb->prefix . 'shorturl_links';
@@ -260,10 +288,10 @@ class ShortURL
             $link_id = $wpdb->insert_id;
             
             // Return the array with id and short_url as empty
-            return array('id' => $link_id, 'short_url' => '');
+            return array('id' => $link_id, 'shortURL' => '');
         } else {
             // Return the array with id and short_url
-            return array('id' => $result['id'], 'short_url' => $result['short_url']);
+            return array('id' => $result['id'], 'shortURL' => $result['short_url']);
         }
     }
     
@@ -340,20 +368,19 @@ class ShortURL
 
         $aLink = self::getLinkfromDB($long_url); // 2DO: liefert tab.id und tab.shortURL => shortURL isNUll => berechnen, sonst ausgeben
 
-        if ($aLink['shortURL'] !== ''){
+        if (!empty($aLink['shortURL'])){
             // url found in DB => return it
             $targetURL = $aLink['shortURL'];
             $shortURL = self::$CONFIG['ShortURLBase'] . $targetURL;
-            return ['error' => false, 'txt' => $shortURL];
         }
 
         // Create shortURL
         if ($aDomain['prefix'] == 1){
-            // customer domain
-            $targetURL = self::createTargetURL($aDomain['type'], $aLink['id']) . 'TEST-CustomDomain' . $aLink['id'];
+            // Customer domain
+            $targetURL = $aDomain['prefix'] . self::cryptNumber($aLink['id'])  . 'linkid = ' . $aLink['id'];
         }else{
-            return ['error' => true, 'txt' => 'prefix ist nicht 1'];
-            // service domain
+            // return ['error' => true, 'txt' => 'prefix ist nicht 1'];
+            // Service domain
             // Get ID and type from the service URL
             [$id, $aDomain['type']] = self::getIdResourceByServiceURL($long_url);
             // return ['error' => true, 'txt' => 'type = ' . $aDomain['type']];
@@ -377,7 +404,14 @@ class ShortURL
         return ['error' => false, 'txt' => $shortURL];
     }
 
+/* Test-Data
 
+https://blogs.fau.de/rewi/2024/02/15/erfolgreiches-pilotprojekt-e-klausuren-in-der-uebung-fuer-fortgeschrittene-im-zivilrecht/
+ 
+
+https://www.germanistik.phil.fau.de/wp-content/plugins/contact-form-7/includes/js/index.js?ver=5.8.7:1
+
+*/
 
 }
 
