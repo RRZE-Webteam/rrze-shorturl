@@ -4,7 +4,7 @@
 Plugin Name:     RRZE ShortURL
 Plugin URI:      https://gitlab.rrze.fau.de/rrze-webteam/rrze-shorturl
 Description:     Plugin, um URLs zu verkürzen. 
-Version:         0.0.2
+Version:         0.1.0
 Requires at least: 6.2
 Requires PHP:      8.0
 Author:          RRZE Webteam
@@ -122,7 +122,7 @@ function create_custom_tables()
     $shorturl_links_sql = "CREATE TABLE IF NOT EXISTS $shorturl_links_table_name (
         id mediumint(9) NOT NULL AUTO_INCREMENT,
         long_url varchar(255) UNIQUE NOT NULL,
-        short_url varchar(255) UNIQUE NOT NULL,
+        short_url varchar(255) NOT NULL,
         PRIMARY KEY (id)
     ) $charset_collate;";
     dbDelta($shorturl_links_sql);

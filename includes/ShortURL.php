@@ -273,9 +273,10 @@ class ShortURL
         $table_name = $wpdb->prefix . 'shorturl_links';
         
         // Query the links table to get the ID and short_url where long_url matches $long_url
-        $result = $wpdb->get_results($wpdb->prepare("SELECT id, short_url FROM $table_name WHERE long_url = %s", $long_url), ARRAY_A);
-        
+        $result = $wpdb->get_results($wpdb->prepare("SELECT id, short_url FROM $table_name WHERE long_url = %s LIMIT 1", $long_url), ARRAY_A);
+
         if (empty($result)) {
+
             // Insert into the links table
             $wpdb->insert(
                 $table_name,
@@ -288,10 +289,10 @@ class ShortURL
             $link_id = $wpdb->insert_id;
             
             // Return the array with id and short_url as empty
-            return array('id' => $link_id, 'shortURL' => '');
+            return array('id' => $link_id, 'short_url' => '');
         } else {
             // Return the array with id and short_url
-            return array('id' => $result['id'], 'shortURL' => $result['short_url']);
+            return array('id' => $result[0]['id'], 'short_url' => $result[0]['short_url']);
         }
     }
     
@@ -333,20 +334,44 @@ class ShortURL
     public static function checkDomain($long_url){
 
 
-        $aRet = ["prefix" => 0, "hostname" => ''];
+        $aRet = ["prefix" => 0, "hostname" => '', 'type_code' => ''];
 
         $domain = wp_parse_url($long_url, PHP_URL_HOST);
 
         // Check if the extracted domain belongs to one of our allowed domains
         foreach (self::$CONFIG['AllowedDomains'] as $aEntry) {
             if ($domain === $aEntry['hostname']) {
-                $aRet = ["prefix" => $aEntry['prefix'], "hostname" => $aEntry['hostname']];
+                $aRet = ["prefix" => $aEntry['prefix'], "hostname" => $aEntry['hostname'], "type_code" => $aEntry['type_code']];
                 break;
             }
         }
 
         return $aRet;
     }
+
+    public static function updateLink($id, $short_url) {
+        global $wpdb;
+    
+        // Table name
+        $table_name = $wpdb->prefix . 'shorturl_links';
+    
+        // Data to update
+        $data = array(
+            'short_url' => $short_url,
+        );
+    
+        // Where clause to specify the row to update
+        $where = array(
+            'id' => $id,
+        );
+    
+        // Update the link in the database
+        $updated = $wpdb->update($table_name, $data, $where);
+    
+        // Return true if the update was successful, false otherwise
+        return $updated !== false;
+    }
+    
 
     public static function shorten($long_url)
     {
@@ -368,16 +393,19 @@ class ShortURL
 
         $aLink = self::getLinkfromDB($long_url); // 2DO: liefert tab.id und tab.shortURL => shortURL isNUll => berechnen, sonst ausgeben
 
-        if (!empty($aLink['shortURL'])){
+        if (!empty($aLink['short_url'])){
             // url found in DB => return it
-            $targetURL = $aLink['shortURL'];
-            $shortURL = self::$CONFIG['ShortURLBase'] . $targetURL;
+            return ['error' => false, 'txt' => $aLink['short_url']];
         }
 
         // Create shortURL
-        if ($aDomain['prefix'] == 1){
+        if ($aDomain['type_code'] == 'customerdomain'){
             // Customer domain
-            $targetURL = $aDomain['prefix'] . self::cryptNumber($aLink['id'])  . 'linkid = ' . $aLink['id'];
+            $targetURL = $aDomain['prefix'] . self::cryptNumber($aLink['id']);
+            $bUpdated = self::updateLink($aLink['id'], $targetURL);
+            if (!$bUpdated) {
+                return ['error' => true, 'txt' => 'Unable to update database table'];
+            }
         }else{
             // return ['error' => true, 'txt' => 'prefix ist nicht 1'];
             // Service domain
