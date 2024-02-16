@@ -32,6 +32,7 @@ const Edit = ({
   setAttributes
 }) => {
   const [url, setUrl] = useState('');
+  const [getParameter, setGetParameter] = useState(''); // New state for GET parameter
   const [shortenedUrl, setShortenedUrl] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const shortenUrl = () => {
@@ -43,8 +44,9 @@ const Edit = ({
         // 'X-WP-Nonce': shortUrl.nonce // Make sure to include a nonce for security
       },
       body: JSON.stringify({
-        url
-      })
+        url,
+        getParameter
+      }) // Include getParameter in the body
     }).then(response => response.json()).then(data => {
       console.log('Response:', data); // Log the response data to the console
       if (!data.error) {
@@ -62,6 +64,11 @@ const Edit = ({
     label: __('Enter URL'),
     value: url,
     onChange: setUrl
+  }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(TextControl // New TextControl for GET parameter
+  , {
+    label: __('GET Parameter'),
+    value: getParameter,
+    onChange: setGetParameter
   }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(Button, {
     onClick: shortenUrl
   }, __('Shorten URL')), errorMessage && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
@@ -100,7 +107,7 @@ module.exports = window["wp"]["blocks"];
   \************************/
 /***/ ((module) => {
 
-module.exports = JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":3,"name":"create-block/rrze-shorturl","version":"0.1.0","title":"Shorten URL RRZE","description":"A block to shorten URLs.","category":"widgets","icon":"admin-links","keywords":["url","shorten"],"textdomain":"rrze-shorturl","editorScript":"file:./index.js","supports":{"align":true},"example":{},"attributes":{"url":"https://example.com"}}');
+module.exports = JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":3,"name":"create-block/rrze-shorturl","version":"0.1.1","title":"Shorten URL RRZE","description":"A block to shorten URLs.","category":"widgets","icon":"admin-links","keywords":["url","shorten"],"textdomain":"rrze-shorturl","editorScript":"file:./index.js","supports":{"align":true},"example":{},"attributes":{"url":"https://example.com","getParameter":""}}');
 
 /***/ })
 

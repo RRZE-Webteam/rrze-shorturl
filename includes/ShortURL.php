@@ -473,7 +473,7 @@ class ShortURL
     }
 
 
-    public static function shorten($long_url)
+    public static function shorten($long_url, $get_parameter)
     {
         global $wpdb;
 
@@ -492,7 +492,7 @@ class ShortURL
                 return ['error' => true, 'txt' => 'Domain is not allowed to use our shortening service.'];
             }
 
-            $aLink = self::getLinkfromDB($long_url); // 2DO: liefert tab.id und tab.shortURL => shortURL isNUll => berechnen, sonst ausgeben
+            $aLink = self::getLinkfromDB($long_url . $get_parameter); 
 
             if (!empty($aLink['short_url'])) {
                 // url found in DB => return it
@@ -502,7 +502,7 @@ class ShortURL
             // Create shortURL
             if ($aDomain['type_code'] == 'customerdomain' || $aDomain['type_code'] == 'zoom') {
                 // Customer domain
-                $targetURL = $aDomain['prefix'] . self::cryptNumber($aLink['id']);
+                $targetURL = $aDomain['prefix'] . self::cryptNumber($aLink['id']) . $get_parameter;
                 $bUpdated = self::updateLink($aLink['id'], $targetURL);
                 if (!$bUpdated) {
                     return ['error' => true, 'txt' => 'Unable to update database table'];
@@ -526,7 +526,7 @@ class ShortURL
             }
 
             // Combine the hashed value with ShortURLBase
-            $shortURL = self::$CONFIG['ShortURLBase'] . $targetURL;
+            $shortURL = self::$CONFIG['ShortURLBase'] . $targetURL . $get_parameter;
 
             self::setShortURLinDB($aLink['id'], $shortURL);
 
