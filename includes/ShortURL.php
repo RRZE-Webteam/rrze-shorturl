@@ -242,75 +242,109 @@ class ShortURL
         }
     }
 
-    public static function shorten($url)
-    {
+    public static function getLinkfromDB($long_url){
         global $wpdb;
-
-        // Validate the URL
-        $isValid = self::isValidUrl($url);
-        if ($isValid !== true) {
-            return ['error' => true, 'txt' => 'URL is not valid'];
+        $table_name = $wpdb->prefix . 'shorturl_links';
+        
+        // Query the links table to get the ID and short_url where long_url matches $long_url
+        $result = $wpdb->get_results($wpdb->prepare("SELECT id, short_url FROM $table_name WHERE long_url = %s", $long_url), ARRAY_A);
+        
+        if (empty($result)) {
+            // Insert into the links table
+            $wpdb->insert(
+                $table_name,
+                array(
+                    'long_url' => $long_url,
+                    'short_url' => ''
+                )
+            );
+            // Get the ID of the inserted row
+            $link_id = $wpdb->insert_id;
+            
+            // Return the array with id and short_url as empty
+            return array('id' => $link_id, 'short_url' => '');
+        } else {
+            // Return the array with id and short_url
+            return $result[0];
         }
-
-        // A) is it one of our domains?
-        // Extract the domain from the provided URL
-        $domain = wp_parse_url($url, PHP_URL_HOST);
-
-        // Check if the extracted domain belongs to one of our domains
-        $isOurDomain = false;
-        foreach (self::$CONFIG['OurDomains'] as $ourDomain) {
-            if ($domain === $ourDomain) {
-                $isOurDomain = true;
-                $type = 'ourdomains';
-                $id = 1;
-                break;
-            }
-        }
-
-        if (!$isOurDomain) {
-            // B) is it a service?
-
-            // Get ID and type from the service URL
-            [$id, $type] = self::getIdResourceByServiceURL($url);
-            if (!$id || !$type) {
-                return ['error' => true, 'txt' => 'Unable to extract ID and type from the service URL'];
-            }
-
-            // Create target URL
-            $targetURL = self::createTargetURL($type, $id);
-            if (!$targetURL) {
-                return ['error' => true, 'txt' => 'Unable to create target URL'];
-            }
-        }else{
-            $table_name = $wpdb->prefix . 'shorturl_links';
-            // Query the links table to get the ID where long_url matches $url
-            $link_id = $wpdb->get_var($wpdb->prepare("SELECT id FROM $table_name WHERE long_url = %s", $url));
-            if ($link_id == null) {
-                // Insert into the links table
-                $wpdb->insert(
-                    $table_name,
-                    array(
-                        'long_url' => $url,
-                        'short_url' => ''
-                    )
-                );
-                // Get the ID of the inserted row
-                $link_id = $wpdb->insert_id;
-            }
-
-            $targetURL = self::createTargetURL($type, $link_id) . 'test' . $link_id;
-
-        }
-
-        // Combine the hashed value with ShortURLBase
-        $shortURL = self::$CONFIG['ShortURLBase'] . $targetURL;
-
+    }
+    
+    public static function setShortURLinDB($link_id, $shortURL){
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'shorturl_links';
         // Store in the database
         $wpdb->update(
             $table_name,
             array('short_url' => $shortURL),
             array('id' => $link_id)
         );
+    }
+
+    public static function checkDomain($long_url){
+        $aRet = ["prefix" => 0, "domainkey" => ''];
+        $domain = wp_parse_url($long_url, PHP_URL_HOST);
+
+        // Check if the extracted domain belongs to one of our domains
+        $isOurDomain = false;
+        foreach (self::$CONFIG['OurDomains'] as $ourDomain) {
+            if ($domain === $ourDomain) {
+                $aRet = ["prefix" => 1, "domainkey" => 'ourdomains']; // 2DO blogs, etc in table speichern mit type
+                break;
+            }
+        }
+
+        return $aRet;
+    }
+    
+
+    public static function shorten($long_url)
+    {
+        global $wpdb;
+        $aDomain = ['prefix' => 0, 'domainkey' => ''];
+
+        // Validate the URL
+        $isValid = self::isValidUrl($long_url);
+        if ($isValid !== true) {
+            return ['error' => true, 'txt' => 'URL is not valid'];
+        }
+        $aDomain = self::checkDomain($long_url);
+
+        if ($aDomain['prefix'] == 0){
+            return ['error' => true, 'txt' => 'Domain is not allowed to use our shortening service.'];
+        }
+
+        $aLink = self::getLinkfromDB($long_url); // 2DO: liefert tab.id und tab.shortURL => shortURL isNUll => berechnen, sonst ausgeben
+
+        if ($aLink['shortURL'] !== ''){
+            // url found in DB => return it
+            $targetURL = $aLink['shortURL'];
+            $shortURL = self::$CONFIG['ShortURLBase'] . $targetURL;
+            return ['error' => false, 'txt' => $shortURL];
+        }
+
+        // Create shortURL
+        if ($aDomain['key'] == 1){
+            // customer domain
+            $targetURL = self::createTargetURL($aDomain['type'], $aLink['id']) . 'TEST-CustomDomain' . $aLink['id'];
+        }else{
+            // service domain
+            // Get ID and type from the service URL
+            [$id, $aDomain['type']] = self::getIdResourceByServiceURL($long_url);
+            if (!$id || !$aDomain['type']) {
+                return ['error' => true, 'txt' => 'Unable to extract ID and type from the service URL'];
+            }
+
+            // Create target URL
+            $targetURL = self::createTargetURL($aDomain['type'], $id);
+            if (!$targetURL) {
+                return ['error' => true, 'txt' => 'Unable to create target URL'];
+            }
+        }
+
+        // Combine the hashed value with ShortURLBase
+        $shortURL = self::$CONFIG['ShortURLBase'] . $targetURL;
+
+        self::setShortURLinDB($aLink['id'], $shortURL);
 
         return ['error' => false, 'txt' => $shortURL];
     }
