@@ -87,9 +87,7 @@ class ShortURL
                 $wpdb->insert(
                     $table_name,
                     array(
-                        'long_url' => $long_url,
-                        'short_url' => '',
-                        'uri' => $uri,
+                        'long_url' => $long_url
                     )
                 );
                 // Get the ID of the inserted row
