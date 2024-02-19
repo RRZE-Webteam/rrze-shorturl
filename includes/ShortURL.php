@@ -15,99 +15,6 @@ class ShortURL
         self::$CONFIG['AllowedDomains'] = self::getAllowedDomains();
     }
 
-    public static function getIdResourceByServiceURL($url)
-    {
-        try {
-            if (!$url)
-                return;
-
-            $url = preg_replace('/[^a-z0-9\-\?\._\&:;\/\%\$!,\+=]/i', '', $url);
-
-            $id = $type = '';
-
-            foreach (self::$CONFIG['AllowedDomains'] as $aService) {
-                $serviceurl = str_replace('$id', '', $aService['targeturl']);
-                $sslserviceurl = str_replace('http:', 'https:', $serviceurl);
-                $aliasurl = str_replace('$id', '', $aService['servicestarturl']);
-
-                if ($serviceurl && preg_match('/' . preg_quote($serviceurl, '/') . '([0-9]+)/', $url, $matches)) {
-                    $id = $matches[1];
-                    $type = $aService['type_code'];
-                    break;
-                } elseif ($sslserviceurl && preg_match('/' . preg_quote($sslserviceurl, '/') . '([0-9]+)/', $url, $matches)) {
-                    $id = $matches[1];
-                    $type = $aService['type_code'];
-                    break;
-                } elseif ($aliasurl && preg_match('/' . preg_quote($aliasurl, '/') . '([0-9]+)/', $url, $matches)) {
-                    $id = $matches[1];
-                    $type = $aService['type_code'];
-                    break;
-                }
-            }
-
-            return [$id, $type];
-        } catch (\Exception $e) {
-            error_log("Error in getIdResourceByServiceURL: " . $e->getMessage());
-            return null;
-        }
-    }
-
-    public static function createTargetURL($type, $id)
-    {
-        try {
-            if (!$type || !$id)
-                return;
-
-            $target = self::getTargetURLByPrefix($type);
-
-            if (!$target)
-                return;
-
-            $target = str_replace('$id', $id, $target);
-
-            if (strpos($id, '.') !== false) {
-                $teil = explode('.', $id);
-
-                foreach ($teil as $key => $val) {
-                    $target = str_replace('$p' . ($key + 1), $val, $target);
-                }
-            }
-
-            return $target;
-        } catch (\Exception $e) {
-            error_log("Error in createTargetURL: " . $e->getMessage());
-            return null;
-        }
-    }
-
-    public static function getIdResourceByShortURL($url)
-    {
-        try {
-            $type = $result = '';
-
-            if (preg_match('/^\/?([0-9])([a-z0-9\-]+)$/i', $url, $matches)) {
-                $type = $matches[1];
-                $code = $matches[2];
-                $result = self::calcResource($code);
-                return [$type, $result];
-            } elseif (preg_match('/^\/?([0-9])([a-z0-9\-\.]+)$/i', $url, $matches)) {
-                $type = $matches[1];
-                $partcode = $matches[2];
-                $teil = explode('.', $partcode);
-
-                foreach ($teil as $val) {
-                    $result .= self::calcResource($val);
-                    $result .= ".";
-                }
-                return [$type, rtrim($result, '.')];
-            } else {
-                return [0, 0];
-            }
-        } catch (\Exception $e) {
-            error_log("Error in getIdResourceByShortURL: " . $e->getMessage());
-            return null;
-        }
-    }
 
     public static function isValidUrl($url)
     {
@@ -119,173 +26,6 @@ class ShortURL
             return true;
         } catch (\Exception $e) {
             error_log("Error in isValidUrl: " . $e->getMessage());
-            return null;
-        }
-    }
-
-    public static function calcResource($code)
-    {
-        try {
-            if (!$code)
-                return;
-
-            $modchars = self::$CONFIG['ShortURLModChars'];
-            $modbase = strlen($modchars);
-            $charlist = str_split($modchars);
-            $stelle = str_split($code);
-            $len = strlen($code);
-            $result = 0;
-
-            for ($i = count($stelle) - 1; $i >= 0; $i--) {
-                $thisval = self::posShortURLModChar($stelle[$i]);
-                $offset = 0;
-                $posval = $len - $i - 1;
-
-                if ($thisval == $modbase) {
-                    $thisval = 0;
-                } else {
-                    $offset = pow($modbase, $posval);
-                    $thisval *= $offset;
-                }
-
-                $result += $thisval;
-            }
-
-            return $result;
-        } catch (\Exception $e) {
-            error_log("Error in calcResource: " . $e->getMessage());
-            return null;
-        }
-    }
-
-    public static function posShortURLModChar($char)
-    {
-        try {
-            $modchars = self::$CONFIG['ShortURLModChars'];
-            $res = strpos($modchars, $char);
-            if ($res !== false) {
-                $res += 1;
-                return $res;
-            }
-            return -1;
-        } catch (\Exception $e) {
-            error_log("Error in posShortURLModChar: " . $e->getMessage());
-            return null;
-        }
-    }
-
-    public static function getShortURL($id, $resourcetype)
-    {
-        try {
-            $modchars = self::$CONFIG['ShortURLModChars'];
-            $modbase = strlen($modchars);
-
-            if (!$resourcetype || !$id)
-                return;
-
-            $prefix = self::getPrefixByType($resourcetype);
-
-            if (!$prefix)
-                return;
-
-            $result = '';
-
-            if (strpos($id, '.') !== false) {
-                $teil = explode('.', $id);
-
-                foreach ($teil as $val) {
-                    $result .= self::calcShortURLId($val);
-                    $result .= ".";
-                }
-            } else {
-                $result = self::calcShortURLId($id);
-            }
-
-            $resurl = self::$CONFIG['ShortURLBase'] . $prefix . $result;
-
-            return $resurl;
-        } catch (\Exception $e) {
-            error_log("Error in getShortURL: " . $e->getMessage());
-            return null;
-        }
-    }
-
-    public static function calcShortURLId($zahl)
-    {
-        try {
-            if (!$zahl)
-                return;
-
-            $modchars = self::$CONFIG['ShortURLModChars'];
-            $modbase = strlen($modchars);
-            $charlist = str_split($modchars);
-            $result = '';
-            $base = (int) ($zahl / $modbase);
-            $rest = $zahl % $modbase;
-
-            while ($base > 0) {
-                if ($base >= $modbase) {
-                    $leftbase = $base % $modbase;
-                    if ($leftbase == 0) {
-                        $result = $charlist[count($charlist) - 1] . $result;
-                    } else {
-                        $result = $charlist[$leftbase - 1] . $result;
-                    }
-                } else {
-                    $result = $charlist[$base - 1] . $result;
-                }
-                $base = (int) ($base / $modbase);
-            }
-
-            if (($rest == 0) && (!$result)) {
-                $result = $charlist[0];
-            }
-            $result .= $charlist[$rest - 1];
-
-            return $result;
-        } catch (\Exception $e) {
-            error_log("Error in calcShortURLId: " . $e->getMessage());
-            return null;
-        }
-    }
-
-    public static function getParamByType($type, $param)
-    {
-        try {
-            if (!$type)
-                return;
-
-            foreach (self::$CONFIG['AllowedDomains'] as $key => $service) {
-                if (strtolower($key) == strtolower($type)) {
-                    return $service[$param] ?? null;
-                }
-            }
-        } catch (\Exception $e) {
-            error_log("Error in getParamByType: " . $e->getMessage());
-            return null;
-        }
-    }
-
-    public static function getPrefixByType($type)
-    {
-        return self::getParamByType($type, "prefix");
-    }
-
-    public static function getTargetURLByType($type)
-    {
-        return self::getParamByType($type, "targeturl");
-    }
-
-    public static function getTargetURLByPrefix($prefix)
-    {
-        try {
-            foreach (self::$CONFIG['AllowedDomains'] as $key => $service) {
-                if ($prefix == $service['prefix']) {
-                    return $service['targeturl'];
-                }
-            }
-        } catch (\Exception $e) {
-            error_log("Error in getTargetURLByPrefix: " . $e->getMessage());
             return null;
         }
     }
@@ -413,8 +153,6 @@ class ShortURL
     public static function checkDomain($long_url)
     {
         try {
-
-
             $aRet = ["prefix" => 0, "hostname" => '', 'type_code' => ''];
 
             $domain = wp_parse_url($long_url, PHP_URL_HOST);
@@ -439,34 +177,24 @@ class ShortURL
         global $wpdb;
 
         try {
-            // Table name
             $table_name = $wpdb->prefix . 'shorturl_links';
 
-            // Data to update
             $data = array(
                 'short_url' => $short_url,
             );
 
-            // Where clause to specify the row to update
             $where = array(
                 'id' => $id,
             );
 
-            // Update the link in the database
             $updated = $wpdb->update($table_name, $data, $where);
 
-            // Check if the update was successful
             if ($updated === false) {
-                // Throw an exception if the update fails
                 throw new Exception("Error updating link");
             }
 
-            // Return true if the update was successful
             return true;
         } catch (\Exception $e) {
-            // Handle the exception
-            // You can log the error, return false, or throw a new exception
-            // Here, we'll log the error message and return false
             error_log("Error in updateLink: " . $e->getMessage());
             return false;
         }
@@ -482,8 +210,7 @@ class ShortURL
                 return ['error' => true, 'txt' => 'URL is not valid'];
             }
 
-
-            // is it an allowed domain? If so, then get prefix, ... 
+            // is it an allowed domain?
             $aDomain = self::checkDomain($long_url);
 
             if ($aDomain['prefix'] == 0) {
@@ -498,30 +225,13 @@ class ShortURL
             }
 
             // Create shortURL
-            if ($aDomain['type_code'] == 'customerdomain' || $aDomain['type_code'] == 'zoom') {
-                // Customer domain
-                $targetURL = $aDomain['prefix'] . self::cryptNumber($aLink['id']);
-                $bUpdated = self::updateLink($aLink['id'], $targetURL);
-                if (!$bUpdated) {
-                    return ['error' => true, 'txt' => 'Unable to update database table'];
-                }
-            } else {
-                // Service domain
-                // Get ID and type from the service URL
-                [$id, $aDomain['type']] = self::getIdResourceByServiceURL($long_url);
+            $targetURL = $aDomain['prefix'] . self::cryptNumber($aLink['id']);
+            $bUpdated = self::updateLink($aLink['id'], $targetURL);
 
-                if (!$id || !$aDomain['type']) {
-                    return ['error' => true, 'txt' => 'Unable to extract ID and type from the service URL'];
-                }
-
-                // Create target URL
-                $targetURL = self::createTargetURL($aDomain['type'], $id);
-                if (!$targetURL) {
-                    return ['error' => true, 'txt' => 'Unable to create target URL'];
-                }
+            if (!$bUpdated) {
+                return ['error' => true, 'txt' => 'Unable to update database table'];
             }
 
-            // Combine the hashed value with ShortURLBase
             $shortURL = self::$CONFIG['ShortURLBase'] . $targetURL;
 
             self::setShortURLinDB($aLink['id'], $shortURL);

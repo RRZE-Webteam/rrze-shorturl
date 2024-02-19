@@ -4,7 +4,7 @@
 Plugin Name:     RRZE ShortURL
 Plugin URI:      https://gitlab.rrze.fau.de/rrze-webteam/rrze-shorturl
 Description:     Plugin, um URLs zu verkürzen. 
-Version:         0.1.2
+Version:         0.1.3
 Requires at least: 6.2
 Requires PHP:      8.0
 Author:          RRZE Webteam
@@ -111,8 +111,6 @@ function create_custom_tables()
             hostname varchar(255) NOT NULL,
             type_code varchar(255) NOT NULL,
             prefix int(1) NOT NULL,
-            servicestarturl varchar(255) NOT NULL,
-            targeturl varchar(255) NOT NULL,
             PRIMARY KEY (id)
         ) $charset_collate;";
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
@@ -140,35 +138,26 @@ function create_custom_tables()
                 'hostname' => 'blogs.fau.de',
                 'type_code' => 'blog',
                 'prefix' => 7,
-                'servicestarturl' => 'http://blogs.fau.de',
-                'targeturl' => 'http://blogs.fau.de/go/$p1/$p2',
             ],
             [
                 'hostname' => 'www.helpdesk.rrze.fau.de',
                 'type_code' => 'helpdesk',
                 'prefix' => 9,
-                'servicestarturl' => 'https://www.helpdesk.rrze.fau.de',
-                'targeturl' => 'https://www.helpdesk.rrze.fau.de/otrs/index.pl?Action=AgentZoom&TicketID=$id',
             ],
             [
                 'hostname' => 'fau.zoom-x.de',
                 'type_code' => 'zoom',
                 'prefix' => 2,
-                'servicestarturl' => '',
-                'targeturl' => '',
             ],
         ];
 
         foreach ($aEntries as $entry) {
             $wpdb->query(
                 $wpdb->prepare(
-                    "INSERT IGNORE INTO {$wpdb->prefix}shorturl_domains (hostname, type_code, prefix, servicestarturl, targeturl, idm) VALUES (%s, %s, %d, %s, %s)",
+                    "INSERT IGNORE INTO {$wpdb->prefix}shorturl_domains (hostname, type_code, prefix) VALUES (%s, %s, %d)",
                     $entry['hostname'],
                     $entry['type_code'],
-                    $entry['prefix'],
-                    $entry['servicestarturl'],
-                    $entry['targeturl'],
-                    'system'
+                    $entry['prefix']
                 )
             );
         }
