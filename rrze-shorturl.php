@@ -4,7 +4,7 @@
 Plugin Name:     RRZE ShortURL
 Plugin URI:      https://gitlab.rrze.fau.de/rrze-webteam/rrze-shorturl
 Description:     Plugin, um URLs zu verkürzen. 
-Version:         0.1.1
+Version:         0.1.2
 Requires at least: 6.2
 Requires PHP:      8.0
 Author:          RRZE Webteam
@@ -76,7 +76,8 @@ function system_requirements()
     return $error;
 }
 
-function drop_custom_tables() {
+function drop_custom_tables()
+{
     global $wpdb;
     $table_domains = $wpdb->prefix . 'shorturl_domains';
     $table_links = $wpdb->prefix . 'shorturl_links';
@@ -170,7 +171,7 @@ function create_custom_tables()
                     'system'
                 )
             );
-        }        
+        }
 
     } catch (\Exception $e) {
         // Handle the exception
@@ -212,8 +213,8 @@ function deactivation()
 
 function render_url_form()
 {
-    // Enqueue jQuery
     wp_enqueue_script('jquery');
+    wp_enqueue_script('qrious', plugins_url('assets/js/qrious.min.js', plugin_basename(__FILE__)), array(), '', true);
 
     ob_start();
     ?>
@@ -222,7 +223,8 @@ function render_url_form()
         <input type="text" id="url" name="url" value="">
         <button type="button" id="submitBtn">Submit</button>
     </form>
-    <div id="response"></div>
+    <div id="shorturl"></div>
+    <div id="qrcode"></div>
 
     <script>
         jQuery(document).ready(function ($) { // Ensure jQuery is ready
@@ -242,10 +244,17 @@ function render_url_form()
                     .then(data => {
                         console.log('Response:', data); // Log the response data to the console
                         if (!data.error) {
-                            $('#response').html(data.txt);
+                            $('#shorturl').html(data.txt);
+                            // console.log('QRious library loaded:', typeof QRious !== 'undefined');
+                            // console.log('Data text:', data.txt);
+                            // Generate QR code using QRious after the library is loaded
+                            var qr = new QRious({
+                                value: data.txt
+                            });
+                            $('#qrcode').html('<img src= ' + qr.toDataURL() + ' alt="QR Code" />');                            
                         } else {
                             // If there's an error, set error message
-                            $('#response').html('Error: ' + data.txt);
+                            $('#shorturl').html('Error: ' + data.txt);
                         }
                     })
                     .catch(error => console.error('Error:', error));

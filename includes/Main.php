@@ -32,7 +32,8 @@ class Main {
      * Es wird ausgeführt, sobald die Klasse instanziiert wird.
      */
     public function onLoaded() {
-        // add_action( 'wp_enqueue_scripts', [$this, 'enqueueScripts'] );
+        add_action( 'enqueue_block_editor_assets', [$this, 'enqueueScripts'] );
+        add_action( 'wp_enqueue_scripts', [$this, 'enqueueScripts'] );
         // add_action( 'enqueue_block_assets', [$this, 'enqueueScripts'] );
 
 
@@ -48,8 +49,7 @@ class Main {
      * Enqueue der globale Skripte.
      */
     public function enqueueScripts() {
-        // wp_register_style('rrze-faq-style', plugins_url('assets/css/rrze-faq.css', plugin_basename($this->pluginFile)));
-        // wp_enqueue_style('rrze-faq-style');
+        wp_enqueue_script('qrious', plugins_url('assets/js/qrious.min.js', plugin_basename($this->pluginFile)));
     }
 
 

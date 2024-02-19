@@ -2,45 +2,45 @@ const { useState } = wp.element;
 const { TextControl, Button } = wp.components;
 const { __ } = wp.i18n;
 
-
-
-
 // Define the Edit component
 const Edit = ({ attributes, setAttributes }) => {
     const [url, setUrl] = useState('');
-    const [getparameter, setGetparameter] = useState(''); // New state for GET parameter
+    const [getparameter, setGetparameter] = useState('');
     const [shortenedUrl, setShortenedUrl] = useState('');
-    const [qr, setQR] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
+    const [qrCodeUrl, setQrCodeUrl] = useState('');
 
     const shortenUrl = () => {
-        // Shorten the URL
         fetch('/wp-json/short-url/v1/shorten', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                // 'X-WP-Nonce': shortUrl.nonce // Make sure to include a nonce for security
             },
-            body: JSON.stringify({ url, getparameter }) // Include getParameter in the body
+            body: JSON.stringify({ url, getparameter })
         })
         .then(response => response.json())
         .then(data => {
-            console.log('Response:', data); // Log the response data to the console
+            console.log('Response:', data);
             if (!data.error) {
-                // If URL is successfully shortened, set the shortened URL and clear error message
-                // var QRCode = require("qrcode-svg");
-                // var svg = new QRCode("Hello World!").svg();
-                // setQR(svg);
-                
                 setShortenedUrl(data.txt);
                 setErrorMessage('');
+                generateQRCode(data.txt); // Generate QR code after getting shortened URL
             } else {
-                // If there's an error, set error message
                 setErrorMessage('Error: ' + data.txt);
                 setShortenedUrl('');
             }
         })
         .catch(error => console.error('Error:', error));
+    }
+
+    const generateQRCode = (text) => {
+        // Generate QR code using qrious library
+        const qr = new QRious({
+            element: document.getElementById('qrcode'),
+            value: text,
+            size: 150 // Adjust the size as per your requirement
+        });
+        setQrCodeUrl(qr.toDataURL()); // Set the QR code image URL
     }
 
     return (
@@ -50,7 +50,7 @@ const Edit = ({ attributes, setAttributes }) => {
                 value={url}
                 onChange={setUrl}
             />
-            <TextControl // New TextControl for GET parameter
+            <TextControl
                 label={__('GET Parameter')}
                 value={getparameter}
                 onChange={setGetparameter}
@@ -64,14 +64,12 @@ const Edit = ({ attributes, setAttributes }) => {
                 </p>
             )}
             {shortenedUrl && (
-                <p>
-                    {__('Shortened URL')}: {shortenedUrl}
-                </p>
-            )}
-            {qr && (
-                <p>
-                    {qr}
-                </p>
+                <div>
+                    <p>
+                        {__('Shortened URL')}: {shortenedUrl}
+                    </p>
+                    <img src={qrCodeUrl} alt="QR Code" />
+                </div>
             )}
         </div>
     );

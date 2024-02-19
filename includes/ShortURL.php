@@ -479,7 +479,7 @@ class ShortURL
             // Validate the URL
             $isValid = self::isValidUrl($long_url);
             if ($isValid !== true) {
-                return ['error' => true, 'txt' => 'URL is not valid', 'qr' => ''];
+                return ['error' => true, 'txt' => 'URL is not valid'];
             }
 
 
@@ -487,14 +487,14 @@ class ShortURL
             $aDomain = self::checkDomain($long_url);
 
             if ($aDomain['prefix'] == 0) {
-                return ['error' => true, 'txt' => 'Domain is not allowed to use our shortening service.', 'qr' => ''];
+                return ['error' => true, 'txt' => 'Domain is not allowed to use our shortening service.'];
             }
 
             $aLink = self::getLinkfromDB($long_url); 
 
             if (!empty($aLink['short_url'])) {
                 // url found in DB => return it
-                return ['error' => false, 'txt' => $aLink['short_url'], 'qr' => ''];
+                return ['error' => false, 'txt' => $aLink['short_url']];
             }
 
             // Create shortURL
@@ -503,7 +503,7 @@ class ShortURL
                 $targetURL = $aDomain['prefix'] . self::cryptNumber($aLink['id']);
                 $bUpdated = self::updateLink($aLink['id'], $targetURL);
                 if (!$bUpdated) {
-                    return ['error' => true, 'txt' => 'Unable to update database table', 'qr' => ''];
+                    return ['error' => true, 'txt' => 'Unable to update database table'];
                 }
             } else {
                 // Service domain
@@ -511,19 +511,18 @@ class ShortURL
                 [$id, $aDomain['type']] = self::getIdResourceByServiceURL($long_url);
 
                 if (!$id || !$aDomain['type']) {
-                    return ['error' => true, 'txt' => 'Unable to extract ID and type from the service URL', 'qr' => ''];
+                    return ['error' => true, 'txt' => 'Unable to extract ID and type from the service URL'];
                 }
 
                 // Create target URL
                 $targetURL = self::createTargetURL($aDomain['type'], $id);
                 if (!$targetURL) {
-                    return ['error' => true, 'txt' => 'Unable to create target URL', 'qr' => ''];
+                    return ['error' => true, 'txt' => 'Unable to create target URL'];
                 }
             }
 
             // Combine the hashed value with ShortURLBase
             $shortURL = self::$CONFIG['ShortURLBase'] . $targetURL;
-            // $qr = QR::generateQRCode($shortURL);
 
             self::setShortURLinDB($aLink['id'], $shortURL);
 
