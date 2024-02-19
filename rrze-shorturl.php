@@ -4,7 +4,7 @@
 Plugin Name:     RRZE ShortURL
 Plugin URI:      https://gitlab.rrze.fau.de/rrze-webteam/rrze-shorturl
 Description:     Plugin, um URLs zu verkürzen. 
-Version:         0.1.3
+Version:         0.1.4
 Requires at least: 6.2
 Requires PHP:      8.0
 Author:          RRZE Webteam
@@ -104,7 +104,7 @@ function create_custom_tables()
     $charset_collate = $wpdb->get_charset_collate();
 
     try {
-        // Create the shorturl_domains table without the 'idm' field
+        // Create the shorturl_domains table
         $shorturl_domains_table_name = $wpdb->prefix . 'shorturl_domains';
         $shorturl_domains_sql = "CREATE TABLE IF NOT EXISTS $shorturl_domains_table_name (
             id mediumint(9) NOT NULL AUTO_INCREMENT,
@@ -116,12 +116,13 @@ function create_custom_tables()
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
         dbDelta($shorturl_domains_sql);
 
-        // Add 'idm' field to the shorturl_links table
+        // Create the shorturl_links table
         $shorturl_links_table_name = $wpdb->prefix . 'shorturl_links';
         $shorturl_links_sql = "CREATE TABLE IF NOT EXISTS $shorturl_links_table_name (
             id mediumint(9) NOT NULL AUTO_INCREMENT,
             long_url varchar(255) UNIQUE NOT NULL,
             short_url varchar(255) NOT NULL,
+            uri varchar(255) DEFAULT NULL,
             idm varchar(255) DEFAULT 'system', /* New field idm with default value 'system' */
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

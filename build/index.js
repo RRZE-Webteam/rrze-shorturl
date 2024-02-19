@@ -34,29 +34,47 @@ const Edit = ({
   const [url, setUrl] = useState('');
   const [getparameter, setGetparameter] = useState('');
   const [shortenedUrl, setShortenedUrl] = useState('');
+  const [selfExplanatoryUri, setSelfExplanatoryUri] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const shortenUrl = () => {
-    fetch('/wp-json/short-url/v1/shorten', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        url,
-        getparameter
-      })
-    }).then(response => response.json()).then(data => {
-      console.log('Response:', data);
-      if (!data.error) {
-        setShortenedUrl(data.txt);
-        setErrorMessage('');
-        generateQRCode(data.txt); // Generate QR code after getting shortened URL
-      } else {
-        setErrorMessage('Error: ' + data.txt);
-        setShortenedUrl('');
+    let isValid = true;
+
+    // Check if self-explanatory URI is not empty
+    if (selfExplanatoryUri.trim() !== '') {
+      // Remove spaces from the URI
+      const uriWithoutSpaces = selfExplanatoryUri.replace(/\s/g, '');
+
+      // Check if encodeURIComponent returns the same value for the URI
+      if (encodeURIComponent(selfExplanatoryUri) !== encodeURIComponent(uriWithoutSpaces)) {
+        setErrorMessage('Error: Self-Explanatory URI is not valid');
+        isValid = false;
       }
-    }).catch(error => console.error('Error:', error));
+    }
+    if (isValid) {
+      // Proceed with URL shortening
+      fetch('/wp-json/short-url/v1/shorten', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          url,
+          getparameter,
+          uri: selfExplanatoryUri
+        })
+      }).then(response => response.json()).then(shortenData => {
+        console.log('Response:', shortenData);
+        if (!shortenData.error) {
+          setShortenedUrl(shortenData.txt);
+          setErrorMessage('');
+          generateQRCode(shortenData.txt); // Generate QR code after getting shortened URL
+        } else {
+          setErrorMessage('Error: ' + shortenData.txt);
+          setShortenedUrl('');
+        }
+      }).catch(error => console.error('Error:', error));
+    }
   };
   const generateQRCode = text => {
     // Generate QR code using qrious library
@@ -75,6 +93,10 @@ const Edit = ({
     label: __('GET Parameter'),
     value: getparameter,
     onChange: setGetparameter
+  }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(TextControl, {
+    label: __('Self-Explanatory URI'),
+    value: selfExplanatoryUri,
+    onChange: setSelfExplanatoryUri
   }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(Button, {
     onClick: shortenUrl
   }, __('Shorten URL')), errorMessage && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
@@ -116,7 +138,7 @@ module.exports = window["wp"]["blocks"];
   \************************/
 /***/ ((module) => {
 
-module.exports = /*#__PURE__*/JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":3,"name":"create-block/rrze-shorturl","version":"0.1.3","title":"Shorten URL RRZE","description":"A block to shorten URLs.","category":"widgets","icon":"admin-links","keywords":["url","shorten"],"textdomain":"rrze-shorturl","editorScript":"file:./index.js","supports":{"align":true},"example":{},"attributes":{"url":"https://example.com","getparameter":""}}');
+module.exports = /*#__PURE__*/JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":3,"name":"create-block/rrze-shorturl","version":"0.1.4","title":"Shorten URL RRZE","description":"A block to shorten URLs.","category":"widgets","icon":"admin-links","keywords":["url","shorten"],"textdomain":"rrze-shorturl","editorScript":"file:./index.js","supports":{"align":true},"example":{},"attributes":{"url":"https://example.com","getparameter":""}}');
 
 /***/ })
 

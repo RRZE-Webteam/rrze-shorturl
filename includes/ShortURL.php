@@ -70,14 +70,16 @@ class ShortURL
     }
 
 
-    public static function getLinkfromDB($long_url)
+    public static function getLinkfromDB($long_url, $uri)
     {
         try {
             global $wpdb;
             $table_name = $wpdb->prefix . 'shorturl_links';
 
             // Query the links table to get the ID and short_url where long_url matches $long_url
-            $result = $wpdb->get_results($wpdb->prepare("SELECT id, short_url FROM $table_name WHERE long_url = %s LIMIT 1", $long_url), ARRAY_A);
+            $result = $wpdb->get_results($wpdb->prepare("SELECT id, short_url, uri FROM $table_name WHERE long_url = %s AND uri = %s LIMIT 1", $long_url, $uri), ARRAY_A);
+
+            error_log("$result : " . json_encode($result));
 
             if (empty($result)) {
 
@@ -86,17 +88,18 @@ class ShortURL
                     $table_name,
                     array(
                         'long_url' => $long_url,
-                        'short_url' => ''
+                        'short_url' => '',
+                        'uri' => $uri,
                     )
                 );
                 // Get the ID of the inserted row
                 $link_id = $wpdb->insert_id;
 
                 // Return the array with id and short_url as empty
-                return array('id' => $link_id, 'short_url' => '');
+                return array('id' => $link_id, 'short_url' => '', 'uri' => $uri);
             } else {
                 // Return the array with id and short_url
-                return array('id' => $result[0]['id'], 'short_url' => $result[0]['short_url']);
+                return array('id' => $result[0]['id'], 'short_url' => $result[0]['short_url'], 'uri' => $result[0]['uri']);
             }
         } catch (\Exception $e) {
             error_log("Error in getLinkfromDB: " . $e->getMessage());
@@ -104,19 +107,22 @@ class ShortURL
         }
     }
 
-    public static function setShortURLinDB($link_id, $shortURL)
+    public static function updateLink($link_id, $shortURL, $uri)
     {
         global $wpdb;
         $table_name = $wpdb->prefix . 'shorturl_links';
         try {
             // Store in the database
-            $wpdb->update(
+            return $wpdb->update(
                 $table_name,
-                array('short_url' => $shortURL),
-                array('id' => $link_id)
+                [
+                    'short_url' => $shortURL,
+                    'uri' => $uri
+                ],
+                ['id' => $link_id]
             );
         } catch (\Exception $e) {
-            error_log("Error in setShortURLinDB: " . $e->getMessage());
+            error_log("Error in updateLink: " . $e->getMessage());
             return null;
         }
     }
@@ -172,36 +178,30 @@ class ShortURL
         }
     }
 
-    public static function updateLink($id, $short_url)
+    public static function isUniqueURI($uri)
     {
         global $wpdb;
 
-        try {
-            $table_name = $wpdb->prefix . 'shorturl_links';
+        // Check if the slug is used by posts or pages 
+        $query = $wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}posts WHERE post_name = %s", $uri);
 
-            $data = array(
-                'short_url' => $short_url,
-            );
-
-            $where = array(
-                'id' => $id,
-            );
-
-            $updated = $wpdb->update($table_name, $data, $where);
-
-            if ($updated === false) {
-                throw new Exception("Error updating link");
-            }
-
-            return true;
-        } catch (\Exception $e) {
-            error_log("Error in updateLink: " . $e->getMessage());
+        if ($wpdb->get_var($query) != 0) {
             return false;
         }
+
+        // Check if the slug exists in shorturl_links
+        $query = $wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}shorturl_links WHERE uri = %s", $uri);
+
+        if ($wpdb->get_var($query) != 0) {
+            return false;
+        }
+
+        // $uri is not used anywhere, it is unique
+        return true;
     }
 
 
-    public static function shorten($long_url)
+    public static function shorten($long_url, $uri)
     {
         try {
             // Validate the URL
@@ -217,24 +217,48 @@ class ShortURL
                 return ['error' => true, 'txt' => 'Domain is not allowed to use our shortening service.'];
             }
 
-            $aLink = self::getLinkfromDB($long_url); 
+            $aLink = self::getLinkfromDB($long_url, $uri);
 
+            error_log('$aLink : ' . json_encode($aLink));
+            // return ['error' => true, 'txt' => 'test'];
+
+
+
+            // Check if already exists in DB 
             if (!empty($aLink['short_url'])) {
                 // url found in DB => return it
                 return ['error' => false, 'txt' => $aLink['short_url']];
             }
 
             // Create shortURL
-            $targetURL = $aDomain['prefix'] . self::cryptNumber($aLink['id']);
-            $bUpdated = self::updateLink($aLink['id'], $targetURL);
+            if (!empty($uri)) {
+                if (!self::isUniqueURI($uri)){
+                    return ['error' => true, 'txt' => $uri . ' is already in use. Try another one.'];
+                }
+                $targetURL = $uri;
+            } else {
+                error_log('da');
+                // Create shortURL
+                $targetURL = $aDomain['prefix'] . self::cryptNumber($aLink['id']);
+            }
+            // error_log(json_encode($aLink));
+
+            // // Create shortURL
+            // $bUpdated = self::updateLink($aLink['id'], $targetURL, $uri);
+
+            $shortURL = self::$CONFIG['ShortURLBase'] . $targetURL;
+
+            error_log('X : ' . $aLink['id']);
+            error_log('Y : ' . $shortURL);
+            error_log('Z : ' . $uri);
+
+            $bUpdated = self::updateLink($aLink['id'], $shortURL, $uri);
+
+            error_log('$bUpdated : ' . json_encode($bUpdated));
 
             if (!$bUpdated) {
                 return ['error' => true, 'txt' => 'Unable to update database table'];
             }
-
-            $shortURL = self::$CONFIG['ShortURLBase'] . $targetURL;
-
-            self::setShortURLinDB($aLink['id'], $shortURL);
 
             return ['error' => false, 'txt' => $shortURL];
         } catch (\Exception $e) {

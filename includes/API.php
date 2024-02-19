@@ -2,7 +2,6 @@
 namespace RRZE\ShortURL;
 
 use WP_REST_Response;
-use WP_REST_Request;
 use WP_Error;
 
 class API {
@@ -11,13 +10,11 @@ class API {
     }
 
     public function register_rest_endpoints() {
-        // Register the /short-url/v1/shorten endpoint
         register_rest_route('short-url/v1', '/shorten', array(
             'methods' => 'POST',
             'callback' => array($this, 'shorten_url_callback'),
         ));
 
-        // Register the /short-url/v1/active-short-urls endpoint
         register_rest_route('short-url/v1', '/active-short-urls', array(
             'methods' => 'GET',
             'callback' => array($this, 'get_active_short_urls_callback'),
@@ -51,7 +48,7 @@ class API {
             $url_to_shorten = self::makeURL($parameters['url'], $parameters['getparameter']);
 
             // Shorten the URL
-            $shortened_url = ShortURL::shorten($url_to_shorten);
+            $shortened_url = ShortURL::shorten($url_to_shorten, $parameters['uri']);
 
             // Return the shortened URL in the response
             return rest_ensure_response($shortened_url);
