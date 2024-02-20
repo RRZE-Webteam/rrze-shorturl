@@ -116,9 +116,9 @@ class Settings
         }
 
         // Check if the hostname matches the allowed pattern
-        if (!preg_match('/^([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])$/', $hostname)) {
-            return false;
-        }
+        // if (!preg_match('/^([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])$/', $hostname)) {
+        //     return false;
+        // }
 
         // Check if the hostname contains at least one dot
         if (strpos($hostname, '.') === false) {
@@ -152,23 +152,34 @@ class Settings
     {
         global $wpdb;
         $message = '';
+        $bDel = false;
 
         // Check if form is submitted
         if (isset($_POST['submit'])) {
             try {
                 // Delete selected entries
                 if (!empty($_POST['delete'])) {
-                    foreach ($_POST['delete'] as $delete_id) {
-                        $wpdb->delete("{$wpdb->prefix}shorturl_domains", array('id' => $delete_id), array('%d'));
+
+                    // echo '<pre>';
+                    // var_dump($_POST);
+                    // echo '</pre>';
+                    // exit;
+
+                    foreach ($_POST['delete'] as $id => $delete_id) {
+                        if ($_POST['prefix'][$id] == '1'){
+                            $message = __('You cannot delete the entry used for our customers.', 'rrze-shorturl');
+                        }else{
+                            $wpdb->delete("{$wpdb->prefix}shorturl_domains", array('id' => $delete_id), array('%d'));
+                            $bDel = true;
+                        }
                     }
-                    $message = __('Selected entries deleted successfully.', 'rrze-shorturl');
+                    $message = (empty($message) ? '' : $message . '<br \>') . ($bDel ? __('Selected entries deleted successfully.', 'rrze-shorturl') : '');
                 }
 
                 // Add new entry
-                if (!empty($_POST['new_type_code'])) {
+                if (!empty($_POST['new_hostname'])) {
                     try {
                         // Sanitize input data
-                        $new_type_code = sanitize_text_field($_POST['new_type_code']);
                         $new_hostname = sanitize_text_field($_POST['new_hostname']);
                         $new_prefix = sanitize_text_field($_POST['new_prefix']);
 
@@ -180,7 +191,6 @@ class Settings
                             $wpdb->insert(
                                 "{$wpdb->prefix}shorturl_domains",
                                 array(
-                                    'type_code' => $new_type_code,
                                     'hostname' => $new_hostname,
                                     'prefix' => $new_prefix
                                 )
@@ -191,7 +201,8 @@ class Settings
                                 throw new \Exception($wpdb->last_error);
                             }
 
-                            $new_type_code = $new_hostname = $new_prefix = '';
+                            $new_hostname = '';
+                            $new_prefix = 0;
 
 
                             $message = __('New service added successfully.', 'rrze-shorturl');
@@ -209,7 +220,7 @@ class Settings
         }
 
         // Fetch entries from shorturl_domains table
-        $entries = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_domains ORDER BY type_code");
+        $entries = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_domains ORDER BY prefix");
 
         ?>
         <div class="wrap">
@@ -225,9 +236,6 @@ class Settings
                     <thead>
                         <tr>
                             <th>
-                                <?php _e('Type Code', 'rrze-shorturl'); ?>
-                            </th>
-                            <th>
                                 <?php _e('Hostname', 'rrze-shorturl'); ?>
                             </th>
                             <th>
@@ -241,8 +249,6 @@ class Settings
                     <tbody>
                         <?php foreach ($entries as $entry): ?>
                             <tr>
-                                <td><input type="text" name="type_code[]" value="<?php echo esc_attr($entry->type_code); ?>"
-                                        readonly /></td>
                                 <td><input type="text" name="hostname[]" value="<?php echo esc_attr($entry->hostname); ?>"
                                         readonly /></td>
                                 <td><input type="text" name="prefix[]" value="<?php echo esc_attr($entry->prefix); ?>" readonly />
@@ -251,8 +257,6 @@ class Settings
                             </tr>
                         <?php endforeach; ?>
                         <tr>
-                            <td><input type="text" name="new_type_code"
-                                    value="<?php echo (!empty($new_type_code) ? $new_type_code : ''); ?>" /></td>
                             <td><input type="text" name="new_hostname"
                                     value="<?php echo (!empty($new_hostname) ? $new_hostname : ''); ?>" /></td>
                             <td><input type="text" name="new_prefix"
@@ -297,7 +301,6 @@ class Settings
                     try {
                         // Sanitize input data
                         $hostname = sanitize_text_field($_POST['new_hostname']);
-                        $type_code = 'customerdomain';
                         $prefix = 1;
 
                         // Validate hostname
@@ -313,7 +316,6 @@ class Settings
 
                         // Insert new entry into the database
                         $wpdb->insert("{$wpdb->prefix}shorturl_domains", array(
-                            'type_code' => $type_code,
                             'hostname' => $hostname,
                             'prefix' => $prefix
                         )

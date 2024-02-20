@@ -157,14 +157,14 @@ class ShortURL
     public static function checkDomain($long_url)
     {
         try {
-            $aRet = ["prefix" => 0, "hostname" => '', 'type_code' => ''];
+            $aRet = ["prefix" => 0, "hostname" => ''];
 
             $domain = wp_parse_url($long_url, PHP_URL_HOST);
 
             // Check if the extracted domain belongs to one of our allowed domains
             foreach (self::$CONFIG['AllowedDomains'] as $aEntry) {
                 if ($domain === $aEntry['hostname']) {
-                    $aRet = ["prefix" => $aEntry['prefix'], "hostname" => $aEntry['hostname'], "type_code" => $aEntry['type_code']];
+                    $aRet = ["prefix" => $aEntry['prefix'], "hostname" => $aEntry['hostname']];
                     break;
                 }
             }

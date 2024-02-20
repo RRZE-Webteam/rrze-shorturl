@@ -4,7 +4,7 @@
 Plugin Name:     RRZE ShortURL
 Plugin URI:      https://gitlab.rrze.fau.de/rrze-webteam/rrze-shorturl
 Description:     Plugin, um URLs zu verkürzen. 
-Version:         0.1.7
+Version:         0.1.10
 Requires at least: 6.2
 Requires PHP:      8.0
 Author:          RRZE Webteam
@@ -109,7 +109,6 @@ function create_custom_tables()
         $shorturl_domains_sql = "CREATE TABLE IF NOT EXISTS $shorturl_domains_table_name (
             id mediumint(9) NOT NULL AUTO_INCREMENT,
             hostname varchar(255) NOT NULL DEFAULT '' UNIQUE,
-            type_code varchar(255) NOT NULL UNIQUE,
             prefix int(1) NOT NULL UNIQUE,
             PRIMARY KEY (id)
         ) $charset_collate;";
@@ -137,32 +136,27 @@ function create_custom_tables()
         $aEntries = [
             [
                 'hostname' => 'blogs.fau.de',
-                'type_code' => 'blog',
                 'prefix' => 7,
             ],
             [
                 'hostname' => 'www.helpdesk.rrze.fau.de',
-                'type_code' => 'helpdesk',
                 'prefix' => 9,
             ],
             [
                 'hostname' => 'fau.zoom-x.de',
-                'type_code' => 'zoom',
                 'prefix' => 2,
             ],
             [
-                'hostname' => '',
-                'type_code' => 'customerdomain',
+                'hostname' => 'reserved for our customers',
                 'prefix' => 1,
-            ],
+            ]
         ];
 
         foreach ($aEntries as $entry) {
             $wpdb->query(
                 $wpdb->prepare(
-                    "INSERT IGNORE INTO {$wpdb->prefix}shorturl_domains (hostname, type_code, prefix) VALUES (%s, %s, %d)",
+                    "INSERT IGNORE INTO {$wpdb->prefix}shorturl_domains (hostname, prefix) VALUES (%s, %d)",
                     $entry['hostname'],
-                    $entry['type_code'],
                     $entry['prefix']
                 )
             );
