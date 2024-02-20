@@ -108,9 +108,9 @@ function create_custom_tables()
         $shorturl_domains_table_name = $wpdb->prefix . 'shorturl_domains';
         $shorturl_domains_sql = "CREATE TABLE IF NOT EXISTS $shorturl_domains_table_name (
             id mediumint(9) NOT NULL AUTO_INCREMENT,
-            hostname varchar(255) NOT NULL,
-            type_code varchar(255) NOT NULL,
-            prefix int(1) NOT NULL,
+            hostname varchar(255) NOT NULL DEFAULT '' UNIQUE,
+            type_code varchar(255) NOT NULL UNIQUE,
+            prefix int(1) NOT NULL UNIQUE,
             PRIMARY KEY (id)
         ) $charset_collate;";
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
@@ -149,6 +149,11 @@ function create_custom_tables()
                 'hostname' => 'fau.zoom-x.de',
                 'type_code' => 'zoom',
                 'prefix' => 2,
+            ],
+            [
+                'hostname' => '',
+                'type_code' => 'customerdomain',
+                'prefix' => 1,
             ],
         ];
 

@@ -36,7 +36,8 @@ class Main {
         add_action( 'wp_enqueue_scripts', [$this, 'enqueueScripts'] );
         // add_action( 'enqueue_block_assets', [$this, 'enqueueScripts'] );
 
-        $CustomerDomains = new CustomerDomains(); 
+        $settings = new Settings();
+        $domains = new CustomerDomains(); 
 
         $shortURL = new ShortURL(); 
 
