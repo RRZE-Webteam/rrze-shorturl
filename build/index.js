@@ -35,6 +35,7 @@ const Edit = ({
   const [getparameter, setGetparameter] = useState('');
   const [shortenedUrl, setShortenedUrl] = useState('');
   const [selfExplanatoryUri, setSelfExplanatoryUri] = useState('');
+  const [validUntil, setValidUntil] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const shortenUrl = () => {
@@ -61,7 +62,8 @@ const Edit = ({
         body: JSON.stringify({
           url,
           getparameter,
-          uri: selfExplanatoryUri
+          uri: selfExplanatoryUri,
+          valid_until: validUntil // Include valid_until date in the request body
         })
       }).then(response => response.json()).then(shortenData => {
         console.log('Response:', shortenData);
@@ -97,6 +99,14 @@ const Edit = ({
     label: __('Self-Explanatory URI'),
     value: selfExplanatoryUri,
     onChange: setSelfExplanatoryUri
+  }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(TextControl, {
+    label: __('Valid until'),
+    type: "date",
+    value: validUntil,
+    onChange: setValidUntil,
+    min: new Date().toISOString().split('T')[0] // Set minimum date to today
+    ,
+    max: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0] // Set maximum date to one year from today
   }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(Button, {
     onClick: shortenUrl
   }, __('Shorten URL')), errorMessage && (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", {
@@ -138,7 +148,7 @@ module.exports = window["wp"]["blocks"];
   \************************/
 /***/ ((module) => {
 
-module.exports = /*#__PURE__*/JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":3,"name":"create-block/rrze-shorturl","version":"0.1.7","title":"Shorten URL RRZE","description":"A block to shorten URLs.","category":"widgets","icon":"admin-links","keywords":["url","shorten"],"textdomain":"rrze-shorturl","editorScript":"file:./index.js","supports":{"align":true},"example":{},"attributes":{"url":"https://example.com","getparameter":""}}');
+module.exports = /*#__PURE__*/JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":3,"name":"create-block/rrze-shorturl","version":"0.1.8","title":"Shorten URL RRZE","description":"A block to shorten URLs.","category":"widgets","icon":"admin-links","keywords":["url","shorten"],"textdomain":"rrze-shorturl","editorScript":"file:./index.js","supports":{"align":true},"example":{},"attributes":{"url":"https://example.com","getparameter":""}}');
 
 /***/ })
 

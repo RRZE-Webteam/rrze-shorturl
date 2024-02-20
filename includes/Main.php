@@ -36,11 +36,11 @@ class Main {
         add_action( 'wp_enqueue_scripts', [$this, 'enqueueScripts'] );
         // add_action( 'enqueue_block_assets', [$this, 'enqueueScripts'] );
 
+        $taxonomy = new Taxomomy();
+        $post = new Post();
         $settings = new Settings();
         $domains = new CustomerDomains(); 
-
         $shortURL = new ShortURL(); 
-
         $api = new API();
     }
 

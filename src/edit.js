@@ -8,6 +8,7 @@ const Edit = ({ attributes, setAttributes }) => {
     const [getparameter, setGetparameter] = useState('');
     const [shortenedUrl, setShortenedUrl] = useState('');
     const [selfExplanatoryUri, setSelfExplanatoryUri] = useState('');
+    const [validUntil, setValidUntil] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
     const [qrCodeUrl, setQrCodeUrl] = useState('');
 
@@ -33,7 +34,12 @@ const Edit = ({ attributes, setAttributes }) => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ url, getparameter, uri: selfExplanatoryUri })
+                body: JSON.stringify({ 
+                    url, 
+                    getparameter, 
+                    uri: selfExplanatoryUri,
+                    valid_until: validUntil // Include valid_until date in the request body
+                })
             })
             .then(response => response.json())
             .then(shortenData => {
@@ -77,6 +83,14 @@ const Edit = ({ attributes, setAttributes }) => {
                 label={__('Self-Explanatory URI')}
                 value={selfExplanatoryUri}
                 onChange={setSelfExplanatoryUri}
+            />
+            <TextControl
+                label={__('Valid until')}
+                type="date"
+                value={validUntil}
+                onChange={setValidUntil}
+                min={new Date().toISOString().split('T')[0]} // Set minimum date to today
+                max={new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0]} // Set maximum date to one year from today
             />
             <Button onClick={shortenUrl}>
                 {__('Shorten URL')}
