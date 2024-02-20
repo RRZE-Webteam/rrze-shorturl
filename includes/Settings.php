@@ -160,11 +160,6 @@ class Settings
                 // Delete selected entries
                 if (!empty($_POST['delete'])) {
 
-                    // echo '<pre>';
-                    // var_dump($_POST);
-                    // echo '</pre>';
-                    // exit;
-
                     foreach ($_POST['delete'] as $id => $delete_id) {
                         if ($_POST['prefix'][$id] == '1'){
                             $message = __('You cannot delete the entry used for our customers.', 'rrze-shorturl');

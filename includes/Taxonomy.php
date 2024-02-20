@@ -73,6 +73,7 @@ class Taxonomy
             'show_ui' => true,
             'show_admin_column' => true,
             'query_var' => true,
+            'show_in_rest' => true, // Enable REST API support
             'rewrite' => array('slug' => 'shorturl_category'), // Change 'shorturl_category' to desired slug
         );
 
