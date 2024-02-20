@@ -2,7 +2,7 @@
 
 namespace RRZE\ShortURL;
 
-class Taxomomy
+class Taxonomy
 {
     public function __construct()
     {
