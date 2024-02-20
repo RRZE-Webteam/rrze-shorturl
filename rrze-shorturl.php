@@ -4,7 +4,7 @@
 Plugin Name:     RRZE ShortURL
 Plugin URI:      https://gitlab.rrze.fau.de/rrze-webteam/rrze-shorturl
 Description:     Plugin, um URLs zu verkürzen. 
-Version:         0.1.6
+Version:         0.1.7
 Requires at least: 6.2
 Requires PHP:      8.0
 Author:          RRZE Webteam
@@ -206,63 +206,10 @@ function deactivation()
     drop_custom_tables();
 }
 
-function render_url_form()
-{
-    wp_enqueue_script('jquery');
-    wp_enqueue_script('qrious', plugins_url('assets/js/qrious.min.js', plugin_basename(__FILE__)), array(), '', true);
-
-    ob_start();
-    ?>
-    <form id="urlForm">
-        <label for="url">Enter URL:</label>
-        <input type="text" id="url" name="url" value="">
-        <button type="button" id="submitBtn">Submit</button>
-    </form>
-    <div id="shorturl"></div>
-    <div id="qrcode"></div>
-
-    <script>
-        jQuery(document).ready(function ($) { // Ensure jQuery is ready
-            // Shorten the URL
-            $('#submitBtn').click(function () {
-                var url = $('#url').val(); // Get the URL from the input field
-
-                fetch('/wp-json/short-url/v1/shorten', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        // 'X-WP-Nonce': shortUrl.nonce // Make sure to include a nonce for security
-                    },
-                    body: JSON.stringify({ url: url })
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log('Response:', data); // Log the response data to the console
-                        if (!data.error) {
-                            $('#shorturl').html(data.txt);
-                            // console.log('QRious library loaded:', typeof QRious !== 'undefined');
-                            // console.log('Data text:', data.txt);
-                            // Generate QR code using QRious after the library is loaded
-                            var qr = new QRious({
-                                value: data.txt
-                            });
-                            $('#qrcode').html('<img src= ' + qr.toDataURL() + ' alt="QR Code" />');                            
-                        } else {
-                            // If there's an error, set error message
-                            $('#shorturl').html('Error: ' + data.txt);
-                        }
-                    })
-                    .catch(error => console.error('Error:', error));
-            });
-        });
-    </script>
-    <?php
-    return ob_get_clean();
-}
 
 function rrze_shorturl_init()
 {
-    register_block_type(__DIR__ . '/build', ['render_callback' => __NAMESPACE__ . '\render_url_form']);
+    register_block_type(__DIR__ . '/build', ['render_callback' => [Settings::class, 'render_url_form']]);
 }
 
 /**

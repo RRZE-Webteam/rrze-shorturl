@@ -33,30 +33,14 @@ class Settings
             'rrze_shorturl_services'
         );
 
-        // add_settings_field(
-        //     'rrze_shorturl_services_field',
-        //     'Services Field',
-        //     [$this, 'render_services_field'],
-        //     'rrze_shorturl_services',
-        //     'rrze_shorturl_services_section'
-        // );
-
         register_setting('rrze_shorturl_services', 'rrze_shorturl_services');
 
         // Customer Domains tab settings
         add_settings_section(
             'rrze_shorturl_customer_domains_section',
-            'Customer Domains Settings',
+            '&nbsp;',
             [$this, 'render_customer_domains_section'],
             'rrze_shorturl_customer_domains'
-        );
-
-        add_settings_field(
-            'rrze_shorturl_customer_domains_field',
-            'Customer Domains Field',
-            [$this, 'render_customer_domains_field'],
-            'rrze_shorturl_customer_domains',
-            'rrze_shorturl_customer_domains_section'
         );
 
         register_setting('rrze_shorturl_customer_domains', 'rrze_shorturl_customer_domains');
@@ -64,17 +48,9 @@ class Settings
         // Short URLs tab settings
         add_settings_section(
             'rrze_shorturl_short_urls_section',
-            'Short URLs Settings',
+            '&nbsp;',
             [$this, 'render_short_urls_section'],
             'rrze_shorturl_short_urls'
-        );
-
-        add_settings_field(
-            'rrze_shorturl_short_urls_field',
-            'Short URLs Field',
-            [$this, 'render_short_urls_field'],
-            'rrze_shorturl_short_urls',
-            'rrze_shorturl_short_urls_section'
         );
 
         register_setting('rrze_shorturl_short_urls', 'rrze_shorturl_short_urls');
@@ -295,12 +271,6 @@ class Settings
     }
 
 
-    // Render the Services tab field
-    public function render_services_field()
-    {
-        echo '<input type="text" name="rrze_shorturl_services" value="' . esc_attr(get_option('rrze_shorturl_services')) . '" />';
-    }
-
     // Render the Customer Domains tab section
     public function render_customer_domains_section()
     {
@@ -414,22 +384,69 @@ class Settings
 
     }
 
-    // Render the Customer Domains tab field
-    public function render_customer_domains_field()
-    {
-        echo '<input type="text" name="rrze_shorturl_customer_domains" value="' . esc_attr(get_option('rrze_shorturl_customer_domains')) . '" />';
-    }
+
+    public static function render_url_form()
+{
+    wp_enqueue_script('jquery');
+    wp_enqueue_script('qrious', plugins_url('assets/js/qrious.min.js', plugin_basename(__FILE__)), array(), '', true);
+
+    ob_start();
+    ?>
+    <form id="urlForm">
+        <label for="url">Enter URL:</label>
+        <input type="text" id="url" name="url" value="">
+        <button type="button" id="submitBtn">Submit</button>
+    </form>
+    <div id="shorturl"></div>
+    <div id="qrcode"></div>
+
+    <script>
+        jQuery(document).ready(function ($) { // Ensure jQuery is ready
+            // Shorten the URL
+            $('#submitBtn').click(function () {
+                var url = $('#url').val(); // Get the URL from the input field
+
+                fetch('/wp-json/short-url/v1/shorten', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        // 'X-WP-Nonce': shortUrl.nonce // Make sure to include a nonce for security
+                    },
+                    body: JSON.stringify({ url: url })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Response:', data); // Log the response data to the console
+                        if (!data.error) {
+                            $('#shorturl').html(data.txt);
+                            // console.log('QRious library loaded:', typeof QRious !== 'undefined');
+                            // console.log('Data text:', data.txt);
+                            // Generate QR code using QRious after the library is loaded
+                            var qr = new QRious({
+                                value: data.txt
+                            });
+                            $('#qrcode').html('<img src= ' + qr.toDataURL() + ' alt="QR Code" />');                            
+                        } else {
+                            // If there's an error, set error message
+                            $('#shorturl').html('Error: ' + data.txt);
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            });
+        });
+    </script>
+    <?php
+    return ob_get_clean();
+}
+
 
     // Render the Short URLs tab section
     public function render_short_urls_section()
     {
-        echo '<p>Short URLs tab settings</p>';
+
+        echo self::render_url_form();
+        // echo '<p>Short URLs tab settings</p>';
     }
 
-    // Render the Short URLs tab field
-    public function render_short_urls_field()
-    {
-        echo '<input type="text" name="rrze_shorturl_short_urls" value="' . esc_attr(get_option('rrze_shorturl_short_urls')) . '" />';
-    }
 }
 
