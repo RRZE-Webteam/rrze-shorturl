@@ -198,6 +198,24 @@ class ShortURL
         return true;
     }
 
+    public static function isValidURI(string $uri = ''): bool {
+        $isValid = true;
+        
+        // Check if URI is not empty
+        if (trim($uri) !== '') {
+            // Remove spaces from the URI
+            $uriWithoutSpaces = preg_replace('/\s/', '', $uri);
+            
+            // Check if rawurlencode returns the same value for the URI
+            if (rawurlencode($uri) !== rawurlencode($uriWithoutSpaces)) {
+                $isValid = false;
+            }
+        }
+        
+        return $isValid;
+    }
+    
+
 
     public static function shorten($long_url, $uri)
     {
@@ -206,6 +224,12 @@ class ShortURL
             $isValid = self::isValidUrl($long_url);
             if ($isValid !== true) {
                 return ['error' => true, 'txt' => 'URL is not valid'];
+            }
+
+            // Validate the URI
+            $isValid = self::isValidURI($uri);
+            if ($isValid !== true) {
+                return ['error' => true, 'txt' => $uri . ' ' . 'is not valid'];
             }
 
             // is it an allowed domain?
