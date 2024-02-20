@@ -37,7 +37,7 @@ class Main {
         // add_action( 'enqueue_block_assets', [$this, 'enqueueScripts'] );
 
         $taxonomy = new Taxonomy();
-        $post = new Post();
+        $trigger = new Trigger();
         $settings = new Settings();
         $domains = new CustomerDomains(); 
         $shortURL = new ShortURL(); 

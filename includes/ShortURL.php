@@ -281,6 +281,19 @@ class ShortURL
             if (!$bUpdated) {
                 return ['error' => true, 'txt' => 'Unable to update database table'];
             }
+            
+
+            // 2DO: fill these arrays via edit.js
+            $aCategories = [];
+            $aTags = [];
+
+            $data = [
+                'id' => $aLink['id'],
+                'categories' => $aCategories,
+                'tags' => $aTags                 
+            ];
+
+            do_action('shortlink_inserted', $data);
 
             return ['error' => false, 'txt' => $shortURL];
         } catch (\Exception $e) {
