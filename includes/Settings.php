@@ -83,6 +83,8 @@ class Settings
     // Render the options page
     public function render_options_page()
     {
+        $_GET['tab'] = (empty($_GET['tab']) ? 'services' : $_GET['tab']);
+
         ?>
         <div class="wrap">
             <h1>RRZE ShortURL Settings</h1>
@@ -302,7 +304,114 @@ class Settings
     // Render the Customer Domains tab section
     public function render_customer_domains_section()
     {
-        echo '<p>Customer Domains tab settings</p>';
+        global $wpdb;
+        $message = '';
+
+        // Check if form is submitted
+        if (isset($_POST['submit'])) {
+            try {
+                // Handle form submission
+                // Validate and process form data
+                // Add new entry or update existing entry
+
+                // Delete selected entries
+                if (!empty($_POST['delete'])) {
+                    foreach ($_POST['delete'] as $delete_id) {
+                        $wpdb->delete("{$wpdb->prefix}shorturl_domains", array('id' => $delete_id), array('%d'));
+                    }
+                    $message = __('Selected entries deleted successfully.', 'rrze-shorturl');
+                }
+
+                // Add new entry
+                if (!empty($_POST['new_hostname'])) {
+                    try {
+                        // Sanitize input data
+                        $hostname = sanitize_text_field($_POST['new_hostname']);
+                        $type_code = 'customerdomain';
+                        $prefix = 1;
+
+                        // Validate hostname
+                        if (!filter_var($hostname, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)) {
+                            throw new \Exception(__('Invalid hostname.', 'rrze-shorturl'));
+                        }
+
+                        // Check if prefix is unique
+                        $existing_entry = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}shorturl_domains WHERE prefix = %d", $prefix));
+                        if ($existing_entry) {
+                            throw new \Exception(__('Prefix is already in use. Choose a different one.', 'rrze-shorturl'));
+                        }
+
+                        // Insert new entry into the database
+                        $wpdb->insert("{$wpdb->prefix}shorturl_domains", array(
+                            'type_code' => $type_code,
+                            'hostname' => $hostname,
+                            'prefix' => $prefix
+                        )
+                        );
+
+                        if ($wpdb->last_error) {
+                            throw new \Exception($wpdb->last_error);
+                        }
+
+                        $message = __('New customer domain added successfully.', 'rrze-shorturl');
+                    } catch (\Exception $e) {
+                        // Handle exceptions
+                        $message = __('An error occurred: ', 'rrze-shorturl') . $e->getMessage();
+                    }
+                }
+                // Display success message
+            } catch (\Exception $e) {
+                // Handle exceptions
+                $message = __('An error occurred: ', 'rrze-shorturl') . $e->getMessage();
+            }
+        }
+
+        // Fetch entries from shorturl_domains table where prefix is 1
+        $entries = $wpdb->get_results($wpdb->prepare("SELECT * FROM {$wpdb->prefix}shorturl_domains WHERE prefix = %d ORDER BY hostname", 1));
+
+        ?>
+        <div class="wrap">
+            <?php if (!empty($message)): ?>
+                <div class="<?php echo strpos($message, 'error') !== false ? 'error' : 'updated'; ?>">
+                    <p>
+                        <?php echo $message; ?>
+                    </p>
+                </div>
+            <?php endif; ?>
+            <form method="post" action="">
+                <table class="wp-list-table widefat fixed striped">
+                    <thead>
+                        <tr>
+                            <th>
+                                <?php _e('Hostname', 'rrze-shorturl'); ?>
+                            </th>
+                            <th>
+                                <?php _e('Delete', 'rrze-shorturl'); ?>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($entries as $entry): ?>
+                            <tr>
+                                <td><input type="text" name="hostname[]" value="<?php echo esc_attr($entry->hostname); ?>"
+                                        readonly /></td>
+                                <td><input type="checkbox" name="delete[]" value="<?php echo esc_attr($entry->id); ?>" /></td>
+                            </tr>
+                        <?php endforeach; ?>
+                        <tr>
+                            <td><input type="text" name="new_hostname" value="" /></td>
+                            <td></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <button type="submit" name="submit" class="button button-primary">
+                    <?php _e('Save Changes', 'rrze-shorturl'); ?>
+                </button>
+            </form>
+        </div>
+        <?php
+
     }
 
     // Render the Customer Domains tab field
