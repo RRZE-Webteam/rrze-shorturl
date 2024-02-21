@@ -57,20 +57,20 @@ class Taxonomy
     public function register_taxonomies()
     {
         $labels = array(
-            'name' => _x('ShortURL categories', 'taxonomy general name', 'textdomain'),
-            'singular_name' => _x('ShortURL category', 'taxonomy singular name', 'textdomain'),
-            'search_items' => __('Search ShortURL categories', 'textdomain'),
-            'popular_items' => __('Popular ShortURL categories', 'textdomain'),
-            'all_items' => __('All ShortURL categories', 'textdomain'),
-            'edit_item' => __('Edit ShortURL category', 'textdomain'),
-            'update_item' => __('Update ShortURL category', 'textdomain'),
-            'add_new_item' => __('Add New ShortURL category', 'textdomain'),
-            'new_item_name' => __('New ShortURL category name', 'textdomain'),
-            'separate_items_with_commas' => __('Separate ShortURL categories with commas', 'textdomain'),
-            'add_or_remove_items' => __('Add or remove ShortURL categories', 'textdomain'),
-            'choose_from_most_used' => __('Choose from the most used ShortURL categories', 'textdomain'),
-            'not_found' => __('No ShortURL categories found', 'textdomain'),
-            'menu_name' => __('ShortURL categories', 'textdomain'),
+            'name' => _x('ShortURL Categories', 'taxonomy general name', 'textdomain'),
+            'singular_name' => _x('ShortURL Category', 'taxonomy singular name', 'textdomain'),
+            'search_items' => __('Search ShortURL Categories', 'textdomain'),
+            'popular_items' => __('Popular ShortURL Categories', 'textdomain'),
+            'all_items' => __('All ShortURL Categories', 'textdomain'),
+            'edit_item' => __('Edit ShortURL Category', 'textdomain'),
+            'update_item' => __('Update ShortURL Category', 'textdomain'),
+            'add_new_item' => __('Add New ShortURL Category', 'textdomain'),
+            'new_item_name' => __('New ShortURL Category name', 'textdomain'),
+            'separate_items_with_commas' => __('Separate ShortURL Categories with commas', 'textdomain'),
+            'add_or_remove_items' => __('Add or remove ShortURL Categories', 'textdomain'),
+            'choose_from_most_used' => __('Choose from the most used ShortURL Categories', 'textdomain'),
+            'not_found' => __('No ShortURL Categories found', 'textdomain'),
+            'menu_name' => __('ShortURL Categories', 'textdomain'),
         );
 
         $args = array(

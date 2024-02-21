@@ -1,6 +1,6 @@
 import { useState, useEffect } from '@wordpress/element';
 import { TextControl, Button, SelectControl, PanelBody } from '@wordpress/components';
-import { InspectorControls } from '@wordpress/editor';
+import { InspectorControls, useBlockProps } from '@wordpress/block-editor';
 import { __ } from '@wordpress/i18n';
 
 // Define the Edit component
@@ -110,7 +110,7 @@ const Edit = ({ attributes, setAttributes }) => {
     }
 
     return (
-        <div>
+        <div {...useBlockProps()}>
             <InspectorControls>
                 <PanelBody title={__('URL Shortener Settings')}>
                     <TextControl
