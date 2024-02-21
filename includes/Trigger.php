@@ -39,6 +39,9 @@ class Trigger
             $category_id = (!empty($data['categories']) ? $data['categories'] : null);
             $tag_ids = isset($data['tags']) ? $data['tags'] : [];
 
+            error_log('Inserted $category_id: ' . $category_id);
+            error_log('Inserted $category_id: ' . json_encode($tag_ids));
+
             $post_data = array(
                 'post_title' => 'Short URL Post ' . $id, // Example post title
                 'post_status' => 'publish',
@@ -53,10 +56,7 @@ class Trigger
 
             // Assign categories and tags to the post
             if (!empty($category_id)) {
-                wp_set_post_categories($post_id, array($category_id));
-            }
-            if (!empty($tag_ids)) {
-                wp_set_post_tags($post_id, $tag_ids);
+                wp_set_object_terms( $post_id, $category_id, 'shorturl_category' );
             }
         }
     }
