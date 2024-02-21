@@ -161,9 +161,9 @@ class Settings
                 if (!empty($_POST['delete'])) {
 
                     foreach ($_POST['delete'] as $id => $delete_id) {
-                        if ($_POST['prefix'][$id] == '1'){
+                        if ($_POST['prefix'][$id] == '1') {
                             $message = __('You cannot delete the entry used for our customers.', 'rrze-shorturl');
-                        }else{
+                        } else {
                             $wpdb->delete("{$wpdb->prefix}shorturl_domains", array('id' => $delete_id), array('%d'));
                             $bDel = true;
                         }
@@ -182,25 +182,31 @@ class Settings
                         if (!self::isValidHostName($new_hostname)) {
                             $message = __('Hostname is not valid.', 'rrze-shorturl');
                         } else {
+                            if (empty($new_prefix)) {
+                                // this is a customer domain
+                                $message = __('You are trying to enter a customer domain. Please use tab "Customer Domains" to do this.', 'rrze-shorturl');
+                            } else {
+                                $wpdb->insert(
+                                    "{$wpdb->prefix}shorturl_domains",
+                                    array(
+                                        'hostname' => $new_hostname,
+                                        'prefix' => $new_prefix
+                                    )
+                                );
 
-                            $wpdb->insert(
-                                "{$wpdb->prefix}shorturl_domains",
-                                array(
-                                    'hostname' => $new_hostname,
-                                    'prefix' => $new_prefix
-                                )
-                            );
+                                $message = __('New service added successfully.', 'rrze-shorturl');
 
-                            if ($wpdb->last_error) {
-                                $message = __('An error occurred: ', 'rrze-shorturl') . $wpdb->last_error;
-                                throw new \Exception($wpdb->last_error);
+                                if ($wpdb->last_error) {
+                                    $message = __('An error occurred: ', 'rrze-shorturl') . $wpdb->last_error;
+                                    throw new \Exception($wpdb->last_error);
+                                }
+
+
                             }
-
                             $new_hostname = '';
                             $new_prefix = 0;
 
 
-                            $message = __('New service added successfully.', 'rrze-shorturl');
                         }
                     } catch (\Exception $e) {
                         // Handle \Exceptions
@@ -214,8 +220,8 @@ class Settings
             }
         }
 
-        // Fetch entries from shorturl_domains table
-        $entries = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_domains ORDER BY prefix");
+        // Fetch entries from shorturl_domains table (prefix = 1 is reserved for our customer domains)
+        $entries = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_domains WHERE NOT prefix = 1 ORDER BY prefix");
 
         ?>
         <div class="wrap">
@@ -296,24 +302,18 @@ class Settings
                     try {
                         // Sanitize input data
                         $hostname = sanitize_text_field($_POST['new_hostname']);
-                        $prefix = 1;
 
                         // Validate hostname
                         if (!filter_var($hostname, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)) {
                             throw new \Exception(__('Invalid hostname.', 'rrze-shorturl'));
                         }
 
-                        // Check if prefix is unique
-                        $existing_entry = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}shorturl_domains WHERE prefix = %d", $prefix));
-                        if ($existing_entry) {
-                            throw new \Exception(__('Prefix is already in use. Choose a different one.', 'rrze-shorturl'));
-                        }
-
                         // Insert new entry into the database
-                        $wpdb->insert("{$wpdb->prefix}shorturl_domains", array(
-                            'hostname' => $hostname,
-                            'prefix' => $prefix
-                        )
+                        $wpdb->insert(
+                            "{$wpdb->prefix}shorturl_domains",
+                            array(
+                                'hostname' => $hostname
+                            )
                         );
 
                         if ($wpdb->last_error) {
@@ -334,7 +334,7 @@ class Settings
         }
 
         // Fetch entries from shorturl_domains table where prefix is 1
-        $entries = $wpdb->get_results($wpdb->prepare("SELECT * FROM {$wpdb->prefix}shorturl_domains WHERE prefix = %d ORDER BY hostname", 1));
+        $entries = $wpdb->get_results($wpdb->prepare("SELECT * FROM {$wpdb->prefix}shorturl_domains WHERE prefix = %d AND NOT hostname = 'reserved for our customers' ORDER BY hostname", 1));
 
         ?>
         <div class="wrap">
@@ -383,58 +383,58 @@ class Settings
 
 
     public static function render_url_form()
-{
-    wp_enqueue_script('jquery');
-    wp_enqueue_script('qrious', plugins_url('assets/js/qrious.min.js', plugin_basename(__FILE__)), array(), '', true);
+    {
+        wp_enqueue_script('jquery');
+        wp_enqueue_script('qrious', plugins_url('assets/js/qrious.min.js', plugin_basename(__FILE__)), array(), '', true);
 
-    ob_start();
-    ?>
-    <form id="urlForm">
-        <label for="url">Enter URL:</label>
-        <input type="text" id="url" name="url" value="">
-        <button type="button" id="submitBtn">Submit</button>
-    </form>
-    <div id="shorturl"></div>
-    <div id="qrcode"></div>
+        ob_start();
+        ?>
+        <form id="urlForm">
+            <label for="url">Enter URL:</label>
+            <input type="text" id="url" name="url" value="">
+            <button type="button" id="submitBtn">Submit</button>
+        </form>
+        <div id="shorturl"></div>
+        <div id="qrcode"></div>
 
-    <script>
-        jQuery(document).ready(function ($) { // Ensure jQuery is ready
-            // Shorten the URL
-            $('#submitBtn').click(function () {
-                var url = $('#url').val(); // Get the URL from the input field
+        <script>
+            jQuery(document).ready(function ($) { // Ensure jQuery is ready
+                // Shorten the URL
+                $('#submitBtn').click(function () {
+                    var url = $('#url').val(); // Get the URL from the input field
 
-                fetch('/wp-json/short-url/v1/shorten', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        // 'X-WP-Nonce': shortUrl.nonce // Make sure to include a nonce for security
-                    },
-                    body: JSON.stringify({ url: url })
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log('Response:', data); // Log the response data to the console
-                        if (!data.error) {
-                            $('#shorturl').html(data.txt);
-                            // console.log('QRious library loaded:', typeof QRious !== 'undefined');
-                            // console.log('Data text:', data.txt);
-                            // Generate QR code using QRious after the library is loaded
-                            var qr = new QRious({
-                                value: data.txt
-                            });
-                            $('#qrcode').html('<img src= ' + qr.toDataURL() + ' alt="QR Code" />');                            
-                        } else {
-                            // If there's an error, set error message
-                            $('#shorturl').html('Error: ' + data.txt);
-                        }
+                    fetch('/wp-json/short-url/v1/shorten', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            // 'X-WP-Nonce': shortUrl.nonce // Make sure to include a nonce for security
+                        },
+                        body: JSON.stringify({ url: url })
                     })
-                    .catch(error => console.error('Error:', error));
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log('Response:', data); // Log the response data to the console
+                            if (!data.error) {
+                                $('#shorturl').html(data.txt);
+                                // console.log('QRious library loaded:', typeof QRious !== 'undefined');
+                                // console.log('Data text:', data.txt);
+                                // Generate QR code using QRious after the library is loaded
+                                var qr = new QRious({
+                                    value: data.txt
+                                });
+                                $('#qrcode').html('<img src= ' + qr.toDataURL() + ' alt="QR Code" />');
+                            } else {
+                                // If there's an error, set error message
+                                $('#shorturl').html('Error: ' + data.txt);
+                            }
+                        })
+                        .catch(error => console.error('Error:', error));
+                });
             });
-        });
-    </script>
-    <?php
-    return ob_get_clean();
-}
+        </script>
+        <?php
+        return ob_get_clean();
+    }
 
 
     // Render the Short URLs tab section

@@ -4,7 +4,7 @@
 Plugin Name:     RRZE ShortURL
 Plugin URI:      https://gitlab.rrze.fau.de/rrze-webteam/rrze-shorturl
 Description:     Plugin, um URLs zu verkürzen. 
-Version:         0.1.11
+Version:         0.1.12
 Requires at least: 6.2
 Requires PHP:      8.0
 Author:          RRZE Webteam
@@ -109,7 +109,7 @@ function create_custom_tables()
         $shorturl_domains_sql = "CREATE TABLE IF NOT EXISTS $shorturl_domains_table_name (
             id mediumint(9) NOT NULL AUTO_INCREMENT,
             hostname varchar(255) NOT NULL DEFAULT '' UNIQUE,
-            prefix int(1) NOT NULL UNIQUE,
+            prefix int(1) NOT NULL DEFAULT 1,
             PRIMARY KEY (id)
         ) $charset_collate;";
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
@@ -146,10 +146,6 @@ function create_custom_tables()
                 'hostname' => 'fau.zoom-x.de',
                 'prefix' => 2,
             ],
-            [
-                'hostname' => 'reserved for our customers',
-                'prefix' => 1,
-            ]
         ];
 
         foreach ($aEntries as $entry) {

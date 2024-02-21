@@ -32,6 +32,7 @@ class Taxonomy
         $args = array(
             'labels' => $labels,
             'public' => true,
+            'capability_type' => 'shorturl_link', // Define a custom capability
             'publicly_queryable' => true,
             'show_ui' => true,
             'show_in_menu' => true,
@@ -43,6 +44,12 @@ class Taxonomy
             'menu_position' => null,
             'supports' => array('title', 'editor', 'author', 'thumbnail', 'excerpt', 'comments'),
             'taxonomies' => array('shorturl_category', 'shorturl_tag'), // Assign custom taxonomies here
+            'capabilities' => array(
+                'edit_post'          => 'edit_shorturl_link', // Custom capability for editing
+                'read_post'          => 'read_shorturl_link', // Custom capability for reading
+                'delete_post'        => 'delete_shorturl_link', // Custom capability for deleting
+                'create_posts'       => 'do_not_allow', // Disallow creation of new posts
+            ),            
         );
         register_post_type('shorturl_links', $args);
     }

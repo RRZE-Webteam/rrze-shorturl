@@ -1,8 +1,7 @@
-const { useState, useEffect } = wp.element;
-const { TextControl, Button, SelectControl } = wp.components;
-const { InspectorControls } = wp.editor;
-const { PanelBody } = wp.components;
-const { __ } = wp.i18n;
+import { useState, useEffect } from '@wordpress/element';
+import { TextControl, Button, SelectControl, PanelBody } from '@wordpress/components';
+import { InspectorControls } from '@wordpress/editor';
+import { __ } from '@wordpress/i18n';
 
 // Define the Edit component
 const Edit = ({ attributes, setAttributes }) => {
