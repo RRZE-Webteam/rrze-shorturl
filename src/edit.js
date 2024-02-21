@@ -20,53 +20,56 @@ const Edit = ({ attributes, setAttributes }) => {
 
     useEffect(() => {
         // Fetch categories from the shorturl_category taxonomy
-        const categories = wp.data.select('core').getEntityRecords('taxonomy', 'shorturl_category');
-        // Fetch tags from the shorturl_tag taxonomy
-        const tags = wp.data.select('core').getEntityRecords('taxonomy', 'shorturl_tag');
-    
-        Promise.all([categories, tags]).then(([categories, tags]) => {
-            // Check if categories or tags are null
-            if (categories === null || tags === null) {
-                // No categories or tags found, set options to empty arrays
-                setCategoriesOptions([]);
-                setTagsOptions([]);
-                setIsLoading(false); // Set loading state to false
-                return;
-            }
-    
-            // Categories found, format them and set categoriesOptions
-            const categoriesOptions = categories.map((category) => ({
-                label: category.name,
-                value: category.id.toString(),
-            }));
-            setCategoriesOptions(categoriesOptions);
-    
-            // Tags found, format them and set tagsOptions
-            const tagsOptions = tags.map((tag) => ({
-                label: tag.name,
-                value: tag.id.toString(),
-            }));
-            setTagsOptions(tagsOptions);
-    
-            setIsLoading(false); // Set loading state to false
-        });
+        // const categories = wp.data.select('core').getEntityRecords('taxonomy', 'shorturl_category'); // DOES NOT WORK EVEN NOT WITH Promise.all BECAUSE OF DELAY, therefore fetch via REST-API
+        fetch('/wp-json/wp/v2/shorturl_category?fields=id,name')
+            .then(response => response.json())
+            .then(data => {
+                const categoriesOptions = data.map(term => ({
+                    label: term.name,
+                    value: term.id.toString()
+                }));
+
+                setCategoriesOptions(categoriesOptions)
+
+            })
+            .catch(error => {
+                console.error('Error fetching shorturl_category terms:', error);
+            });
+
+        fetch('/wp-json/wp/v2/shorturl_tag?fields=id,name')
+            .then(response => response.json())
+            .then(data => {
+                const tagsOptions = data.map(term => ({
+                    label: term.name,
+                    value: term.id.toString()
+                }));
+
+                setTagsOptions(tagsOptions)
+
+            })
+            .catch(error => {
+                console.error('Error fetching shorturl_tag terms:', error);
+            });
+
+
+
     }, []);
 
     const shortenUrl = () => {
         let isValid = true;
-    
+
         // Check if self-explanatory URI is not empty
         if (selfExplanatoryUri.trim() !== '') {
             // Remove spaces from the URI
             const uriWithoutSpaces = selfExplanatoryUri.replace(/\s/g, '');
-            
+
             // Check if encodeURIComponent returns the same value for the URI
             if (encodeURIComponent(selfExplanatoryUri) !== encodeURIComponent(uriWithoutSpaces)) {
                 setErrorMessage('Error: Self-Explanatory URI is not valid');
                 isValid = false;
             }
         }
-    
+
         if (isValid) {
             // Proceed with URL shortening
             fetch('/wp-json/short-url/v1/shorten', {
@@ -74,31 +77,31 @@ const Edit = ({ attributes, setAttributes }) => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ 
-                    url, 
-                    getparameter, 
+                body: JSON.stringify({
+                    url,
+                    getparameter,
                     uri: selfExplanatoryUri,
                     valid_until: validUntil, // Include valid_until date in the request body
                     categories: selectedCategories, // Include selected categories
                     tags: selectedTags // Include selected tags
                 })
             })
-            .then(response => response.json())
-            .then(shortenData => {
-                console.log('Response:', shortenData);
-                if (!shortenData.error) {
-                    setShortenedUrl(shortenData.txt);
-                    setErrorMessage('');
-                    generateQRCode(shortenData.txt); // Generate QR code after getting shortened URL
-                } else {
-                    setErrorMessage('Error: ' + shortenData.txt);
-                    setShortenedUrl('');
-                }
-            })
-            .catch(error => console.error('Error:', error));
+                .then(response => response.json())
+                .then(shortenData => {
+                    console.log('Response:', shortenData);
+                    if (!shortenData.error) {
+                        setShortenedUrl(shortenData.txt);
+                        setErrorMessage('');
+                        generateQRCode(shortenData.txt); // Generate QR code after getting shortened URL
+                    } else {
+                        setErrorMessage('Error: ' + shortenData.txt);
+                        setShortenedUrl('');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
         }
     }
-        
+
     const generateQRCode = (text) => {
         // Generate QR code using qrious library
         const qr = new QRious({
@@ -131,25 +134,21 @@ const Edit = ({ attributes, setAttributes }) => {
                         min={new Date().toISOString().split('T')[0]} // Set minimum date to today
                         max={new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0]} // Set maximum date to one year from today
                     />
-                    {isLoading ? (
-                        <p>{__('Loading categories and tags...')}</p>
-                    ) : (
-                        <>
-                            <SelectControl
-                                label={__('Categories')}
-                                value={selectedCategories}
-                                onChange={(category) => setSelectedCategories(category)}
-                                options={categoriesOptions} // Provide options for the SelectControl
-                            />
-                            <SelectControl
+                    <>
+                        <SelectControl
+                            label={__('Categories')}
+                            value={selectedCategories}
+                            onChange={(category) => setSelectedCategories(category)}
+                            options={categoriesOptions} // Provide options for the SelectControl
+                        />
+                        <SelectControl
                                 label={__('Tags')}
                                 multiple
                                 value={selectedTags}
                                 onChange={(tags) => setSelectedTags(tags)}
                                 options={tagsOptions} // Provide options for the SelectControl
                             />
-                        </>
-                    )}
+                    </>
                 </PanelBody>
             </InspectorControls>
 
@@ -158,17 +157,17 @@ const Edit = ({ attributes, setAttributes }) => {
                 value={url}
                 onChange={setUrl}
             />
-            
+
             <Button onClick={shortenUrl}>
                 {__('Shorten URL')}
             </Button>
-            
+
             {errorMessage && (
                 <p style={{ color: 'red' }}>
                     {errorMessage}
                 </p>
             )}
-            
+
             {shortenedUrl && (
                 <div>
                     <p>

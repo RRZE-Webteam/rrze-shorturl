@@ -48,33 +48,24 @@ const Edit = ({
 
   (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useEffect)(() => {
     // Fetch categories from the shorturl_category taxonomy
-    const categories = wp.data.select('core').getEntityRecords('taxonomy', 'shorturl_category');
-    // Fetch tags from the shorturl_tag taxonomy
-    const tags = wp.data.select('core').getEntityRecords('taxonomy', 'shorturl_tag');
-    Promise.all([categories, tags]).then(([categories, tags]) => {
-      // Check if categories or tags are null
-      if (categories === null || tags === null) {
-        // No categories or tags found, set options to empty arrays
-        setCategoriesOptions([]);
-        setTagsOptions([]);
-        setIsLoading(false); // Set loading state to false
-        return;
-      }
-
-      // Categories found, format them and set categoriesOptions
-      const categoriesOptions = categories.map(category => ({
-        label: category.name,
-        value: category.id.toString()
+    // const categories = wp.data.select('core').getEntityRecords('taxonomy', 'shorturl_category'); // DOES NOT WORK EVEN NOT WITH Promise.all BECAUSE OF DELAY, therefore fetch via REST-API
+    fetch('/wp-json/wp/v2/shorturl_category?fields=id,name').then(response => response.json()).then(data => {
+      const categoriesOptions = data.map(term => ({
+        label: term.name,
+        value: term.id.toString()
       }));
       setCategoriesOptions(categoriesOptions);
-
-      // Tags found, format them and set tagsOptions
-      const tagsOptions = tags.map(tag => ({
-        label: tag.name,
-        value: tag.id.toString()
+    }).catch(error => {
+      console.error('Error fetching shorturl_category terms:', error);
+    });
+    fetch('/wp-json/wp/v2/shorturl_tag?fields=id,name').then(response => response.json()).then(data => {
+      const tagsOptions = data.map(term => ({
+        label: term.name,
+        value: term.id.toString()
       }));
       setTagsOptions(tagsOptions);
-      setIsLoading(false); // Set loading state to false
+    }).catch(error => {
+      console.error('Error fetching shorturl_tag terms:', error);
     });
   }, []);
   const shortenUrl = () => {
@@ -150,7 +141,7 @@ const Edit = ({
     min: new Date().toISOString().split('T')[0] // Set minimum date to today
     ,
     max: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0] // Set maximum date to one year from today
-  }), isLoading ? (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Loading categories and tags...')) : (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.SelectControl, {
+  }), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(react__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.SelectControl, {
     label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Categories'),
     value: selectedCategories,
     onChange: category => setSelectedCategories(category),
@@ -246,7 +237,7 @@ module.exports = window["wp"]["i18n"];
   \************************/
 /***/ ((module) => {
 
-module.exports = /*#__PURE__*/JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":3,"name":"create-block/rrze-shorturl","version":"0.1.13","title":"Shorten URL RRZE","description":"A block to shorten URLs.","category":"widgets","icon":"admin-links","keywords":["url","shorten"],"textdomain":"rrze-shorturl","editorScript":"file:./index.js","supports":{"align":true},"example":{},"attributes":{"url":"https://example.com","getparameter":""}}');
+module.exports = /*#__PURE__*/JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":3,"name":"create-block/rrze-shorturl","version":"0.1.14","title":"Shorten URL RRZE","description":"A block to shorten URLs.","category":"widgets","icon":"admin-links","keywords":["url","shorten"],"textdomain":"rrze-shorturl","editorScript":"file:./index.js","supports":{"align":true},"example":{},"attributes":{"url":"https://example.com","getparameter":""}}');
 
 /***/ })
 
