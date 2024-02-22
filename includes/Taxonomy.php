@@ -36,6 +36,7 @@ class Taxonomy
             'publicly_queryable' => true,
             'show_ui' => true,
             'show_in_menu' => true,
+            'menu_icon' => 'dashicons-admin-links',            
             'query_var' => true,
             'rewrite' => array('slug' => 'shorturl_links'),
             'capability_type' => 'post',
