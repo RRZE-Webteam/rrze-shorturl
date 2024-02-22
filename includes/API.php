@@ -21,20 +21,6 @@ class API {
         ));
     }
 
-    public static function makeURL($url, $getParameter = '') {
-        if ($getParameter === '') {
-            return $url;
-        }
-
-        $getParameter = trim($getParameter, '?');
-
-        if (strpos($url, '?') !== false) {
-            return $url . '&' . $getParameter;
-        } else {
-            return $url . '?' . $getParameter;
-        }
-    }
-
     public function shorten_url_callback($request) {
         try {
             $parameters = $request->get_json_params();
@@ -44,11 +30,8 @@ class API {
                 throw new WP_Error('missing_url_parameter', 'URL parameter is missing.');
             }
 
-            // Get the URL to shorten from the request parameters
-            $url_to_shorten = self::makeURL($parameters['url'], $parameters['getparameter']);
-
             // Shorten the URL
-            $shortened_url = ShortURL::shorten($url_to_shorten, $parameters['uri']);
+            $shortened_url = ShortURL::shorten($parameters);
 
             // Return the shortened URL in the response
             return rest_ensure_response($shortened_url);

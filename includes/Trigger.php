@@ -34,13 +34,15 @@ class Trigger
                 return;
             }
 
+
             // Get the category IDs and tag IDs from the inserted data
             $id = (!empty($data['id']) ? $data['id'] : null);
-            $category_id = (!empty($data['categories']) ? $data['categories'] : null);
-            $tag_ids = isset($data['tags']) ? $data['tags'] : [];
+            $category_id = (!empty($data['category_id']) ? $data['category_id'] : null);
+            $tag_ids = (!empty($data['tag_ids']) ? $data['tag_ids'] : []);
 
-            error_log('Inserted $category_id: ' . $category_id);
-            error_log('Inserted $category_id: ' . json_encode($tag_ids));
+            error_log('tag IDs = ' . json_encode($tag_ids));
+            // error_log('Inserted $category_id: ' . $category_id);
+            // error_log('Inserted $category_id: ' . json_encode($tag_ids));
 
             $post_data = array(
                 'post_title' => 'Short URL Post ' . $id, // Example post title
@@ -57,6 +59,9 @@ class Trigger
             // Assign categories and tags to the post
             if (!empty($category_id)) {
                 wp_set_object_terms( $post_id, $category_id, 'shorturl_category' );
+            }
+            if (!empty($tag_ids)) {
+                wp_set_object_terms( $post_id, $tag_ids, 'shorturl_tag' );
             }
         }
     }

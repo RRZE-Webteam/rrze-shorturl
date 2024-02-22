@@ -19,17 +19,19 @@ class ShortURL
     public static function isValidUrl($url)
     {
         try {
-            // Use PHP's built-in filter_var function with FILTER_VALIDATE_URL flag
+            // Check if the URL is valid
             if (filter_var($url, FILTER_VALIDATE_URL) === false) {
-                return "invalid url";
+                return false;
             }
+    
+            // Passed all checks, URL is valid
             return true;
         } catch (\Exception $e) {
             error_log("Error in isValidUrl: " . $e->getMessage());
             return null;
         }
     }
-
+    
     public static function cryptNumber($input)
     {
         try {
@@ -198,38 +200,45 @@ class ShortURL
         return true;
     }
 
-    public static function isValidURI(string $uri = ''): bool {
+    public static function isValidURI(string $uri = ''): bool
+    {
         $isValid = true;
-        
+
         // Check if URI is not empty
         if (trim($uri) !== '') {
             // Remove spaces from the URI
             $uriWithoutSpaces = preg_replace('/\s/', '', $uri);
-            
+
             // Check if rawurlencode returns the same value for the URI
             if (rawurlencode($uri) !== rawurlencode($uriWithoutSpaces)) {
                 $isValid = false;
             }
         }
-        
+
         return $isValid;
     }
-    
 
 
-    public static function shorten($long_url, $uri)
+
+    public static function shorten($shortenParams)
     {
         try {
+            $long_url = $shortenParams['url'] ?? null;
+            $uri = $shortenParams['uri'] ?? null;
+            $valid_until = $shortenParams['valid_until'] ?? null;
+            $category = $shortenParams['category'] ?? null;
+            $tags = $shortenParams['tags'] ?? null;
+
             // Validate the URL
             $isValid = self::isValidUrl($long_url);
             if ($isValid !== true) {
-                return ['error' => true, 'txt' => 'URL is not valid'];
+                return ['error' => true, 'txt' => $long_url . 'is not a valid URL'];
             }
 
             // Validate the URI
             $isValid = self::isValidURI($uri);
             if ($isValid !== true) {
-                return ['error' => true, 'txt' => $uri . ' ' . 'is not valid'];
+                return ['error' => true, 'txt' => $uri . ' ' . 'is not a valid URI'];
             }
 
             // is it an allowed domain?
@@ -241,11 +250,6 @@ class ShortURL
 
             $aLink = self::getLinkfromDB($long_url, $uri);
 
-            error_log('$aLink : ' . json_encode($aLink));
-            // return ['error' => true, 'txt' => 'test'];
-
-
-
             // Check if already exists in DB 
             if (!empty($aLink['short_url'])) {
                 // url found in DB => return it
@@ -254,7 +258,7 @@ class ShortURL
 
             // Create shortURL
             if (!empty($uri)) {
-                if (!self::isUniqueURI($uri)){
+                if (!self::isUniqueURI($uri)) {
                     return ['error' => true, 'txt' => $uri . ' is already in use. Try another one.'];
                 }
                 $targetURL = $uri;
@@ -266,31 +270,19 @@ class ShortURL
             // error_log(json_encode($aLink));
 
             // // Create shortURL
-            // $bUpdated = self::updateLink($aLink['id'], $targetURL, $uri);
-
             $shortURL = self::$CONFIG['ShortURLBase'] . $targetURL;
-
-            error_log('X : ' . $aLink['id']);
-            error_log('Y : ' . $shortURL);
-            error_log('Z : ' . $uri);
-
             $bUpdated = self::updateLink($aLink['id'], $shortURL, $uri);
-
-            error_log('$bUpdated : ' . json_encode($bUpdated));
 
             if (!$bUpdated) {
                 return ['error' => true, 'txt' => 'Unable to update database table'];
             }
-            
+
 
             // 2DO: fill these arrays via edit.js
-            $aCategories = [];
-            $aTags = [];
-
             $data = [
                 'id' => $aLink['id'],
-                'categories' => $aCategories,
-                'tags' => $aTags                 
+                'category_id' => $category,
+                'tag_ids' => $tags
             ];
 
             do_action('shortlink_inserted', $data);

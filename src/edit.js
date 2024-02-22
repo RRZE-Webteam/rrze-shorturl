@@ -1,5 +1,5 @@
 import { useState, useEffect } from '@wordpress/element';
-import { TextControl, Button, SelectControl, PanelBody } from '@wordpress/components';
+import { FormTokenField, TextControl, Button, SelectControl, CheckboxControl, PanelBody } from '@wordpress/components';
 import { InspectorControls, useBlockProps } from '@wordpress/block-editor';
 import { __ } from '@wordpress/i18n';
 
@@ -10,7 +10,7 @@ const Edit = ({ attributes, setAttributes }) => {
     const [shortenedUrl, setShortenedUrl] = useState('');
     const [selfExplanatoryUri, setSelfExplanatoryUri] = useState('');
     const [validUntil, setValidUntil] = useState('');
-    const [selectedCategories, setSelectedCategories] = useState('');
+    const [selectedCategories, setSelectedCategories] = useState([]); // Change to array
     const [selectedTags, setSelectedTags] = useState([]);
     const [errorMessage, setErrorMessage] = useState('');
     const [qrCodeUrl, setQrCodeUrl] = useState('');
@@ -18,19 +18,21 @@ const Edit = ({ attributes, setAttributes }) => {
     const [tagsOptions, setTagsOptions] = useState([]);
     const [isLoading, setIsLoading] = useState(true); // Add loading state
 
+
     useEffect(() => {
         // Fetch categories from the shorturl_category taxonomy
-        // const categories = wp.data.select('core').getEntityRecords('taxonomy', 'shorturl_category'); // DOES NOT WORK EVEN NOT WITH Promise.all BECAUSE OF DELAY, therefore fetch via REST-API
-        fetch('/wp-json/wp/v2/shorturl_category?fields=id,name')
+        fetch('/wp-json/wp/v2/shorturl_category?fields=id,name,parent')
             .then(response => response.json())
             .then(data => {
                 const categoriesOptions = data.map(term => ({
                     label: term.name,
-                    value: term.id.toString()
+                    value: term.id,
+                    parent: term.parent || 0 // If parent is null, treat it as a top-level category
                 }));
 
-                setCategoriesOptions(categoriesOptions)
+                // console.log('cats = ' + JSON.stringify(categoriesOptions));
 
+                setCategoriesOptions(categoriesOptions);
             })
             .catch(error => {
                 console.error('Error fetching shorturl_category terms:', error);
@@ -45,16 +47,66 @@ const Edit = ({ attributes, setAttributes }) => {
                 }));
 
                 setTagsOptions(tagsOptions)
-
             })
             .catch(error => {
                 console.error('Error fetching shorturl_tag terms:', error);
             });
-
-
-
     }, []);
 
+
+
+    // Define renderCategories function
+    const renderCategories = (categories, level = 0, renderedCategories = new Set()) => {
+        return categories.map((category, index) => {
+            // Check if the category has already been rendered
+            if (renderedCategories.has(category.value)) {
+                return null; // Skip rendering this category
+            }
+
+            // Add the category ID to the set of rendered categories
+            renderedCategories.add(category.value);
+
+            const children = categoriesOptions.filter(child => child.parent === category.value);
+            const isLastCategory = index === categories.length - 1;
+
+            return (
+                <div
+                    key={category.value}
+                    style={{
+                        marginLeft: `${level * 20}px`,
+                        marginBottom: `0`
+                    }}
+                >
+                    <CheckboxControl
+                        label={category.label}
+                        checked={selectedCategories.includes(category.value)}
+                        onChange={(isChecked) => {
+                            if (isChecked) {
+                                setSelectedCategories([...selectedCategories, category.value]);
+                            } else {
+                                setSelectedCategories(selectedCategories.filter(cat => cat !== category.value));
+                            }
+                        }}
+                    />
+                    {children.length > 0 && renderCategories(children, level + 1, renderedCategories)}
+                </div>
+            );
+        });
+    };
+
+
+    const renderTags = () => {
+        return (
+            <FormTokenField
+                label={__('Tags')}
+                value={selectedTags}
+                onChange={setSelectedTags}
+                suggestions={tagsOptions?.map(tag => ({ label: tag.label, value: tag.value })) || []}
+            />
+        );
+    };
+
+    
     const shortenUrl = () => {
         let isValid = true;
 
@@ -71,24 +123,38 @@ const Edit = ({ attributes, setAttributes }) => {
         }
 
         if (isValid) {
+            // Regular expression to check if the URL scheme is missing (neither http nor https)
+            // Construct the URL with the correct scheme (prepend "https://" if needed)
+            let formattedUrl = url.trim();
+            if (!/^https?:\/\//i.test(formattedUrl)) {
+                formattedUrl = "https://" + formattedUrl;
+            }
+
+            // Check if the URL already contains a query string
+            const separator = formattedUrl.includes('?') ? '&' : '?';
+
+            // Construct the final URL with the getparameter
+            const finalUrl = getparameter ? `${formattedUrl}${separator}${getparameter}` : formattedUrl;
+
+            const shortenParams = {
+                url: finalUrl,
+                uri: selfExplanatoryUri,
+                valid_until: validUntil,
+                category: selectedCategories.map(cat => parseInt(cat)),
+                tags: selectedTags.map(tag => parseInt(tag))
+            };
+
             // Proceed with URL shortening
             fetch('/wp-json/short-url/v1/shorten', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    url,
-                    getparameter,
-                    uri: selfExplanatoryUri,
-                    valid_until: validUntil, // Include valid_until date in the request body
-                    categories: selectedCategories, // Include selected categories
-                    tags: selectedTags // Include selected tags
-                })
+                body: JSON.stringify(shortenParams)
             })
                 .then(response => response.json())
                 .then(shortenData => {
-                    console.log('Response:', shortenData);
+                    console.log('My response:', shortenData);
                     if (!shortenData.error) {
                         setShortenedUrl(shortenData.txt);
                         setErrorMessage('');
@@ -112,43 +178,25 @@ const Edit = ({ attributes, setAttributes }) => {
         setQrCodeUrl(qr.toDataURL()); // Set the QR code image URL
     }
 
+
     return (
         <div {...useBlockProps()}>
             <InspectorControls>
                 <PanelBody title={__('URL Shortener Settings')}>
-                    <TextControl
-                        label={__('GET Parameter')}
-                        value={getparameter}
-                        onChange={setGetparameter}
-                    />
-                    <TextControl
-                        label={__('Self-Explanatory URI')}
-                        value={selfExplanatoryUri}
-                        onChange={setSelfExplanatoryUri}
-                    />
-                    <TextControl
-                        label={__('Valid until')}
-                        type="date"
-                        value={validUntil}
-                        onChange={setValidUntil}
-                        min={new Date().toISOString().split('T')[0]} // Set minimum date to today
-                        max={new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0]} // Set maximum date to one year from today
-                    />
-                    <>
-                        <SelectControl
-                            label={__('Categories')}
-                            value={selectedCategories}
-                            onChange={(category) => setSelectedCategories(category)}
-                            options={categoriesOptions} // Provide options for the SelectControl
-                        />
-                        <SelectControl
+                    {/* TextControl, SelectControl for settings */}
+                </PanelBody>
+                <PanelBody title={__('Categories')}>
+                    {categoriesOptions.length > 0 && renderCategories(categoriesOptions)}
+                </PanelBody>
+                <PanelBody title={__('Tags')}>
+                {renderTags()}
+                    {/* <SelectControl
                                 label={__('Tags')}
                                 multiple
                                 value={selectedTags}
                                 onChange={(tags) => setSelectedTags(tags)}
                                 options={tagsOptions} // Provide options for the SelectControl
-                            />
-                    </>
+                            /> */}
                 </PanelBody>
             </InspectorControls>
 
