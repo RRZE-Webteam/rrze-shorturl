@@ -233,7 +233,7 @@ register_setting('rrze_shorturl_statistic', 'rrze_shorturl_statistic');
                     </p>
                 </div>
             <?php endif; ?>
-            <form method="post" action="">
+            <form method="post" action="" id="services-form">
                 <table class="wp-list-table widefat fixed striped">
                     <thead>
                         <tr>
@@ -346,7 +346,7 @@ register_setting('rrze_shorturl_statistic', 'rrze_shorturl_statistic');
                     </p>
                 </div>
             <?php endif; ?>
-            <form method="post" action="">
+            <form method="post" action="" id="customer-domains-form">
                 <table class="wp-list-table widefat fixed striped">
                     <thead>
                         <tr>

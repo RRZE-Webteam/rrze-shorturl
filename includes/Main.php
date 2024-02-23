@@ -37,6 +37,7 @@ class Main
     {
         add_action('enqueue_block_editor_assets', [$this, 'enqueueScripts']);
         add_action('wp_enqueue_scripts', [$this, 'enqueueScripts']);
+        add_action('admin_enqueue_scripts', [$this, 'enqueueScripts']);
 
         $taxonomy = new Taxonomy();
         $trigger = new Trigger();
@@ -52,8 +53,10 @@ class Main
      */
     public function enqueueScripts()
     {
-        wp_enqueue_script('qrious', plugins_url('assets/js/qrious.min.js', plugin_basename($this->pluginFile)));
+        wp_enqueue_script('qrious', plugins_url('assets/js/qrious.min.js', plugin_basename($this->pluginFile)));        
+        wp_enqueue_script('rrrze-shorturl', plugins_url('src/rrze-shorturl.js', plugin_basename($this->pluginFile)), array('jquery'), null, true);
     }
+
 
 
 }
