@@ -7,7 +7,7 @@ jQuery(document).ready(function($) {
         // If the delete action is triggered
         if ($(this).find('input[type="checkbox"]:checked').length > 0) {
             // Determine the confirmation message based on the form
-            var confirmationMessage = 'Are you sure you want to delete the selected entries? All Shortcodes related to them will be deleted, too. This action cannot be undone.';
+            var confirmationMessage = 'WARNING! Are you sure you want to delete the selected entries? All Short URLs related to them will be deleted, too. This action cannot be undone.';
 
             // Ask for confirmation
             var confirmDelete = confirm(confirmationMessage);
