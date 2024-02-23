@@ -83,15 +83,16 @@ function drop_custom_tables()
     $table_links = $wpdb->prefix . 'shorturl_links';
 
     try {
+        // Drop shorturl_links table if it exists
+        if ($wpdb->get_var("SHOW TABLES LIKE '$table_links'") == $table_links) {
+            $wpdb->query("DROP TABLE $table_links");
+        }
+
         // Drop shorturl_domains table if it exists
         if ($wpdb->get_var("SHOW TABLES LIKE '$table_domains'") == $table_domains) {
             $wpdb->query("DROP TABLE $table_domains");
         }
 
-        // Drop shorturl_links table if it exists
-        if ($wpdb->get_var("SHOW TABLES LIKE '$table_links'") == $table_links) {
-            $wpdb->query("DROP TABLE $table_links");
-        }
     } catch (\Exception $e) {
         // Handle the exception
         error_log("Error in drop_custom_tables: " . $e->getMessage());
