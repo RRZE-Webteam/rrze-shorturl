@@ -45,6 +45,16 @@ class Settings
 
         register_setting('rrze_shorturl_customer_domains', 'rrze_shorturl_customer_domains');
 
+        // Statistic tab settings
+add_settings_section(
+    'rrze_shorturl_statistic_section',
+    '&nbsp;',
+    [$this, 'render_statistic_section'],
+    'rrze_shorturl_statistic'
+);
+
+register_setting('rrze_shorturl_statistic', 'rrze_shorturl_statistic');
+
     }
 
     // Render the options page
@@ -63,6 +73,9 @@ class Settings
                 <a href="?page=rrze-shorturl&tab=customer-domains"
                     class="nav-tab <?php echo isset($_GET['tab']) && $_GET['tab'] === 'customer-domains' ? 'nav-tab-active' : ''; ?>">Customer
                     Domains</a>
+                    <a href="?page=rrze-shorturl&tab=statistic"
+    class="nav-tab <?php echo isset($_GET['tab']) && $_GET['tab'] === 'statistic' ? 'nav-tab-active' : ''; ?>">Statistic</a>
+
             </h2>
 
             <div class="tab-content">
@@ -77,6 +90,10 @@ class Settings
                         settings_fields('rrze_shorturl_customer_domains');
                         do_settings_sections('rrze_shorturl_customer_domains');
                         break;
+                        case 'statistic':
+                            settings_fields('rrze_shorturl_statistic');
+                            do_settings_sections('rrze_shorturl_statistic');
+                            break;                        
                     default:
                         settings_fields('rrze_shorturl_services');
                         do_settings_sections('rrze_shorturl_services');
@@ -364,5 +381,42 @@ class Settings
         <?php
 
     }
+
+    public function render_statistic_section()
+{
+    global $wpdb;
+
+    // Fetch link counts grouped by domain_id and hostname
+    $link_counts = $wpdb->get_results("
+        SELECT sd.hostname, COUNT(sl.id) AS link_count
+        FROM {$wpdb->prefix}shorturl_links AS sl
+        LEFT JOIN {$wpdb->prefix}shorturl_domains AS sd ON sl.domain_id = sd.id
+        GROUP BY sl.domain_id, sd.hostname
+        ORDER BY sd.hostname
+    ");
+
+    // Output the statistics table
+    ?>
+    <div class="wrap">
+        <h2>Link Statistics</h2>
+        <table class="wp-list-table widefat fixed striped">
+            <thead>
+                <tr>
+                    <th><?php _e('Hostname', 'rrze-shorturl'); ?></th>
+                    <th><?php _e('Link Count', 'rrze-shorturl'); ?></th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($link_counts as $link_count): ?>
+                    <tr>
+                        <td><?php echo esc_html($link_count->hostname); ?></td>
+                        <td><?php echo esc_html($link_count->link_count); ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+    <?php
+}
 }
 

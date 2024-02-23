@@ -13,6 +13,11 @@ class Taxonomy
         add_action('manage_shorturl_links_posts_custom_column', [$this, 'custom_shorturl_links_column'], 10, 2);
         add_filter('manage_edit-shorturl_links_columns', [$this, 'remove_default_columns']);
 
+        add_filter('manage_edit-shorturl_links_sortable_columns', [$this, 'custom_shorturl_links_sortable_columns']);
+
+        add_action('add_meta_boxes', [$this, 'custom_shorturl_links_metabox']);
+        add_action('save_post', [$this, 'custom_shorturl_links_save_valid_until']);
+
     }
 
     public function register_cpt()
@@ -145,6 +150,17 @@ class Taxonomy
 
         return $new_columns;
     }
+
+    public function custom_shorturl_links_sortable_columns($columns)
+    {
+        $columns['shorturl_id'] = 'shorturl_id';
+        $columns['long_url'] = 'long_url';
+        $columns['short_url'] = 'short_url';
+        $columns['valid_until'] = 'valid_until';
+
+        return $columns;
+    }
+
     // Display data in custom column
     public function custom_shorturl_links_column($column, $post_id)
     {
@@ -201,6 +217,68 @@ class Taxonomy
             default:
                 // Handle other column cases if needed
                 break;
+        }
+    }
+
+
+    // Register the metabox
+    function custom_shorturl_links_metabox()
+    {
+        add_meta_box(
+            'shorturl_links_valid_until_metabox',
+            __('Validation Date'),
+            [$this, 'custom_shorturl_links_valid_until_metabox_content'], // Callback function
+            'shorturl_links',
+            'side',
+            'default'
+        );
+    }
+
+    // Display the metabox content
+    public function custom_shorturl_links_valid_until_metabox_content($post)
+    {
+        // Retrieve the current value of the valid_until meta field
+        $valid_until = get_post_meta($post->ID, 'valid_until', true);
+
+        // Convert the date string to a format compatible with datetime-local input
+        $datetime_local_value = date('Y-m-d\TH:i', strtotime($valid_until));
+
+        ?>
+        <label for="valid_until">
+            <?php _e('Validation Date:'); ?>
+        </label>
+        <br>
+        <input type="datetime-local" id="valid_until" name="valid_until" value="<?php echo esc_attr($datetime_local_value); ?>">
+        <?php
+        wp_nonce_field('custom_shorturl_links_save_valid_until', 'custom_shorturl_links_valid_until_nonce');
+    }
+
+    // Save the metabox data
+    public function custom_shorturl_links_save_valid_until($post_id)
+    {
+        // Check if nonce is set
+        if (!isset($_POST['custom_shorturl_links_valid_until_nonce'])) {
+            return;
+        }
+
+        // Verify nonce
+        if (!wp_verify_nonce($_POST['custom_shorturl_links_valid_until_nonce'], 'custom_shorturl_links_save_valid_until')) {
+            return;
+        }
+
+        // Check if this is an autosave
+        if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+            return;
+        }
+
+        // Check the user's permissions
+        if (!current_user_can('edit_post', $post_id)) {
+            return;
+        }
+
+        // Save the data
+        if (isset($_POST['valid_until'])) {
+            update_post_meta($post_id, 'valid_until', sanitize_text_field($_POST['valid_until']));
         }
     }
 

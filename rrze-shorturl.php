@@ -119,16 +119,18 @@ function create_custom_tables()
         $shorturl_links_table_name = $wpdb->prefix . 'shorturl_links';
         $shorturl_links_sql = "CREATE TABLE IF NOT EXISTS $shorturl_links_table_name (
             id mediumint(9) NOT NULL AUTO_INCREMENT,
+            domain_id mediumint(9) NOT NULL,            
             long_url varchar(255) UNIQUE NOT NULL,
             short_url varchar(255) NOT NULL,
             uri varchar(255) DEFAULT NULL,
-            idm varchar(255) DEFAULT 'system', /* New field idm with default value 'system' */
+            idm varchar(255) DEFAULT 'system',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             deleted_at TIMESTAMP DEFAULT NULL,
             valid_until TIMESTAMP DEFAULT NULL,
             active BOOLEAN DEFAULT TRUE,
-            PRIMARY KEY (id)
+            PRIMARY KEY (id),
+            CONSTRAINT fk_domain_id FOREIGN KEY (domain_id) REFERENCES {$shorturl_domains_table_name}(id) ON DELETE CASCADE
         ) $charset_collate;";
         dbDelta($shorturl_links_sql);
 

@@ -20,24 +20,10 @@ const Edit = ({ attributes, setAttributes }) => {
     const [isLoading, setIsLoading] = useState(true);
 
     const onChangeValidUntil = newDate => {
-        const now = new Date();
-        const maxDate = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
-
-        // Check if the selected date is beyond one year
-        if (newDate > maxDate) {
-            // Display a message indicating that the date is adjusted
-            setErrorMessage('The selected date is beyond one year and has been adjusted.');
-            // Set the validation date to the maximum one year if chosen date is beyond one year
-            setValidUntil(maxDate);
-            setAttributes({ valid_until: maxDate });
-        } else {
-            setValidUntil(newDate);
-            setAttributes({ valid_until: newDate });
-            // Clear any existing error message
-            setErrorMessage('');
-        }
+        setValidUntil(newDate);
+        setAttributes({ valid_until: newDate });
     };
-
+    
     useEffect(() => {
         if (!validUntil) {
             const now = new Date();

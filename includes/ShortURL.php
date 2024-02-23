@@ -72,7 +72,7 @@ class ShortURL
     }
 
 
-    public static function getLinkfromDB($long_url, $uri)
+    public static function getLinkfromDB($domain_id, $long_url, $uri)
     {
         try {
             global $wpdb;
@@ -86,6 +86,7 @@ class ShortURL
                 $wpdb->insert(
                     $table_name,
                     array(
+                        'domain_id' => $domain_id,
                         'long_url' => $long_url
                     )
                 );
@@ -104,7 +105,7 @@ class ShortURL
         }
     }
 
-    public static function updateLink($link_id, $shortURL, $uri, $valid_until)
+    public static function updateLink($link_id, $domain_id, $shortURL, $uri, $valid_until)
     {
         global $wpdb;
         $table_name = $wpdb->prefix . 'shorturl_links';
@@ -113,6 +114,7 @@ class ShortURL
             return $wpdb->update(
                 $table_name,
                 [
+                    'domain_id' => $domain_id,
                     'short_url' => $shortURL,
                     'uri' => $uri,
                     'valid_until' => $valid_until
@@ -164,7 +166,7 @@ class ShortURL
             // Check if the extracted domain belongs to one of our allowed domains
             foreach (self::$CONFIG['AllowedDomains'] as $aEntry) {
                 if ($domain === $aEntry['hostname']) {
-                    $aRet = ["prefix" => $aEntry['prefix'], "hostname" => $aEntry['hostname']];
+                    $aRet = ["id" => $aEntry['id'], "prefix" => $aEntry['prefix'], "hostname" => $aEntry['hostname']];
                     break;
                 }
             }
@@ -227,10 +229,15 @@ class ShortURL
         $valid_until_date = date_create($valid_until);
     
         // Get current date
-        $current_date = date_create();
+        $current_date = new \DateTime(); // Using DateTime object directly
+    
+        // Check if $valid_until is in the past
+        if ($valid_until_date < $current_date) {
+            return ['error' => true, 'txt' => 'Validity date cannot be in the past.'];
+        }
     
         // Calculate one year from now
-        $one_year_from_now = date_add(date_create(), date_interval_create_from_date_string('1 year'));
+        $one_year_from_now = date_add(clone $current_date, date_interval_create_from_date_string('1 year'));
     
         // Check if $valid_until is more than one year in the future
         if ($valid_until_date > $one_year_from_now) {
@@ -238,9 +245,9 @@ class ShortURL
         }
     
         // If the date is valid and within the allowed range
-        return ['error' => false, 'txt' => ''];
+        return ['error' => false, 'txt' => 'Date is valid.'];
     }
-    
+        
 
 
     public static function shorten($shortenParams)
@@ -277,7 +284,7 @@ class ShortURL
                 return ['error' => true, 'txt' => 'Domain is not allowed to use our shortening service.'];
             }
 
-            $aLink = self::getLinkfromDB($long_url, $uri);
+            $aLink = self::getLinkfromDB($aDomain['id'], $long_url, $uri);
 
             // Check if already exists in DB 
             if (!empty($aLink['short_url'])) {
@@ -299,10 +306,10 @@ class ShortURL
 
             // // Create shortURL
             $shortURL = self::$CONFIG['ShortURLBase'] . $targetURL;
-            $bUpdated = self::updateLink($aLink['id'], $shortURL, $uri, $valid_until);
+            $bUpdated = self::updateLink($aLink['id'], $aDomain['id'], $shortURL, $uri, $valid_until);
 
             if (!$bUpdated) {
-                return ['error' => true, 'txt' => 'Unable to update database table'];
+                return ['error' => true, 'txt' => 'Unable to update database table ' . $aDomain['id']];
             }
 
 

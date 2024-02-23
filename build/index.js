@@ -47,26 +47,10 @@ const Edit = ({
   const [tagsOptions, setTagsOptions] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useState)([]);
   const [isLoading, setIsLoading] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useState)(true);
   const onChangeValidUntil = newDate => {
-    const now = new Date();
-    const maxDate = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
-
-    // Check if the selected date is beyond one year
-    if (newDate > maxDate) {
-      // Display a message indicating that the date is adjusted
-      setErrorMessage('The selected date is beyond one year and has been adjusted.');
-      // Set the validation date to the maximum one year if chosen date is beyond one year
-      setValidUntil(maxDate);
-      setAttributes({
-        valid_until: maxDate
-      });
-    } else {
-      setValidUntil(newDate);
-      setAttributes({
-        valid_until: newDate
-      });
-      // Clear any existing error message
-      setErrorMessage('');
-    }
+    setValidUntil(newDate);
+    setAttributes({
+      valid_until: newDate
+    });
   };
   (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useEffect)(() => {
     if (!validUntil) {
