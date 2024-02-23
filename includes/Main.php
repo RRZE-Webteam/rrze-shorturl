@@ -11,7 +11,8 @@ use RRZE\ShortURL\ShortURL;
 /**
  * Hauptklasse (Main)
  */
-class Main {
+class Main
+{
     /**
      * Der vollständige Pfad- und Dateiname der Plugin-Datei.
      * @var string
@@ -24,23 +25,24 @@ class Main {
      * Variablen Werte zuweisen.
      * @param string $pluginFile Pfad- und Dateiname der Plugin-Datei
      */
-    public function __construct($pluginFile) {
+    public function __construct($pluginFile)
+    {
         $this->pluginFile = $pluginFile;
     }
 
     /**
      * Es wird ausgeführt, sobald die Klasse instanziiert wird.
      */
-    public function onLoaded() {
-        add_action( 'enqueue_block_editor_assets', [$this, 'enqueueScripts'] );
-        add_action( 'wp_enqueue_scripts', [$this, 'enqueueScripts'] );
-        // add_action( 'enqueue_block_assets', [$this, 'enqueueScripts'] );
+    public function onLoaded()
+    {
+        add_action('enqueue_block_editor_assets', [$this, 'enqueueScripts']);
+        add_action('wp_enqueue_scripts', [$this, 'enqueueScripts']);
 
         $taxonomy = new Taxonomy();
         $trigger = new Trigger();
         $settings = new Settings();
-        $domains = new CustomerDomains(); 
-        $shortURL = new ShortURL(); 
+        $domains = new CustomerDomains();
+        $shortURL = new ShortURL();
         $api = new API();
     }
 
@@ -48,7 +50,8 @@ class Main {
     /**
      * Enqueue der globale Skripte.
      */
-    public function enqueueScripts() {
+    public function enqueueScripts()
+    {
         wp_enqueue_script('qrious', plugins_url('assets/js/qrious.min.js', plugin_basename($this->pluginFile)));
     }
 
