@@ -81,10 +81,7 @@ class ShortURL
             // Query the links table to get the ID and short_url where long_url matches $long_url
             $result = $wpdb->get_results($wpdb->prepare("SELECT id, short_url, uri FROM $table_name WHERE long_url = %s AND uri = %s LIMIT 1", $long_url, $uri), ARRAY_A);
 
-            error_log("$result : " . json_encode($result));
-
             if (empty($result)) {
-
                 // Insert into the links table
                 $wpdb->insert(
                     $table_name,
@@ -295,7 +292,6 @@ class ShortURL
                 }
                 $targetURL = $uri;
             } else {
-                error_log('da');
                 // Create shortURL
                 $targetURL = $aDomain['prefix'] . self::cryptNumber($aLink['id']);
             }
@@ -313,8 +309,11 @@ class ShortURL
             // 2DO: fill these arrays via edit.js
             $data = [
                 'shorturl_id' => $aLink['id'],
+                'long_url' => $long_url,
+                'short_url' => $shortURL,
                 'category_id' => $category,
-                'tag_ids' => $tags
+                'tag_ids' => $tags,
+                'valid_until' => $valid_until,
             ];
 
             do_action('shortlink_inserted', $data);

@@ -185,8 +185,11 @@ const Edit = ({ attributes, setAttributes }) => {
     return (
         <div {...useBlockProps()}>
             <InspectorControls>
-                <PanelBody title={__('URL Shortener Settings')}>
-                    {/* TextControl, SelectControl for settings */}
+                <PanelBody title={__('Self-Explanatory URI')}>
+                <TextControl
+                value={selfExplanatoryUri}
+                onChange={setSelfExplanatoryUri}
+            />
                 </PanelBody>
                 <PanelBody title={__('Validity')}>
                     <DateTimePicker
@@ -214,12 +217,7 @@ const Edit = ({ attributes, setAttributes }) => {
                 value={url}
                 onChange={setUrl}
             />
-            <TextControl
-                label={__('Self-Explanatory URI')}
-                value={selfExplanatoryUri}
-                onChange={setSelfExplanatoryUri}
-            />
-            <Button onClick={shortenUrl}>
+            <Button isPrimary onClick={shortenUrl}>
                 {__('Shorten URL')}
             </Button>
 

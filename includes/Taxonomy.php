@@ -11,6 +11,7 @@ class Taxonomy
 
         add_filter('manage_shorturl_links_posts_columns', [$this, 'custom_shorturl_links_columns']);
         add_action('manage_shorturl_links_posts_custom_column', [$this, 'custom_shorturl_links_column'], 10, 2);
+        add_filter('manage_edit-shorturl_links_columns', [$this, 'remove_default_columns']);
 
     }
 
@@ -121,21 +122,87 @@ class Taxonomy
         register_taxonomy('shorturl_tag', array('shorturl_links'), $args); // 'shorturl_links' is the post type to which the taxonomy will be associated
     }
 
-
-    // Add custom column to the post list table
-    public function custom_shorturl_links_columns($columns)
+    public function remove_default_columns($columns)
     {
-        $columns['shorturl_id'] = 'Short URL ID'; // Change 'shorturl_id' to the meta key you want to display
+        // Unset the 'author' column
+        unset($columns['author']);
+        unset($columns['title']);
         return $columns;
     }
 
+    public function custom_shorturl_links_columns($columns)
+    {
+        // Define the order of columns
+        $new_columns = array(
+            'cb' => $columns['cb'], // Leave the checkbox column first
+            'shorturl_id' => __('ShortURL ID'), // Add ShortURL ID column
+            'long_url' => __('Long URL'), // Add Long URL column
+            'short_url' => __('Short URL'), // Add Short URL column
+            'valid_until' => __('Valid Until'), // Add Valid Until column
+            'shorturl_category' => __('Categories'), // Add Categories column
+            'shorturl_tag' => __('Tags'), // Add Tags column
+        );
+
+        return $new_columns;
+    }
     // Display data in custom column
     public function custom_shorturl_links_column($column, $post_id)
     {
-        if ($column == 'shorturl_id') {
-            $shorturl_id = get_post_meta($post_id, 'shorturl_id', true); // Change 'shorturl_id' to the meta key you want to display
-            echo esc_html($shorturl_id);
+        switch ($column) {
+            case 'shorturl_id':
+                $shorturl_id = get_post_meta($post_id, 'shorturl_id', true);
+                echo esc_html($shorturl_id);
+                break;
+
+            case 'long_url':
+                $long_url = get_post_meta($post_id, 'long_url', true);
+                echo esc_html($long_url);
+                break;
+
+            case 'short_url':
+                $short_url = get_post_meta($post_id, 'short_url', true);
+                echo esc_html($short_url);
+                break;
+
+            case 'valid_until':
+                $valid_until = get_post_meta($post_id, 'valid_until', true);
+                if (!empty($valid_until)) {
+                    $timestamp = strtotime($valid_until);
+                    $formatted_date = date('d.m.Y H:i', $timestamp); // Adjust the format as needed
+                    echo esc_html($formatted_date);
+                } else {
+                    echo 'No valid date'; // Or any message you want to show if the date is empty
+                }
+                break;
+            case 'shorturl_category':
+                $categories = get_the_terms($post_id, 'shorturl_category');
+                if ($categories && !is_wp_error($categories)) {
+                    $category_names = array();
+                    foreach ($categories as $category) {
+                        $category_names[] = $category->name;
+                    }
+                    echo esc_html(implode(', ', $category_names));
+                } else {
+                    echo '';
+                }
+                break;
+            case 'shorturl_tag':
+                $tags = get_the_terms($post_id, 'shorturl_tag');
+                if ($tags && !is_wp_error($tags)) {
+                    $tag_names = array();
+                    foreach ($tags as $tag) {
+                        $tag_names[] = $tag->name;
+                    }
+                    echo esc_html(implode(', ', $tag_names));
+                } else {
+                    echo '';
+                }
+                break;
+            default:
+                // Handle other column cases if needed
+                break;
         }
     }
+
 
 }
