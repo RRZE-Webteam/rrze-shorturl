@@ -45,15 +45,6 @@ class Settings
 
         register_setting('rrze_shorturl_customer_domains', 'rrze_shorturl_customer_domains');
 
-        // Short URLs tab settings
-        add_settings_section(
-            'rrze_shorturl_short_urls_section',
-            '&nbsp;',
-            [$this, 'render_short_urls_section'],
-            'rrze_shorturl_short_urls'
-        );
-
-        register_setting('rrze_shorturl_short_urls', 'rrze_shorturl_short_urls');
     }
 
     // Render the options page
@@ -72,9 +63,6 @@ class Settings
                 <a href="?page=rrze-shorturl&tab=customer-domains"
                     class="nav-tab <?php echo isset($_GET['tab']) && $_GET['tab'] === 'customer-domains' ? 'nav-tab-active' : ''; ?>">Customer
                     Domains</a>
-                <a href="?page=rrze-shorturl&tab=short-urls"
-                    class="nav-tab <?php echo isset($_GET['tab']) && $_GET['tab'] === 'short-urls' ? 'nav-tab-active' : ''; ?>">Short
-                    URLs</a>
             </h2>
 
             <div class="tab-content">
@@ -88,10 +76,6 @@ class Settings
                     case 'customer-domains':
                         settings_fields('rrze_shorturl_customer_domains');
                         do_settings_sections('rrze_shorturl_customer_domains');
-                        break;
-                    case 'short-urls':
-                        settings_fields('rrze_shorturl_short_urls');
-                        do_settings_sections('rrze_shorturl_short_urls');
                         break;
                     default:
                         settings_fields('rrze_shorturl_services');
@@ -116,9 +100,9 @@ class Settings
         }
 
         // Check if the hostname matches the allowed pattern
-        // if (!preg_match('/^([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])$/', $hostname)) {
-        //     return false;
-        // }
+        if (!preg_match('/^([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])$/', $hostname)) {
+            return false;
+        }
 
         // Check if the hostname contains at least one dot
         if (strpos($hostname, '.') === false) {
@@ -380,20 +364,5 @@ class Settings
         <?php
 
     }
-
-
-    public static function render_url_form()
-    {
-    }
-
-
-    // Render the Short URLs tab section
-    public function render_short_urls_section()
-    {
-
-        echo self::render_url_form();
-        // echo '<p>Short URLs tab settings</p>';
-    }
-
 }
 
