@@ -1,37 +1,59 @@
 import { useState, useEffect } from '@wordpress/element';
-import { FormTokenField, TextControl, Button, SelectControl, CheckboxControl, PanelBody } from '@wordpress/components';
+import { PanelBody, DateTimePicker, CheckboxControl, FormTokenField, TextControl, Button } from '@wordpress/components';
 import { InspectorControls, useBlockProps } from '@wordpress/block-editor';
 import { __ } from '@wordpress/i18n';
 
-// Define the Edit component
 const Edit = ({ attributes, setAttributes }) => {
+    const { valid_until: defaultValidUntil } = attributes;
+
     const [url, setUrl] = useState('');
     const [getparameter, setGetparameter] = useState('');
     const [shortenedUrl, setShortenedUrl] = useState('');
     const [selfExplanatoryUri, setSelfExplanatoryUri] = useState('');
-    const [validUntil, setValidUntil] = useState('');
-    const [selectedCategories, setSelectedCategories] = useState([]); // Change to array
+    const [validUntil, setValidUntil] = useState(defaultValidUntil);
+    const [selectedCategories, setSelectedCategories] = useState([]);
     const [selectedTags, setSelectedTags] = useState([]);
     const [errorMessage, setErrorMessage] = useState('');
     const [qrCodeUrl, setQrCodeUrl] = useState('');
     const [categoriesOptions, setCategoriesOptions] = useState([]);
     const [tagsOptions, setTagsOptions] = useState([]);
-    const [isLoading, setIsLoading] = useState(true); // Add loading state
+    const [isLoading, setIsLoading] = useState(true);
 
+    const onChangeValidUntil = newDate => {
+        const now = new Date();
+        const maxDate = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
+
+        // Check if the selected date is beyond one year
+        if (newDate > maxDate) {
+            // Display a message indicating that the date is adjusted
+            setErrorMessage('The selected date is beyond one year and has been adjusted.');
+            // Set the validation date to the maximum one year if chosen date is beyond one year
+            setValidUntil(maxDate);
+            setAttributes({ valid_until: maxDate });
+        } else {
+            setValidUntil(newDate);
+            setAttributes({ valid_until: newDate });
+            // Clear any existing error message
+            setErrorMessage('');
+        }
+    };
 
     useEffect(() => {
-        // Fetch categories from the shorturl_category taxonomy
+        if (!validUntil) {
+            const now = new Date();
+            const nextYear = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
+            setValidUntil(nextYear);
+            setAttributes({ valid_until: nextYear });
+        }
+
         fetch('/wp-json/wp/v2/shorturl_category?fields=id,name,parent')
             .then(response => response.json())
             .then(data => {
                 const categoriesOptions = data.map(term => ({
                     label: term.name,
                     value: term.id,
-                    parent: term.parent || 0 // If parent is null, treat it as a top-level category
+                    parent: term.parent || 0
                 }));
-
-                // console.log('cats = ' + JSON.stringify(categoriesOptions));
-
                 setCategoriesOptions(categoriesOptions);
             })
             .catch(error => {
@@ -45,25 +67,19 @@ const Edit = ({ attributes, setAttributes }) => {
                     label: term.name,
                     value: term.id.toString()
                 }));
-
-                setTagsOptions(tagsOptions)
+                setTagsOptions(tagsOptions);
             })
             .catch(error => {
                 console.error('Error fetching shorturl_tag terms:', error);
             });
     }, []);
 
-
-
-    // Define renderCategories function
     const renderCategories = (categories, level = 0, renderedCategories = new Set()) => {
         return categories.map((category, index) => {
-            // Check if the category has already been rendered
             if (renderedCategories.has(category.value)) {
-                return null; // Skip rendering this category
+                return null;
             }
 
-            // Add the category ID to the set of rendered categories
             renderedCategories.add(category.value);
 
             const children = categoriesOptions.filter(child => child.parent === category.value);
@@ -94,7 +110,6 @@ const Edit = ({ attributes, setAttributes }) => {
         });
     };
 
-
     const renderTags = () => {
         return (
             <FormTokenField
@@ -106,16 +121,12 @@ const Edit = ({ attributes, setAttributes }) => {
         );
     };
 
-    
     const shortenUrl = () => {
         let isValid = true;
 
-        // Check if self-explanatory URI is not empty
         if (selfExplanatoryUri.trim() !== '') {
-            // Remove spaces from the URI
             const uriWithoutSpaces = selfExplanatoryUri.replace(/\s/g, '');
 
-            // Check if encodeURIComponent returns the same value for the URI
             if (encodeURIComponent(selfExplanatoryUri) !== encodeURIComponent(uriWithoutSpaces)) {
                 setErrorMessage('Error: Self-Explanatory URI is not valid');
                 isValid = false;
@@ -123,17 +134,12 @@ const Edit = ({ attributes, setAttributes }) => {
         }
 
         if (isValid) {
-            // Regular expression to check if the URL scheme is missing (neither http nor https)
-            // Construct the URL with the correct scheme (prepend "https://" if needed)
             let formattedUrl = url.trim();
             if (!/^https?:\/\//i.test(formattedUrl)) {
                 formattedUrl = "https://" + formattedUrl;
             }
 
-            // Check if the URL already contains a query string
             const separator = formattedUrl.includes('?') ? '&' : '?';
-
-            // Construct the final URL with the getparameter
             const finalUrl = getparameter ? `${formattedUrl}${separator}${getparameter}` : formattedUrl;
 
             const shortenParams = {
@@ -144,7 +150,6 @@ const Edit = ({ attributes, setAttributes }) => {
                 tags: selectedTags.map(tag => parseInt(tag))
             };
 
-            // Proceed with URL shortening
             fetch('/wp-json/short-url/v1/shorten', {
                 method: 'POST',
                 headers: {
@@ -158,7 +163,7 @@ const Edit = ({ attributes, setAttributes }) => {
                     if (!shortenData.error) {
                         setShortenedUrl(shortenData.txt);
                         setErrorMessage('');
-                        generateQRCode(shortenData.txt); // Generate QR code after getting shortened URL
+                        generateQRCode(shortenData.txt);
                     } else {
                         setErrorMessage('Error: ' + shortenData.txt);
                         setShortenedUrl('');
@@ -169,15 +174,13 @@ const Edit = ({ attributes, setAttributes }) => {
     }
 
     const generateQRCode = (text) => {
-        // Generate QR code using qrious library
         const qr = new QRious({
             element: document.getElementById('qrcode'),
             value: text,
-            size: 150 // Adjust the size as per your requirement
+            size: 150
         });
-        setQrCodeUrl(qr.toDataURL()); // Set the QR code image URL
+        setQrCodeUrl(qr.toDataURL());
     }
-
 
     return (
         <div {...useBlockProps()}>
@@ -185,19 +188,25 @@ const Edit = ({ attributes, setAttributes }) => {
                 <PanelBody title={__('URL Shortener Settings')}>
                     {/* TextControl, SelectControl for settings */}
                 </PanelBody>
+                <PanelBody title={__('Validity')}>
+                    <DateTimePicker
+                        currentDate={validUntil}
+                        onChange={onChangeValidUntil}
+                        is12Hour={false} // Set to false to use 24-hour format
+                        minDate={new Date()} // Minimum date is the current date
+                        maxDate={new Date(new Date().getFullYear() + 1, new Date().getMonth(), new Date().getDate())} // Maximum date is one year from now
+                        isInvalidDate={(date) => {
+                            const nextYear = new Date(new Date().getFullYear() + 1, new Date().getMonth(), new Date().getDate());
+                            return date > nextYear;
+                        }}
+                    />
+                </PanelBody>
                 <PanelBody title={__('Categories')}>
                     {categoriesOptions.length > 0 && renderCategories(categoriesOptions)}
                 </PanelBody>
-                <PanelBody title={__('Tags')}>
-                {renderTags()}
-                    {/* <SelectControl
-                                label={__('Tags')}
-                                multiple
-                                value={selectedTags}
-                                onChange={(tags) => setSelectedTags(tags)}
-                                options={tagsOptions} // Provide options for the SelectControl
-                            /> */}
-                </PanelBody>
+                {/* <PanelBody title={__('Tags')}>
+                    {renderTags()}
+                </PanelBody> */}
             </InspectorControls>
 
             <TextControl
@@ -205,7 +214,11 @@ const Edit = ({ attributes, setAttributes }) => {
                 value={url}
                 onChange={setUrl}
             />
-
+            <TextControl
+                label={__('Self-Explanatory URI')}
+                value={selfExplanatoryUri}
+                onChange={setSelfExplanatoryUri}
+            />
             <Button onClick={shortenUrl}>
                 {__('Shorten URL')}
             </Button>

@@ -107,7 +107,7 @@ class ShortURL
         }
     }
 
-    public static function updateLink($link_id, $shortURL, $uri)
+    public static function updateLink($link_id, $shortURL, $uri, $valid_until)
     {
         global $wpdb;
         $table_name = $wpdb->prefix . 'shorturl_links';
@@ -117,7 +117,8 @@ class ShortURL
                 $table_name,
                 [
                     'short_url' => $shortURL,
-                    'uri' => $uri
+                    'uri' => $uri,
+                    'valid_until' => $valid_until
                 ],
                 ['id' => $link_id]
             );
@@ -218,6 +219,31 @@ class ShortURL
         return $isValid;
     }
 
+    public static function isValidDate($valid_until) {
+        // Validate if $valid_until is a valid date
+        $parsed_date = date_parse($valid_until);
+        if ($parsed_date['error_count'] > 0 || !checkdate($parsed_date['month'], $parsed_date['day'], $parsed_date['year'])) {
+            return ['error' => true, 'txt' => 'Validity is not a valid date.'];
+        }
+    
+        // Convert $valid_until to DateTime object
+        $valid_until_date = date_create($valid_until);
+    
+        // Get current date
+        $current_date = date_create();
+    
+        // Calculate one year from now
+        $one_year_from_now = date_add(date_create(), date_interval_create_from_date_string('1 year'));
+    
+        // Check if $valid_until is more than one year in the future
+        if ($valid_until_date > $one_year_from_now) {
+            return ['error' => true, 'txt' => 'Validity cannot be more than one year in the future.'];
+        }
+    
+        // If the date is valid and within the allowed range
+        return ['error' => false, 'txt' => ''];
+    }
+    
 
 
     public static function shorten($shortenParams)
@@ -228,6 +254,12 @@ class ShortURL
             $valid_until = $shortenParams['valid_until'] ?? null;
             $category = $shortenParams['category'] ?? null;
             $tags = $shortenParams['tags'] ?? null;
+
+            // Validate the Date
+            $isValid = self::isValidDate($valid_until);
+            if ($isValid['error'] !== false) {
+                return ['error' => true, 'txt' => $isValid['txt']];
+            }
 
             // Validate the URL
             $isValid = self::isValidUrl($long_url);
@@ -271,7 +303,7 @@ class ShortURL
 
             // // Create shortURL
             $shortURL = self::$CONFIG['ShortURLBase'] . $targetURL;
-            $bUpdated = self::updateLink($aLink['id'], $shortURL, $uri);
+            $bUpdated = self::updateLink($aLink['id'], $shortURL, $uri, $valid_until);
 
             if (!$bUpdated) {
                 return ['error' => true, 'txt' => 'Unable to update database table'];
@@ -280,7 +312,7 @@ class ShortURL
 
             // 2DO: fill these arrays via edit.js
             $data = [
-                'id' => $aLink['id'],
+                'shorturl_id' => $aLink['id'],
                 'category_id' => $category,
                 'tag_ids' => $tags
             ];

@@ -7,45 +7,21 @@ class Trigger
     public function __construct()
     {
         // Hook the create_shorturl_links_post method to the wpdb::insert action
-        add_action('shortlink_inserted', array($this, 'create_shorturl_links_post'), 10, 3);
+        add_action('shortlink_inserted', array($this, 'create_shorturl_post'), 10, 3);
     }
 
-    /**
-     * Create a WordPress post for each row inserted into the shorturl_links table.
-     *
-     * @param string $table The name of the table that was inserted into.
-     * @param array $data Data that was inserted into the table.
-     * @param array $format Data format.
-     */
-    public function create_shorturl_links_post(array $data)
+    public function create_shorturl_post(array $data)
     {
         global $wpdb;
 
-        // Log information about the hook trigger
-        error_log('create_shorturl_links_post() hook triggered');
-        error_log('Data received:');
-        error_log(print_r($data, true));
-
-        if (is_array($data)) {
-            // Get the ID of the last inserted row
-            $id = (!empty($data['id']) ? $data['id'] : null);
-
-            if (empty($id)) {
-                return;
-            }
-
-
+        try {
             // Get the category IDs and tag IDs from the inserted data
-            $id = (!empty($data['id']) ? $data['id'] : null);
+            $shorturl_id = (!empty($data['shorturl_id']) ? $data['shorturl_id'] : null);
             $category_id = (!empty($data['category_id']) ? $data['category_id'] : null);
             $tag_ids = (!empty($data['tag_ids']) ? $data['tag_ids'] : []);
 
-            error_log('tag IDs = ' . json_encode($tag_ids));
-            // error_log('Inserted $category_id: ' . $category_id);
-            // error_log('Inserted $category_id: ' . json_encode($tag_ids));
-
             $post_data = array(
-                'post_title' => 'Short URL Post ' . $id, // Example post title
+                'post_title' => 'Short URL ' . $shorturl_id, // Example post title
                 'post_status' => 'publish',
                 'post_type' => 'shorturl_links', // Your custom post type
             );
@@ -53,16 +29,26 @@ class Trigger
             // Insert the post into the database
             $post_id = wp_insert_post($post_data);
 
-            // Log the inserted post ID
-            error_log('Inserted post ID: ' . $post_id);
+            if (is_wp_error($post_id)) {
+                throw new Exception($post_id->get_error_message());
+            }
+
+            // Store shorturl_id as post meta
+            if (!empty($shorturl_id)) {
+                update_post_meta($post_id, 'shorturl_id', $shorturl_id);
+            }
 
             // Assign categories and tags to the post
             if (!empty($category_id)) {
-                wp_set_object_terms( $post_id, $category_id, 'shorturl_category' );
+                wp_set_object_terms($post_id, $category_id, 'shorturl_category');
             }
             if (!empty($tag_ids)) {
-                wp_set_object_terms( $post_id, $tag_ids, 'shorturl_tag' );
+                wp_set_object_terms($post_id, $tag_ids, 'shorturl_tag');
             }
+        } catch (Exception $e) {
+            // Handle exception
+            error_log('Error creating short URL post: ' . $e->getMessage());
+            // Optionally, you can display an error message to the user
         }
     }
 

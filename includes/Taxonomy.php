@@ -8,27 +8,31 @@ class Taxonomy
     {
         add_action('init', [$this, 'register_cpt']);
         add_action('init', [$this, 'register_taxonomies']);
+
+        add_filter('manage_shorturl_links_posts_columns', [$this, 'custom_shorturl_links_columns']);
+        add_action('manage_shorturl_links_posts_custom_column', [$this, 'custom_shorturl_links_column'], 10, 2);
+
     }
 
     public function register_cpt()
     {
         $labels = array(
-            'name'               => __('Short URL Links', 'rrze-shorturl'),
-            'singular_name'      => __('Short URL Link', 'rrze-shorturl'),
-            'menu_name'          => __('Short URL Links', 'rrze-shorturl'),
-            'name_admin_bar'     => __('Short URL Link', 'rrze-shorturl'),
-            'add_new'            => __('Add New', 'rrze-shorturl'),
-            'add_new_item'       => __('Add New Short URL Link', 'rrze-shorturl'),
-            'new_item'           => __('New Short URL Link', 'rrze-shorturl'),
-            'edit_item'          => __('Edit Short URL Link', 'rrze-shorturl'),
-            'view_item'          => __('View Short URL Link', 'rrze-shorturl'),
-            'all_items'          => __('All Short URL Links', 'rrze-shorturl'),
-            'search_items'       => __('Search Short URL Links', 'rrze-shorturl'),
-            'parent_item_colon'  => __('Parent Short URL Links:', 'rrze-shorturl'),
-            'not_found'          => __('No short URL links found.', 'rrze-shorturl'),
+            'name' => __('Short URL Links', 'rrze-shorturl'),
+            'singular_name' => __('Short URL Link', 'rrze-shorturl'),
+            'menu_name' => __('Short URL Links', 'rrze-shorturl'),
+            'name_admin_bar' => __('Short URL Link', 'rrze-shorturl'),
+            'add_new' => __('Add New', 'rrze-shorturl'),
+            'add_new_item' => __('Add New Short URL Link', 'rrze-shorturl'),
+            'new_item' => __('New Short URL Link', 'rrze-shorturl'),
+            'edit_item' => __('Edit Short URL Link', 'rrze-shorturl'),
+            'view_item' => __('View Short URL Link', 'rrze-shorturl'),
+            'all_items' => __('All Short URL Links', 'rrze-shorturl'),
+            'search_items' => __('Search Short URL Links', 'rrze-shorturl'),
+            'parent_item_colon' => __('Parent Short URL Links:', 'rrze-shorturl'),
+            'not_found' => __('No short URL links found.', 'rrze-shorturl'),
             'not_found_in_trash' => __('No short URL links found in Trash.', 'rrze-shorturl')
         );
-    
+
         $args = array(
             'labels' => $labels,
             'public' => true,
@@ -36,7 +40,7 @@ class Taxonomy
             'publicly_queryable' => true,
             'show_ui' => true,
             'show_in_menu' => true,
-            'menu_icon' => 'dashicons-admin-links',            
+            'menu_icon' => 'dashicons-admin-links',
             'query_var' => true,
             'rewrite' => array('slug' => 'shorturl_links'),
             'capability_type' => 'post',
@@ -46,11 +50,11 @@ class Taxonomy
             'supports' => array('title', 'editor', 'author', 'thumbnail', 'excerpt', 'comments'),
             'taxonomies' => array('shorturl_category', 'shorturl_tag'), // Assign custom taxonomies here
             'capabilities' => array(
-                'edit_post'          => 'edit_shorturl_link', // Custom capability for editing
-                'read_post'          => 'read_shorturl_link', // Custom capability for reading
-                'delete_post'        => 'delete_shorturl_link', // Custom capability for deleting
-                'create_posts'       => 'do_not_allow', // Disallow creation of new posts
-            ),            
+                'edit_post' => 'edit_shorturl_link', // Custom capability for editing
+                'read_post' => 'read_shorturl_link', // Custom capability for reading
+                'delete_post' => 'delete_shorturl_link', // Custom capability for deleting
+                'create_posts' => 'do_not_allow', // Disallow creation of new posts
+            ),
         );
         register_post_type('shorturl_links', $args);
     }
@@ -116,4 +120,22 @@ class Taxonomy
 
         register_taxonomy('shorturl_tag', array('shorturl_links'), $args); // 'shorturl_links' is the post type to which the taxonomy will be associated
     }
+
+
+    // Add custom column to the post list table
+    public function custom_shorturl_links_columns($columns)
+    {
+        $columns['shorturl_id'] = 'Short URL ID'; // Change 'shorturl_id' to the meta key you want to display
+        return $columns;
+    }
+
+    // Display data in custom column
+    public function custom_shorturl_links_column($column, $post_id)
+    {
+        if ($column == 'shorturl_id') {
+            $shorturl_id = get_post_meta($post_id, 'shorturl_id', true); // Change 'shorturl_id' to the meta key you want to display
+            echo esc_html($shorturl_id);
+        }
+    }
+
 }
