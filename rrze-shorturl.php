@@ -190,10 +190,11 @@ function activation()
  */
 function deactivation()
 {
-    // Hier können die Funktionen hinzugefügt werden, die
-    // bei der Deaktivierung des Plugins aufgerufen werden müssen.
-    // Bspw. delete_option, wp_clear_scheduled_hook, flush_rewrite_rules, etc.
+    // clean up the database
     drop_custom_tables();
+
+    // delete the cron to fetch customer domains
+    wp_clear_scheduled_hook('fetch_and_store_customerdomains');
 }
 
 
