@@ -23,7 +23,7 @@ class ShortURL
             if (filter_var($url, FILTER_VALIDATE_URL) === false) {
                 return false;
             }
-    
+
             // Passed all checks, URL is valid
             return true;
         } catch (\Exception $e) {
@@ -31,7 +31,7 @@ class ShortURL
             return null;
         }
     }
-    
+
     public static function cryptNumber($input)
     {
         try {
@@ -218,36 +218,37 @@ class ShortURL
         return $isValid;
     }
 
-    public static function isValidDate($valid_until) {
+    public static function isValidDate($valid_until)
+    {
         // Validate if $valid_until is a valid date
         $parsed_date = date_parse($valid_until);
         if ($parsed_date['error_count'] > 0 || !checkdate($parsed_date['month'], $parsed_date['day'], $parsed_date['year'])) {
             return ['error' => true, 'txt' => 'Validity is not a valid date.'];
         }
-    
+
         // Convert $valid_until to DateTime object
         $valid_until_date = date_create($valid_until);
-    
+
         // Get current date
         $current_date = new \DateTime(); // Using DateTime object directly
-    
+
         // Check if $valid_until is in the past
         if ($valid_until_date < $current_date) {
             return ['error' => true, 'txt' => 'Validity date cannot be in the past.'];
         }
-    
+
         // Calculate one year from now
         $one_year_from_now = date_add(clone $current_date, date_interval_create_from_date_string('1 year'));
-    
+
         // Check if $valid_until is more than one year in the future
         if ($valid_until_date > $one_year_from_now) {
             return ['error' => true, 'txt' => 'Validity cannot be more than one year in the future.'];
         }
-    
+
         // If the date is valid and within the allowed range
         return ['error' => false, 'txt' => 'Date is valid.'];
     }
-        
+
 
 
     public static function shorten($shortenParams)
@@ -331,6 +332,48 @@ class ShortURL
             return null;
         }
     }
+
+
+    public function render_shortcode_creation_form()
+    {
+        if (isset($_POST['submit_shortcode'])) {
+            // Handle form submission
+            $long_url = isset($_POST['long_url']) ? $_POST['long_url'] : '';
+            $uri = isset($_POST['uri']) ? $_POST['uri'] : '';
+            $valid_until = isset($_POST['valid_until']) ? $_POST['valid_until'] : '';
+
+            // Call ShortURL::shorten function
+            $shortcode_data = ShortURL::shorten([
+                'url' => $long_url,
+                'uri' => $uri,
+                'valid_until' => $valid_until,
+                // Additional parameters like category and tags can be added here
+            ]);
+
+            // Display result
+            if ($shortcode_data && !isset($shortcode_data['error'])) {
+                echo '<p>Shortcode created: ' . $shortcode_data['txt'] . '</p>';
+            } else {
+                echo '<p>Error: ' . $shortcode_data['txt'] . '</p>';
+            }
+        }
+        ?>
+        <div class="shortcode-creation-form">
+            <h2>Create Shortcode</h2>
+            <form method="post">
+                <label for="long-url">Long URL:</label>
+                <input type="text" id="long-url" name="long_url" required>
+                <label for="uri">URI (optional):</label>
+                <input type="text" id="uri" name="uri">
+                <label for="valid-until">Valid Until:</label>
+                <input type="date" id="valid-until" name="valid_until" required>
+                <!-- Additional fields for category and tags can be added here -->
+                <button type="submit" name="submit_shortcode">Create Shortcode</button>
+            </form>
+        </div>
+        <?php
+    }
+
 
     /* Test-Data
 
