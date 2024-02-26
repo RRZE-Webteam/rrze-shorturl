@@ -45,15 +45,24 @@ class Settings
 
         register_setting('rrze_shorturl_customer_domains', 'rrze_shorturl_customer_domains');
 
-        // Statistic tab settings
-add_settings_section(
-    'rrze_shorturl_statistic_section',
-    '&nbsp;',
-    [$this, 'render_statistic_section'],
-    'rrze_shorturl_statistic'
-);
+        // IdM tab settings
+        add_settings_section(
+            'rrze_shorturl_idm_section',
+            '&nbsp;',
+            [$this, 'render_idm_section'],
+            'rrze_shorturl_idm'
+        );
 
-register_setting('rrze_shorturl_statistic', 'rrze_shorturl_statistic');
+        register_setting('rrze_shorturl_statistic', 'rrze_shorturl_statistic');
+        // Statistic tab settings
+        add_settings_section(
+            'rrze_shorturl_statistic_section',
+            '&nbsp;',
+            [$this, 'render_statistic_section'],
+            'rrze_shorturl_statistic'
+        );
+
+        register_setting('rrze_shorturl_statistic', 'rrze_shorturl_statistic');
 
     }
 
@@ -73,9 +82,10 @@ register_setting('rrze_shorturl_statistic', 'rrze_shorturl_statistic');
                 <a href="?page=rrze-shorturl&tab=customer-domains"
                     class="nav-tab <?php echo isset($_GET['tab']) && $_GET['tab'] === 'customer-domains' ? 'nav-tab-active' : ''; ?>">Customer
                     Domains</a>
-                    <a href="?page=rrze-shorturl&tab=statistic"
-    class="nav-tab <?php echo isset($_GET['tab']) && $_GET['tab'] === 'statistic' ? 'nav-tab-active' : ''; ?>">Statistic</a>
-
+                <a href="?page=rrze-shorturl&tab=idm"
+                    class="nav-tab <?php echo isset($_GET['tab']) && $_GET['tab'] === 'idm' ? 'nav-tab-active' : ''; ?>">IdM</a>
+                <a href="?page=rrze-shorturl&tab=statistic"
+                    class="nav-tab <?php echo isset($_GET['tab']) && $_GET['tab'] === 'statistic' ? 'nav-tab-active' : ''; ?>">Statistic</a>
             </h2>
 
             <div class="tab-content">
@@ -90,11 +100,15 @@ register_setting('rrze_shorturl_statistic', 'rrze_shorturl_statistic');
                         settings_fields('rrze_shorturl_customer_domains');
                         do_settings_sections('rrze_shorturl_customer_domains');
                         break;
-                        case 'statistic':
-                            settings_fields('rrze_shorturl_statistic');
-                            do_settings_sections('rrze_shorturl_statistic');
-                            break;                        
-                    default:
+                        case 'idm':
+                            settings_fields('rrze_shorturl_idm');
+                            do_settings_sections('rrze_shorturl_idm');
+                            break;
+                            case 'statistic':
+                                settings_fields('rrze_shorturl_statistic');
+                                do_settings_sections('rrze_shorturl_statistic');
+                                break;
+                                default:
                         settings_fields('rrze_shorturl_services');
                         do_settings_sections('rrze_shorturl_services');
                 }
@@ -382,16 +396,92 @@ register_setting('rrze_shorturl_statistic', 'rrze_shorturl_statistic');
 
     }
 
-    public function render_statistic_section()
-{
+// Define the render_idm_section function
+public function render_idm_section() {
     global $wpdb;
 
-    // Determine the current sorting order and column
-    $orderby = isset($_GET['orderby']) ? $_GET['orderby'] : 'hostname';
-    $order = isset($_GET['order']) && in_array($_GET['order'], ['asc', 'desc']) ? $_GET['order'] : 'asc';
+    // Check if form is submitted
+    if (isset($_POST['submit_idm'])) {
+        // Get input data
+        $idm = sanitize_text_field($_POST['idm']);
+        $active = isset($_POST['active']) ? 1 : 0; // Check if active checkbox is checked
+        $delete = isset($_POST['delete']) ? 1 : 0; // Check if delete checkbox is checked
 
-    // Fetch link counts grouped by domain_id and hostname with sorting
-    $link_counts = $wpdb->get_results("
+        // Insert or update data into database
+        if (!empty($idm)) {
+            if ($_POST['id']) { // Update existing entry
+                $id = intval($_POST['id']);
+                $wpdb->update(
+                    $wpdb->prefix . 'shorturl_idms',
+                    array('idm' => $idm, 'active' => $active, 'delete' => $delete),
+                    array('id' => $id),
+                    array('%s', '%d', '%d'),
+                    array('%d')
+                );
+            } else { // Add new entry
+                $wpdb->insert(
+                    $wpdb->prefix . 'shorturl_idms',
+                    array('idm' => $idm, 'active' => $active, 'delete' => $delete),
+                    array('%s', '%d', '%d')
+                );
+            }
+        }
+    }
+
+    // Display form to add/update entries
+    ?>
+    <form method="post">
+        <label for="idm">IdM:</label>
+        <input type="text" name="idm" id="idm" value="">
+        <input type="checkbox" name="active" id="active">
+        <label for="active">Active</label>
+        <input type="checkbox" name="delete" id="delete">
+        <label for="delete">Delete</label>
+        <input type="hidden" name="id" value="">
+        <input type="submit" name="submit_idm" value="Submit">
+    </form>
+
+    <?php
+    // Display existing entries in a table
+    $idms = $wpdb->get_results("SELECT * FROM " . $wpdb->prefix . "shorturl_idms");
+    if ($idms) {
+        ?>
+        <table>
+            <thead>
+                <tr>
+                    <th>IdM</th>
+                    <th>Active</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php
+                foreach ($idms as $idm) {
+                    ?>
+                    <tr>
+                        <td><?php echo $idm->idm; ?></td>
+                        <td><input type="checkbox" <?php echo $idm->active ? 'checked' : ''; ?> disabled></td>
+                        <td><input type="checkbox" <?php echo $idm->delete ? 'checked' : ''; ?> disabled></td>
+                    </tr>
+                    <?php
+                }
+                ?>
+            </tbody>
+        </table>
+        <?php
+    }
+}
+
+    public function render_statistic_section()
+    {
+        global $wpdb;
+
+        // Determine the current sorting order and column
+        $orderby = isset($_GET['orderby']) ? $_GET['orderby'] : 'hostname';
+        $order = isset($_GET['order']) && in_array($_GET['order'], ['asc', 'desc']) ? $_GET['order'] : 'asc';
+
+        // Fetch link counts grouped by domain_id and hostname with sorting
+        $link_counts = $wpdb->get_results("
         SELECT sd.hostname, COUNT(sl.id) AS link_count
         FROM {$wpdb->prefix}shorturl_links AS sl
         LEFT JOIN {$wpdb->prefix}shorturl_domains AS sd ON sl.domain_id = sd.id
@@ -399,53 +489,77 @@ register_setting('rrze_shorturl_statistic', 'rrze_shorturl_statistic');
         ORDER BY $orderby $order
     ");
 
-    // Output the statistics table
-    ?>
-    <div class="wrap">
-        <table class="wp-list-table widefat striped">
-            <thead>
-                <tr>
-                    <th scope="col" class="manage-column column-hostname <?php echo $orderby === 'hostname' ? 'sorted' : 'sortable'; ?> <?php echo $order; ?>" data-sort="<?php echo $orderby === 'hostname' ? $order : 'asc'; ?>">
-                        <a href="<?php echo admin_url('admin.php?page=rrze-shorturl&tab=statistic&orderby=hostname&order=' . ($orderby === 'hostname' && $order === 'asc' ? 'desc' : 'asc')); ?>">
-                            <span>Hostname</span>
-                            <span class="sorting-indicators"><span class="sorting-indicator asc" aria-hidden="true"></span><span class="sorting-indicator desc" aria-hidden="true"></span></span>
-                        </a>
-                    </th>
-                    <th scope="col" class="manage-column column-count <?php echo $orderby === 'link_count' ? 'sorted' : 'sortable'; ?> <?php echo $order; ?>" data-sort="<?php echo $orderby === 'link_count' ? $order : 'asc'; ?>">
-                        <a href="<?php echo admin_url('admin.php?page=rrze-shorturl&tab=statistic&orderby=link_count&order=' . ($orderby === 'link_count' && $order === 'asc' ? 'desc' : 'asc')); ?>">
-                            <span>Link Count</span>
-                            <span class="sorting-indicators"><span class="sorting-indicator asc" aria-hidden="true"></span><span class="sorting-indicator desc" aria-hidden="true"></span></span>
-                        </a>
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($link_counts as $link_count): ?>
+        // Output the statistics table
+        ?>
+        <div class="wrap">
+            <table class="wp-list-table widefat striped">
+                <thead>
                     <tr>
-                        <td class="hostname column-hostname"><?php echo esc_html($link_count->hostname); ?></td>
-                        <td class="count column-count"><?php echo esc_html($link_count->link_count); ?></td>
+                        <th scope="col"
+                            class="manage-column column-hostname <?php echo $orderby === 'hostname' ? 'sorted' : 'sortable'; ?> <?php echo $order; ?>"
+                            data-sort="<?php echo $orderby === 'hostname' ? $order : 'asc'; ?>">
+                            <a
+                                href="<?php echo admin_url('admin.php?page=rrze-shorturl&tab=statistic&orderby=hostname&order=' . ($orderby === 'hostname' && $order === 'asc' ? 'desc' : 'asc')); ?>">
+                                <span>Hostname</span>
+                                <span class="sorting-indicators"><span class="sorting-indicator asc"
+                                        aria-hidden="true"></span><span class="sorting-indicator desc"
+                                        aria-hidden="true"></span></span>
+                            </a>
+                        </th>
+                        <th scope="col"
+                            class="manage-column column-count <?php echo $orderby === 'link_count' ? 'sorted' : 'sortable'; ?> <?php echo $order; ?>"
+                            data-sort="<?php echo $orderby === 'link_count' ? $order : 'asc'; ?>">
+                            <a
+                                href="<?php echo admin_url('admin.php?page=rrze-shorturl&tab=statistic&orderby=link_count&order=' . ($orderby === 'link_count' && $order === 'asc' ? 'desc' : 'asc')); ?>">
+                                <span>Link Count</span>
+                                <span class="sorting-indicators"><span class="sorting-indicator asc"
+                                        aria-hidden="true"></span><span class="sorting-indicator desc"
+                                        aria-hidden="true"></span></span>
+                            </a>
+                        </th>
                     </tr>
-                <?php endforeach; ?>
-            </tbody>
-            <tfoot>
-                <tr>
-                    <th scope="col" class="manage-column column-hostname <?php echo $orderby === 'hostname' ? 'sorted' : 'sortable'; ?> <?php echo $order; ?>" data-sort="<?php echo $orderby === 'hostname' ? $order : 'asc'; ?>">
-                        <a href="<?php echo admin_url('admin.php?page=rrze-shorturl&tab=statistic&orderby=hostname&order=' . ($orderby === 'hostname' && $order === 'asc' ? 'desc' : 'asc')); ?>">
-                            <span>Hostname</span>
-                            <span class="sorting-indicators"><span class="sorting-indicator asc" aria-hidden="true"></span><span class="sorting-indicator desc" aria-hidden="true"></span></span>
-                        </a>
-                    </th>
-                    <th scope="col" class="manage-column column-count <?php echo $orderby === 'link_count' ? 'sorted' : 'sortable'; ?> <?php echo $order; ?>" data-sort="<?php echo $orderby === 'link_count' ? $order : 'asc'; ?>">
-                        <a href="<?php echo admin_url('admin.php?page=rrze-shorturl&tab=statistic&orderby=link_count&order=' . ($orderby === 'link_count' && $order === 'asc' ? 'desc' : 'asc')); ?>">
-                            <span>Link Count</span>
-                            <span class="sorting-indicators"><span class="sorting-indicator asc" aria-hidden="true"></span><span class="sorting-indicator desc" aria-hidden="true"></span></span>
-                        </a>
-                    </th>
-                </tr>
-            </tfoot>
-        </table>
-    </div>
-    <?php
+                </thead>
+                <tbody>
+                    <?php foreach ($link_counts as $link_count): ?>
+                        <tr>
+                            <td class="hostname column-hostname">
+                                <?php echo esc_html($link_count->hostname); ?>
+                            </td>
+                            <td class="count column-count">
+                                <?php echo esc_html($link_count->link_count); ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th scope="col"
+                            class="manage-column column-hostname <?php echo $orderby === 'hostname' ? 'sorted' : 'sortable'; ?> <?php echo $order; ?>"
+                            data-sort="<?php echo $orderby === 'hostname' ? $order : 'asc'; ?>">
+                            <a
+                                href="<?php echo admin_url('admin.php?page=rrze-shorturl&tab=statistic&orderby=hostname&order=' . ($orderby === 'hostname' && $order === 'asc' ? 'desc' : 'asc')); ?>">
+                                <span>Hostname</span>
+                                <span class="sorting-indicators"><span class="sorting-indicator asc"
+                                        aria-hidden="true"></span><span class="sorting-indicator desc"
+                                        aria-hidden="true"></span></span>
+                            </a>
+                        </th>
+                        <th scope="col"
+                            class="manage-column column-count <?php echo $orderby === 'link_count' ? 'sorted' : 'sortable'; ?> <?php echo $order; ?>"
+                            data-sort="<?php echo $orderby === 'link_count' ? $order : 'asc'; ?>">
+                            <a
+                                href="<?php echo admin_url('admin.php?page=rrze-shorturl&tab=statistic&orderby=link_count&order=' . ($orderby === 'link_count' && $order === 'asc' ? 'desc' : 'asc')); ?>">
+                                <span>Link Count</span>
+                                <span class="sorting-indicators"><span class="sorting-indicator asc"
+                                        aria-hidden="true"></span><span class="sorting-indicator desc"
+                                        aria-hidden="true"></span></span>
+                            </a>
+                        </th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        <?php
+    }
 }
-        }
 
