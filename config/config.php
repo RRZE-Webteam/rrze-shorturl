@@ -8,7 +8,8 @@ defined('ABSPATH') || exit;
  * Gibt der Name der Option zurück.
  * @return array [description]
  */
-function getOptionName() {
+function getOptionName()
+{
     return 'rrze-shorturl';
 }
 
@@ -17,13 +18,14 @@ function getOptionName() {
  * Gibt die Einstellungen des Menus zurück.
  * @return array [description]
  */
-function getMenuSettings() {
+function getMenuSettings()
+{
     return [
-        'page_title'    => __('RRZE ShortURL', 'rrze-shorturl'),
-        'menu_title'    => __('RRZE ShortURL', 'rrze-shorturl'),
-        'capability'    => 'manage_options',
-        'menu_slug'     => 'rrze-shorturl',
-        'title'         => __('RRZE ShortURL Settings', 'rrze-shorturl'),
+        'page_title' => __('RRZE ShortURL', 'rrze-shorturl'),
+        'menu_title' => __('RRZE ShortURL', 'rrze-shorturl'),
+        'capability' => 'manage_options',
+        'menu_slug' => 'rrze-shorturl',
+        'title' => __('RRZE ShortURL Settings', 'rrze-shorturl'),
     ];
 }
 
@@ -31,15 +33,16 @@ function getMenuSettings() {
  * Gibt die Einstellungen der Inhaltshilfe zurück.
  * @return array [description]
  */
-function getHelpTab() {
+function getHelpTab()
+{
     return [
         [
-            'id'        => 'rrze-shorturl-help',
-            'content'   => [
+            'id' => 'rrze-shorturl-help',
+            'content' => [
                 '<p>' . __('Here comes the Context Help content.', 'rrze-shorturl') . '</p>'
             ],
-            'title'     => __('Overview', 'rrze-shorturl'),
-            'sidebar'   => sprintf('<p><strong>%1$s:</strong></p><p><a href="https://blogs.fau.de/webworking">RRZE Webworking</a></p><p><a href="https://github.com/RRZE Webteam">%2$s</a></p>', __('For more information', 'rrze-shorturl'), __('RRZE Webteam on Github', 'rrze-shorturl'))
+            'title' => __('Overview', 'rrze-shorturl'),
+            'sidebar' => sprintf('<p><strong>%1$s:</strong></p><p><a href="https://blogs.fau.de/webworking">RRZE Webworking</a></p><p><a href="https://github.com/RRZE Webteam">%2$s</a></p>', __('For more information', 'rrze-shorturl'), __('RRZE Webteam on Github', 'rrze-shorturl'))
         ]
     ];
 }
@@ -49,18 +52,19 @@ function getHelpTab() {
  * @return array [description]
  */
 
-function getSections() {
-	return [ 
-		[
-		  	'id' => 'shorurllog',
-		  	'title' => __('Logfile', 'rrze-shorturl' )
-		]
-	];   
+function getSections()
+{
+    return [
+        [
+            'id' => 'shorurllog',
+            'title' => __('Logfile', 'rrze-shorturl')
+        ]
+    ];
 }
 
 
 
-  
+
 function drop_custom_tables()
 {
     global $wpdb;
@@ -90,51 +94,49 @@ function create_custom_tables()
     $charset_collate = $wpdb->get_charset_collate();
 
     try {
-        // Create the shorturl_idms table
-        $table_name = $wpdb->prefix . 'shorturl_idms';
-        $sql = "CREATE TABLE IF NOT EXISTS $table_name (
-            id mediumint(9) NOT NULL AUTO_INCREMENT,
-            id INT(11) NOT NULL AUTO_INCREMENT,
-        idm VARCHAR(255) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        created_by VARCHAR(255) NOT NULL,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        updated_by VARCHAR(255) NOT NULL,
-        active BOOLEAN DEFAULT TRUE,
-        PRIMARY KEY (id)
-        ) $charset_collate;";
-        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-        dbDelta($sql);
+        // Define table creation queries
+        $table_queries = [
+            "shorturl_idms" => "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}shorturl_idms (
+                id mediumint(9) NOT NULL AUTO_INCREMENT,
+                idm VARCHAR(255) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                created_by VARCHAR(255) NOT NULL,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                updated_by VARCHAR(255) NOT NULL,
+                active BOOLEAN DEFAULT TRUE,
+                PRIMARY KEY (id)
+            ) $charset_collate",
+            "shorturl_domains" => "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}shorturl_domains (
+                id mediumint(9) NOT NULL AUTO_INCREMENT,
+                hostname varchar(255) NOT NULL DEFAULT '' UNIQUE,
+                prefix int(1) NOT NULL DEFAULT 1,
+                PRIMARY KEY (id)
+            ) $charset_collate",
+            "shorturl_links" => "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}shorturl_links (
+                id mediumint(9) NOT NULL AUTO_INCREMENT,
+                domain_id mediumint(9) NOT NULL,            
+                long_url varchar(255) UNIQUE NOT NULL,
+                short_url varchar(255) NOT NULL,
+                uri varchar(255) DEFAULT NULL,
+                idm varchar(255) DEFAULT 'system',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                deleted_at TIMESTAMP DEFAULT NULL,
+                valid_until TIMESTAMP DEFAULT NULL,
+                active BOOLEAN DEFAULT TRUE,
+                PRIMARY KEY (id),
+                CONSTRAINT fk_domain_id FOREIGN KEY (domain_id) REFERENCES {$wpdb->prefix}shorturl_domains(id) ON DELETE CASCADE
+            ) $charset_collate"
+        ];
 
-        // Create the shorturl_domains table
-        $table_name = $wpdb->prefix . 'shorturl_domains';
-        $sql = "CREATE TABLE IF NOT EXISTS $table_name (
-            id mediumint(9) NOT NULL AUTO_INCREMENT,
-            hostname varchar(255) NOT NULL DEFAULT '' UNIQUE,
-            prefix int(1) NOT NULL DEFAULT 1,
-            PRIMARY KEY (id)
-        ) $charset_collate;";
+        // Require dbDelta once
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-        dbDelta($sql);
 
-        // Create the shorturl_links table
-        $table_name = $wpdb->prefix . 'shorturl_links';
-        $sql = "CREATE TABLE IF NOT EXISTS $table_name (
-            id mediumint(9) NOT NULL AUTO_INCREMENT,
-            domain_id mediumint(9) NOT NULL,            
-            long_url varchar(255) UNIQUE NOT NULL,
-            short_url varchar(255) NOT NULL,
-            uri varchar(255) DEFAULT NULL,
-            idm varchar(255) DEFAULT 'system',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            deleted_at TIMESTAMP DEFAULT NULL,
-            valid_until TIMESTAMP DEFAULT NULL,
-            active BOOLEAN DEFAULT TRUE,
-            PRIMARY KEY (id),
-            CONSTRAINT fk_domain_id FOREIGN KEY (domain_id) REFERENCES {$table_name}(id) ON DELETE CASCADE
-        ) $charset_collate;";
-        dbDelta($sql);
+        // Loop through table creation queries
+        foreach ($table_queries as $table_name => $sql) {
+            // Execute SQL query
+            dbDelta($sql);
+        }
 
         // Insert Service domains
         $aEntries = [
@@ -161,7 +163,6 @@ function create_custom_tables()
                 )
             );
         }
-
     } catch (\Exception $e) {
         // Handle the exception
         error_log("Error in create_custom_tables: " . $e->getMessage());
