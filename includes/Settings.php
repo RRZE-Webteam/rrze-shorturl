@@ -100,15 +100,15 @@ class Settings
                         settings_fields('rrze_shorturl_customer_domains');
                         do_settings_sections('rrze_shorturl_customer_domains');
                         break;
-                        case 'idm':
-                            settings_fields('rrze_shorturl_idm');
-                            do_settings_sections('rrze_shorturl_idm');
-                            break;
-                            case 'statistic':
-                                settings_fields('rrze_shorturl_statistic');
-                                do_settings_sections('rrze_shorturl_statistic');
-                                break;
-                                default:
+                    case 'idm':
+                        settings_fields('rrze_shorturl_idm');
+                        do_settings_sections('rrze_shorturl_idm');
+                        break;
+                    case 'statistic':
+                        settings_fields('rrze_shorturl_statistic');
+                        do_settings_sections('rrze_shorturl_statistic');
+                        break;
+                    default:
                         settings_fields('rrze_shorturl_services');
                         do_settings_sections('rrze_shorturl_services');
                 }
@@ -396,82 +396,107 @@ class Settings
 
     }
 
-// Define the render_idm_section function
-public function render_idm_section() {
-    global $wpdb;
+    // Define the render_idm_section function
+    public function render_idm_section()
+    {
+        global $wpdb;
 
-    // Check if form is submitted
-    if (isset($_POST['submit_idm'])) {
-        // Get input data
-        $idm = sanitize_text_field($_POST['idm']);
-        $active = isset($_POST['active']) ? 1 : 0; // Check if active checkbox is checked
-        $delete = isset($_POST['delete']) ? 1 : 0; // Check if delete checkbox is checked
-
-        // Insert or update data into database
-        if (!empty($idm)) {
-            if ($_POST['id']) { // Update existing entry
-                $id = intval($_POST['id']);
-                $wpdb->update(
-                    $wpdb->prefix . 'shorturl_idms',
-                    array('idm' => $idm, 'active' => $active, 'delete' => $delete),
-                    array('id' => $id),
-                    array('%s', '%d', '%d'),
-                    array('%d')
-                );
-            } else { // Add new entry
-                $wpdb->insert(
-                    $wpdb->prefix . 'shorturl_idms',
-                    array('idm' => $idm, 'active' => $active, 'delete' => $delete),
-                    array('%s', '%d', '%d')
-                );
+                // Determine the current sorting order and column
+                $orderby = isset($_GET['orderby']) ? $_GET['orderby'] : 'idm';
+                $order = isset($_GET['order']) && in_array($_GET['order'], ['asc', 'desc']) ? $_GET['order'] : 'asc';
+        
+    
+        try {
+            // Check if form is submitted
+            if (isset($_POST['submit_idm'])) {
+                // Get input data
+                $idm = sanitize_text_field($_POST['idm']);
+                
+                // Delete rows if delete checkbox is checked
+                if (!empty($_POST['delete'])) {
+                    foreach ($_POST['delete'] as $delete_id) {
+                        $wpdb->delete(
+                            $wpdb->prefix . 'shorturl_idms',
+                            array('id' => $delete_id),
+                            array('%d')
+                        );
+                    }
+                    $message = __('Selected IdMs have been deleted.', 'rrze-shorturl');
+                } elseif (!empty($idm)) { // Add new entry
+                    $insert_result = $wpdb->insert(
+                        $wpdb->prefix . 'shorturl_idms',
+                        array('idm' => $idm, 'created_by' => 'Admin'),
+                        array('%s', '%s')
+                    );
+    
+                    if ($insert_result === false) {
+                        $message = __('An error occurred: this IdM already exists.', 'rrze-shorturl');
+                    }else{
+                        $message = __('New IdM has been added.', 'rrze-shorturl');
+                    }
+    
+                }
             }
+    
+            // Display form to add/update entries
+            ?>
+            <?php if (!empty($message)): ?>
+                <div class="<?php echo strpos($message, 'error') !== false ? 'error' : 'updated'; ?>">
+                    <p>
+                        <?php echo $message; ?>
+                    </p>
+                </div>
+            <?php endif; ?>
+            <form method="post">
+                <table class="wp-list-table widefat fixed striped">
+                    <thead>
+                        <tr>
+                        <th scope="col"
+                            class="manage-column column-hostname <?php echo $orderby === 'idm' ? 'sorted' : 'sortable'; ?> <?php echo $order; ?>"
+                            data-sort="<?php echo $orderby === 'idm' ? $order : 'asc'; ?>">
+                            <a
+                                href="<?php echo admin_url('admin.php?page=rrze-shorturl&tab=idm&orderby=idm&order=' . ($orderby === 'idm' && $order === 'asc' ? 'desc' : 'asc')); ?>">
+                                <span>IdM</span>
+                                <span class="sorting-indicators"><span class="sorting-indicator asc"
+                                        aria-hidden="true"></span><span class="sorting-indicator desc"
+                                        aria-hidden="true"></span></span>
+                            </a>
+                        </th>                            
+                        <th scope="col">Delete</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        // Display existing entries in a table
+                        $idms = $wpdb->get_results("SELECT * FROM " . $wpdb->prefix . "shorturl_idms ORDER BY " . $orderby . ' ' . $order);
+                        if ($idms) {
+                            foreach ($idms as $idm) {
+                                ?>
+                                <tr>
+                                    <td><?php echo $idm->idm; ?></td>
+                                    <td><input type="checkbox" name="delete[]" value="<?php echo $idm->id; ?>"></td>
+                                </tr>
+                                <?php
+                            }
+                        }
+                        ?>
+                        <tr>
+                            <td colspan="2"><input type="text" name="idm" id="idm" value=""></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button type="submit" name="submit_idm" class="button button-primary">
+                    <?php _e('Save Changes', 'rrze-shorturl'); ?>
+                </button>
+            </form>
+            <?php
+        } catch (\Exception $e) {
+            // Handle the exception
+            echo '<div class="error notice"><p>' . $e->getMessage() . '</p></div>';
+            error_log("Error in render_idm_section: " . $e->getMessage());
         }
     }
-
-    // Display form to add/update entries
-    ?>
-    <form method="post">
-        <label for="idm">IdM:</label>
-        <input type="text" name="idm" id="idm" value="">
-        <input type="checkbox" name="active" id="active">
-        <label for="active">Active</label>
-        <input type="checkbox" name="delete" id="delete">
-        <label for="delete">Delete</label>
-        <input type="hidden" name="id" value="">
-        <input type="submit" name="submit_idm" value="Submit">
-    </form>
-
-    <?php
-    // Display existing entries in a table
-    $idms = $wpdb->get_results("SELECT * FROM " . $wpdb->prefix . "shorturl_idms");
-    if ($idms) {
-        ?>
-        <table>
-            <thead>
-                <tr>
-                    <th>IdM</th>
-                    <th>Active</th>
-                    <th>Delete</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php
-                foreach ($idms as $idm) {
-                    ?>
-                    <tr>
-                        <td><?php echo $idm->idm; ?></td>
-                        <td><input type="checkbox" <?php echo $idm->active ? 'checked' : ''; ?> disabled></td>
-                        <td><input type="checkbox" <?php echo $idm->delete ? 'checked' : ''; ?> disabled></td>
-                    </tr>
-                    <?php
-                }
-                ?>
-            </tbody>
-        </table>
-        <?php
-    }
-}
-
+            
     public function render_statistic_section()
     {
         global $wpdb;

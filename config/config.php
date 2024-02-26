@@ -70,8 +70,14 @@ function drop_custom_tables()
     global $wpdb;
     $table_domains = $wpdb->prefix . 'shorturl_domains';
     $table_links = $wpdb->prefix . 'shorturl_links';
+    $table_idms = $wpdb->prefix . 'shorturl_idms';
 
     try {
+        // Drop shorturl_idms table if it exists
+        if ($wpdb->get_var("SHOW TABLES LIKE '$table_idms'") == $table_idms) {
+            $wpdb->query("DROP TABLE $table_idms");
+        }
+
         // Drop shorturl_links table if it exists
         if ($wpdb->get_var("SHOW TABLES LIKE '$table_links'") == $table_links) {
             $wpdb->query("DROP TABLE $table_links");
@@ -98,12 +104,9 @@ function create_custom_tables()
         $table_queries = [
             "shorturl_idms" => "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}shorturl_idms (
                 id mediumint(9) NOT NULL AUTO_INCREMENT,
-                idm VARCHAR(255) NOT NULL,
+                idm VARCHAR(255) UNIQUE NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 created_by VARCHAR(255) NOT NULL,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                updated_by VARCHAR(255) NOT NULL,
-                active BOOLEAN DEFAULT TRUE,
                 PRIMARY KEY (id)
             ) $charset_collate",
             "shorturl_domains" => "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}shorturl_domains (
