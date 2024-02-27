@@ -195,7 +195,7 @@ class Shortcode {
 <?php if (!empty($result['txt'])) : ?>
     <canvas id="qr"></canvas>
             <script>
-            document.addEventListener('DOMContentLoaded', function() {
+            jQuery(document).ready(function($) {
                 // Generate QR code using QRious
                 var qr = new QRious({
                     element: document.getElementById('qr'),

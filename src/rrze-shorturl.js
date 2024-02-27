@@ -18,4 +18,11 @@ jQuery(document).ready(function($) {
             }
         }
     }
+
+
+    $('#show-advanced-settings').on('click', function(e) {
+        e.preventDefault();
+        $('#div-advanced-settings').slideToggle();
+    });
+
 });
