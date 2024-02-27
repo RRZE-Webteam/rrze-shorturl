@@ -25,4 +25,13 @@ jQuery(document).ready(function($) {
         $('#div-advanced-settings').slideToggle();
     });
 
+
+    new ClipboardJS('.copy-to-clipboard');
+
+            // Optional: Show a tooltip or feedback after copying
+            document.querySelectorAll('.copy-to-clipboard').forEach(function(button) {
+                button.addEventListener('click', function() {
+                    button.setAttribute('data-original-title', 'Copied!');
+                });
+            });
 });

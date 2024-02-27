@@ -189,7 +189,13 @@ class Shortcode {
         </form>
     
         <!-- Display result message -->
-        <p><?php echo $result_message; ?></p>
+        <p><?php echo $result_message; ?>
+        <?php if (!$result['error']) : ?>
+                <button class="copy-to-clipboard" data-clipboard-text="<?php echo esc_attr($result['txt']); ?>">Copy</button>
+            <?php endif; ?>
+    
+    
+    </p>
     
 <!-- Display QR code if available -->
 <?php if (!empty($result['txt'])) : ?>
