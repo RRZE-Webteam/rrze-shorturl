@@ -224,22 +224,37 @@ class Shortcode {
         if (!is_array($atts)) {
             $atts = [];
         }
-
+    
         global $wpdb;
         $table_name = $wpdb->prefix . 'shorturl_links';
-    
+
         // Determine the column to sort by and sort order
         $orderby = isset($_GET['orderby']) ? $_GET['orderby'] : 'id';
         $order = isset($_GET['order']) ? $_GET['order'] : 'ASC';
-    
-        // Prepare SQL query
-        $query = "SELECT * FROM $table_name ORDER BY $orderby $order";
+        
+        // Prepare SQL query to fetch post IDs from wp_postmeta and their associated category names
+        $query = "SELECT l.id AS link_id, 
+                         pm.meta_value AS post_id, 
+                         l.long_url, 
+                         l.short_url, 
+                         l.uri, 
+                         l.valid_until, 
+                         GROUP_CONCAT(pm_category.meta_value) AS category_ids 
+                  FROM $table_name l
+                  INNER JOIN {$wpdb->prefix}postmeta AS pm ON l.id = pm.meta_value AND pm.meta_key = 'shorturl_id'
+                  LEFT JOIN {$wpdb->prefix}postmeta AS pm_category ON pm_category.post_id = pm.meta_value AND pm_category.meta_key = 'category_id'
+                  GROUP BY l.id, pm.meta_value, l.long_url, l.short_url, l.uri, l.valid_until
+                  ORDER BY $orderby $order";
+        
+        // return $query;
+
         $results = $wpdb->get_results($query, ARRAY_A);
     
         // Generate table
         $table = '<table class="wp-list-table widefat striped">';
         $table .= '<thead><tr>';
         $table .= '<th scope="col" class="manage-column column-id"><a href="' . admin_url('admin.php?page=your_page_slug&orderby=id&order=' . ($order == 'ASC' ? 'DESC' : 'ASC')) . '">ID</a></th>';
+        $table .= '<th scope="col" class="manage-column column-post-id">Post ID</th>';
         $table .= '<th scope="col" class="manage-column column-long-url"><a href="' . admin_url('admin.php?page=your_page_slug&orderby=long_url&order=' . ($order == 'ASC' ? 'DESC' : 'ASC')) . '">Long URL</a></th>';
         $table .= '<th scope="col" class="manage-column column-short-url"><a href="' . admin_url('admin.php?page=your_page_slug&orderby=short_url&order=' . ($order == 'ASC' ? 'DESC' : 'ASC')) . '">Short URL</a></th>';
         $table .= '<th scope="col" class="manage-column column-uri">URI</th>';
@@ -249,15 +264,45 @@ class Shortcode {
         $table .= '</tr></thead><tbody>';
     
         foreach ($results as $row) {
-            $table .= '<tr>';
-            foreach ($row as $key => $value) {
-                $table .= '<td class="column-' . $key . '">' . $value . '</td>';
+            // Unserialize category IDs if they exist
+            $category_ids = !empty($row['category_ids']) ? unserialize($row['category_ids']) : ['nix'];
+        
+            // Fetch and concatenate category names only if category IDs exist
+            if (!empty($category_ids)) {
+                // Fetch category names based on IDs
+                $category_names = [];
+                foreach ($category_ids as $category_id) {
+                    $category = get_term($category_id, 'shorturl_category');
+                    if ($category && !is_wp_error($category)) {
+                        $category_names[] = $category->name;
+                    }else{
+                        $category_names[] = '$category_id = ' . $category_id;
+                    }
+                }
+        
+                // Concatenate category names
+                $category_names_str = implode(', ', $category_names);
+            } else {
+                // Set empty string if no category IDs exist
+                $category_names_str = '';
             }
+        
+            // Output table row
+            $table .= '<tr>';
+            $table .= '<td class="column-id">' . $row['link_id'] . '</td>';
+            $table .= '<td class="column-post-id">' . $row['post_id'] . '</td>';
+            $table .= '<td class="column-long-url">' . $row['long_url'] . '</td>';
+            $table .= '<td class="column-short-url">' . $row['short_url'] . '</td>';
+            $table .= '<td class="column-uri">' . $row['uri'] . '</td>';
+            $table .= '<td class="column-valid-until">' . $row['valid_until'] . '</td>';
+            $table .= '<td class="column-categories">' . $category_names_str . '</td>';
+            $table .= '<td class="column-tags"></td>'; // You can populate this column similarly for tags
             $table .= '</tr>';
         }
-        $table .= '</tbody></table>';
+                $table .= '</tbody></table>';
     
         return $table;
     }
+        
 }
 
