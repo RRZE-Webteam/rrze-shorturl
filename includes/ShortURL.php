@@ -257,6 +257,8 @@ class ShortURL
 
     public static function shorten($shortenParams)
     {
+
+        
         try {
             $long_url = $shortenParams['url'] ?? null;
             $uri = $shortenParams['uri'] ?? null;

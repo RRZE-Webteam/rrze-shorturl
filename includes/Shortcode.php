@@ -2,119 +2,167 @@
 
 namespace RRZE\ShortURL;
 
+use RRZE\ShortURL\Walker_Category_Checklist_Custom;
+
 class Shortcode {
     public function __construct() {
         add_shortcode('shorturl-generate', [$this, 'generate_shortcode_handler']);
         add_shortcode('shorturl-list', [$this, 'list_shortcode_handler']);
-        add_shortcode('shorturl-tmp', [$this, 'custom_category_checklist']);
 
         if ( ! function_exists( 'wp_terms_checklist' ) ) {
             include ABSPATH . 'wp-admin/includes/template.php';
         }        
     }
 
-    public function custom_category_checklist($post_id = 0, $descendants_and_self = 0, $selected_cats = false, $popular_cats = false, $walker = null) {
-        global $post_ID;
+    private function display_shorturl_category() {
+        $taxonomy = 'shorturl_category';
+        $args = array(
+            'taxonomy' => $taxonomy,
+            'hide_empty' => false,
+            'walker' => new Walker_Category_Checklist_Custom(),
+        );
     
-        if (empty($post_id)) {
-            $post_id = $post_ID;
-        }
-    
-        $tax_name = 'shorturl_category';
-        $taxonomy = get_taxonomy($tax_name);
-        $disabled = !current_user_can($taxonomy->cap->assign_terms) ? 'disabled="disabled"' : '';
-    
-        // Start the output buffer
         ob_start();
-    
-        ?>
-        <div id="taxonomy-<?php echo $tax_name; ?>" class="categorydiv">
-            <ul id="<?php echo $tax_name; ?>-tabs" class="category-tabs">
-                <li class="tabs"><?php echo $taxonomy->labels->name; ?></li>
-            </ul>
-    
-            <div id="<?php echo $tax_name; ?>-all" class="tabs-panel">
-                <ul id="<?php echo $tax_name; ?>checklist" class="list:<?php echo $tax_name; ?> categorychecklist form-no-clear">
-                    <?php wp_terms_checklist($post_id, [
-                        'taxonomy' => $tax_name,
-                        'descendants_and_self' => $descendants_and_self,
-                        'selected_cats' => $selected_cats,
-                        'popular_cats' => $popular_cats,
-                        'walker' => $walker,
-                    ]); ?>
-                </ul>
-    
-                <!-- Add new category -->
-                <div id="<?php echo $tax_name; ?>-adder" class="wp-hidden-children">
-                    <h4>
-                        <a id="<?php echo $tax_name; ?>-add-toggle" href="#"><?php echo $taxonomy->labels->add_new_item; ?></a>
-                    </h4>
-                    <p id="<?php echo $tax_name; ?>-add" class="category-add wp-hidden-child" style="display: none;">
-                        <label class="screen-reader-text" for="new<?php echo $tax_name; ?>"><?php echo $taxonomy->labels->add_new_item; ?></label>
-                        <input type="text" name="new<?php echo $tax_name; ?>" id="new<?php echo $tax_name; ?>" class="form-required form-input-tip" value="New <?php echo $taxonomy->labels->singular_name; ?>" aria-required="true">
-                        <?php wp_dropdown_categories([
-                            'taxonomy' => $tax_name,
-                            'hide_empty' => 0,
-                            'hide_if_empty' => false,
-                            'orderby' => 'name',
-                            'hierarchical' => true,
-                            'show_option_none' => $taxonomy->labels->parent_item,
-                            'name' => 'new' . $tax_name . '_parent',
-                            'orderby' => 'name',
-                        ]); ?>
-                        <input type="button" id="<?php echo $tax_name; ?>-add-submit" data-wp-lists="add:<?php echo $tax_name; ?>-add" class="button <?php echo $tax_name; ?>-add-submit" value="<?php echo esc_attr( $taxonomy->labels->add_new_item ); ?>">
-                        <?php wp_nonce_field( 'add-' . $tax_name, '_ajax_nonce-add-' . $tax_name, false ); ?>
-                        <span id="<?php echo $tax_name; ?>-ajax-response"></span>
-                    </p>
-                </div>
+    ?>
+        <div id="shorturl-category-metabox">
+            <?php wp_terms_checklist(0, $args); ?>
+            <p><a href="#" id="add-new-shorturl-category">Add New Category</a></p>
+            <div id="new-shorturl-category" style="display: none;">
+                <input type="text" name="new_shorturl_category" placeholder="New Category Name">
+                <input type="button" value="Add Category" id="add-shorturl-category-btn">
             </div>
         </div>
         <script>
-        jQuery(document).ready(function($) {
-            $('#<?php echo $tax_name; ?>-add-toggle').on('click', function(e) {
-                e.preventDefault();
-                $('#<?php echo $tax_name; ?>-add').toggleClass('wp-hidden-child').slideToggle();
+            jQuery(document).ready(function($) {
+                $('#add-new-shorturl-category').on('click', function(e) {
+                    e.preventDefault();
+                    $('#new-shorturl-category').slideToggle();
+                });
+    
+                $('#add-shorturl-category-btn').on('click', function(e) {
+                    e.preventDefault();
+                    var categoryName = $('input[name=new_shorturl_category]').val();
+                    if (categoryName) {
+                        $.ajax({
+                            url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                            type: 'POST',
+                            data: {
+                                action: 'add_shorturl_category',
+                                categoryName: categoryName,
+                                taxonomy: '<?php echo $taxonomy; ?>',
+                                _ajax_nonce: '<?php echo wp_create_nonce('add-shorturl-category'); ?>'
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    // Reload the page or update the category list dynamically
+                                    alert('Category added successfully!');
+                                } else {
+                                    alert('Failed to add category. Please try again.');
+                                }
+                            }
+                        });
+                    } else {
+                        alert('Please enter a category name.');
+                    }
+                });
             });
-        });
         </script>
-        <?php
-    
-        // Get the buffered content and clean the buffer
-        $output = ob_get_clean();
-    
-        return $output;
+    <?php
+        return ob_get_clean();
     }
-            
-            
 
+    private function display_shorturl_tag() {
+        $taxonomy = 'shorturl_tag';
+        $tags = get_terms(array(
+            'taxonomy' => $taxonomy,
+            'hide_empty' => false,
+        ));
+    
+        ob_start();
+    ?>
+        <div id="shorturl-tag-metabox">
+            <ul class="tagchecklist">
+                <?php foreach ($tags as $tag) : ?>
+                    <li>
+                        <label>
+                            <input type="checkbox" name="shorturl_tag[]" value="<?php echo esc_attr($tag->term_id); ?>">
+                            <?php echo esc_html($tag->name); ?>
+                        </label>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+            <p><a href="#" id="add-new-shorturl-tag">Add New Tag</a></p>
+            <div id="new-shorturl-tag" style="display: none;">
+                <input type="text" name="new_shorturl_tag" placeholder="New Tag Name">
+                <input type="button" value="Add Tag" id="add-shorturl-tag-btn">
+            </div>
+        </div>
+        <script>
+            jQuery(document).ready(function($) {
+                $('#add-new-shorturl-tag').on('click', function(e) {
+                    e.preventDefault();
+                    $('#new-shorturl-tag').slideToggle();
+                });
+    
+                $('#add-shorturl-tag-btn').on('click', function(e) {
+                    e.preventDefault();
+                    var tagName = $('input[name=new_shorturl_tag]').val();
+                    if (tagName) {
+                        $.ajax({
+                            url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                            type: 'POST',
+                            data: {
+                                action: 'add_shorturl_tag',
+                                tagName: tagName,
+                                taxonomy: '<?php echo $taxonomy; ?>',
+                                _ajax_nonce: '<?php echo wp_create_nonce('add-shorturl-tag'); ?>'
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    // Reload the page or update the tag list dynamically
+                                    alert('Tag added successfully!');
+                                } else {
+                                    alert('Failed to add tag. Please try again.');
+                                }
+                            }
+                        });
+                    } else {
+                        alert('Please enter a tag name.');
+                    }
+                });
+            });
+        </script>
+    <?php
+        return ob_get_clean();
+    }
+    
+            
     public function generate_shortcode_handler($atts = null): string {
         // If $atts is null or not an array, initialize it as an empty array
         if (!is_array($atts)) {
             $atts = [];
         }
-        
+    
         // Extract shortcode attributes
         $atts = shortcode_atts([
-            'url' => '',
-            // 'uri' => '',
-            // 'valid_until' => '',
-            // 'categories' => '',
-            // 'tags' => ''
+            'url' => (empty($_POST['url']) ? '' : filter_var($_POST['url'], FILTER_VALIDATE_URL)),
+            'uri' => (empty($_POST['uri']) ? '' : sanitize_text_field($_POST['uri'])),
+            'valid_until' => (empty($_POST['valid_until']) ? '' : sanitize_text_field($_POST['valid_until'])),
+            'categories' => (empty($_POST['categories']) ? '' : sanitize_text_field($_POST['categories'])),
+            'tags' => (empty($_POST['tags']) ? '' : sanitize_text_field($_POST['tags'])),
         ], $atts);
+    
+        $result_message = ''; // Initialize result message
+        $qr_code_src = ''; // Initialize QR code source
     
         // Check if form is submitted
         if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Check if URL is provided
             if (!empty($_POST['url'])) {
                 // Call ShortURL::shorten() and add the result if URL is given
-                $shortened_url = ShortURL::shorten($_POST['url']);
-                $atts['url'] = $_POST['url']; // Set the URL in $atts for form population
-                $result_message = '<p>Shortened URL: ' . $shortened_url . '</p>';
-            } else {
-                $result_message = '<p>Error: Please provide a URL.</p>';
+                $result = ShortURL::shorten($atts);
+                $result_message = ($result['error'] ? 'Error: ' : 'Short URL: ') . $result['txt'];    
             }
-        } else {
-            $result_message = ''; // Initialize result message
         }
     
         // Generate form
@@ -122,50 +170,55 @@ class Shortcode {
         ?>
         <form method="post">
             <div class="postbox">
-                <h2 class="hndle">Categories</h2>
+                <h2 class="hndle">Create Short URL</h2>
                 <div class="inside">
-                    <?php
-                    // Display categories using custom taxonomy 'shorturl_category'
-                    wp_terms_checklist(0, [
-                        'taxonomy' => 'shorturl_category',
-                        'selected_cats' => $atts['categories'], // Selected categories
-                    ]);
-                    ?>
+                    <label for="url">Long URL:</label>
+                    <input type="text" name="url" value="<?php echo esc_attr($atts['url']); ?>">
                 </div>
             </div>
     
-            <?php
-            // Other attributes
-            foreach ($atts as $key => $value) {
-                ?>
-                <div class="postbox">
-                    <h2 class="hndle"><?php echo ucfirst($key); ?></h2>
-                    <div class="inside">
-                        <label for="<?php echo $key; ?>"><?php echo ucfirst($key); ?>:</label>
-                        <input type="text" name="<?php echo $key; ?>" value="<?php echo $value; ?>"><br>
-                    </div>
-                </div>
-                <?php
-            }
-            ?>
+            <p><a href="#" id="show-advanced-settings">Advanced Settings</a></p>
+            <div id="div-advanced-settings" style="display: none;">
+                <h2 class="handle">Categories</h2>
+                <?php echo $this->display_shorturl_category(); ?>
+                <h2 class="handle">Tags</h2>
+                <?php echo $this->display_shorturl_tag(); ?>
+            </div>
     
-            <!-- Add input for adding a new category -->
-            <label for="new_category">New Category:</label>
-            <input type="text" name="new_category"><br>
             <input type="submit" name="generate" value="Generate">
         </form>
+    
+        <!-- Display result message -->
+        <p><?php echo $result_message; ?></p>
+    
+<!-- Display QR code if available -->
+<?php if (!empty($result['txt'])) : ?>
+    <canvas id="qr"></canvas>
+            <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Generate QR code using QRious
+                var qr = new QRious({
+                    element: document.getElementById('qr'),
+                    value: '<?php echo $result['txt']; ?>',
+                    size: 200 // Adjust size as per your requirement
+                });
+            });
+        </script>
+    <?php endif; ?>    
         <?php
         $form = ob_get_clean(); // Get and clean the buffer
     
-        // Display result message
-        $form .= $result_message;
-    
         return $form;
     }
-        
+            
     
 
-    public function list_shortcode_handler(array $atts = []): string {
+    public function list_shortcode_handler($atts = null): string {
+
+        if (!is_array($atts)) {
+            $atts = [];
+        }
+
         global $wpdb;
         $table_name = $wpdb->prefix . 'shorturl_links';
     
