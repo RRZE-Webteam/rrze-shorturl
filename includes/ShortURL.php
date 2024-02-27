@@ -220,8 +220,12 @@ class ShortURL
 
     public static function isValidDate($valid_until)
     {
+        if (empty($valid_until)){
+            return ['error' => false, 'txt' => 'no date given'];
+        }
         // Validate if $valid_until is a valid date
         $parsed_date = date_parse($valid_until);
+
         if ($parsed_date['error_count'] > 0 || !checkdate($parsed_date['month'], $parsed_date['day'], $parsed_date['year'])) {
             return ['error' => true, 'txt' => 'Validity is not a valid date.'];
         }

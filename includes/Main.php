@@ -7,6 +7,7 @@ defined('ABSPATH') || exit;
 use RRZE\ShortURL\CustomerDomains;
 use RRZE\ShortURL\API;
 use RRZE\ShortURL\ShortURL;
+use RRZE\ShortURL\Shortcode;
 
 /**
  * Hauptklasse (Main)
@@ -45,6 +46,7 @@ class Main
         $domains = new CustomerDomains();
         $shortURL = new ShortURL();
         $api = new API();
+        $shortcode = new Shortcode();
     }
 
 
