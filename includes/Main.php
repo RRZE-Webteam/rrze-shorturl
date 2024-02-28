@@ -68,8 +68,6 @@ class Main
             'update_category_label_nonce' => $nonce,
         )
         );
-        add_action('wp_ajax_nopriv_update_category_label_action', array('RRZE\ShortURL\Shortcode', 'update_category_label'));
-        add_action('wp_ajax_update_category_label_action', array('RRZE\ShortURL\Shortcode', 'update_category_label'));
 
         wp_enqueue_style('rrze-shorturl-css', plugins_url('src/rrze-shorturl.css', plugin_basename($this->pluginFile)));
     }

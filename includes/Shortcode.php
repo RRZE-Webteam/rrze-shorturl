@@ -13,6 +13,9 @@ class Shortcode {
         if ( ! function_exists( 'wp_terms_checklist' ) ) {
             include ABSPATH . 'wp-admin/includes/template.php';
         }        
+
+        add_action('wp_ajax_nopriv_update_category_label_action', [$this, 'update_category_label']);
+        add_action('wp_ajax_update_category_label_action', [$this, 'update_category_label']);
     }
 
     private function display_shorturl_category() {
