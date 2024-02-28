@@ -68,26 +68,18 @@ function getSections()
 function drop_custom_tables()
 {
     global $wpdb;
-    $table_domains = $wpdb->prefix . 'shorturl_domains';
-    $table_links = $wpdb->prefix . 'shorturl_links';
-    $table_idms = $wpdb->prefix . 'shorturl_idms';
 
     try {
-        // Drop shorturl_idms table if it exists
-        if ($wpdb->get_var("SHOW TABLES LIKE '$table_idms'") == $table_idms) {
-            $wpdb->query("DROP TABLE $table_idms");
-        }
+        // Drop shorturl table if they exist
+        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_categories");
+        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_tags");
+        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_links");
+        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_domains");
+        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_idms");
 
-        // Drop shorturl_links table if it exists
-        if ($wpdb->get_var("SHOW TABLES LIKE '$table_links'") == $table_links) {
-            $wpdb->query("DROP TABLE $table_links");
-        }
-
-        // Drop shorturl_domains table if it exists
-        if ($wpdb->get_var("SHOW TABLES LIKE '$table_domains'") == $table_domains) {
-            $wpdb->query("DROP TABLE $table_domains");
-        }
-
+        // Delete triggers just to be sure (they should be deleted as they are binded to the dropped tables)
+        $wpdb->query("DROP TRIGGER IF EXISTS validate_url");
+        $wpdb->query("DROP TRIGGER IF EXISTS validate_hostname");
     } catch (\Exception $e) {
         // Handle the exception
         error_log("Error in drop_custom_tables: " . $e->getMessage());
@@ -131,6 +123,18 @@ function create_custom_tables()
                 PRIMARY KEY (id),
                 CONSTRAINT fk_domain_id FOREIGN KEY (domain_id) REFERENCES {$wpdb->prefix}shorturl_domains(id) ON DELETE CASCADE,
                 CONSTRAINT fk_idm_id FOREIGN KEY (idm_id) REFERENCES {$wpdb->prefix}shorturl_idms(id)
+            ) $charset_collate",
+            "shorturl_categories" => "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}shorturl_categories (
+                id mediumint(9) NOT NULL AUTO_INCREMENT,
+                label varchar(255) NOT NULL UNIQUE,
+                parent_id mediumint(9),
+                PRIMARY KEY (id),
+                CONSTRAINT fk_parent_id FOREIGN KEY (parent_id) REFERENCES {$wpdb->prefix}shorturl_categories(id)
+            ) $charset_collate",
+            "shorturl_tags" => "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}shorturl_tags (
+                id mediumint(9) NOT NULL AUTO_INCREMENT,
+                label varchar(255) NOT NULL UNIQUE,
+                PRIMARY KEY (id)
             ) $charset_collate"
         ];
 
@@ -150,17 +154,18 @@ function create_custom_tables()
             BEFORE INSERT ON {$wpdb->prefix}shorturl_links 
             FOR EACH ROW
             BEGIN
-                IF NEW.long_url NOT REGEXP '^https?://([a-z0-9-]+\\.)+[a-z]{2,}$' THEN
+                IF NEW.long_url NOT REGEXP '^https?://([a-z0-9-]+\.)+[a-z]{2,}/.*(\?.*)?(#.*)?$' THEN
                     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid long_url format';
                 END IF;
-
-                IF NEW.short_url NOT REGEXP '^https?://([a-z0-9-]+\\.)+[a-z]{2,}$' THEN
+            
+                IF NEW.short_url NOT REGEXP '^https?://([a-z0-9-]+\.)+[a-z]{2,}/.*(\?.*)?(#.*)?$' THEN
                     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid short_url format';
                 END IF;
             END;
             ";
-
+        
         $wpdb->query($trigger_sql);
+    
 
         // Validate Hostname
         $trigger_sql = "
@@ -178,7 +183,7 @@ function create_custom_tables()
 
         // Insert Default Data
         // idm "system"
-        $wpdb->query($wpdb->prepare("INSERT IGNORE INTO {$wpdb->prefix}shorturl_idms (idm) VALUES (%s)", 'system'));
+        $wpdb->query($wpdb->prepare("INSERT IGNORE INTO {$wpdb->prefix}shorturl_idms (idm, created_by) VALUES (%s, %s)", 'system', 'system'));
 
         // Insert Service domains
         $aEntries = [

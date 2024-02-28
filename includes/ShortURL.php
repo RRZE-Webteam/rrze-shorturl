@@ -72,14 +72,14 @@ class ShortURL
     }
 
 
-    public static function getLinkfromDB($domain_id, $long_url, $uri)
+    public static function getLinkfromDB($domain_id, $long_url)
     {
         try {
             global $wpdb;
             $table_name = $wpdb->prefix . 'shorturl_links';
 
             // Query the links table to get the ID and short_url where long_url matches $long_url
-            $result = $wpdb->get_results($wpdb->prepare("SELECT id, short_url, uri FROM $table_name WHERE long_url = %s AND uri = %s LIMIT 1", $long_url, $uri), ARRAY_A);
+            $result = $wpdb->get_results($wpdb->prepare("SELECT id, short_url FROM $table_name WHERE long_url = %s LIMIT 1", $long_url), ARRAY_A);
 
             if (empty($result)) {
                 // Insert into the links table
@@ -94,10 +94,10 @@ class ShortURL
                 $link_id = $wpdb->insert_id;
 
                 // Return the array with id and short_url as empty
-                return array('id' => $link_id, 'short_url' => '', 'uri' => $uri);
+                return array('id' => $link_id, 'short_url' => '');
             } else {
                 // Return the array with id and short_url
-                return array('id' => $result[0]['id'], 'short_url' => $result[0]['short_url'], 'uri' => $result[0]['uri']);
+                return array('id' => $result[0]['id'], 'short_url' => $result[0]['short_url']);
             }
         } catch (\Exception $e) {
             error_log("Error in getLinkfromDB: " . $e->getMessage());
@@ -105,7 +105,7 @@ class ShortURL
         }
     }
 
-    public static function updateLink($link_id, $domain_id, $shortURL, $uri, $valid_until)
+    public static function updateLink($link_id, $domain_id, $shortURL, $uri, $valid_until, $properties)
     {
         global $wpdb;
         $table_name = $wpdb->prefix . 'shorturl_links';
@@ -117,7 +117,8 @@ class ShortURL
                     'domain_id' => $domain_id,
                     'short_url' => $shortURL,
                     'uri' => $uri,
-                    'valid_until' => $valid_until
+                    'valid_until' => $valid_until,
+                    'properties' => $properties
                 ],
                 ['id' => $link_id]
             );
@@ -291,7 +292,7 @@ class ShortURL
                 return ['error' => true, 'txt' => 'Domain is not allowed to use our shortening service.'];
             }
 
-            $aLink = self::getLinkfromDB($aDomain['id'], $long_url, $uri);
+            $aLink = self::getLinkfromDB($aDomain['id'], $long_url);
 
             // Check if already exists in DB 
             if (!empty($aLink['short_url'])) {
@@ -313,24 +314,29 @@ class ShortURL
 
             // // Create shortURL
             $shortURL = self::$CONFIG['ShortURLBase'] . $targetURL;
-            $bUpdated = self::updateLink($aLink['id'], $aDomain['id'], $shortURL, $uri, $valid_until);
+            $properties = json_encode([
+                'categories' => $category,
+                'tags' => $tags
+            ]);
+
+            $bUpdated = self::updateLink($aLink['id'], $aDomain['id'], $shortURL, $uri, $valid_until, $properties);
 
             if (!$bUpdated) {
-                return ['error' => true, 'txt' => 'Unable to update database table ' . $aDomain['id']];
+                return ['error' => true, 'txt' => 'Unable to update database table'];
             }
 
 
-            // 2DO: fill these arrays via edit.js
-            $data = [
-                'shorturl_id' => $aLink['id'],
-                'long_url' => $long_url,
-                'short_url' => $shortURL,
-                'category_id' => $category,
-                'tag_ids' => $tags,
-                'valid_until' => $valid_until,
-            ];
+            // // 2DO: fill these arrays via edit.js
+            // $data = [
+            //     'shorturl_id' => $aLink['id'],
+            //     'long_url' => $long_url,
+            //     'short_url' => $shortURL,
+            //     'category_id' => $category,
+            //     'tag_ids' => $tags,
+            //     'valid_until' => $valid_until,
+            // ];
 
-            do_action('shortlink_inserted', $data);
+            // do_action('shortlink_inserted', $data);
 
             return ['error' => false, 'txt' => $shortURL];
         } catch (\Exception $e) {
