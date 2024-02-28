@@ -1,13 +1,13 @@
 .shorturl-edit-container {
-    display: inline-block;
-    vertical-align: top; /* Align the container with the top of the line */
+    display: flex; /* Use flexbox layout */
+    align-items: center; /* Center items vertically */
 }
 
 .shorturl-category-input {
-    display: inline-block;
+    flex: 1; /* Allow input field to grow and fill remaining space */
+    margin-right: 10px; /* Add some spacing between input and button */
 }
 
 .shorturl-update-category {
-    display: inline-block;
-    vertical-align: top; /* Align the button with the top of the line */
+    margin-left: 10px; /* Add some spacing between button and input */
 }

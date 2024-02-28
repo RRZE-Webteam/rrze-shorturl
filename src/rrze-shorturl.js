@@ -51,5 +51,40 @@ jQuery(document).ready(function ($) {
         // Replace label with input field and update button on click
         $(this).parent().html("<div class='shorturl-edit-container'><input type='text' class='shorturl-category-input' data-id='" + id + "' value='" + label + "'><button class='shorturl-update-category' data-id='" + id + "'>Update</button></div>");
     });
+
+
+        // update category
+        $(document).on("click", ".shorturl-update-category", function () {
+            // Handle category update on button click
+            var id = $(this).data("id");
+            var label = $(this).parent().find(".shorturl-category-input").val();
+
+            console.log('label = ' + label);
+            console.log('url = ' + ajax_object.ajax_url);
+    
+            // Send AJAX request to update category label
+            $.ajax({
+                url: ajax_object.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'update_category_label_action',
+                    category_id: id,
+                    updated_label: label,
+                    security: ajax_object.update_category_label_nonce, // Pass nonce                    
+                },
+                success: function(response) {
+                    // Display message
+                    $("p").html(response.data);
+                    // Replace input field with label after successful update
+                    $(".shorturl-category-input[data-id='" + id + "']").parent().html("<span class='category-label'>" + label + "</span>");
+                },
+                error: function(xhr, status, error) {
+                    // Display error message
+                    console.error(xhr.responseText);
+                }
+            });
+        });
+    
+    
             
 });

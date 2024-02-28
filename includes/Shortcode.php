@@ -306,6 +306,36 @@ class Shortcode {
     }
         
 
+    public static function update_category_label() {
+          // Verify nonce
+    if ( ! isset( $_POST['security'] ) || ! wp_verify_nonce( $_POST['security'], 'update_category_label_nonce' ) ) {
+        wp_send_json_error( 'Nonce verification failed.' );
+    }
+
+        global $wpdb;
+    
+        error_log('jawoll ja');
+        // Get category ID and updated label from AJAX request
+        $category_id = intval($_POST['category_id']);
+        $updated_label = sanitize_text_field($_POST['updated_label']);
+    
+        // Update category label in the database
+        $update_query = $wpdb->prepare("UPDATE {$wpdb->prefix}shorturl_categories SET label = %s WHERE id = %d", $updated_label, $category_id);
+        $result = $wpdb->query($update_query);
+    
+        // Check if update was successful
+        if ($result !== false) {
+            // Return success message
+            wp_send_json_success('Category updated');
+        } else {
+            // Return error message
+            wp_send_json_error('Error: Could not update category');
+        }
+    
+        // Don't forget to exit
+        wp_die();
+    }
+    
 
     public function display_shorturl_categories($atts) {
         global $wpdb;
@@ -337,32 +367,7 @@ class Shortcode {
                     $message = "Error: Category label must be unique.";
                 }
             }
-        }
-    
-        // Check if form submitted to update category label
-        if (isset($_POST['update_category'])) {
-            $category_id = intval($_POST['category_id']);
-            $updated_label = sanitize_text_field($_POST['updated_label']);
-            // Update category label in the database
-            $update_query = $wpdb->prepare("UPDATE {$wpdb->prefix}shorturl_categories SET label = %s WHERE id = %d", $updated_label, $category_id);
-            if ($wpdb->query($update_query)) {
-                $message = "Category updated";
-            } else {
-                $message = "Error: Could not update category.";
-            }
-        }
-    
-        // Check if form submitted to delete category
-        if (isset($_POST['delete_category'])) {
-            $category_id = intval($_POST['category_id']);
-            // Delete category from the database
-            $delete_query = $wpdb->prepare("DELETE FROM {$wpdb->prefix}shorturl_categories WHERE id = %d", $category_id);
-            if ($wpdb->query($delete_query)) {
-                $message = "Category deleted";
-            } else {
-                $message = "Error: Could not delete category.";
-            }
-        }
+        }    
     
         // Retrieve categories from the database
         $categories = $wpdb->get_results("SELECT id, label, parent_id FROM {$wpdb->prefix}shorturl_categories ORDER BY label", ARRAY_A);

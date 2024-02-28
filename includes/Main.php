@@ -57,9 +57,19 @@ class Main
     {
         wp_enqueue_script('clipboard', plugins_url('assets/js/clipboard.min.js', plugin_basename($this->pluginFile)), array('jquery'), null, true);     
         wp_enqueue_script('qrious', plugins_url('assets/js/qrious.min.js', plugin_basename($this->pluginFile)), array('jquery'), null, true);     
-        wp_enqueue_script('rrrze-shorturl', plugins_url('src/rrze-shorturl.js', plugin_basename($this->pluginFile)), array('jquery'), null, true);
+        wp_enqueue_script('rrze-shorturl', plugins_url('src/rrze-shorturl.js', plugin_basename($this->pluginFile)), array('jquery'), null, true);
+  // Create a nonce
+  $nonce = wp_create_nonce('update_category_label_nonce');
 
-        wp_enqueue_style('custom-styles', plugins_url('src/rrze-shorturl.css', plugin_basename($this->pluginFile)));
+  // Localize the script with the nonce
+  wp_localize_script('rrze-shorturl', 'ajax_object', array(
+      'ajax_url' => admin_url('admin-ajax.php'),
+      'update_category_label_nonce' => $nonce,
+  ));
+  add_action('wp_ajax_nopriv_update_category_label_action', array('Shortcode', 'update_category_label'));
+  add_action('wp_ajax_update_category_label_action', array('Shortcode', 'update_category_label'));
+
+        wp_enqueue_style('rrze-shorturl-css', plugins_url('src/rrze-shorturl.css', plugin_basename($this->pluginFile)));
     }
 
 
