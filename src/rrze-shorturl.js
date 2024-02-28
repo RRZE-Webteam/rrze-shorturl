@@ -38,11 +38,11 @@ jQuery(document).ready(function ($) {
     $(document).on("mouseover", ".shorturl-category-row", function () {
         $(this).find(".shorturl-edit-category, .shorturl-delete-category").removeClass("hidden");
     });
-    
+
     $(document).on("mouseleave", ".shorturl-category-row", function () {
         $(this).find(".shorturl-edit-category, .shorturl-delete-category").addClass("hidden");
     });
-        
+
 
     $(document).on("click", ".shorturl-edit-category", function (e) {
         e.preventDefault();
@@ -53,38 +53,39 @@ jQuery(document).ready(function ($) {
     });
 
 
-        // update category
-        $(document).on("click", ".shorturl-update-category", function () {
-            // Handle category update on button click
-            var id = $(this).data("id");
-            var label = $(this).parent().find(".shorturl-category-input").val();
+    // update category
+    $(document).on("click", ".shorturl-update-category", function () {
+        // Handle category update on button click
+        var id = $(this).data("id");
+        var label = $(this).parent().find(".shorturl-category-input").val();
 
-            console.log('label = ' + label);
-            console.log('url = ' + ajax_object.ajax_url);
-    
-            // Send AJAX request to update category label
-            $.ajax({
-                url: ajax_object.ajax_url,
-                type: 'POST',
-                data: {
-                    action: 'update_category_label_action',
-                    category_id: id,
-                    updated_label: label,
-                    security: ajax_object.update_category_label_nonce, // Pass nonce                    
-                },
-                success: function(response) {
-                    // Display message
-                    $("p").html(response.data);
-                    // Replace input field with label after successful update
-                    $(".shorturl-category-input[data-id='" + id + "']").parent().html("<span class='category-label'>" + label + "</span>");
-                },
-                error: function(xhr, status, error) {
-                    // Display error message
-                    console.error(xhr.responseText);
-                }
-            });
+        console.log('label = ' + label);
+        console.log('url = ' + rrze_shorturl_ajax_object.ajax_url);
+
+        // Send AJAX request to update category label
+        $.ajax({
+            url: rrze_shorturl_ajax_object.ajax_url,
+            type: 'POST',
+            dataType: 'json', // Specify that the response should be treated as JSON
+            data: {
+                action: 'update_category_label_action',
+                category_id: id,
+                updated_label: label,
+                security: rrze_shorturl_ajax_object.update_category_label_nonce, // Pass nonce                    
+            },
+            success: function (response) {
+                // Display message
+                $("p").html(response.data);
+                // Replace input field with label after successful update
+                $(".shorturl-category-input[data-id='" + id + "']").parent().html("<span class='category-label'>" + label + "</span>");
+            },
+            error: function (xhr, status, error) {
+                // Display error message
+                console.error('THIS IS AN ERROR! ' + xhr.responseText);
+            }
         });
-    
-    
-            
+    });
+
+
+
 });

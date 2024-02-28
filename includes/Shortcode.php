@@ -307,6 +307,8 @@ class Shortcode {
         
 
     public static function update_category_label() {
+
+        error_log('$_POST[security] = ' . $_POST['security']);
           // Verify nonce
     if ( ! isset( $_POST['security'] ) || ! wp_verify_nonce( $_POST['security'], 'update_category_label_nonce' ) ) {
         wp_send_json_error( 'Nonce verification failed.' );
