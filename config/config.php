@@ -178,7 +178,7 @@ function create_custom_tables()
 
         // Insert Default Data
         // idm "system"
-        $wpdb->query($wpdb->prepare("INSERT IGNORE INTO {$wpdb->prefix}shorturl_idms (idm) VALUES (%s)", $entry['system']));
+        $wpdb->query($wpdb->prepare("INSERT IGNORE INTO {$wpdb->prefix}shorturl_idms (idm) VALUES (%s)", 'system'));
 
         // Insert Service domains
         $aEntries = [
