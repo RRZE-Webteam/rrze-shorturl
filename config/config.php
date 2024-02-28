@@ -121,14 +121,16 @@ function create_custom_tables()
                 long_url varchar(255) UNIQUE NOT NULL,
                 short_url varchar(255) NOT NULL,
                 uri varchar(255) DEFAULT NULL,
-                idm varchar(255) DEFAULT 'system',
+                properties JSON CHECK (JSON_VALID(properties)),
+                idm_id mediumint(9) NOT NULL DEFAULT 1,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 deleted_at TIMESTAMP DEFAULT NULL,
                 valid_until TIMESTAMP DEFAULT NULL,
                 active BOOLEAN DEFAULT TRUE,
                 PRIMARY KEY (id),
-                CONSTRAINT fk_domain_id FOREIGN KEY (domain_id) REFERENCES {$wpdb->prefix}shorturl_domains(id) ON DELETE CASCADE
+                CONSTRAINT fk_domain_id FOREIGN KEY (domain_id) REFERENCES {$wpdb->prefix}shorturl_domains(id) ON DELETE CASCADE,
+                CONSTRAINT fk_idm_id FOREIGN KEY (idm_id) REFERENCES {$wpdb->prefix}shorturl_idms(id)
             ) $charset_collate"
         ];
 
@@ -140,6 +142,43 @@ function create_custom_tables()
             // Execute SQL query
             dbDelta($sql);
         }
+
+        // Create some triggers to let the database do some job, too ;)
+        // Validate URL
+        $trigger_sql = "
+            CREATE TRIGGER validate_url
+            BEFORE INSERT ON {$wpdb->prefix}shorturl_links 
+            FOR EACH ROW
+            BEGIN
+                IF NEW.long_url NOT REGEXP '^https?://([a-z0-9-]+\\.)+[a-z]{2,}$' THEN
+                    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid long_url format';
+                END IF;
+
+                IF NEW.short_url NOT REGEXP '^https?://([a-z0-9-]+\\.)+[a-z]{2,}$' THEN
+                    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid short_url format';
+                END IF;
+            END;
+            ";
+
+        $wpdb->query($trigger_sql);
+
+        // Validate Hostname
+        $trigger_sql = "
+            CREATE TRIGGER validate_hostname
+            BEFORE INSERT ON {$wpdb->prefix}shorturl_domains
+            FOR EACH ROW
+            BEGIN
+                IF NEW.hostname NOT REGEXP '^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]*[a-zA-Z0-9])\\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\\-]*[A-Za-z0-9])$' THEN
+                    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid hostname format';
+                END IF;
+            END;
+            ";
+
+        $wpdb->query($trigger_sql);
+
+        // Insert Default Data
+        // idm "system"
+        $wpdb->query($wpdb->prepare("INSERT IGNORE INTO {$wpdb->prefix}shorturl_idms (idm) VALUES (%s)", $entry['system']));
 
         // Insert Service domains
         $aEntries = [
