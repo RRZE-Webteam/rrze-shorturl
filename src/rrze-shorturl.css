@@ -1,0 +1,13 @@
+.shorturl-edit-container {
+    display: inline-block;
+    vertical-align: top; /* Align the container with the top of the line */
+}
+
+.shorturl-category-input {
+    display: inline-block;
+}
+
+.shorturl-update-category {
+    display: inline-block;
+    vertical-align: top; /* Align the button with the top of the line */
+}

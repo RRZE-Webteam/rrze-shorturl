@@ -352,6 +352,18 @@ class Shortcode {
             }
         }
     
+        // Check if form submitted to delete category
+        if (isset($_POST['delete_category'])) {
+            $category_id = intval($_POST['category_id']);
+            // Delete category from the database
+            $delete_query = $wpdb->prepare("DELETE FROM {$wpdb->prefix}shorturl_categories WHERE id = %d", $category_id);
+            if ($wpdb->query($delete_query)) {
+                $message = "Category deleted";
+            } else {
+                $message = "Error: Could not delete category.";
+            }
+        }
+    
         // Retrieve categories from the database
         $categories = $wpdb->get_results("SELECT id, label, parent_id FROM {$wpdb->prefix}shorturl_categories ORDER BY label", ARRAY_A);
     
@@ -360,7 +372,7 @@ class Shortcode {
         $output .= '<thead><tr><th>ID</th><th>Category Label</th></tr></thead><tbody>';
     
         foreach ($categories as $category) {
-            $output .= '<tr>';
+            $output .= '<tr class="shorturl-category-row">';
             $output .= '<td>' . $category['id'] . '</td>';
             $output .= '<td>';
             // Display hierarchical indentation based on category_id
@@ -369,14 +381,17 @@ class Shortcode {
             if ($atts['checkbox']) {
                 $output .= '<input type="checkbox" name="category_ids[]" value="' . $category['id'] . '">&nbsp;';
             }
-            // Display label with edit link
-            $output .= '<span class="category-label" data-id="' . $category['id'] . '">' . $category['label'] . '</span>';
-            // Hidden edit link
-            $output .= '<a href="#" class="edit-category hidden" data-id="' . $category['id'] . '">Edit category</a>';
+            // Display label
+            $output .= '<span class="shorturl-category-span" data-id="' . $category['id'] . '">';
+            $output .= '<span class="shorturl-category-label">' . $category['label'] . '</span>';            
+            $output .= '<br>';
+            $output .= '<a href="#" class="shorturl-edit-category hidden" data-id="' . $category['id'] . '">Edit</a>&nbsp;&nbsp;';
+            $output .= '<a href="#" class="shorturl-delete-category hidden" data-id="' . $category['id'] . '">Delete</a>';
+            $output .= '</span>';
             $output .= '</td>';
             $output .= '</tr>';
         }
-    
+                    
         $output .= '</tbody></table>';
     
         // Start rendering the form for adding new category
@@ -398,43 +413,9 @@ class Shortcode {
         $output .= '<input type="submit" name="new_category" value="Add New Category">';
         $output .= '</form>';
     
-        // jQuery script for edit functionality
-        $output .= '<script>
-            jQuery(document).ready(function($) {
-                $(document).on("mouseover", ".category-label", function() {
-                    $(this).find(".edit-category").removeClass("hidden");
-                });
-    
-                $(document).on("mouseleave", ".category-label", function() {
-                    $(this).find(".edit-category").addClass("hidden");
-                });
-    
-                $(document).on("click", ".edit-category", function(e) {
-                    e.preventDefault();
-                    var label = $(this).parent().find(".category-label").text().trim();
-                    var id = $(this).parent().find(".category-label").data("id");
-                    // Replace label with input field and update button on click
-                    $(this).parent().find(".category-label").html("<input type=\'text\' class=\'category-input\' data-id=\'" + id + "\' value=\'" + label + "\'><button class=\'update-category\' data-id=\'" + id + "\'>Update</button>");
-                    $(this).addClass("hidden");
-                });
-    
-                $(document).on("click", ".update-category", function() {
-                    // Handle category update on button click
-                    var id = $(this).data("id");
-                    var label = $(this).parent().find(".category-input").val();
-                    $.post(window.location.href, { update_category: true, category_id: id, updated_label: label }, function(response) {
-                        $("p").html(response); // Display message
-                        // Replace input field with label after successful update
-                        $(".category-input[data-id=\'" + id + "\']").parent().find(".category-label").html(label);
-                        $(".category-input[data-id=\'" + id + "\']").remove();
-                        $(this).parent().find(".edit-category").removeClass("hidden");
-                    });
-                });
-            });
-        </script>';
-    
         return $output;
     }
+    
                                         
 }
 
