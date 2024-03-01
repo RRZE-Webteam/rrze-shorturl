@@ -35,16 +35,13 @@ const Edit = ({
     valid_until: defaultValidUntil
   } = attributes;
   const [url, setUrl] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useState)('');
-  const [getparameter, setGetparameter] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useState)('');
   const [shortenedUrl, setShortenedUrl] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useState)('');
   const [selfExplanatoryUri, setSelfExplanatoryUri] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useState)('');
   const [validUntil, setValidUntil] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useState)(defaultValidUntil);
   const [selectedCategories, setSelectedCategories] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useState)([]);
-  const [selectedTags, setSelectedTags] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useState)([]);
   const [errorMessage, setErrorMessage] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useState)('');
   const [qrCodeUrl, setQrCodeUrl] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useState)('');
   const [categoriesOptions, setCategoriesOptions] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useState)([]);
-  const [tagsOptions, setTagsOptions] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useState)([]);
   const [isLoading, setIsLoading] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useState)(true);
   const onChangeValidUntil = newDate => {
     setValidUntil(newDate);
@@ -61,62 +58,53 @@ const Edit = ({
         valid_until: nextYear
       });
     }
-    fetch('/wp-json/wp/v2/shorturl_category?fields=id,name,parent').then(response => response.json()).then(data => {
-      const categoriesOptions = data.map(term => ({
-        label: term.name,
-        value: term.id,
-        parent: term.parent || 0
-      }));
-      setCategoriesOptions(categoriesOptions);
+
+    // Fetch categories from shorturl_categories table
+    fetch('/wp-json/short-url/v1/categories').then(response => response.json()).then(data => {
+      console.log('ShortURL Categories Data:', data); // Log the data to see its structure
+      if (Array.isArray(data)) {
+        const categoriesOptions = data.map(term => ({
+          label: term.label,
+          value: term.id,
+          parent: term.parent_id || 0
+        }));
+        setCategoriesOptions(categoriesOptions);
+      } else {
+        console.log('No categories found.');
+        setCategoriesOptions([]); // Set categoriesOptions to an empty array if data is not an array
+      }
     }).catch(error => {
       console.error('Error fetching shorturl_category terms:', error);
     });
-    fetch('/wp-json/wp/v2/shorturl_tag?fields=id,name').then(response => response.json()).then(data => {
-      const tagsOptions = data.map(term => ({
-        label: term.name,
-        value: term.id.toString()
-      }));
-      setTagsOptions(tagsOptions);
-    }).catch(error => {
-      console.error('Error fetching shorturl_tag terms:', error);
-    });
   }, []);
-  const renderCategories = (categories, level = 0, renderedCategories = new Set()) => {
-    return categories.map((category, index) => {
-      if (renderedCategories.has(category.value)) {
-        return null;
+  const handleAddCategory = () => {
+    const newCategoryLabel = prompt('Enter the label of the new category:');
+    if (!newCategoryLabel) return; // If user cancels or enters an empty name, do nothing
+
+    // Make a POST request to add the new category
+    fetch('/wp-json/short-url/v1/add-category', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        label: newCategoryLabel
+      })
+    }).then(response => {
+      if (!response.ok) {
+        throw new Error('Failed to add category');
       }
-      renderedCategories.add(category.value);
-      const children = categoriesOptions.filter(child => child.parent === category.value);
-      const isLastCategory = index === categories.length - 1;
-      return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-        key: category.value,
-        style: {
-          marginLeft: `${level * 20}px`,
-          marginBottom: `0`
-        }
-      }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.CheckboxControl, {
-        label: category.label,
-        checked: selectedCategories.includes(category.value),
-        onChange: isChecked => {
-          if (isChecked) {
-            setSelectedCategories([...selectedCategories, category.value]);
-          } else {
-            setSelectedCategories(selectedCategories.filter(cat => cat !== category.value));
-          }
-        }
-      }), children.length > 0 && renderCategories(children, level + 1, renderedCategories));
-    });
-  };
-  const renderTags = () => {
-    return (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.FormTokenField, {
-      label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Tags'),
-      value: selectedTags,
-      onChange: setSelectedTags,
-      suggestions: tagsOptions?.map(tag => ({
-        label: tag.label,
-        value: tag.value
-      })) || []
+      return response.json();
+    }).then(newCategory => {
+      // Assuming newCategory has the structure { id: ..., name: ... }
+      const updatedCategories = [...categoriesOptions, {
+        label: newCategory.label,
+        value: newCategory.id
+      }];
+      setCategoriesOptions(updatedCategories);
+    }).catch(error => {
+      console.error('Error adding category:', error);
+      // Handle error, e.g., show error message to the user
     });
   };
   const shortenUrl = () => {
@@ -129,19 +117,15 @@ const Edit = ({
       }
     }
     if (isValid) {
-      let formattedUrl = url.trim();
-      if (!/^https?:\/\//i.test(formattedUrl)) {
-        formattedUrl = "https://" + formattedUrl;
-      }
-      const separator = formattedUrl.includes('?') ? '&' : '?';
-      const finalUrl = getparameter ? `${formattedUrl}${separator}${getparameter}` : formattedUrl;
+      // Construct shortenParams object
       const shortenParams = {
-        url: finalUrl,
+        url: url.trim(),
         uri: selfExplanatoryUri,
         valid_until: validUntil,
-        category: selectedCategories.map(cat => parseInt(cat)),
-        tags: selectedTags.map(tag => parseInt(tag))
+        category: selectedCategories
       };
+
+      // Make a POST request to shorten the URL
       fetch('/wp-json/short-url/v1/shorten', {
         method: 'POST',
         headers: {
@@ -181,19 +165,33 @@ const Edit = ({
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.DateTimePicker, {
     currentDate: validUntil,
     onChange: onChangeValidUntil,
-    is12Hour: false // Set to false to use 24-hour format
-    ,
-    minDate: new Date() // Minimum date is the current date
-    ,
-    maxDate: new Date(new Date().getFullYear() + 1, new Date().getMonth(), new Date().getDate()) // Maximum date is one year from now
-    ,
+    is12Hour: false,
+    minDate: new Date(),
+    maxDate: new Date(new Date().getFullYear() + 1, new Date().getMonth(), new Date().getDate()),
     isInvalidDate: date => {
       const nextYear = new Date(new Date().getFullYear() + 1, new Date().getMonth(), new Date().getDate());
       return date > nextYear;
     }
   })), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.PanelBody, {
     title: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Categories')
-  }, categoriesOptions.length > 0 && renderCategories(categoriesOptions))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.TextControl, {
+  }, categoriesOptions.map(category => (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    key: category.value
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
+    type: "checkbox",
+    value: category.value,
+    checked: selectedCategories.includes(category.value),
+    onChange: event => {
+      const isChecked = event.target.checked;
+      if (isChecked) {
+        setSelectedCategories([...selectedCategories, category.value]);
+      } else {
+        setSelectedCategories(selectedCategories.filter(cat => cat !== category.value));
+      }
+    }
+  }), ' ', (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", null, category.label), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("br", null))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("a", {
+    href: "#",
+    onClick: handleAddCategory
+  }, "Add New Category"))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.TextControl, {
     label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Enter URL'),
     value: url,
     onChange: setUrl
@@ -279,7 +277,7 @@ module.exports = window["wp"]["i18n"];
   \************************/
 /***/ ((module) => {
 
-module.exports = /*#__PURE__*/JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":3,"name":"create-block/rrze-shorturl","version":"0.1.22","title":"Shorten URL RRZE","description":"A block to shorten URLs.","category":"widgets","icon":"admin-links","keywords":["url","shorten"],"textdomain":"rrze-shorturl","editorScript":"file:./index.js","supports":{"align":true},"example":{},"attributes":{"url":"https://example.com","getparameter":""}}');
+module.exports = /*#__PURE__*/JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":3,"name":"create-block/rrze-shorturl","version":"0.1.23","title":"Shorten URL RRZE","description":"A block to shorten URLs.","category":"widgets","icon":"admin-links","keywords":["url","shorten"],"textdomain":"rrze-shorturl","editorScript":"file:./index.js","supports":{"align":true},"example":{},"attributes":{"url":"https://example.com","getparameter":""}}');
 
 /***/ })
 

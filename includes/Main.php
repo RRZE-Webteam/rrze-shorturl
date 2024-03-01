@@ -40,7 +40,6 @@ class Main
         add_action('wp_enqueue_scripts', [$this, 'enqueueScripts']);
         add_action('admin_enqueue_scripts', [$this, 'enqueueScripts']);
 
-        $taxonomy = new Taxonomy();
         $trigger = new Trigger();
         $settings = new Settings();
         $domains = new CustomerDomains();

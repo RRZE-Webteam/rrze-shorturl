@@ -50,7 +50,7 @@ class Trigger
 
             // Assign categories and tags to the post
             if (!empty($category_id)) {
-                wp_set_object_terms($post_id, $category_id, 'shorturl_category');
+                wp_set_object_terms($post_id, $category_id, '   ');
             }
             if (!empty($tag_ids)) {
                 wp_set_object_terms($post_id, $tag_ids, 'shorturl_tag');

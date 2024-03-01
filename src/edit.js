@@ -1,5 +1,5 @@
 import { useState, useEffect } from '@wordpress/element';
-import { PanelBody, DateTimePicker, CheckboxControl, FormTokenField, TextControl, Button } from '@wordpress/components';
+import { PanelBody, DateTimePicker, TextControl, Button } from '@wordpress/components';
 import { InspectorControls, useBlockProps } from '@wordpress/block-editor';
 import { __ } from '@wordpress/i18n';
 
@@ -7,23 +7,20 @@ const Edit = ({ attributes, setAttributes }) => {
     const { valid_until: defaultValidUntil } = attributes;
 
     const [url, setUrl] = useState('');
-    const [getparameter, setGetparameter] = useState('');
     const [shortenedUrl, setShortenedUrl] = useState('');
     const [selfExplanatoryUri, setSelfExplanatoryUri] = useState('');
     const [validUntil, setValidUntil] = useState(defaultValidUntil);
     const [selectedCategories, setSelectedCategories] = useState([]);
-    const [selectedTags, setSelectedTags] = useState([]);
     const [errorMessage, setErrorMessage] = useState('');
     const [qrCodeUrl, setQrCodeUrl] = useState('');
     const [categoriesOptions, setCategoriesOptions] = useState([]);
-    const [tagsOptions, setTagsOptions] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
     const onChangeValidUntil = newDate => {
         setValidUntil(newDate);
         setAttributes({ valid_until: newDate });
     };
-    
+
     useEffect(() => {
         if (!validUntil) {
             const now = new Date();
@@ -32,79 +29,55 @@ const Edit = ({ attributes, setAttributes }) => {
             setAttributes({ valid_until: nextYear });
         }
 
-        fetch('/wp-json/wp/v2/shorturl_category?fields=id,name,parent')
+        // Fetch categories from shorturl_categories table
+        fetch('/wp-json/short-url/v1/categories')
             .then(response => response.json())
             .then(data => {
-                const categoriesOptions = data.map(term => ({
-                    label: term.name,
-                    value: term.id,
-                    parent: term.parent || 0
-                }));
-                setCategoriesOptions(categoriesOptions);
+                console.log('ShortURL Categories Data:', data); // Log the data to see its structure
+                if (Array.isArray(data)) {
+                    const categoriesOptions = data.map(term => ({
+                        label: term.label,
+                        value: term.id,
+                        parent: term.parent_id || 0
+                    }));
+                    setCategoriesOptions(categoriesOptions);
+                } else {
+                    console.log('No categories found.');
+                    setCategoriesOptions([]); // Set categoriesOptions to an empty array if data is not an array
+                }
             })
             .catch(error => {
                 console.error('Error fetching shorturl_category terms:', error);
             });
-
-        fetch('/wp-json/wp/v2/shorturl_tag?fields=id,name')
-            .then(response => response.json())
-            .then(data => {
-                const tagsOptions = data.map(term => ({
-                    label: term.name,
-                    value: term.id.toString()
-                }));
-                setTagsOptions(tagsOptions);
-            })
-            .catch(error => {
-                console.error('Error fetching shorturl_tag terms:', error);
-            });
     }, []);
 
-    const renderCategories = (categories, level = 0, renderedCategories = new Set()) => {
-        return categories.map((category, index) => {
-            if (renderedCategories.has(category.value)) {
-                return null;
-            }
+    const handleAddCategory = () => {
+        const newCategoryLabel = prompt('Enter the label of the new category:');
+        if (!newCategoryLabel) return; // If user cancels or enters an empty name, do nothing
 
-            renderedCategories.add(category.value);
-
-            const children = categoriesOptions.filter(child => child.parent === category.value);
-            const isLastCategory = index === categories.length - 1;
-
-            return (
-                <div
-                    key={category.value}
-                    style={{
-                        marginLeft: `${level * 20}px`,
-                        marginBottom: `0`
-                    }}
-                >
-                    <CheckboxControl
-                        label={category.label}
-                        checked={selectedCategories.includes(category.value)}
-                        onChange={(isChecked) => {
-                            if (isChecked) {
-                                setSelectedCategories([...selectedCategories, category.value]);
-                            } else {
-                                setSelectedCategories(selectedCategories.filter(cat => cat !== category.value));
-                            }
-                        }}
-                    />
-                    {children.length > 0 && renderCategories(children, level + 1, renderedCategories)}
-                </div>
-            );
-        });
-    };
-
-    const renderTags = () => {
-        return (
-            <FormTokenField
-                label={__('Tags')}
-                value={selectedTags}
-                onChange={setSelectedTags}
-                suggestions={tagsOptions?.map(tag => ({ label: tag.label, value: tag.value })) || []}
-            />
-        );
+        // Make a POST request to add the new category
+        fetch('/wp-json/short-url/v1/add-category', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ label: newCategoryLabel })
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to add category');
+                }
+                return response.json();
+            })
+            .then(newCategory => {
+                // Assuming newCategory has the structure { id: ..., name: ... }
+                const updatedCategories = [...categoriesOptions, { label: newCategory.label, value: newCategory.id }];
+                setCategoriesOptions(updatedCategories);
+            })
+            .catch(error => {
+                console.error('Error adding category:', error);
+                // Handle error, e.g., show error message to the user
+            });
     };
 
     const shortenUrl = () => {
@@ -120,22 +93,15 @@ const Edit = ({ attributes, setAttributes }) => {
         }
 
         if (isValid) {
-            let formattedUrl = url.trim();
-            if (!/^https?:\/\//i.test(formattedUrl)) {
-                formattedUrl = "https://" + formattedUrl;
-            }
-
-            const separator = formattedUrl.includes('?') ? '&' : '?';
-            const finalUrl = getparameter ? `${formattedUrl}${separator}${getparameter}` : formattedUrl;
-
+            // Construct shortenParams object
             const shortenParams = {
-                url: finalUrl,
+                url: url.trim(),
                 uri: selfExplanatoryUri,
                 valid_until: validUntil,
-                category: selectedCategories.map(cat => parseInt(cat)),
-                tags: selectedTags.map(tag => parseInt(tag))
+                category: selectedCategories
             };
 
+            // Make a POST request to shorten the URL
             fetch('/wp-json/short-url/v1/shorten', {
                 method: 'POST',
                 headers: {
@@ -157,7 +123,7 @@ const Edit = ({ attributes, setAttributes }) => {
                 })
                 .catch(error => console.error('Error:', error));
         }
-    }
+    };
 
     const generateQRCode = (text) => {
         const qr = new QRious({
@@ -172,18 +138,18 @@ const Edit = ({ attributes, setAttributes }) => {
         <div {...useBlockProps()}>
             <InspectorControls>
                 <PanelBody title={__('Self-Explanatory URI')}>
-                <TextControl
-                value={selfExplanatoryUri}
-                onChange={setSelfExplanatoryUri}
-            />
+                    <TextControl
+                        value={selfExplanatoryUri}
+                        onChange={setSelfExplanatoryUri}
+                    />
                 </PanelBody>
                 <PanelBody title={__('Validity')}>
                     <DateTimePicker
                         currentDate={validUntil}
                         onChange={onChangeValidUntil}
-                        is12Hour={false} // Set to false to use 24-hour format
-                        minDate={new Date()} // Minimum date is the current date
-                        maxDate={new Date(new Date().getFullYear() + 1, new Date().getMonth(), new Date().getDate())} // Maximum date is one year from now
+                        is12Hour={false}
+                        minDate={new Date()}
+                        maxDate={new Date(new Date().getFullYear() + 1, new Date().getMonth(), new Date().getDate())}
                         isInvalidDate={(date) => {
                             const nextYear = new Date(new Date().getFullYear() + 1, new Date().getMonth(), new Date().getDate());
                             return date > nextYear;
@@ -191,11 +157,29 @@ const Edit = ({ attributes, setAttributes }) => {
                     />
                 </PanelBody>
                 <PanelBody title={__('Categories')}>
-                    {categoriesOptions.length > 0 && renderCategories(categoriesOptions)}
+                    {categoriesOptions.map(category => (
+                        <div key={category.value}>
+                            <input
+                                type="checkbox"
+                                value={category.value}
+                                checked={selectedCategories.includes(category.value)}
+                                onChange={(event) => {
+                                    const isChecked = event.target.checked;
+                                    if (isChecked) {
+                                        setSelectedCategories([...selectedCategories, category.value]);
+                                    } else {
+                                        setSelectedCategories(selectedCategories.filter(cat => cat !== category.value));
+                                    }
+                                }}
+                            />
+                            {' '}
+                            <label>{category.label}</label>
+                            <br />
+                        </div>
+                    ))}
+                    <a href="#" onClick={handleAddCategory}>Add New Category</a>
                 </PanelBody>
-                {/* <PanelBody title={__('Tags')}>
-                    {renderTags()}
-                </PanelBody> */}
+
             </InspectorControls>
 
             <TextControl
@@ -207,12 +191,14 @@ const Edit = ({ attributes, setAttributes }) => {
                 {__('Shorten URL')}
             </Button>
 
+            {/* Display error message if exists */}
             {errorMessage && (
                 <p style={{ color: 'red' }}>
                     {errorMessage}
                 </p>
             )}
 
+            {/* Display shortened URL and QR code if exists */}
             {shortenedUrl && (
                 <div>
                     <p>
