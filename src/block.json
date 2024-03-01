@@ -1,22 +1,27 @@
 {
-	"$schema": "https://schemas.wp.org/trunk/block.json",
-	"apiVersion": 3,
-	"name": "create-block/rrze-shorturl",
-	"version": "0.1.23",
+    "$schema": "https://schemas.wp.org/trunk/block.json",
+    "apiVersion": 3,
+    "name": "create-block/rrze-shorturl",
+    "version": "0.1.22",
     "title": "Shorten URL RRZE",
     "description": "A block to shorten URLs.",
     "category": "widgets",
-	"icon": "admin-links",
+    "icon": "admin-links",
     "keywords": ["url", "shorten"],
-	"textdomain": "rrze-shorturl",
-	"editorScript": "file:./index.js",
+    "textdomain": "rrze-shorturl",
+    "editorScript": "file:./index.js",
     "supports": {
         "align": true
     },
-    "example": {
-    },
+    "example": {},
     "attributes": {
-        "url": "https://example.com",
-        "getparameter": ""
+        "url": {
+            "type": "string",
+            "default": "https://example.com"
+        },
+        "getparameter": {
+            "type": "string",
+            "default": ""
+        }
     }
 }

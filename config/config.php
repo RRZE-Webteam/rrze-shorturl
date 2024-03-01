@@ -4,6 +4,69 @@ namespace RRZE\ShortURL\Config;
 
 defined('ABSPATH') || exit;
 
+
+
+// TEST DATA
+
+function fill_test_data() {
+    global $wpdb;
+
+    // Insert test data into the shorturl_tags table
+    $wpdb->insert(
+        $wpdb->prefix . 'shorturl_tags',
+        array(
+            'label' => 'Tag 1',
+        )
+    );
+    $wpdb->insert(
+        $wpdb->prefix . 'shorturl_tags',
+        array(
+            'label' => 'Tag 2',
+        )
+    );
+
+    // Insert test data into the shorturl_categories table
+    $wpdb->insert(
+        $wpdb->prefix . 'shorturl_categories',
+        array(
+            'label' => 'Category 1',
+        )
+    );
+    $wpdb->insert(
+        $wpdb->prefix . 'shorturl_categories',
+        array(
+            'label' => 'Category 2',
+        )
+    );
+
+     // Insert test data into the shorturl_categories table with hierarchy
+     $wpdb->insert(
+        $wpdb->prefix . 'shorturl_categories',
+        array(
+            'label' => 'Parent Category'
+        )
+    );
+    $parent_id = $wpdb->insert_id; // Get the ID of the inserted parent category
+
+    // Insert child categories
+    $wpdb->insert(
+        $wpdb->prefix . 'shorturl_categories',
+        array(
+            'label' => 'Child Category 1',
+            'parent_id' => $parent_id, // Set parent_id to the ID of the parent category
+        )
+    );
+    $wpdb->insert(
+        $wpdb->prefix . 'shorturl_categories',
+        array(
+            'label' => 'Child Category 2',
+            'parent_id' => $parent_id, // Set parent_id to the ID of the parent category
+        )
+    );
+}
+
+
+
 /**
  * Gibt der Name der Option zurück.
  * @return array [description]
@@ -150,19 +213,19 @@ function create_custom_tables()
         // Create some triggers to let the database do some job, too ;)
         // Validate URL
         $trigger_sql = "
-            CREATE TRIGGER validate_url
-            BEFORE INSERT ON {$wpdb->prefix}shorturl_links 
-            FOR EACH ROW
-            BEGIN
-                IF NEW.long_url NOT REGEXP '^https?://([a-z0-9-]+\.)+[a-z]{2,}/.*(\?.*)?(#.*)?$' THEN
-                    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid long_url format';
-                END IF;
-            
-                IF NEW.short_url NOT REGEXP '^https?://([a-z0-9-]+\.)+[a-z]{2,}/.*(\?.*)?(#.*)?$' THEN
-                    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid short_url format';
-                END IF;
-            END;
-            ";
+        CREATE TRIGGER validate_url
+        BEFORE INSERT ON {$wpdb->prefix}shorturl_links 
+        FOR EACH ROW
+        BEGIN
+            IF NEW.long_url NOT REGEXP '^https?://.*$' THEN
+                SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid long_url format';
+            END IF;
+        
+            IF NEW.short_url NOT REGEXP '^https?://.*$' THEN
+                SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid short_url format';
+            END IF;
+        END;
+        ";
         
         $wpdb->query($trigger_sql);
     
@@ -214,4 +277,6 @@ function create_custom_tables()
         // Handle the exception
         error_log("Error in create_custom_tables: " . $e->getMessage());
     }
+
+    fill_test_data();
 }

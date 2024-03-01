@@ -39,9 +39,11 @@ const Edit = ({
   const [selfExplanatoryUri, setSelfExplanatoryUri] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useState)('');
   const [validUntil, setValidUntil] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useState)(defaultValidUntil);
   const [selectedCategories, setSelectedCategories] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useState)([]);
+  const [selectedTags, setSelectedTags] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useState)([]);
   const [errorMessage, setErrorMessage] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useState)('');
   const [qrCodeUrl, setQrCodeUrl] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useState)('');
   const [categoriesOptions, setCategoriesOptions] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useState)([]);
+  const [tagSuggestions, setTagSuggestions] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useState)([]);
   const [isLoading, setIsLoading] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useState)(true);
   const onChangeValidUntil = newDate => {
     setValidUntil(newDate);
@@ -75,6 +77,20 @@ const Edit = ({
       }
     }).catch(error => {
       console.error('Error fetching shorturl_category terms:', error);
+    });
+
+    // Fetch tags from shorturl_tags table
+    fetch('/wp-json/short-url/v1/tags').then(response => response.json()).then(data => {
+      console.log('ShortURL Tags Data:', data); // Log the data to see its structure
+      if (Array.isArray(data)) {
+        const tagLabels = data.map(tag => tag.label); // Extract only the label strings
+        setTagSuggestions(tagLabels);
+      } else {
+        console.log('No tags found.');
+        setTagSuggestions([]);
+      }
+    }).catch(error => {
+      console.error('Error fetching shorturl_tags:', error);
     });
   }, []);
   const handleAddCategory = () => {
@@ -117,33 +133,72 @@ const Edit = ({
       }
     }
     if (isValid) {
-      // Construct shortenParams object
-      const shortenParams = {
-        url: url.trim(),
-        uri: selfExplanatoryUri,
-        valid_until: validUntil,
-        category: selectedCategories
-      };
+      // First, check if there are any new tags
+      const newTags = selectedTags.filter(tag => !tagSuggestions.includes(tag));
 
-      // Make a POST request to shorten the URL
-      fetch('/wp-json/short-url/v1/shorten', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(shortenParams)
-      }).then(response => response.json()).then(shortenData => {
-        console.log('My response:', shortenData);
-        if (!shortenData.error) {
-          setShortenedUrl(shortenData.txt);
-          setErrorMessage('');
-          generateQRCode(shortenData.txt);
-        } else {
-          setErrorMessage('Error: ' + shortenData.txt);
-          setShortenedUrl('');
-        }
-      }).catch(error => console.error('Error:', error));
+      // If there are new tags, add them via REST API
+      if (newTags.length > 0) {
+        // Make a POST request to add the new tags
+        Promise.all(newTags.map(newTag => {
+          return fetch('/wp-json/short-url/v1/add-tag', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              label: newTag
+            })
+          }).then(response => {
+            if (!response.ok) {
+              throw new Error('Failed to add tag');
+            }
+            return response.json();
+          }).then(newTag => newTag.id);
+        })).then(newTagIds => {
+          // Add the IDs of the new tags to the selectedTags array
+          const updatedSelectedTags = [...selectedTags, ...newTagIds];
+          setSelectedTags(updatedSelectedTags);
+
+          // Continue with the URL shortening process
+          continueShorteningUrl(updatedSelectedTags);
+        }).catch(error => {
+          console.error('Error adding tag:', error);
+          setErrorMessage('Error adding tag');
+        });
+      } else {
+        // No new tags, continue with the URL shortening process
+        continueShorteningUrl(selectedTags);
+      }
     }
+  };
+  const continueShorteningUrl = tags => {
+    // Construct shortenParams object
+    const shortenParams = {
+      url: url.trim(),
+      uri: selfExplanatoryUri,
+      valid_until: validUntil,
+      category: selectedCategories,
+      tags: tags // Include selected tags
+    };
+
+    // Make a POST request to shorten the URL
+    fetch('/wp-json/short-url/v1/shorten', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(shortenParams)
+    }).then(response => response.json()).then(shortenData => {
+      console.log('My response:', shortenData);
+      if (!shortenData.error) {
+        setShortenedUrl(shortenData.txt);
+        setErrorMessage('');
+        generateQRCode(shortenData.txt);
+      } else {
+        setErrorMessage('Error: ' + shortenData.txt);
+        setShortenedUrl('');
+      }
+    }).catch(error => console.error('Error:', error));
   };
   const generateQRCode = text => {
     const qr = new QRious({
@@ -191,7 +246,14 @@ const Edit = ({
   }), ' ', (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("label", null, category.label), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("br", null))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)("a", {
     href: "#",
     onClick: handleAddCategory
-  }, "Add New Category"))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.TextControl, {
+  }, "Add New Category")), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.PanelBody, {
+    title: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Tags')
+  }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.FormTokenField, {
+    label: "Tags",
+    value: selectedTags,
+    suggestions: tagSuggestions,
+    onChange: newTags => setSelectedTags(newTags)
+  }))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.TextControl, {
     label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Enter URL'),
     value: url,
     onChange: setUrl
@@ -277,7 +339,7 @@ module.exports = window["wp"]["i18n"];
   \************************/
 /***/ ((module) => {
 
-module.exports = /*#__PURE__*/JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":3,"name":"create-block/rrze-shorturl","version":"0.1.23","title":"Shorten URL RRZE","description":"A block to shorten URLs.","category":"widgets","icon":"admin-links","keywords":["url","shorten"],"textdomain":"rrze-shorturl","editorScript":"file:./index.js","supports":{"align":true},"example":{},"attributes":{"url":"https://example.com","getparameter":""}}');
+module.exports = /*#__PURE__*/JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":3,"name":"create-block/rrze-shorturl","version":"0.1.22","title":"Shorten URL RRZE","description":"A block to shorten URLs.","category":"widgets","icon":"admin-links","keywords":["url","shorten"],"textdomain":"rrze-shorturl","editorScript":"file:./index.js","supports":{"align":true},"example":{},"attributes":{"url":{"type":"string","default":"https://example.com"},"getparameter":{"type":"string","default":""}}}');
 
 /***/ })
 

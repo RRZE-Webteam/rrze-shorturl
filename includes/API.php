@@ -22,20 +22,83 @@ class API {
 
         register_rest_route('short-url/v1', '/categories', array(
             'methods' => 'GET',
-            'callback' => array($this, 'get_shorturl_categories'),
+            'callback' => array($this, 'get_categories_callback'),
         ));
 
         register_rest_route('short-url/v1', '/add-category', array(
             'methods' => 'POST',
-            'callback' => array($this, 'handle_add_category_request'),
+            'callback' => array($this, 'add_category_callback'),
             // 'permission_callback' => function () {
             //     return current_user_can('manage_options');
             // },
-        ));        
+        ));  
+        
+        register_rest_route('short-url/v1', '/tags', array(
+            'methods' => 'GET',
+            'callback' => array($this, 'get_tags_callback'),
+        ));
+
+        register_rest_route( 'short-url/v1', '/add-tag', array(
+            'methods'             => 'POST',
+            'callback'            => array($this, 'add_tag_callback'),
+            // 'permission_callback' => 'rest_allow_authenticated', // Set your permission callback function
+        ) );
     }
 
+    function add_tag_callback( $request ) {
+        global $wpdb;
+        
+        $tag_label = $request->get_param( 'label' );
+    
+        if ( empty( $tag_label ) ) {
+            return new WP_Error( 'missing_tag_label', __( 'Tag label is required.' ), array( 'status' => 400 ) );
+        }
+    
+        // Check if tag already exists
+        $existing_tag = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}shorturl_tags WHERE label = %s", $tag_label ) );
+    
+        if ( ! $existing_tag ) {
+            // Tag does not exist, so add it
+            $wpdb->insert( $wpdb->prefix . 'shorturl_tags', array( 'label' => $tag_label ) );
+    
+            // Return the newly added tag
+            $tag_id = $wpdb->insert_id;
+            $response = array(
+                'id'    => $tag_id,
+                'label' => $tag_label,
+            );
+    
+            return rest_ensure_response( $response );
+        } else {
+            // Tag already exists
+            return new WP_Error( 'tag_already_exists', __( 'Tag already exists.' ), array( 'status' => 400 ) );
+        }
+    }
+    
+    // Callback function to get tags
+    function get_tags_callback( $request ) {
+        global $wpdb;
+    
+        // Query tags from the database
+        $tags = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}shorturl_tags" );
+    
+        // Initialize an empty array to store tag data
+        $tag_data = array();
+    
+        // Loop through the tags and extract required data
+        foreach ( $tags as $tag ) {
+            $tag_data[] = array(
+                'id'    => $tag->id,
+                'label' => $tag->label,
+            );
+        }
+    
+        // Return the tag data as a JSON response
+        return rest_ensure_response( $tag_data );
+    }
+    
 
-    public function handle_add_category_request($request) {
+    public function add_category_callback($request) {
 
         $parameters = $request->get_json_params();
     
@@ -57,13 +120,13 @@ class API {
         error_log('PASST');
     
         $categories = array('id' => $category_id, 'label' => $parameters['label']);
-        
+
         return new WP_REST_Response($categories, 200);
 
     }
 
     
-    public function get_shorturl_categories() {
+    public function get_categories_callback() {
         global $wpdb;
     
         try {

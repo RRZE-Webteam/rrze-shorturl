@@ -1,5 +1,5 @@
 import { useState, useEffect } from '@wordpress/element';
-import { PanelBody, DateTimePicker, TextControl, Button } from '@wordpress/components';
+import { PanelBody, DateTimePicker, TextControl, Button, FormTokenField } from '@wordpress/components';
 import { InspectorControls, useBlockProps } from '@wordpress/block-editor';
 import { __ } from '@wordpress/i18n';
 
@@ -11,9 +11,11 @@ const Edit = ({ attributes, setAttributes }) => {
     const [selfExplanatoryUri, setSelfExplanatoryUri] = useState('');
     const [validUntil, setValidUntil] = useState(defaultValidUntil);
     const [selectedCategories, setSelectedCategories] = useState([]);
+    const [selectedTags, setSelectedTags] = useState([]);
     const [errorMessage, setErrorMessage] = useState('');
     const [qrCodeUrl, setQrCodeUrl] = useState('');
     const [categoriesOptions, setCategoriesOptions] = useState([]);
+    const [tagSuggestions, setTagSuggestions] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
     const onChangeValidUntil = newDate => {
@@ -49,7 +51,25 @@ const Edit = ({ attributes, setAttributes }) => {
             .catch(error => {
                 console.error('Error fetching shorturl_category terms:', error);
             });
+
+        // Fetch tags from shorturl_tags table
+        fetch('/wp-json/short-url/v1/tags')
+            .then(response => response.json())
+            .then(data => {
+                console.log('ShortURL Tags Data:', data); // Log the data to see its structure
+                if (Array.isArray(data)) {
+                    const tagLabels = data.map(tag => tag.label); // Extract only the label strings
+                    setTagSuggestions(tagLabels);
+                } else {
+                    console.log('No tags found.');
+                    setTagSuggestions([]);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching shorturl_tags:', error);
+            });
     }, []);
+
 
     const handleAddCategory = () => {
         const newCategoryLabel = prompt('Enter the label of the new category:');
@@ -93,36 +113,74 @@ const Edit = ({ attributes, setAttributes }) => {
         }
 
         if (isValid) {
-            // Construct shortenParams object
-            const shortenParams = {
-                url: url.trim(),
-                uri: selfExplanatoryUri,
-                valid_until: validUntil,
-                category: selectedCategories
-            };
+            // First, check if there are any new tags
+            const newTags = selectedTags.filter(tag => !tagSuggestions.includes(tag));
 
-            // Make a POST request to shorten the URL
-            fetch('/wp-json/short-url/v1/shorten', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(shortenParams)
-            })
-                .then(response => response.json())
-                .then(shortenData => {
-                    console.log('My response:', shortenData);
-                    if (!shortenData.error) {
-                        setShortenedUrl(shortenData.txt);
-                        setErrorMessage('');
-                        generateQRCode(shortenData.txt);
-                    } else {
-                        setErrorMessage('Error: ' + shortenData.txt);
-                        setShortenedUrl('');
-                    }
-                })
-                .catch(error => console.error('Error:', error));
+            // If there are new tags, add them via REST API
+            if (newTags.length > 0) {
+                // Make a POST request to add the new tags
+                Promise.all(newTags.map(newTag => {
+                    return fetch('/wp-json/short-url/v1/add-tag', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ label: newTag })
+                    }).then(response => {
+                        if (!response.ok) {
+                            throw new Error('Failed to add tag');
+                        }
+                        return response.json();
+                    }).then(newTag => newTag.id);
+                })).then(newTagIds => {
+                    // Add the IDs of the new tags to the selectedTags array
+                    const updatedSelectedTags = [...selectedTags, ...newTagIds];
+                    setSelectedTags(updatedSelectedTags);
+
+                    // Continue with the URL shortening process
+                    continueShorteningUrl(updatedSelectedTags);
+                }).catch(error => {
+                    console.error('Error adding tag:', error);
+                    setErrorMessage('Error adding tag');
+                });
+            } else {
+                // No new tags, continue with the URL shortening process
+                continueShorteningUrl(selectedTags);
+            }
         }
+    };
+
+    const continueShorteningUrl = (tags) => {
+        // Construct shortenParams object
+        const shortenParams = {
+            url: url.trim(),
+            uri: selfExplanatoryUri,
+            valid_until: validUntil,
+            category: selectedCategories,
+            tags: tags // Include selected tags
+        };
+
+        // Make a POST request to shorten the URL
+        fetch('/wp-json/short-url/v1/shorten', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(shortenParams)
+        })
+            .then(response => response.json())
+            .then(shortenData => {
+                console.log('My response:', shortenData);
+                if (!shortenData.error) {
+                    setShortenedUrl(shortenData.txt);
+                    setErrorMessage('');
+                    generateQRCode(shortenData.txt);
+                } else {
+                    setErrorMessage('Error: ' + shortenData.txt);
+                    setShortenedUrl('');
+                }
+            })
+            .catch(error => console.error('Error:', error));
     };
 
     const generateQRCode = (text) => {
@@ -179,7 +237,14 @@ const Edit = ({ attributes, setAttributes }) => {
                     ))}
                     <a href="#" onClick={handleAddCategory}>Add New Category</a>
                 </PanelBody>
-
+                <PanelBody title={__('Tags')}>
+                    <FormTokenField
+                        label="Tags"
+                        value={selectedTags}
+                        suggestions={tagSuggestions}
+                        onChange={(newTags) => setSelectedTags(newTags)}
+                    />
+                </PanelBody>
             </InspectorControls>
 
             <TextControl

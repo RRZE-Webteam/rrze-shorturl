@@ -86,7 +86,7 @@ class ShortURL
                 $wpdb->insert(
                     $table_name,
                     array(
-                        'domain_id' => $domain_id,
+                        'domain_id' => (int)$domain_id,
                         'long_url' => $long_url
                     )
                 );
@@ -285,13 +285,14 @@ class ShortURL
                 return ['error' => true, 'txt' => $uri . ' ' . 'is not a valid URI'];
             }
 
-            // is it an allowed domain?
+            // Is it an allowed domain?
             $aDomain = self::checkDomain($long_url);
 
             if ($aDomain['prefix'] == 0) {
                 return ['error' => true, 'txt' => 'Domain is not allowed to use our shortening service.'];
             }
 
+            // Fetch or insert on new
             $aLink = self::getLinkfromDB($aDomain['id'], $long_url);
 
             // Check if already exists in DB 
@@ -310,7 +311,7 @@ class ShortURL
                 // Create shortURL
                 $targetURL = $aDomain['prefix'] . self::cryptNumber($aLink['id']);
             }
-            // error_log(json_encode($aLink));
+            error_log(json_encode($aLink));
 
             // // Create shortURL
             $shortURL = self::$CONFIG['ShortURLBase'] . $targetURL;
