@@ -45,34 +45,29 @@ class API {
         ) );
     }
 
-    function add_tag_callback( $request ) {
+    public function add_tag_callback($request) {
+
+        $parameters = $request->get_json_params();
+    
+        if (empty($parameters['label'])) {
+            return new WP_Error('invalid_name', 'Tag label is required.', array('status' => 400));
+        }
+    
         global $wpdb;
-        
-        $tag_label = $request->get_param( 'label' );
+        $table_name = $wpdb->prefix . 'shorturl_tags';
     
-        if ( empty( $tag_label ) ) {
-            return new WP_Error( 'missing_tag_label', __( 'Tag label is required.' ), array( 'status' => 400 ) );
+        $inserted = $wpdb->insert($table_name, array('label' => sanitize_text_field($parameters['label'])));
+    
+        if (!$inserted) {
+            return new WP_Error('insert_failed', 'Failed to add tag to the database.', array('status' => 500));
         }
     
-        // Check if tag already exists
-        $existing_tag = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}shorturl_tags WHERE label = %s", $tag_label ) );
+        $tag_id = $wpdb->insert_id;
     
-        if ( ! $existing_tag ) {
-            // Tag does not exist, so add it
-            $wpdb->insert( $wpdb->prefix . 'shorturl_tags', array( 'label' => $tag_label ) );
-    
-            // Return the newly added tag
-            $tag_id = $wpdb->insert_id;
-            $response = array(
-                'id'    => $tag_id,
-                'label' => $tag_label,
-            );
-    
-            return rest_ensure_response( $response );
-        } else {
-            // Tag already exists
-            return new WP_Error( 'tag_already_exists', __( 'Tag already exists.' ), array( 'status' => 400 ) );
-        }
+        $tags = array('id' => $tag_id, 'label' => $parameters['label']);
+
+        return new WP_REST_Response($tags, 200);
+
     }
     
     // Callback function to get tags
@@ -94,7 +89,7 @@ class API {
         }
     
         // Return the tag data as a JSON response
-        return rest_ensure_response( $tag_data );
+        return new WP_REST_Response($tag_data, 200);
     }
     
 
@@ -112,17 +107,14 @@ class API {
         $inserted = $wpdb->insert($table_name, array('label' => sanitize_text_field($parameters['label'])));
     
         if (!$inserted) {
-            error_log('KONNTE NICHT GEINSERTED WERDEN');
             return new WP_Error('insert_failed', 'Failed to add category to the database.', array('status' => 500));
         }
     
         $category_id = $wpdb->insert_id;
-        error_log('PASST');
     
         $categories = array('id' => $category_id, 'label' => $parameters['label']);
 
         return new WP_REST_Response($categories, 200);
-
     }
 
     
@@ -138,6 +130,7 @@ class API {
     
             return new WP_REST_Response($categories, 200);
         } catch (Exception $e) {
+            error_log('Error in get_categories_callback: ' . $e->getMessage());
             return new WP_Error('shorturl_categories_error', $e->getMessage(), array('status' => 500));
         }
     }
@@ -155,7 +148,7 @@ class API {
             $shortened_url = ShortURL::shorten($parameters);
 
             // Return the shortened URL in the response
-            return rest_ensure_response($shortened_url);
+            return new WP_REST_Response($shortened_url, 200);
         } catch (\Exception $e) {
             // Handle any exceptions that occur
             // You can log the error, return a WP_Error, or handle it in any other way appropriate for your application

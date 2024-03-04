@@ -105,29 +105,72 @@ class ShortURL
         }
     }
 
-    public static function updateLink($link_id, $domain_id, $shortURL, $uri, $valid_until, $properties)
-    {
+    public static function updateLink(
+        $link_id,
+        $domain_id,
+        $shortURL,
+        $uri,
+        $valid_until,
+        $categories,
+        $tags
+    ) {
         global $wpdb;
         $table_name = $wpdb->prefix . 'shorturl_links';
+        $link_categories_table = $wpdb->prefix . 'shorturl_links_categories';
+        $link_tags_table = $wpdb->prefix . 'shorturl_links_tags';
+    
+
+        error_log('updateLink');
+        error_log('link_id = ' . $link_id);
+        error_log('domain_id = ' . $domain_id);
+        error_log('shortURL = ' . $shortURL);
+        error_log('uri = ' . $uri);
+        error_log('valid_until = ' . $valid_until);
+        error_log('categories = ' . implode(',', $categories));
+        error_log('tags = ' . implode(',', $tags));
+
         try {
-            // Store in the database
-            return $wpdb->update(
+            // Store in the database    
+            $update_result = $wpdb->update(
                 $table_name,
                 [
                     'domain_id' => $domain_id,
                     'short_url' => $shortURL,
                     'uri' => $uri,
-                    'valid_until' => $valid_until,
-                    'properties' => $properties
+                    'valid_until' => $valid_until
                 ],
                 ['id' => $link_id]
             );
-        } catch (\Exception $e) {
+    
+            if ($update_result !== false) {
+                // Delete existing categories and tags for the link
+                $wpdb->delete($link_categories_table, ['link_id' => $link_id]);
+                $wpdb->delete($link_tags_table, ['link_id' => $link_id]);
+    
+                // Insert new categories
+                foreach ($categories as $category_id) {
+                    $wpdb->insert(
+                        $link_categories_table,
+                        ['link_id' => $link_id, 'category_id' => $category_id]
+                    );
+                }
+    
+                // Insert new tags
+                foreach ($tags as $tag_id) {
+                    $wpdb->insert(
+                        $link_tags_table,
+                        ['link_id' => $link_id, 'tag_id' => $tag_id]
+                    );
+                }
+            }
+    
+            return $update_result;
+        } catch (\Throwable $e) {
             error_log("Error in updateLink: " . $e->getMessage());
             return null;
         }
     }
-
+        
 
     // Function to retrieve our domains from the database
     public static function getAllowedDomains()
@@ -264,8 +307,8 @@ class ShortURL
             $long_url = $shortenParams['url'] ?? null;
             $uri = $shortenParams['uri'] ?? null;
             $valid_until = $shortenParams['valid_until'] ?? null;
-            $category = $shortenParams['category'] ?? null;
-            $tags = $shortenParams['tags'] ?? null;
+            $categories = $shortenParams['categories'] ?? [];
+            $tags = $shortenParams['tags'] ?? [];
 
             // Validate the Date
             $isValid = self::isValidDate($valid_until);
@@ -315,29 +358,12 @@ class ShortURL
 
             // // Create shortURL
             $shortURL = self::$CONFIG['ShortURLBase'] . $targetURL;
-            $properties = json_encode([
-                'categories' => $category,
-                'tags' => $tags
-            ]);
 
-            $bUpdated = self::updateLink($aLink['id'], $aDomain['id'], $shortURL, $uri, $valid_until, $properties);
+            $bUpdated = self::updateLink($aLink['id'], $aDomain['id'], $shortURL, $uri, $valid_until, $categories, $tags);
 
             if (!$bUpdated) {
                 return ['error' => true, 'txt' => 'Unable to update database table'];
             }
-
-
-            // // 2DO: fill these arrays via edit.js
-            // $data = [
-            //     'shorturl_id' => $aLink['id'],
-            //     'long_url' => $long_url,
-            //     'short_url' => $shortURL,
-            //     'category_id' => $category,
-            //     'tag_ids' => $tags,
-            //     'valid_until' => $valid_until,
-            // ];
-
-            // do_action('shortlink_inserted', $data);
 
             return ['error' => false, 'txt' => $shortURL];
         } catch (\Exception $e) {

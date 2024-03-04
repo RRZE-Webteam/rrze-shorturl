@@ -44,7 +44,6 @@ const Edit = ({
   const [qrCodeUrl, setQrCodeUrl] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useState)('');
   const [categoriesOptions, setCategoriesOptions] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useState)([]);
   const [tagSuggestions, setTagSuggestions] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useState)([]);
-  const [isLoading, setIsLoading] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_1__.useState)(true);
   const onChangeValidUntil = newDate => {
     setValidUntil(newDate);
     setAttributes({
@@ -63,7 +62,6 @@ const Edit = ({
 
     // Fetch categories from shorturl_categories table
     fetch('/wp-json/short-url/v1/categories').then(response => response.json()).then(data => {
-      console.log('ShortURL Categories Data:', data); // Log the data to see its structure
       if (Array.isArray(data)) {
         const categoriesOptions = data.map(term => ({
           label: term.label,
@@ -73,7 +71,7 @@ const Edit = ({
         setCategoriesOptions(categoriesOptions);
       } else {
         console.log('No categories found.');
-        setCategoriesOptions([]); // Set categoriesOptions to an empty array if data is not an array
+        setCategoriesOptions([]);
       }
     }).catch(error => {
       console.error('Error fetching shorturl_category terms:', error);
@@ -81,10 +79,13 @@ const Edit = ({
 
     // Fetch tags from shorturl_tags table
     fetch('/wp-json/short-url/v1/tags').then(response => response.json()).then(data => {
-      console.log('ShortURL Tags Data:', data); // Log the data to see its structure
+      console.log('ShortURL Tags Data:', data);
       if (Array.isArray(data)) {
-        const tagLabels = data.map(tag => tag.label); // Extract only the label strings
-        setTagSuggestions(tagLabels);
+        const tagSuggestions = data.map(tag => ({
+          id: tag.id,
+          value: tag.label
+        }));
+        setTagSuggestions(tagSuggestions);
       } else {
         console.log('No tags found.');
         setTagSuggestions([]);
@@ -95,7 +96,7 @@ const Edit = ({
   }, []);
   const handleAddCategory = () => {
     const newCategoryLabel = prompt('Enter the label of the new category:');
-    if (!newCategoryLabel) return; // If user cancels or enters an empty name, do nothing
+    if (!newCategoryLabel) return;
 
     // Make a POST request to add the new category
     fetch('/wp-json/short-url/v1/add-category', {
@@ -112,7 +113,6 @@ const Edit = ({
       }
       return response.json();
     }).then(newCategory => {
-      // Assuming newCategory has the structure { id: ..., name: ... }
       const updatedCategories = [...categoriesOptions, {
         label: newCategory.label,
         value: newCategory.id
@@ -120,7 +120,6 @@ const Edit = ({
       setCategoriesOptions(updatedCategories);
     }).catch(error => {
       console.error('Error adding category:', error);
-      // Handle error, e.g., show error message to the user
     });
   };
   const shortenUrl = () => {
@@ -133,12 +132,9 @@ const Edit = ({
       }
     }
     if (isValid) {
-      // First, check if there are any new tags
-      const newTags = selectedTags.filter(tag => !tagSuggestions.includes(tag));
-
-      // If there are new tags, add them via REST API
+      const allTagIds = selectedTags.map(tag => tag.id);
+      const newTags = selectedTags.filter(tag => !tagSuggestions.some(suggestion => suggestion.value === tag.value));
       if (newTags.length > 0) {
-        // Make a POST request to add the new tags
         Promise.all(newTags.map(newTag => {
           return fetch('/wp-json/short-url/v1/add-tag', {
             method: 'POST',
@@ -146,7 +142,7 @@ const Edit = ({
               'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-              label: newTag
+              label: newTag.value
             })
           }).then(response => {
             if (!response.ok) {
@@ -155,33 +151,25 @@ const Edit = ({
             return response.json();
           }).then(newTag => newTag.id);
         })).then(newTagIds => {
-          // Add the IDs of the new tags to the selectedTags array
-          const updatedSelectedTags = [...selectedTags, ...newTagIds];
-          setSelectedTags(updatedSelectedTags);
-
-          // Continue with the URL shortening process
-          continueShorteningUrl(updatedSelectedTags);
+          const combinedTagIds = [...allTagIds, ...newTagIds];
+          continueShorteningUrl(combinedTagIds);
         }).catch(error => {
           console.error('Error adding tag:', error);
-          setErrorMessage('Error adding tag');
+          setErrorMessage('Error: Failed to add tag');
         });
       } else {
-        // No new tags, continue with the URL shortening process
-        continueShorteningUrl(selectedTags);
+        continueShorteningUrl(allTagIds);
       }
     }
   };
   const continueShorteningUrl = tags => {
-    // Construct shortenParams object
     const shortenParams = {
       url: url.trim(),
       uri: selfExplanatoryUri,
       valid_until: validUntil,
-      category: selectedCategories,
-      tags: tags // Include selected tags
+      categories: selectedCategories,
+      tags: tags
     };
-
-    // Make a POST request to shorten the URL
     fetch('/wp-json/short-url/v1/shorten', {
       method: 'POST',
       headers: {
@@ -189,7 +177,6 @@ const Edit = ({
       },
       body: JSON.stringify(shortenParams)
     }).then(response => response.json()).then(shortenData => {
-      console.log('My response:', shortenData);
       if (!shortenData.error) {
         setShortenedUrl(shortenData.txt);
         setErrorMessage('');
@@ -250,9 +237,15 @@ const Edit = ({
     title: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Tags')
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.FormTokenField, {
     label: "Tags",
-    value: selectedTags,
-    suggestions: tagSuggestions,
-    onChange: newTags => setSelectedTags(newTags)
+    value: selectedTags.map(tag => tag.value),
+    suggestions: tagSuggestions.map(tag => tag.value),
+    onChange: newTags => {
+      const updatedTags = newTags.map(tag => ({
+        id: tagSuggestions.find(suggestion => suggestion.value === tag).id,
+        value: tag
+      }));
+      setSelectedTags(updatedTags);
+    }
   }))), (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.TextControl, {
     label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Enter URL'),
     value: url,

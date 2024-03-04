@@ -134,6 +134,8 @@ function drop_custom_tables()
 
     try {
         // Drop shorturl table if they exist
+        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_links_categories");
+        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_links_tags");
         $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_categories");
         $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_tags");
         $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_links");
@@ -176,7 +178,6 @@ function create_custom_tables()
                 long_url varchar(255) UNIQUE NOT NULL,
                 short_url varchar(255) NOT NULL,
                 uri varchar(255) DEFAULT NULL,
-                properties JSON CHECK (JSON_VALID(properties)),
                 idm_id mediumint(9) NOT NULL DEFAULT 1,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -198,9 +199,23 @@ function create_custom_tables()
                 id mediumint(9) NOT NULL AUTO_INCREMENT,
                 label varchar(255) NOT NULL UNIQUE,
                 PRIMARY KEY (id)
+            ) $charset_collate",
+            "shorturl_links_categories" => "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}shorturl_links_categories (
+                link_id mediumint(9) NOT NULL,
+                category_id mediumint(9) NOT NULL,
+                PRIMARY KEY (link_id, category_id),
+                CONSTRAINT fk_link_id FOREIGN KEY (link_id) REFERENCES {$wpdb->prefix}shorturl_links(id) ON DELETE CASCADE,
+                CONSTRAINT fk_category_id FOREIGN KEY (category_id) REFERENCES {$wpdb->prefix}shorturl_categories(id) ON DELETE CASCADE
+            ) $charset_collate",
+            "shorturl_links_tags" => "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}shorturl_links_tags (
+                link_id mediumint(9) NOT NULL,
+                tag_id mediumint(9) NOT NULL,
+                PRIMARY KEY (link_id, tag_id),
+                CONSTRAINT fk_link_id2 FOREIGN KEY (link_id) REFERENCES {$wpdb->prefix}shorturl_links(id) ON DELETE CASCADE,
+                CONSTRAINT fk_tag_id FOREIGN KEY (tag_id) REFERENCES {$wpdb->prefix}shorturl_tags(id) ON DELETE CASCADE
             ) $charset_collate"
         ];
-
+        
         // Require dbDelta once
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 
