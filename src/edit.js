@@ -225,18 +225,18 @@ const Edit = ({ attributes, setAttributes }) => {
                     <a href="#" onClick={handleAddCategory}>Add New Category</a>
                 </PanelBody>
                 <PanelBody title={__('Tags')}>
-                    <FormTokenField
-                        label="Tags"
-                        value={selectedTags.map(tag => tag.value)}
-                        suggestions={tagSuggestions.map(tag => tag.value)}
-                        onChange={(newTags) => {
-                            const updatedTags = newTags.map(tag => ({
-                                id: tagSuggestions.find(suggestion => suggestion.value === tag).id,
-                                value: tag
-                            }));
-                            setSelectedTags(updatedTags);
-                        }}
-                    />
+                <FormTokenField
+    label="Tags"
+    value={selectedTags.map(tag => tag.value)} // Extracting values from selectedTags
+    suggestions={tagSuggestions.map(tag => tag.value)} // Extracting values from tagSuggestions
+    onChange={(newTags) => {
+        const updatedTags = newTags.map(tagValue => ({
+            id: tagSuggestions.find(suggestion => suggestion.value === tagValue)?.id,
+            value: tagValue
+        }));
+        setSelectedTags(updatedTags);
+    }}
+/>
                 </PanelBody>
             </InspectorControls>
 

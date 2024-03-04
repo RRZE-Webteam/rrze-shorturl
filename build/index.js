@@ -237,12 +237,14 @@ const Edit = ({
     title: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('Tags')
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.FormTokenField, {
     label: "Tags",
-    value: selectedTags.map(tag => tag.value),
-    suggestions: tagSuggestions.map(tag => tag.value),
+    value: selectedTags.map(tag => tag.value) // Extracting values from selectedTags
+    ,
+    suggestions: tagSuggestions.map(tag => tag.value) // Extracting values from tagSuggestions
+    ,
     onChange: newTags => {
-      const updatedTags = newTags.map(tag => ({
-        id: tagSuggestions.find(suggestion => suggestion.value === tag).id,
-        value: tag
+      const updatedTags = newTags.map(tagValue => ({
+        id: tagSuggestions.find(suggestion => suggestion.value === tagValue)?.id,
+        value: tagValue
       }));
       setSelectedTags(updatedTags);
     }
