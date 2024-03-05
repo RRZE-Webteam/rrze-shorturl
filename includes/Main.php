@@ -54,7 +54,6 @@ class Main
      */
     public function enqueueScripts()
     {
-        wp_enqueue_script('clipboard', plugins_url('assets/js/clipboard.min.js', plugin_basename($this->pluginFile)), array('jquery'), null, true);
         wp_enqueue_script('qrious', plugins_url('assets/js/qrious.min.js', plugin_basename($this->pluginFile)), array('jquery'), null, true);
         wp_enqueue_script('rrze-shorturl', plugins_url('src/rrze-shorturl.js', plugin_basename($this->pluginFile)), array('jquery'), null, true);
 

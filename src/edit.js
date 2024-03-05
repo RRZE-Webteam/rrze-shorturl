@@ -2,6 +2,7 @@ import { useState, useEffect } from '@wordpress/element';
 import { PanelBody, DateTimePicker, TextControl, Button, FormTokenField } from '@wordpress/components';
 import { InspectorControls, useBlockProps } from '@wordpress/block-editor';
 import { __ } from '@wordpress/i18n';
+import ClipboardJS from 'clipboard'; // Import ClipboardJS
 
 const Edit = ({ attributes, setAttributes }) => {
     const { valid_until: defaultValidUntil } = attributes;
@@ -16,6 +17,8 @@ const Edit = ({ attributes, setAttributes }) => {
     const [qrCodeUrl, setQrCodeUrl] = useState('');
     const [categoriesOptions, setCategoriesOptions] = useState([]);
     const [tagSuggestions, setTagSuggestions] = useState([]);
+    const [copied, setCopied] = useState(false);
+    let clipboard; // Declare clipboard variable
 
     const onChangeValidUntil = newDate => {
         setValidUntil(newDate);
@@ -29,6 +32,30 @@ const Edit = ({ attributes, setAttributes }) => {
             setValidUntil(nextYear);
             setAttributes({ valid_until: nextYear });
         }
+
+        // Initialize clipboard instance
+        clipboard = new ClipboardJS('.btn', {
+            text: function() {
+                return shortenedUrl;
+            }
+        });
+
+        // Define success and error handlers
+        clipboard.on('success', function(e) {
+            setCopied(true);
+            e.clearSelection();
+        });
+
+        clipboard.on('error', function(e) {
+            console.error('Copy failed:', e.action);
+        });
+
+        // Clean up function to remove event listeners when component unmounts
+        return () => {
+            if (clipboard) {
+                clipboard.destroy();
+            }
+        };
 
         // Fetch categories from shorturl_categories table
         fetch('/wp-json/short-url/v1/categories')
@@ -52,22 +79,22 @@ const Edit = ({ attributes, setAttributes }) => {
 
         // Fetch tags from shorturl_tags table
         fetch('/wp-json/short-url/v1/tags')
-        .then(response => response.json())
-        .then(data => {
-            console.log('ShortURL Tags Data:', data);
-            if (Array.isArray(data)) {
-                const tagSuggestions = data.map(tag => ({ id: tag.id, value: tag.label }));
-                setTagSuggestions(tagSuggestions);
-            } else {
-                console.log('No tags found.');
-                setTagSuggestions([]);
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching shorturl_tags:', error);
-        });
+            .then(response => response.json())
+            .then(data => {
+                console.log('ShortURL Tags Data:', data);
+                if (Array.isArray(data)) {
+                    const tagSuggestions = data.map(tag => ({ id: tag.id, value: tag.label }));
+                    setTagSuggestions(tagSuggestions);
+                } else {
+                    console.log('No tags found.');
+                    setTagSuggestions([]);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching shorturl_tags:', error);
+            });
 
-    }, []);
+    }, [shortenedUrl]);
 
     const handleAddCategory = () => {
         const newCategoryLabel = prompt('Enter the label of the new category:');
@@ -179,6 +206,36 @@ const Edit = ({ attributes, setAttributes }) => {
         setQrCodeUrl(qr.toDataURL());
     }
 
+    const handleCopy = () => {
+        console.log('handleCopy clicked');
+        // Trigger copy action
+        if (shortenedUrl) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(shortenedUrl)
+                    .then(() => {
+                        setCopied(true);
+                    })
+                    .catch(err => {
+                        console.error('Copy failed:', err);
+                    });
+            } else {
+                // Fallback method for browsers that do not support Clipboard API
+                const textArea = document.createElement('textarea');
+                textArea.value = shortenedUrl;
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    setCopied(true);
+                } catch (err) {
+                    console.error('Copy failed:', err);
+                }
+                document.body.removeChild(textArea);
+            }
+        }
+    };
+        
     return (
         <div {...useBlockProps()}>
             <InspectorControls>
@@ -225,18 +282,18 @@ const Edit = ({ attributes, setAttributes }) => {
                     <a href="#" onClick={handleAddCategory}>Add New Category</a>
                 </PanelBody>
                 <PanelBody title={__('Tags')}>
-                <FormTokenField
-    label="Tags"
-    value={selectedTags.map(tag => tag.value)} // Extracting values from selectedTags
-    suggestions={tagSuggestions.map(tag => tag.value)} // Extracting values from tagSuggestions
-    onChange={(newTags) => {
-        const updatedTags = newTags.map(tagValue => ({
-            id: tagSuggestions.find(suggestion => suggestion.value === tagValue)?.id,
-            value: tagValue
-        }));
-        setSelectedTags(updatedTags);
-    }}
-/>
+                    <FormTokenField
+                        label="Tags"
+                        value={selectedTags.map(tag => tag.value)} // Extracting values from selectedTags
+                        suggestions={tagSuggestions.map(tag => tag.value)} // Extracting values from tagSuggestions
+                        onChange={(newTags) => {
+                            const updatedTags = newTags.map(tagValue => ({
+                                id: tagSuggestions.find(suggestion => suggestion.value === tagValue)?.id,
+                                value: tagValue
+                            }));
+                            setSelectedTags(updatedTags);
+                        }}
+                    />
                 </PanelBody>
             </InspectorControls>
 
@@ -255,12 +312,22 @@ const Edit = ({ attributes, setAttributes }) => {
                 </p>
             )}
 
+            {/* Display shortened URL and copy button */}
             {shortenedUrl && (
                 <div>
                     <p>
-                        {__('Shortened URL')}: {shortenedUrl}
+                        {__('Shortened URL')}: {shortenedUrl} 
+                        &nbsp;&nbsp;<button class="btn" data-clipboard-target="#foo">
+                        <img
+                src="data:image/svg+xml,%3Csvg height='1024' width='896' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M128 768h256v64H128v-64z m320-384H128v64h320v-64z m128 192V448L384 640l192 192V704h320V576H576z m-288-64H128v64h160v-64zM128 704h160v-64H128v64z m576 64h64v128c-1 18-7 33-19 45s-27 18-45 19H64c-35 0-64-29-64-64V192c0-35 29-64 64-64h192C256 57 313 0 384 0s128 57 128 128h192c35 0 64 29 64 64v320h-64V320H64v576h640V768zM128 256h512c0-35-29-64-64-64h-64c-35 0-64-29-64-64s-29-64-64-64-64 29-64 64-29 64-64 64h-64c-35 0-64 29-64 64z'/%3E%3C/svg%3E"
+                width="13"
+                alt="Copy to clipboard"
+                onClick={handleCopy} // Attach onClick event handler
+                style={{ cursor: 'pointer' }} // Add cursor style to indicate it's clickable
+            />
+            </button> {copied && <span>URL copied!</span>}
                     </p>
-                    <img src={qrCodeUrl} alt="QR Code" />
+                    <img src={qrCodeUrl} alt="QR Code" />                                        
                 </div>
             )}
         </div>
