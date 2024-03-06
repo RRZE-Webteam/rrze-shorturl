@@ -62,7 +62,7 @@ jQuery(document).ready(function ($) {
                 action: 'update_category_label_action',
                 category_id: id,
                 updated_label: label,
-                security: rrze_shorturl_ajax_object.update_category_label_nonce, // Pass nonce                    
+                _ajax_nonce: rrze_shorturl_ajax_object.update_category_label_nonce, // Pass nonce                    
             },
             success: function (response) {
                 // Display message
@@ -75,6 +75,87 @@ jQuery(document).ready(function ($) {
                 console.error('THIS IS AN ERROR! ' + xhr.responseText);
             }
         });
+    });
+
+
+
+    // tokenfield for tags
+    $('#add-new-shorturl-tag').on('click', function (e) {
+        e.preventDefault();
+        $('#new-shorturl-tag').slideToggle();
+    });
+
+    $('#add-shorturl-tag-btn').on('click', function (e) {
+        e.preventDefault();
+        var tagLabel = $('input[name=new_shorturl_tag]').val();
+        if (tagLabel) {
+            $.ajax({
+                url: rrze_shorturl_ajax_object.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'add_shorturl_tag',
+                    tagLabel: tagLabel,
+                    _ajax_nonce: rrze_shorturl_ajax_object.add_shorturl_tag_nonce
+                },
+                success: function (response) {
+                    if (response.success) {
+                        // Reload the page or update the tag list dynamically
+                        alert('Tag added successfully!');
+                    } else {
+                        alert('Failed to add tag. Please try again.');
+                    }
+                }
+            });
+        } else {
+            alert('Please enter a tag name.');
+        }
+    });
+
+    // Initialize the tokenfield
+    $('#tag-tokenfield').tokenfield({
+        autocomplete: {
+            source: rrze_shorturl_ajax_object.tagLabels,
+            delay: 100
+        }
+    });
+
+
+
+    $('#add-new-shorturl-category').on('click', function (e) {
+        e.preventDefault();
+        $('#new-shorturl-category').slideToggle();
+    });
+
+    $('#add-shorturl-category-btn').on('click', function (e) {
+        e.preventDefault();
+        var categoryName = $('input[name=new_shorturl_category]').val();
+        if (categoryName) {
+            $.ajax({
+                url: rrze_shorturl_ajax_object.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'add_shorturl_category',
+                    categoryName: categoryName,
+                    parentCategory: $('select[name=parent_category]').val(),
+                    _ajax_nonce: rrze_shorturl_ajax_object.add_shorturl_category_nonce
+                },
+                success: function (response) {
+                    if (response.success) {
+                        // Replace the existing category list with the updated HTML
+                        $('#shorturl-category-metabox').html(response.data.category_list_html);
+                        // Check the checkbox for the newly added category
+                        var newCategoryId = response.data.category_id;
+                        $('input[name="shorturl_categories[]"][value="' + newCategoryId + '"]').prop('checked', true);
+
+                        alert('Category added successfully!');
+                    } else {
+                        alert('Failed to add category. Please try again.');
+                    }
+                }
+            });
+        } else {
+            alert('Please enter a category name.');
+        }
     });
 
 

@@ -18,14 +18,11 @@ class Shortcode
         add_action('wp_ajax_nopriv_add_shorturl_category', [$this, 'add_shorturl_category_callback']);
         add_action('wp_ajax_add_shorturl_category', [$this, 'add_shorturl_category_callback']);
 
+        add_action('wp_ajax_nopriv_add_shorturl_tag', [$this, 'add_shorturl_tag_callback']);
+        add_action('wp_ajax_add_shorturl_tag', [$this, 'add_shorturl_tag_callback']);
+
         add_action('wp_ajax_nopriv_update_category_label_action', [$this, 'update_category_label']);
         add_action('wp_ajax_update_category_label_action', [$this, 'update_category_label']);
-
-
-        wp_localize_script('rrze-shorturl', 'custom_tag_ajax_object', array('ajax_url' => admin_url('admin-ajax.php')));
-
-
-
     }
 
 
@@ -47,7 +44,6 @@ class Shortcode
         ], $atts);
 
         $result_message = ''; // Initialize result message
-        $qr_code_src = ''; // Initialize QR code source
 
         // Check if form is submitted
         if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -75,7 +71,7 @@ class Shortcode
         $form .= '<h2 class="handle">Categories</h2>';
         $form .= self::display_shorturl_category();
         $form .= '<h2 class="handle">Tags</h2>';
-        // $form .= $this->display_shorturl_tag();
+        $form .= self::display_shorturl_tag();
         $form .= '</div>';
 
         $form .= '<input type="submit" name="generate" value="Generate">';
@@ -182,46 +178,6 @@ class Shortcode
                 <input type="button" value="Add Category" id="add-shorturl-category-btn">
             </div>
         </div>
-        <script>
-            jQuery(document).ready(function ($) {
-                $('#add-new-shorturl-category').on('click', function (e) {
-                    e.preventDefault();
-                    $('#new-shorturl-category').slideToggle();
-                });
-
-                $('#add-shorturl-category-btn').on('click', function (e) {
-                    e.preventDefault();
-                    var categoryName = $('input[name=new_shorturl_category]').val();
-                    if (categoryName) {
-                        $.ajax({
-                            url: '<?php echo admin_url('admin-ajax.php'); ?>',
-                            type: 'POST',
-                            data: {
-                                action: 'add_shorturl_category',
-                                categoryName: categoryName,
-                                parentCategory: $('select[name=parent_category]').val(),                                
-                                _ajax_nonce: '<?php echo wp_create_nonce('add-shorturl-category'); ?>'
-                            },
-                            success: function (response) {
-                                if (response.success) {
-                                    // Replace the existing category list with the updated HTML
-                                    $('#shorturl-category-metabox').html(response.data.category_list_html);
-                                    // Check the checkbox for the newly added category
-                                    var newCategoryId = response.data.category_id;
-                                    $('input[name="shorturl_categories[]"][value="' + newCategoryId + '"]').prop('checked', true);
-
-                                    alert('Category added successfully!');
-                                } else {
-                                    alert('Failed to add category. Please try again.');
-                                }
-                            }
-                        });
-                    } else {
-                        alert('Please enter a category name.');
-                    }
-                });
-            });
-        </script>
         <?php
         return ob_get_clean();
     }
@@ -267,74 +223,27 @@ class Shortcode
         }
     }
 
-    private function display_shorturl_tag()
+    private static function display_shorturl_tag()
     {
-        $taxonomy = 'shorturl_tag';
-        $tags = get_terms(
-            array(
-                'taxonomy' => $taxonomy,
-                'hide_empty' => false,
-            )
-        );
-
+        global $wpdb;
+    
+        $tags = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_tags");
+    
         ob_start();
         ?>
         <div id="shorturl-tag-metabox">
-            <ul class="tagchecklist">
-                <?php foreach ($tags as $tag): ?>
-                    <li>
-                        <label>
-                            <input type="checkbox" name="shorturl_tag[]" value="<?php echo esc_attr($tag->term_id); ?>">
-                            <?php echo esc_html($tag->name); ?>
-                        </label>
-                    </li>
-                <?php endforeach; ?>
-            </ul>
+            <label for="tag-tokenfield">Tags:</label>
+            <input type="text" id="tag-tokenfield" name="shorturl_tag" placeholder="Add tags" />
             <p><a href="#" id="add-new-shorturl-tag">Add New Tag</a></p>
             <div id="new-shorturl-tag" style="display: none;">
                 <input type="text" name="new_shorturl_tag" placeholder="New Tag Name">
                 <input type="button" value="Add Tag" id="add-shorturl-tag-btn">
             </div>
         </div>
-        <script>
-            jQuery(document).ready(function ($) {
-                $('#add-new-shorturl-tag').on('click', function (e) {
-                    e.preventDefault();
-                    $('#new-shorturl-tag').slideToggle();
-                });
-
-                $('#add-shorturl-tag-btn').on('click', function (e) {
-                    e.preventDefault();
-                    var tagName = $('input[name=new_shorturl_tag]').val();
-                    if (tagName) {
-                        $.ajax({
-                            url: '<?php echo admin_url('admin-ajax.php'); ?>',
-                            type: 'POST',
-                            data: {
-                                action: 'add_shorturl_tag',
-                                tagName: tagName,
-                                taxonomy: '<?php echo $taxonomy; ?>',
-                                _ajax_nonce: '<?php echo wp_create_nonce('add-shorturl-tag'); ?>'
-                            },
-                            success: function (response) {
-                                if (response.success) {
-                                    // Reload the page or update the tag list dynamically
-                                    alert('Tag added successfully!');
-                                } else {
-                                    alert('Failed to add tag. Please try again.');
-                                }
-                            }
-                        });
-                    } else {
-                        alert('Please enter a tag name.');
-                    }
-                });
-            });
-        </script>
         <?php
         return ob_get_clean();
     }
-
+    
 
 
 
@@ -430,7 +339,7 @@ class Shortcode
     public static function update_category_label()
     {
         // Verify nonce
-        if (!isset($_POST['security']) || !wp_verify_nonce($_POST['security'], 'update_category_label_nonce')) {
+        if (!isset($_POST['_ajax_nonce']) || !wp_verify_nonce($_POST['_ajax_nonce'], 'update_category_label_nonce')) {
             wp_send_json_error('Nonce verification failed.');
         }
 
@@ -461,29 +370,29 @@ class Shortcode
 
     public function add_shorturl_category_callback()
     {
-        check_ajax_referer('add-shorturl-category', '_ajax_nonce');
-    
+        check_ajax_referer('add_shorturl_category_nonce', '_ajax_nonce');
+
         $category_name = isset($_POST['categoryName']) ? sanitize_text_field($_POST['categoryName']) : '';
         $parent_category = isset($_POST['parentCategory']) ? intval($_POST['parentCategory']) : 0;
-    
+
         if (empty($category_name)) {
             wp_send_json_error('Category name is required.');
         }
-    
+
         global $wpdb;
-    
+
         $table_name = $wpdb->prefix . 'shorturl_categories';
-    
+
         // Check if category already exists
         $existing_category = $wpdb->get_row($wpdb->prepare("SELECT id FROM $table_name WHERE label = %s", $category_name));
-    
+
         if ($existing_category) {
             // Category already exists, return its ID
             wp_send_json_success(['category_id' => $existing_category->id, 'category_list_html' => self::generate_category_list_html()]);
         } else {
             // Insert new category
             $inserted = $wpdb->insert($table_name, ['label' => $category_name, 'parent_id' => $parent_category]);
-    
+
             if ($inserted) {
                 $category_id = $wpdb->insert_id;
                 wp_send_json_success(['category_id' => $category_id, 'category_list_html' => self::generate_category_list_html()]);
@@ -535,6 +444,31 @@ class Shortcode
         }
     }
 
+
+
+    public function add_shorturl_tag_callback()
+    {
+        check_ajax_referer('add_shorturl_tag_nonce', '_ajax_nonce');
+
+        $tag_label = isset($_POST['tagLabel']) ? sanitize_text_field($_POST['tagLabel']) : '';
+
+        if (empty($tag_label)) {
+            wp_send_json_error('Tag label is required.');
+        }
+
+        global $wpdb;
+
+        $table_name = $wpdb->prefix . 'shorturl_tags';
+
+        // Insert new tag
+        $inserted = $wpdb->insert($table_name, ['label' => $tag_label]);
+
+        if ($inserted) {
+            wp_send_json_success('Tag added successfully!');
+        } else {
+            wp_send_json_error('Failed to add tag. Please try again.');
+        }
+    }
 
 }
 
