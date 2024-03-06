@@ -9,16 +9,20 @@ class Shortcode
     public function __construct()
     {
         add_shortcode('shorturl', [$this, 'shorturl_handler']);
-        // add_shortcode('shorturl-list', [$this, 'list_shortcode_handler']);
-        // add_shortcode('shorturl-categories', [$this, 'display_shorturl_categories']);
-        // add_shortcode('shorturl-test', [$this, 'display_custom_tags']);
-        // add_shortcode('custom_tag_shortcode', [$this, 'render_custom_tag_shortcode']);
+        add_shortcode('shorturl-list', [$this, 'list_shortcode_handler']);
+        add_shortcode('custom_tag_shortcode', [$this, 'render_custom_tag_shortcode']);
+
+        add_action('wp_ajax_nopriv_store_link_category', [$this, 'store_link_category_callback']);
+        add_action('wp_ajax_store_link_category', [$this, 'store_link_category_callback']);
+
+        add_action('wp_ajax_nopriv_add_shorturl_category', [$this, 'add_shorturl_category_callback']);
+        add_action('wp_ajax_add_shorturl_category', [$this, 'add_shorturl_category_callback']);
 
         add_action('wp_ajax_nopriv_update_category_label_action', [$this, 'update_category_label']);
         add_action('wp_ajax_update_category_label_action', [$this, 'update_category_label']);
 
 
-        // wp_localize_script('rrze-shorturl', 'custom_tag_ajax_object', array('ajax_url' => admin_url('admin-ajax.php')));
+        wp_localize_script('rrze-shorturl', 'custom_tag_ajax_object', array('ajax_url' => admin_url('admin-ajax.php')));
 
 
 
@@ -69,7 +73,7 @@ class Shortcode
         $form .= '<p><a href="#" id="show-advanced-settings">Advanced Settings</a></p>';
         $form .= '<div id="div-advanced-settings" style="display: none;">';
         $form .= '<h2 class="handle">Categories</h2>';
-        $form .= $this->display_shorturl_category();
+        $form .= self::display_shorturl_category();
         $form .= '<h2 class="handle">Tags</h2>';
         // $form .= $this->display_shorturl_tag();
         $form .= '</div>';
@@ -153,24 +157,28 @@ class Shortcode
     }
 
 
-    public function display_shorturl_category()
+    public static function display_shorturl_category()
     {
         global $wpdb;
-    
+
         // Retrieve categories from the shorturl_categories table
         $categories = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_categories");
-    
+
         // Build hierarchical category structure
-        $hierarchicalCategories = $this->build_category_hierarchy($categories);
-    
+        $hierarchicalCategories = self::build_category_hierarchy($categories);
+
         // Output HTML
         ob_start();
         ?>
         <div id="shorturl-category-metabox">
-            <?php $this->display_hierarchical_categories($hierarchicalCategories); ?>
+            <?php self::display_hierarchical_categories($hierarchicalCategories); ?>
             <p><a href="#" id="add-new-shorturl-category">Add New Category</a></p>
             <div id="new-shorturl-category" style="display: none;">
                 <input type="text" name="new_shorturl_category" placeholder="New Category Name">
+                <select name="parent_category">
+                    <option value="0">None</option>
+                    <?php self::display_parent_categories_dropdown($hierarchicalCategories); ?>
+                </select>
                 <input type="button" value="Add Category" id="add-shorturl-category-btn">
             </div>
         </div>
@@ -180,7 +188,7 @@ class Shortcode
                     e.preventDefault();
                     $('#new-shorturl-category').slideToggle();
                 });
-    
+
                 $('#add-shorturl-category-btn').on('click', function (e) {
                     e.preventDefault();
                     var categoryName = $('input[name=new_shorturl_category]').val();
@@ -191,11 +199,17 @@ class Shortcode
                             data: {
                                 action: 'add_shorturl_category',
                                 categoryName: categoryName,
+                                parentCategory: $('select[name=parent_category]').val(),                                
                                 _ajax_nonce: '<?php echo wp_create_nonce('add-shorturl-category'); ?>'
                             },
                             success: function (response) {
                                 if (response.success) {
-                                    // Reload the page or update the category list dynamically
+                                    // Replace the existing category list with the updated HTML
+                                    $('#shorturl-category-metabox').html(response.data.category_list_html);
+                                    // Check the checkbox for the newly added category
+                                    var newCategoryId = response.data.category_id;
+                                    $('input[name="shorturl_categories[]"][value="' + newCategoryId + '"]').prop('checked', true);
+
                                     alert('Category added successfully!');
                                 } else {
                                     alert('Failed to add category. Please try again.');
@@ -211,36 +225,48 @@ class Shortcode
         <?php
         return ob_get_clean();
     }
-    
+
+    private static function display_parent_categories_dropdown($categories, $level = 0)
+    {
+        foreach ($categories as $category) {
+            echo '<option value="' . esc_attr($category->id) . '">' . str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;', $level) . esc_html($category->label) . '</option>';
+            if (!empty($category->children)) {
+                self::display_parent_categories_dropdown($category->children, $level + 1);
+            }
+        }
+    }
+
     // Function to build hierarchical category structure
-    private function build_category_hierarchy($categories, $parent_id = 0) {
+    private static function build_category_hierarchy($categories, $parent_id = 0)
+    {
         $hierarchicalCategories = array();
-    
+
         foreach ($categories as $category) {
             if ($category->parent_id == $parent_id) {
-                $children = $this->build_category_hierarchy($categories, $category->id);
+                $children = self::build_category_hierarchy($categories, $category->id);
                 if ($children) {
                     $category->children = $children;
                 }
                 $hierarchicalCategories[] = $category;
             }
         }
-    
+
         return $hierarchicalCategories;
     }
-    
+
     // Function to display hierarchical categories
-    private function display_hierarchical_categories($categories, $level = 0) {
+    private static function display_hierarchical_categories($categories, $level = 0)
+    {
         foreach ($categories as $category) {
             echo str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;', $level); // Indent based on level
             echo '<input type="checkbox" name="shorturl_categories[]" value="' . esc_attr($category->id) . '" />';
             echo esc_html($category->label) . '<br>';
             if (!empty($category->children)) {
-                $this->display_hierarchical_categories($category->children, $level + 1);
+                self::display_hierarchical_categories($category->children, $level + 1);
             }
         }
     }
-        
+
     private function display_shorturl_tag()
     {
         $taxonomy = 'shorturl_tag';
@@ -432,93 +458,83 @@ class Shortcode
     }
 
 
-    public function display_shorturl_category($link_id)
+
+    public function add_shorturl_category_callback()
     {
+        check_ajax_referer('add-shorturl-category', '_ajax_nonce');
+    
+        $category_name = isset($_POST['categoryName']) ? sanitize_text_field($_POST['categoryName']) : '';
+        $parent_category = isset($_POST['parentCategory']) ? intval($_POST['parentCategory']) : 0;
+    
+        if (empty($category_name)) {
+            wp_send_json_error('Category name is required.');
+        }
+    
         global $wpdb;
     
-        // Retrieve categories from the shorturl_categories table
-        $categories = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_categories");
+        $table_name = $wpdb->prefix . 'shorturl_categories';
     
-        // Build hierarchical category structure
-        $hierarchicalCategories = $this->build_category_hierarchy($categories);
+        // Check if category already exists
+        $existing_category = $wpdb->get_row($wpdb->prepare("SELECT id FROM $table_name WHERE label = %s", $category_name));
     
-        // Retrieve categories associated with the link
-        $linkedCategories = $wpdb->get_col($wpdb->prepare("SELECT category_id FROM {$wpdb->prefix}shorturl_links_categories WHERE link_id = %d", $link_id));
+        if ($existing_category) {
+            // Category already exists, return its ID
+            wp_send_json_success(['category_id' => $existing_category->id, 'category_list_html' => self::generate_category_list_html()]);
+        } else {
+            // Insert new category
+            $inserted = $wpdb->insert($table_name, ['label' => $category_name, 'parent_id' => $parent_category]);
     
-        // Output HTML
+            if ($inserted) {
+                $category_id = $wpdb->insert_id;
+                wp_send_json_success(['category_id' => $category_id, 'category_list_html' => self::generate_category_list_html()]);
+            } else {
+                wp_send_json_error('Failed to add category. Please try again.');
+            }
+        }
+    }
+
+    private static function generate_category_list_html()
+    {
+        // Generate HTML for the updated category list
         ob_start();
-        ?>
-        <div id="shorturl-category-metabox">
-            <?php $this->display_hierarchical_categories($hierarchicalCategories, $linkedCategories); ?>
-            <p><a href="#" id="add-new-shorturl-category">Add New Category</a></p>
-            <div id="new-shorturl-category" style="display: none;">
-                <input type="text" name="new_shorturl_category" id="new_shorturl_category" placeholder="New Category Name">
-                <input type="button" value="Add Category" id="add-shorturl-category-btn">
-            </div>
-        </div>
-        <script>
-            jQuery(document).ready(function ($) {
-                $('#add-new-shorturl-category').on('click', function (e) {
-                    e.preventDefault();
-                    $('#new-shorturl-category').slideToggle();
-                });
-    
-                $('#add-shorturl-category-btn').on('click', function (e) {
-                    e.preventDefault();
-                    var categoryName = $('#new_shorturl_category').val();
-                    if (categoryName) {
-                        $.ajax({
-                            url: '<?php echo admin_url('admin-ajax.php'); ?>',
-                            type: 'POST',
-                            data: {
-                                action: 'add_shorturl_category',
-                                categoryName: categoryName,
-                                _ajax_nonce: '<?php echo wp_create_nonce('add-shorturl-category'); ?>'
-                            },
-                            success: function (response) {
-                                if (response.success) {
-                                    // Reload the page or update the category list dynamically
-                                    alert('Category added successfully!');
-                                    
-                                    // Check the checkbox for the newly added category
-                                    var categoryId = response.data.category_id;
-                                    $('input[name="shorturl_categories[]"][value="' + categoryId + '"]').prop('checked', true);
-                                    
-                                    // Store the category ID with the link ID
-                                    var linkId = <?php echo $link_id; ?>;
-                                    $.ajax({
-                                        url: '<?php echo admin_url('admin-ajax.php'); ?>',
-                                        type: 'POST',
-                                        data: {
-                                            action: 'store_link_category',
-                                            linkId: linkId,
-                                            categoryId: categoryId,
-                                            _ajax_nonce: '<?php echo wp_create_nonce('store-link-category'); ?>'
-                                        },
-                                        success: function (response) {
-                                            if (response.success) {
-                                                // Success message or further action
-                                            } else {
-                                                // Error handling
-                                                alert('Failed to store category for link. Please try again.');
-                                            }
-                                        }
-                                    });
-                                } else {
-                                    alert('Failed to add category. Please try again.');
-                                }
-                            }
-                        });
-                    } else {
-                        alert('Please enter a category name.');
-                    }
-                });
-            });
-        </script>
-        <?php
+        echo self::display_shorturl_category();
         return ob_get_clean();
     }
-    
+
+
+    public function store_link_category_callback()
+    {
+        check_ajax_referer('store-link-category', '_ajax_nonce');
+
+        $link_id = isset($_POST['linkId']) ? intval($_POST['linkId']) : 0;
+        $category_id = isset($_POST['categoryId']) ? intval($_POST['categoryId']) : 0;
+
+        if ($link_id <= 0 || $category_id <= 0) {
+            wp_send_json_error('Invalid link ID or category ID.');
+        }
+
+        global $wpdb;
+
+        $table_name = $wpdb->prefix . 'shorturl_links_categories';
+
+        // Check if the link-category association already exists
+        $existing_association = $wpdb->get_row($wpdb->prepare("SELECT id FROM $table_name WHERE link_id = %d AND category_id = %d", $link_id, $category_id));
+
+        if ($existing_association) {
+            // Association already exists
+            wp_send_json_success('Association already exists.');
+        } else {
+            // Insert new association
+            $inserted = $wpdb->insert($table_name, ['link_id' => $link_id, 'category_id' => $category_id]);
+
+            if ($inserted) {
+                wp_send_json_success('Category linked to the link successfully.');
+            } else {
+                wp_send_json_error('Failed to link category to the link. Please try again.');
+            }
+        }
+    }
+
 
 }
 

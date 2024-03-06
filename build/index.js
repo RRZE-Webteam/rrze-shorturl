@@ -1394,10 +1394,10 @@ __webpack_require__.r(__webpack_exports__);
 // Import Edit and Save components
 
 
-// import Save from './save'; // Using Edit component for Save as requested
 
 // Register block type
 (0,_wordpress_blocks__WEBPACK_IMPORTED_MODULE_0__.registerBlockType)(_block_json__WEBPACK_IMPORTED_MODULE_1__.name, {
+  title: _block_json__WEBPACK_IMPORTED_MODULE_1__.title,
   edit: _edit__WEBPACK_IMPORTED_MODULE_2__["default"],
   // Use the Edit component for editing
   save: () => null // Empty save function
