@@ -8,11 +8,14 @@ class Shortcode
 {
     public function __construct()
     {
-        add_shortcode('shorturl-generate', [$this, 'generate_shortcode_handler']);
+        add_shortcode('shorturl', [$this, 'generate_shortcode_handler']);
         add_shortcode('shorturl-list', [$this, 'list_shortcode_handler']);
         add_shortcode('shorturl-categories', [$this, 'display_shorturl_categories']);
         add_shortcode('shorturl-test', [$this, 'display_custom_tags']);
         add_shortcode('custom_tag_shortcode', [$this, 'render_custom_tag_shortcode']);
+
+
+
 
         if (!function_exists('wp_terms_checklist')) {
             include ABSPATH . 'wp-admin/includes/template.php';
@@ -23,11 +26,370 @@ class Shortcode
 
 
         wp_localize_script('rrze-shorturl', 'custom_tag_ajax_object', array('ajax_url' => admin_url('admin-ajax.php')));
-    
+
+
+
     }
 
 
-    public function add_new_tag_callback() {
+
+
+    public function render_shorturl_block_shortcode() {
+        ob_start(); // Start output buffering
+
+        // Output the form created in edit.js
+        ?>
+        <div id="rrze-shorturl-form"></div>
+        <script>
+            jQuery(document).ready(function ($) {
+                const { __ } = wp.i18n;
+                const { useState, useEffect } = wp.element;
+                const { PanelBody, DateTimePicker, TextControl, Button, FormTokenField } = wp.components;
+                const { InspectorControls, useBlockProps } = wp.blockEditor;
+                const Edit = ({ attributes, setAttributes }) => {
+    const { valid_until: defaultValidUntil } = attributes;
+
+    const [url, setUrl] = useState('');
+    const [shortenedUrl, setShortenedUrl] = useState('');
+    const [selfExplanatoryUri, setSelfExplanatoryUri] = useState('');
+    const [validUntil, setValidUntil] = useState(defaultValidUntil);
+    const [selectedCategories, setSelectedCategories] = useState([]);
+    const [selectedTags, setSelectedTags] = useState([]);
+    const [errorMessage, setErrorMessage] = useState('');
+    const [qrCodeUrl, setQrCodeUrl] = useState('');
+    const [categoriesOptions, setCategoriesOptions] = useState([]);
+    const [tagSuggestions, setTagSuggestions] = useState([]);
+    const [copied, setCopied] = useState(false);
+    let clipboard; // Declare clipboard variable
+
+    const onChangeValidUntil = newDate => {
+        setValidUntil(newDate);
+        setAttributes({ valid_until: newDate });
+    };
+
+    useEffect(() => {
+        if (!validUntil) {
+            const now = new Date();
+            const nextYear = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
+            setValidUntil(nextYear);
+            setAttributes({ valid_until: nextYear });
+        }
+
+        // Initialize clipboard instance
+        clipboard = new ClipboardJS('.btn', {
+            text: function() {
+                return shortenedUrl;
+            }
+        });
+
+        // Define success and error handlers
+        clipboard.on('success', function(e) {
+            setCopied(true);
+            e.clearSelection();
+        });
+
+        clipboard.on('error', function(e) {
+            console.error('Copy failed:', e.action);
+        });
+
+        // Clean up function to remove event listeners when component unmounts
+        return () => {
+            if (clipboard) {
+                clipboard.destroy();
+            }
+        };
+
+        // Fetch categories from shorturl_categories table
+        fetch('/wp-json/short-url/v1/categories')
+            .then(response => response.json())
+            .then(data => {
+                if (Array.isArray(data)) {
+                    const categoriesOptions = data.map(term => ({
+                        label: term.label,
+                        value: term.id,
+                        parent: term.parent_id || 0
+                    }));
+                    setCategoriesOptions(categoriesOptions);
+                } else {
+                    console.log('No categories found.');
+                    setCategoriesOptions([]);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching shorturl_category terms:', error);
+            });
+
+        // Fetch tags from shorturl_tags table
+        fetch('/wp-json/short-url/v1/tags')
+            .then(response => response.json())
+            .then(data => {
+                console.log('ShortURL Tags Data:', data);
+                if (Array.isArray(data)) {
+                    const tagSuggestions = data.map(tag => ({ id: tag.id, value: tag.label }));
+                    setTagSuggestions(tagSuggestions);
+                } else {
+                    console.log('No tags found.');
+                    setTagSuggestions([]);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching shorturl_tags:', error);
+            });
+
+    }, [shortenedUrl]);
+
+    const handleAddCategory = () => {
+        const newCategoryLabel = prompt('Enter the label of the new category:');
+        if (!newCategoryLabel) return;
+
+        // Make a POST request to add the new category
+        fetch('/wp-json/short-url/v1/add-category', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ label: newCategoryLabel })
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to add category');
+                }
+                return response.json();
+            })
+            .then(newCategory => {
+                const updatedCategories = [...categoriesOptions, { label: newCategory.label, value: newCategory.id }];
+                setCategoriesOptions(updatedCategories);
+            })
+            .catch(error => {
+                console.error('Error adding category:', error);
+            });
+    };
+
+    const shortenUrl = () => {
+        let isValid = true;
+
+        if (selfExplanatoryUri.trim() !== '') {
+            const uriWithoutSpaces = selfExplanatoryUri.replace(/\s/g, '');
+
+            if (encodeURIComponent(selfExplanatoryUri) !== encodeURIComponent(uriWithoutSpaces)) {
+                setErrorMessage('Error: Self-Explanatory URI is not valid');
+                isValid = false;
+            }
+        }
+
+        if (isValid) {
+            const allTagIds = selectedTags.map(tag => tag.id);
+
+            const newTags = selectedTags.filter(tag => !tagSuggestions.some(suggestion => suggestion.value === tag.value));
+
+            if (newTags.length > 0) {
+                Promise.all(newTags.map(newTag => {
+                    return fetch('/wp-json/short-url/v1/add-tag', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ label: newTag.value })
+                    }).then(response => {
+                        if (!response.ok) {
+                            throw new Error('Failed to add tag');
+                        }
+                        return response.json();
+                    }).then(newTag => newTag.id);
+                })).then(newTagIds => {
+                    const combinedTagIds = [...allTagIds, ...newTagIds];
+                    continueShorteningUrl(combinedTagIds);
+                }).catch(error => {
+                    console.error('Error adding tag:', error);
+                    setErrorMessage('Error: Failed to add tag');
+                });
+            } else {
+                continueShorteningUrl(allTagIds);
+            }
+        }
+    };
+
+    const continueShorteningUrl = (tags) => {
+        const shortenParams = {
+            url: url.trim(),
+            uri: selfExplanatoryUri,
+            valid_until: validUntil,
+            categories: selectedCategories,
+            tags: tags
+        };
+
+        fetch('/wp-json/short-url/v1/shorten', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(shortenParams)
+        })
+            .then(response => response.json())
+            .then(shortenData => {
+                if (!shortenData.error) {
+                    setShortenedUrl(shortenData.txt);
+                    setErrorMessage('');
+                    generateQRCode(shortenData.txt);
+                } else {
+                    setErrorMessage('Error: ' + shortenData.txt);
+                    setShortenedUrl('');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    };
+
+    const generateQRCode = (text) => {
+        const qr = new QRious({
+            element: document.getElementById('qrcode'),
+            value: text,
+            size: 150
+        });
+        setQrCodeUrl(qr.toDataURL());
+    }
+
+    const handleCopy = () => {
+        console.log('handleCopy clicked');
+        // Trigger copy action
+        if (shortenedUrl) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(shortenedUrl)
+                    .then(() => {
+                        setCopied(true);
+                    })
+                    .catch(err => {
+                        console.error('Copy failed:', err);
+                    });
+            } else {
+                // Fallback method for browsers that do not support Clipboard API
+                const textArea = document.createElement('textarea');
+                textArea.value = shortenedUrl;
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    setCopied(true);
+                } catch (err) {
+                    console.error('Copy failed:', err);
+                }
+                document.body.removeChild(textArea);
+            }
+        }
+    };
+        
+    return (
+        <div {...useBlockProps()}>
+            <InspectorControls>
+                <PanelBody title={__('Self-Explanatory URI')}>
+                    <TextControl
+                        value={selfExplanatoryUri}
+                        onChange={setSelfExplanatoryUri}
+                    />
+                </PanelBody>
+                <PanelBody title={__('Validity')}>
+                    <DateTimePicker
+                        currentDate={validUntil}
+                        onChange={onChangeValidUntil}
+                        is12Hour={false}
+                        minDate={new Date()}
+                        maxDate={new Date(new Date().getFullYear() + 1, new Date().getMonth(), new Date().getDate())}
+                        isInvalidDate={(date) => {
+                            const nextYear = new Date(new Date().getFullYear() + 1, new Date().getMonth(), new Date().getDate());
+                            return date > nextYear;
+                        }}
+                    />
+                </PanelBody>
+                <PanelBody title={__('Categories')}>
+                    {categoriesOptions.map(category => (
+                        <div key={category.value}>
+                            <input
+                                type="checkbox"
+                                value={category.value}
+                                checked={selectedCategories.includes(category.value)}
+                                onChange={(event) => {
+                                    const isChecked = event.target.checked;
+                                    if (isChecked) {
+                                        setSelectedCategories([...selectedCategories, category.value]);
+                                    } else {
+                                        setSelectedCategories(selectedCategories.filter(cat => cat !== category.value));
+                                    }
+                                }}
+                            />
+                            {' '}
+                            <label>{category.label}</label>
+                            <br />
+                        </div>
+                    ))}
+                    <a href="#" onClick={handleAddCategory}>Add New Category</a>
+                </PanelBody>
+                <PanelBody title={__('Tags')}>
+                    <FormTokenField
+                        label="Tags"
+                        value={selectedTags.map(tag => tag.value)} // Extracting values from selectedTags
+                        suggestions={tagSuggestions.map(tag => tag.value)} // Extracting values from tagSuggestions
+                        onChange={(newTags) => {
+                            const updatedTags = newTags.map(tagValue => ({
+                                id: tagSuggestions.find(suggestion => suggestion.value === tagValue)?.id,
+                                value: tagValue
+                            }));
+                            setSelectedTags(updatedTags);
+                        }}
+                    />
+                </PanelBody>
+            </InspectorControls>
+
+            <TextControl
+                label={__('Enter URL')}
+                value={url}
+                onChange={setUrl}
+            />
+            <Button isPrimary onClick={shortenUrl}>
+                {__('Shorten URL')}
+            </Button>
+
+            {errorMessage && (
+                <p style={{ color: 'red' }}>
+                    {errorMessage}
+                </p>
+            )}
+
+            {/* Display shortened URL and copy button */}
+            {shortenedUrl && (
+                <div>
+                    <p>
+                        {__('Shortened URL')}: {shortenedUrl} 
+                        &nbsp;&nbsp;<button class="btn" data-clipboard-target="#foo">
+                        <img
+                src="data:image/svg+xml,%3Csvg height='1024' width='896' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M128 768h256v64H128v-64z m320-384H128v64h320v-64z m128 192V448L384 640l192 192V704h320V576H576z m-288-64H128v64h160v-64zM128 704h160v-64H128v64z m576 64h64v128c-1 18-7 33-19 45s-27 18-45 19H64c-35 0-64-29-64-64V192c0-35 29-64 64-64h192C256 57 313 0 384 0s128 57 128 128h192c35 0 64 29 64 64v320h-64V320H64v576h640V768zM128 256h512c0-35-29-64-64-64h-64c-35 0-64-29-64-64s-29-64-64-64-64 29-64 64-29 64-64 64h-64c-35 0-64 29-64 64z'/%3E%3C/svg%3E"
+                width="13"
+                alt="Copy to clipboard"
+                onClick={handleCopy} // Attach onClick event handler
+                style={{ cursor: 'pointer' }} // Add cursor style to indicate it's clickable
+            />
+            </button> {copied && <span>URL copied!</span>}
+                    </p>
+                    <img src={qrCodeUrl} alt="QR Code" />                                        
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default Edit;
+ 
+                // Your edit.js code goes here...
+            });
+        </script>
+        <?php
+    
+        $output = ob_get_clean(); // Get and clean the buffer
+    
+        return $output;
+        }
+
+    public function add_new_tag_callback()
+    {
         if (isset($_POST['new_tag'])) {
             $new_tag = sanitize_text_field($_POST['new_tag']);
             // Add your logic to insert $new_tag into the shorturl_tags table
@@ -39,43 +401,46 @@ class Shortcode
         wp_die();
     }
 
-public function render_custom_tag_shortcode() {
-    ob_start();
-    ?>
-    <div class="tagsdiv" id="custom-tagdiv">
-        <div class="jaxtag">
-            <div class="ajaxtag hide-if-no-js">
-                <label class="screen-reader-text" for="new-tag">Add New Tag</label>
-                <div class="taghint">Add New Tag</div>
-                <input type="text" id="new-tag" name="newtag" class="newtag form-input-tip" size="16" autocomplete="off">
-                <input type="button" class="button tagadd" value="Add">
+    public function render_custom_tag_shortcode()
+    {
+        ob_start();
+        ?>
+        <div class="tagsdiv" id="custom-tagdiv">
+            <div class="jaxtag">
+                <div class="ajaxtag hide-if-no-js">
+                    <label class="screen-reader-text" for="new-tag">Add New Tag</label>
+                    <div class="taghint">Add New Tag</div>
+                    <input type="text" id="new-tag" name="newtag" class="newtag form-input-tip" size="16" autocomplete="off">
+                    <input type="button" class="button tagadd" value="Add">
+                </div>
             </div>
         </div>
-    </div>
-    <?php
-    return ob_get_clean();
-}
+        <?php
+        return ob_get_clean();
+    }
 
 
-    public function fetch_custom_tags() {
+    public function fetch_custom_tags()
+    {
         global $wpdb;
-        $tags = $wpdb->get_results( "SELECT id, name FROM {$wpdb->prefix}shorturl_tags" );
+        $tags = $wpdb->get_results("SELECT id, name FROM {$wpdb->prefix}shorturl_tags");
         return $tags;
     }
-    
-    public function display_custom_tags() {
+
+    public function display_custom_tags()
+    {
         $tags = $this->fetch_custom_tags();
         $ret = '';
-        if ( $tags ) {
+        if ($tags) {
             $ret .= '<div class="custom-tags">';
-            foreach ( $tags as $tag ) {
+            foreach ($tags as $tag) {
                 $ret .= '<button class="tag-button" data-tag-id="' . $tag->id . '">' . $tag->name . '</button>';
             }
             $ret .= '</div>';
         }
         return $ret;
     }
-    
+
 
     public function display_shorturl_category()
     {
@@ -209,6 +574,7 @@ public function render_custom_tag_shortcode() {
 
     public function generate_shortcode_handler($atts = null): string
     {
+
         // If $atts is null or not an array, initialize it as an empty array
         if (!is_array($atts)) {
             $atts = [];
@@ -237,57 +603,47 @@ public function render_custom_tag_shortcode() {
         }
 
         // Generate form
-        ob_start(); // Start output buffering
-        ?>
-        <form method="post">
-            <div class="postbox">
-                <h2 class="hndle">Create Short URL</h2>
-                <div class="inside">
-                    <label for="url">Long URL:</label>
-                    <input type="text" name="url" value="<?php echo esc_attr($atts['url']); ?>">
-                </div>
-            </div>
+        $form = '';
+        $form .= '<form method="post">';
+        $form .= '<div class="postbox">';
+        $form .= '<h2 class="hndle">Create Short URL</h2>';
+        $form .= '<div class="inside">';
+        $form .= '<label for="url">Long URL:</label>';
+        $form .= '<input type="text" name="url" value="' . esc_attr($atts['url']) . '">';
+        $form .= '</div>';
+        $form .= '</div>';
 
-            <p><a href="#" id="show-advanced-settings">Advanced Settings</a></p>
-            <div id="div-advanced-settings" style="display: none;">
-                <h2 class="handle">Categories</h2>
-                <?php echo $this->display_shorturl_category(); ?>
-                <h2 class="handle">Tags</h2>
-                <?php echo $this->display_shorturl_tag(); ?>
-            </div>
+        $form .= '<p><a href="#" id="show-advanced-settings">Advanced Settings</a></p>';
+        $form .= '<div id="div-advanced-settings" style="display: none;">';
+        $form .= '<h2 class="handle">Categories</h2>';
+        // $form .= $this->display_shorturl_category();
+        $form .= '<h2 class="handle">Tags</h2>';
+        // $form .= $this->display_shorturl_tag();
+        $form .= '</div>';
 
-            <input type="submit" name="generate" value="Generate">
-        </form>
+        $form .= '<input type="submit" name="generate" value="Generate">';
+        $form .= '</form>';
 
-        <!-- Display result message -->
-        <p>
-            <?php echo $result_message; ?>
-            <?php if (!$result['error']): ?>
-                <button class="copy-to-clipboard" data-clipboard-text="<?php echo esc_attr($result['txt']); ?>">Copy</button>
-            <?php endif; ?>
+        // Display result message
+        $form .= '<div><p>' . $result_message;
+        $form .= '</p>';
+        if (!empty($result) && !$result['error']) {
+            $form .= '<canvas id="qr"></canvas>';
+            $form .= '<script>';
+            $form .= 'jQuery(document).ready(function ($) {';
+            $form .= 'var qr = new QRious({';
+            $form .= 'element: document.getElementById("qr"),';
+            $form .= 'value: "' . $result['txt'] . '",';
+            $form .= 'size: 200';
+            $form .= '});';
+            $form .= '});';
+            $form .= '</script><div>';
+        }
 
-
-        </p>
-
-        <!-- Display QR code if available -->
-        <?php if (!empty($result['txt'])): ?>
-            <canvas id="qr"></canvas>
-            <script>
-                jQuery(document).ready(function ($) {
-                    // Generate QR code using QRious
-                    var qr = new QRious({
-                        element: document.getElementById('qr'),
-                        value: '<?php echo $result['txt']; ?>',
-                        size: 200 // Adjust size as per your requirement
-                    });
-                });
-            </script>
-        <?php endif; ?>
-        <?php
-        $form = ob_get_clean(); // Get and clean the buffer
 
         return $form;
     }
+
 
 
 
@@ -417,7 +773,9 @@ public function render_custom_tag_shortcode() {
         $atts = shortcode_atts(
             array(
                 'checkbox' => false, // Default checkbox value
-            ), $atts);
+            ),
+            $atts
+        );
 
         $message = ''; // Initialize message variable
 

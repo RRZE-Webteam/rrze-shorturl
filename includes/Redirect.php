@@ -4,31 +4,40 @@ namespace RRZE\ShortURL;
 
 class Redirect
 {
-    public static function getActiveShortURLs(): array
-    {
+    // generate_redirect_rules returns an array with Redirect instructions
+    public static function generate_redirect_rules() {
         global $wpdb;
-
+    
         try {
-            $currentTimestamp = current_time('mysql', 1);
-
-            // Prepare the SQL query
-            $query = $wpdb->prepare(
-                "SELECT long_url, short_url FROM {$wpdb->prefix}shorturl_links WHERE active = TRUE AND (valid_until IS NULL OR valid_until >= %s)",
-                $currentTimestamp
-            );
-
-            // Execute the query
-            $results = $wpdb->get_results($query, ARRAY_A);
-
-            if ($results === null) {
-                throw new \Exception("Error fetching active short URLs from the database.");
+            // Get current date
+            $current_date = current_time('mysql');
+    
+            // Query for active links with valid_until in the future or NULL
+            $query = $wpdb->prepare("
+                SELECT long_shorturl, short_url
+                FROM {$wpdb->prefix}shorturl_links
+                WHERE is_active = 1 AND (valid_until > %s OR valid_until IS NULL)
+            ", $current_date);
+    
+            $results = $wpdb->get_results($query);
+    
+            // Initialize an empty array to store redirect rules
+            $redirect_rules = array();
+    
+            // Generate redirect rules for each active link
+            foreach ($results as $result) {
+                // Construct the redirect rule
+                $redirect_rule = "Redirect 302 {$result->long_shorturl} {$result->short_url}";
+                // Add the rule to the array
+                $redirect_rules[] = $redirect_rule;
             }
-
-            return $results;
-        } catch (\Exception $e) {
-            // Handle the exception
-            error_log("Error in getActiveShortURLs: " . $e->getMessage());
-            return [];
+    
+            // Return the array of redirect rules
+            return $redirect_rules;
+        } catch (Exception $e) {
+            // Handle exceptions
+            error_log("Error generating redirect rules: " . $e->getMessage());
+            return array(); // Return an empty array in case of error
         }
-    }
+    }   
 }

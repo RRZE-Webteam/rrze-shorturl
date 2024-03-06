@@ -54,6 +54,22 @@ class Main
      */
     public function enqueueScripts()
     {
+        wp_enqueue_script('jquery');
+        wp_enqueue_script('wp-blocks');
+        wp_enqueue_script('wp-element');
+        wp_enqueue_script('wp-components');
+        wp_enqueue_script('wp-api');        
+        wp_enqueue_script('wp-i18n');
+        wp_enqueue_script('wp-editor');
+        wp_enqueue_script(
+            'rrze-shorturl-block-editor-script',
+            plugins_url('build/index.js', plugin_basename($this->pluginFile)),
+            array( 'wp-blocks', 'wp-element', 'wp-components', 'wp-i18n', 'wp-editor' ), // Dependencies
+            '1.0', // Version
+            true // Enqueue script in footer
+        );
+
+
         wp_enqueue_script('qrious', plugins_url('assets/js/qrious.min.js', plugin_basename($this->pluginFile)), array('jquery'), null, true);
         wp_enqueue_script('rrze-shorturl', plugins_url('src/rrze-shorturl.js', plugin_basename($this->pluginFile)), array('jquery'), null, true);
 

@@ -25,15 +25,6 @@ jQuery(document).ready(function ($) {
         $('#div-advanced-settings').slideToggle();
     });
 
-    // Copy Short URL to clipboard
-    new ClipboardJS('.copy-to-clipboard');
-
-    // Optional: Show a tooltip or feedback after copying
-    document.querySelectorAll('.copy-to-clipboard').forEach(function (button) {
-        button.addEventListener('click', function () {
-            button.setAttribute('data-original-title', 'Copied!');
-        });
-    });
 
     $(document).on("mouseover", ".shorturl-category-row", function () {
         $(this).find(".shorturl-edit-category, .shorturl-delete-category").removeClass("hidden");
