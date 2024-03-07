@@ -39,7 +39,7 @@ class Shortcode
                 array('%s')
             );
             // Return the ID of the newly inserted tag
-            echo $wpdb->insert_id;
+            return wp_send_json_success(['id' => $wpdb->insert_id]);
         }
         wp_die();
     }
@@ -65,6 +65,12 @@ class Shortcode
 
         // Check if form is submitted
         if ($_SERVER["REQUEST_METHOD"] == "POST") {
+
+
+            echo '<pre>';
+            var_dump($_POST);
+            exit;
+
             // Check if URL is provided
             if (!empty($_POST['url'])) {
                 // Call ShortURL::shorten() and add the result if URL is given
@@ -81,6 +87,7 @@ class Shortcode
         $form .= '<div class="inside">';
         $form .= '<label for="url">Long URL:</label>';
         $form .= '<input type="text" name="url" value="' . esc_attr($atts['url']) . '">';
+        $form .= '<input type="hidden" name="link_id" value="'. (!empty($result['link_id']) ? $result['link_id'] : '') .'">';
         $form .= '</div>';
         $form .= '</div>';
 
@@ -96,7 +103,7 @@ class Shortcode
         $form .= self::display_shorturl_tag();
         $form .= '</div>';
 
-        $form .= '<input type="submit" name="generate" value="Generate">';
+        $form .= '<input type="submit" id="generate" name="generate" value="Generate">';
         $form .= '</form>';
 
         // Display result message
@@ -249,7 +256,7 @@ class Shortcode
     {
         foreach ($categories as $category) {
             echo str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;', $level); // Indent based on level
-            echo '<input type="checkbox" name="shorturl_categories[]" value="' . esc_attr($category->id) . '" />';
+            echo '<input type="checkbox" name="categories[]" value="' . esc_attr($category->id) . '" />';
             echo esc_html($category->label) . '<br>';
             if (!empty($category->children)) {
                 self::display_hierarchical_categories($category->children, $level + 1);
@@ -275,7 +282,7 @@ class Shortcode
         ?>
         <div id="shorturl-tag-metabox">
             <label for="tag-tokenfield">Tags:</label>
-            <select id="tag-tokenfield" name="shorturl_tag[]" multiple="multiple" style="width: 100%;">
+            <select id="tag-tokenfield" name="tags[]" multiple="multiple" style="width: 100%;">
                 <?php foreach ($tags as $tag): ?>
                     <option value="<?php echo esc_attr($tag->id); ?>">
                         <?php echo esc_html($tag->label); ?>
@@ -492,7 +499,7 @@ class Shortcode
         ?>
         <div>
             <label for="self_explanatory_uri">Self-Explanatory URI:</label>
-            <input type="text" id="self_explanatory_uri" name="self_explanatory_uri" value="">
+            <input type="text" id="uri" name="uri" value="">
         </div>
         <?php
         return ob_get_clean();

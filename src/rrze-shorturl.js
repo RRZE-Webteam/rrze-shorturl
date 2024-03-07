@@ -1,4 +1,6 @@
 jQuery(document).ready(function ($) {
+    var advancedSettingsChanged = false; // Variable to track changes in advanced settings
+
     // Function to handle form submission for both customer domains and services
     function handleFormSubmission() {
         // If the delete action is triggered
@@ -23,6 +25,11 @@ jQuery(document).ready(function ($) {
     $('#show-advanced-settings').on('click', function (e) {
         e.preventDefault();
         $('#div-advanced-settings').slideToggle();
+    });
+
+    // Event listener for changes in the advanced settings
+    $('#div-advanced-settings input[type="text"], #div-advanced-settings input[type="date"], #div-advanced-settings select').on('change', function () {
+        $("#generate").prop('value', 'Update');
     });
 
 
@@ -82,27 +89,39 @@ jQuery(document).ready(function ($) {
     // tokenfield for tags
     $('#tag-tokenfield').select2({
         tags: true,
-        tokenSeparators: [',', ' '], // Define token separators
+        tokenSeparators: [','],
         placeholder: 'Add tags'
     });
 
+
     $('#tag-tokenfield').on('select2:selecting', function (e) {
         var tagValue = e.params.args.data.text;
-            $.ajax({
-                url: rrze_shorturl_ajax_object.ajax_url,
-                method: 'POST',
-                data: {
-                    action: 'add_shorturl_tag',
-                    new_tag_name: tagValue,
-                    _ajax_nonce: rrze_shorturl_ajax_object.add_shorturl_tag_nonce
-                },
-                success: function (response) {
-                    // shall we store the id pairs now?
-                },
-                error: function (xhr, status, error) {
-                    console.error('Error adding tag:', error);
+
+        $.ajax({
+            url: rrze_shorturl_ajax_object.ajax_url,
+            method: 'POST',
+            data: {
+                action: 'add_shorturl_tag',
+                new_tag_name: tagValue,
+                dataType: 'json',
+                _ajax_nonce: rrze_shorturl_ajax_object.add_shorturl_tag_nonce
+            },
+            success: function (response) {
+                if (response.success) {
+                    var newTagId = response.data.id;
+
+                    // Append the new tag
+                    $('#tag-tokenfield').append('<option value="' + newTagId + '" selected>' + tagValue + '</option>');
+                    $('#tag-tokenfield').trigger('change');
+
+                } else {
+                    console.error('Error adding tag:', response.error);
                 }
-            });
+            },
+            error: function (xhr, status, error) {
+                console.error('Error adding tag:', error);
+            }
+        });
     });
 
 

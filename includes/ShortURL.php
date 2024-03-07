@@ -86,7 +86,7 @@ class ShortURL
                 $wpdb->insert(
                     $table_name,
                     array(
-                        'domain_id' => (int)$domain_id,
+                        'domain_id' => (int) $domain_id,
                         'long_url' => $long_url
                     )
                 );
@@ -118,16 +118,16 @@ class ShortURL
         $table_name = $wpdb->prefix . 'shorturl_links';
         $link_categories_table = $wpdb->prefix . 'shorturl_links_categories';
         $link_tags_table = $wpdb->prefix . 'shorturl_links_tags';
-    
 
-        error_log('updateLink');
-        error_log('link_id = ' . $link_id);
-        error_log('domain_id = ' . $domain_id);
-        error_log('shortURL = ' . $shortURL);
-        error_log('uri = ' . $uri);
-        error_log('valid_until = ' . $valid_until);
-        error_log('categories = ' . implode(',', $categories));
-        error_log('tags = ' . implode(',', $tags));
+
+        // error_log('updateLink');
+        // error_log('link_id = ' . $link_id);
+        // error_log('domain_id = ' . $domain_id);
+        // error_log('shortURL = ' . $shortURL);
+        // error_log('uri = ' . $uri);
+        // error_log('valid_until = ' . $valid_until);
+        // error_log('categories = ' . implode(',', $categories));
+        // error_log('tags = ' . implode(',', $tags));
 
         try {
             // Store in the database    
@@ -141,36 +141,41 @@ class ShortURL
                 ],
                 ['id' => $link_id]
             );
-    
+
             if ($update_result !== false) {
                 // Delete existing categories and tags for the link
                 $wpdb->delete($link_categories_table, ['link_id' => $link_id]);
                 $wpdb->delete($link_tags_table, ['link_id' => $link_id]);
-    
+
                 // Insert new categories
-                foreach ($categories as $category_id) {
-                    $wpdb->insert(
-                        $link_categories_table,
-                        ['link_id' => $link_id, 'category_id' => $category_id]
-                    );
+                if (!empty($categories)) {
+
+                    foreach ($categories as $category_id) {
+                        $wpdb->insert(
+                            $link_categories_table,
+                            ['link_id' => $link_id, 'category_id' => $category_id]
+                        );
+                    }
                 }
-    
+
                 // Insert new tags
-                foreach ($tags as $tag_id) {
-                    $wpdb->insert(
-                        $link_tags_table,
-                        ['link_id' => $link_id, 'tag_id' => $tag_id]
-                    );
+                if (!empty($tags)) {
+                    foreach ($tags as $tag_id) {
+                        $wpdb->insert(
+                            $link_tags_table,
+                            ['link_id' => $link_id, 'tag_id' => $tag_id]
+                        );
+                    }
                 }
             }
-    
+
             return $update_result;
         } catch (\Throwable $e) {
             error_log("Error in updateLink: " . $e->getMessage());
             return null;
         }
     }
-        
+
 
     // Function to retrieve our domains from the database
     public static function getAllowedDomains()
@@ -264,7 +269,7 @@ class ShortURL
 
     public static function isValidDate($valid_until)
     {
-        if (empty($valid_until)){
+        if (empty($valid_until)) {
             return ['error' => false, 'txt' => 'no date given'];
         }
         // Validate if $valid_until is a valid date
@@ -302,7 +307,7 @@ class ShortURL
     public static function shorten($shortenParams)
     {
 
-        
+
         try {
             $long_url = $shortenParams['url'] ?? null;
             $uri = $shortenParams['uri'] ?? null;
@@ -365,7 +370,7 @@ class ShortURL
                 return ['error' => true, 'txt' => 'Unable to update database table'];
             }
 
-            return ['error' => false, 'txt' => $shortURL];
+            return ['error' => false, 'txt' => $shortURL, 'link_id' => $aLink['id']];
         } catch (\Exception $e) {
             error_log("Error in shorten: " . $e->getMessage());
             return null;
