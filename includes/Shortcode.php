@@ -65,12 +65,6 @@ class Shortcode
 
         // Check if form is submitted
         if ($_SERVER["REQUEST_METHOD"] == "POST") {
-
-
-            echo '<pre>';
-            var_dump($_POST);
-            exit;
-
             // Check if URL is provided
             if (!empty($_POST['url'])) {
                 // Call ShortURL::shorten() and add the result if URL is given
@@ -87,12 +81,12 @@ class Shortcode
         $form .= '<div class="inside">';
         $form .= '<label for="url">Long URL:</label>';
         $form .= '<input type="text" name="url" value="' . esc_attr($atts['url']) . '">';
-        $form .= '<input type="hidden" name="link_id" value="'. (!empty($result['link_id']) ? $result['link_id'] : '') .'">';
+        $form .= '<input type="hidden" name="link_id" value="' . (!empty($result['link_id']) ? $result['link_id'] : '') . '">';
         $form .= '</div>';
         $form .= '</div>';
 
         $form .= '<p><a href="#" id="show-advanced-settings">Advanced Settings</a></p>';
-        $form .= '<div id="div-advanced-settings" style="display: none;">';                
+        $form .= '<div id="div-advanced-settings" style="display: none;">';
         // $form .= '<h2 class="handle">Self-Explanatory URI</h2>';
         $form .= self::display_shorturl_uri();
         // $form .= '<h2 class="handle">Validity</h2>';
@@ -300,13 +294,16 @@ class Shortcode
 
     public function list_shortcode_handler($atts = null): string
     {
-
         if (!is_array($atts)) {
             $atts = [];
         }
 
         global $wpdb;
-        $table_name = $wpdb->prefix . 'shorturl_links';
+        $links_table = $wpdb->prefix . 'shorturl_links';
+        $links_categories_table = $wpdb->prefix . 'shorturl_links_categories';
+        $links_tags_table = $wpdb->prefix . 'shorturl_links_tags';
+        $categories_table = $wpdb->prefix . 'shorturl_categories';
+        $tags_table = $wpdb->prefix . 'shorturl_tags';
 
         // Determine the column to sort by and sort order
         $orderby = isset($_GET['orderby']) ? $_GET['orderby'] : 'id';
@@ -314,27 +311,25 @@ class Shortcode
 
         // Prepare SQL query to fetch post IDs from wp_postmeta and their associated category names
         $query = "SELECT l.id AS link_id, 
-                         pm.meta_value AS post_id, 
-                         l.long_url, 
-                         l.short_url, 
-                         l.uri, 
-                         l.valid_until, 
-                         GROUP_CONCAT(pm_category.meta_value) AS category_ids 
-                  FROM $table_name l
-                  INNER JOIN {$wpdb->prefix}postmeta AS pm ON l.id = pm.meta_value AND pm.meta_key = 'shorturl_id'
-                  LEFT JOIN {$wpdb->prefix}postmeta AS pm_category ON pm_category.post_id = pm.meta_value AND pm_category.meta_key = 'category_id'
-                  GROUP BY l.id, pm.meta_value, l.long_url, l.short_url, l.uri, l.valid_until
-                  ORDER BY $orderby $order";
-
-        // return $query;
+                     l.long_url, 
+                     l.short_url, 
+                     l.uri, 
+                     l.valid_until, 
+                     GROUP_CONCAT(DISTINCT lc.category_id) AS category_ids,
+                     GROUP_CONCAT(DISTINCT lt.tag_id) AS tag_ids
+              FROM $links_table l
+              LEFT JOIN $links_categories_table AS lc ON l.id = lc.link_id
+              LEFT JOIN $links_tags_table AS lt ON l.id = lt.link_id
+              GROUP BY l.id, l.long_url, l.short_url, l.uri, l.valid_until
+              ORDER BY $orderby $order";
 
         $results = $wpdb->get_results($query, ARRAY_A);
 
         // Generate table
         $table = '<table class="wp-list-table widefat striped">';
+        // Table header
         $table .= '<thead><tr>';
         $table .= '<th scope="col" class="manage-column column-id"><a href="' . admin_url('admin.php?page=your_page_slug&orderby=id&order=' . ($order == 'ASC' ? 'DESC' : 'ASC')) . '">ID</a></th>';
-        $table .= '<th scope="col" class="manage-column column-post-id">Post ID</th>';
         $table .= '<th scope="col" class="manage-column column-long-url"><a href="' . admin_url('admin.php?page=your_page_slug&orderby=long_url&order=' . ($order == 'ASC' ? 'DESC' : 'ASC')) . '">Long URL</a></th>';
         $table .= '<th scope="col" class="manage-column column-short-url"><a href="' . admin_url('admin.php?page=your_page_slug&orderby=short_url&order=' . ($order == 'ASC' ? 'DESC' : 'ASC')) . '">Short URL</a></th>';
         $table .= '<th scope="col" class="manage-column column-uri">URI</th>';
@@ -344,45 +339,44 @@ class Shortcode
         $table .= '</tr></thead><tbody>';
 
         foreach ($results as $row) {
-            // Unserialize category IDs if they exist
-            $category_ids = !empty($row['category_ids']) ? unserialize($row['category_ids']) : ['nix'];
-
-            // Fetch and concatenate category names only if category IDs exist
-            if (!empty($category_ids)) {
-                // Fetch category names based on IDs
-                $category_names = [];
-                foreach ($category_ids as $category_id) {
-                    $category = get_term($category_id, 'shorturl_category');
-                    if ($category && !is_wp_error($category)) {
-                        $category_names[] = $category->name;
-                    } else {
-                        $category_names[] = '$category_id = ' . $category_id;
-                    }
+            // Fetch and concatenate category names
+            $category_ids = !empty($row['category_ids']) ? explode(',', $row['category_ids']) : [];
+            $category_names = [];
+            foreach ($category_ids as $category_id) {
+                $category_name = $wpdb->get_var("SELECT label FROM $categories_table WHERE id = $category_id");
+                if ($category_name) {
+                    $category_names[] = $category_name;
                 }
-
-                // Concatenate category names
-                $category_names_str = implode(', ', $category_names);
-            } else {
-                // Set empty string if no category IDs exist
-                $category_names_str = '';
             }
+            $category_names_str = implode(', ', $category_names);
+
+            // Fetch and concatenate tag names
+            $tag_ids = !empty($row['tag_ids']) ? explode(',', $row['tag_ids']) : [];
+            $tag_names = [];
+            foreach ($tag_ids as $tag_id) {
+                $tag_name = $wpdb->get_var("SELECT label FROM $tags_table WHERE id = $tag_id");
+                if ($tag_name) {
+                    $tag_names[] = $tag_name;
+                }
+            }
+            $tag_names_str = implode(', ', $tag_names);
 
             // Output table row
             $table .= '<tr>';
             $table .= '<td class="column-id">' . $row['link_id'] . '</td>';
-            $table .= '<td class="column-post-id">' . $row['post_id'] . '</td>';
             $table .= '<td class="column-long-url">' . $row['long_url'] . '</td>';
             $table .= '<td class="column-short-url">' . $row['short_url'] . '</td>';
             $table .= '<td class="column-uri">' . $row['uri'] . '</td>';
             $table .= '<td class="column-valid-until">' . $row['valid_until'] . '</td>';
             $table .= '<td class="column-categories">' . $category_names_str . '</td>';
-            $table .= '<td class="column-tags"></td>'; // You can populate this column similarly for tags
+            $table .= '<td class="column-tags">' . $tag_names_str . '</td>';
             $table .= '</tr>';
         }
         $table .= '</tbody></table>';
 
         return $table;
     }
+
 
 
     public static function update_category_label()
