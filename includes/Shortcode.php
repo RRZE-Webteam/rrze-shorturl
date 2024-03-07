@@ -25,7 +25,8 @@ class Shortcode
     }
 
 
-    public function add_shorturl_tag_callback() {
+    public function add_shorturl_tag_callback()
+    {
         check_ajax_referer('add_shorturl_tag_nonce', '_ajax_nonce');
 
         if (isset($_POST['new_tag_name'])) {
@@ -84,7 +85,11 @@ class Shortcode
         $form .= '</div>';
 
         $form .= '<p><a href="#" id="show-advanced-settings">Advanced Settings</a></p>';
-        $form .= '<div id="div-advanced-settings" style="display: none;">';
+        $form .= '<div id="div-advanced-settings" style="display: none;">';                
+        // $form .= '<h2 class="handle">Self-Explanatory URI</h2>';
+        $form .= self::display_shorturl_uri();
+        // $form .= '<h2 class="handle">Validity</h2>';
+        $form .= self::display_shorturl_validity();
         $form .= '<h2 class="handle">Categories</h2>';
         $form .= self::display_shorturl_category();
         $form .= '<h2 class="handle">Tags</h2>';
@@ -114,7 +119,19 @@ class Shortcode
         return $form;
     }
 
+    public static function display_shorturl_validity()
+    {
+        // Output HTML
+        ob_start();
 
+        // Output the form
+        ?>
+        <label for="valid_until">Valid Until:</label>
+        <input type="date" id="valid_until" name="valid_until" value="">
+        <?php
+        return ob_get_clean();
+
+    }
 
     public function add_new_tag_callback()
     {
@@ -240,9 +257,10 @@ class Shortcode
         }
     }
 
-    public static function getTagLabels(){
+    public static function getTagLabels()
+    {
         global $wpdb;
-    
+
         return $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_tags", ARRAY_A);
 
     }
@@ -250,23 +268,25 @@ class Shortcode
     private static function display_shorturl_tag()
     {
         global $wpdb;
-    
+
         $tags = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_tags");
-    
+
         ob_start();
         ?>
         <div id="shorturl-tag-metabox">
             <label for="tag-tokenfield">Tags:</label>
             <select id="tag-tokenfield" name="shorturl_tag[]" multiple="multiple" style="width: 100%;">
-                <?php foreach ($tags as $tag) : ?>
-                    <option value="<?php echo esc_attr($tag->id); ?>"><?php echo esc_html($tag->label); ?></option>
+                <?php foreach ($tags as $tag): ?>
+                    <option value="<?php echo esc_attr($tag->id); ?>">
+                        <?php echo esc_html($tag->label); ?>
+                    </option>
                 <?php endforeach; ?>
             </select>
         </div>
         <?php
         return ob_get_clean();
     }
-        
+
 
 
 
@@ -466,7 +486,17 @@ class Shortcode
         }
     }
 
-
+    public static function display_shorturl_uri()
+    {
+        ob_start();
+        ?>
+        <div>
+            <label for="self_explanatory_uri">Self-Explanatory URI:</label>
+            <input type="text" id="self_explanatory_uri" name="self_explanatory_uri" value="">
+        </div>
+        <?php
+        return ob_get_clean();
+    }
 
 }
 
