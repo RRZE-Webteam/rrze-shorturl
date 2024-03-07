@@ -97,31 +97,35 @@ jQuery(document).ready(function ($) {
     $('#tag-tokenfield').on('select2:selecting', function (e) {
         var tagValue = e.params.args.data.text;
 
-        $.ajax({
-            url: rrze_shorturl_ajax_object.ajax_url,
-            method: 'POST',
-            data: {
-                action: 'add_shorturl_tag',
-                new_tag_name: tagValue,
-                dataType: 'json',
-                _ajax_nonce: rrze_shorturl_ajax_object.add_shorturl_tag_nonce
-            },
-            success: function (response) {
-                if (response.success) {
-                    var newTagId = response.data.id;
+        if (e.params.args.data.id === e.params.args.data.text) {
+            $.ajax({
+                url: rrze_shorturl_ajax_object.ajax_url,
+                method: 'POST',
+                data: {
+                    action: 'add_shorturl_tag',
+                    new_tag_name: tagValue,
+                    dataType: 'json',
+                    _ajax_nonce: rrze_shorturl_ajax_object.add_shorturl_tag_nonce
+                },
+                success: function (response) {
+                    if (response.success) {
+                        var newTagId = response.data.id;
 
-                    // Append the new tag
-                    $('#tag-tokenfield').append('<option value="' + newTagId + '" selected>' + tagValue + '</option>');
-                    $('#tag-tokenfield').trigger('change');
+                        // Workaround: remove the option that select2 automatically has added (with the wrong value)
+                        $('#tag-tokenfield option[value="' + tagValue + '"]').remove();
+                        // Append the new tag
+                        $('#tag-tokenfield').append('<option value="' + newTagId + '" selected>' + tagValue + '</option>');
+                        $('#tag-tokenfield').trigger('change');
 
-                } else {
-                    console.error('Error adding tag:', response.error);
+                    } else {
+                        console.error('Error adding tag:', response.error);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error adding tag:', error);
                 }
-            },
-            error: function (xhr, status, error) {
-                console.error('Error adding tag:', error);
-            }
-        });
+            });
+        }
     });
 
 
