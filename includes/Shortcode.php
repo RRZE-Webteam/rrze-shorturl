@@ -2,7 +2,6 @@
 
 namespace RRZE\ShortURL;
 
-use RRZE\ShortURL\Walker_Category_Checklist_Custom;
 
 class Shortcode
 {
@@ -25,6 +24,24 @@ class Shortcode
         add_action('wp_ajax_update_category_label_action', [$this, 'update_category_label']);
     }
 
+
+    public function add_shorturl_tag_callback() {
+        check_ajax_referer('add_shorturl_tag_nonce', '_ajax_nonce');
+
+        if (isset($_POST['new_tag_name'])) {
+            global $wpdb;
+            $newTagName = sanitize_text_field($_POST['new_tag_name']);
+            // Insert the new tag into the database
+            $wpdb->insert(
+                $wpdb->prefix . 'shorturl_tags',
+                array('label' => $newTagName),
+                array('%s')
+            );
+            // Return the ID of the newly inserted tag
+            echo $wpdb->insert_id;
+        }
+        wp_die();
+    }
 
     public function shorturl_handler($atts = null): string
     {
@@ -223,6 +240,13 @@ class Shortcode
         }
     }
 
+    public static function getTagLabels(){
+        global $wpdb;
+    
+        return $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_tags", ARRAY_A);
+
+    }
+
     private static function display_shorturl_tag()
     {
         global $wpdb;
@@ -233,18 +257,16 @@ class Shortcode
         ?>
         <div id="shorturl-tag-metabox">
             <label for="tag-tokenfield">Tags:</label>
-            <input type="text" id="tag-tokenfield" name="shorturl_tag" placeholder="Add tags" />
-            <p><a href="#" id="add-new-shorturl-tag">Add New Tag</a></p>
-            <div id="new-shorturl-tag" style="display: none;">
-                <input type="text" name="new_shorturl_tag" placeholder="New Tag Name">
-                <input type="button" value="Add Tag" id="add-shorturl-tag-btn">
-            </div>
+            <select id="tag-tokenfield" name="shorturl_tag[]" multiple="multiple" style="width: 100%;">
+                <?php foreach ($tags as $tag) : ?>
+                    <option value="<?php echo esc_attr($tag->id); ?>"><?php echo esc_html($tag->label); ?></option>
+                <?php endforeach; ?>
+            </select>
         </div>
         <?php
         return ob_get_clean();
     }
-    
-
+        
 
 
 
@@ -445,30 +467,6 @@ class Shortcode
     }
 
 
-
-    public function add_shorturl_tag_callback()
-    {
-        check_ajax_referer('add_shorturl_tag_nonce', '_ajax_nonce');
-
-        $tag_label = isset($_POST['tagLabel']) ? sanitize_text_field($_POST['tagLabel']) : '';
-
-        if (empty($tag_label)) {
-            wp_send_json_error('Tag label is required.');
-        }
-
-        global $wpdb;
-
-        $table_name = $wpdb->prefix . 'shorturl_tags';
-
-        // Insert new tag
-        $inserted = $wpdb->insert($table_name, ['label' => $tag_label]);
-
-        if ($inserted) {
-            wp_send_json_success('Tag added successfully!');
-        } else {
-            wp_send_json_error('Failed to add tag. Please try again.');
-        }
-    }
 
 }
 

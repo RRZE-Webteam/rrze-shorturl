@@ -80,47 +80,33 @@ jQuery(document).ready(function ($) {
 
 
     // tokenfield for tags
-    $('#add-new-shorturl-tag').on('click', function (e) {
-        e.preventDefault();
-        $('#new-shorturl-tag').slideToggle();
+    $('#tag-tokenfield').select2({
+        tags: true,
+        tokenSeparators: [',', ' '], // Define token separators
+        placeholder: 'Add tags'
     });
 
-    $('#add-shorturl-tag-btn').on('click', function (e) {
-        e.preventDefault();
-        var tagLabel = $('input[name=new_shorturl_tag]').val();
-        if (tagLabel) {
+    $('#tag-tokenfield').on('select2:selecting', function (e) {
+        var tagValue = e.params.args.data.text;
             $.ajax({
                 url: rrze_shorturl_ajax_object.ajax_url,
-                type: 'POST',
+                method: 'POST',
                 data: {
                     action: 'add_shorturl_tag',
-                    tagLabel: tagLabel,
+                    new_tag_name: tagValue,
                     _ajax_nonce: rrze_shorturl_ajax_object.add_shorturl_tag_nonce
                 },
                 success: function (response) {
-                    if (response.success) {
-                        // Reload the page or update the tag list dynamically
-                        alert('Tag added successfully!');
-                    } else {
-                        alert('Failed to add tag. Please try again.');
-                    }
+                    // shall we store the id pairs now?
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error adding tag:', error);
                 }
             });
-        } else {
-            alert('Please enter a tag name.');
-        }
-    });
-
-    // Initialize the tokenfield
-    $('#tag-tokenfield').tokenfield({
-        autocomplete: {
-            source: rrze_shorturl_ajax_object.tagLabels,
-            delay: 100
-        }
     });
 
 
-
+    // categories
     $('#add-new-shorturl-category').on('click', function (e) {
         e.preventDefault();
         $('#new-shorturl-category').slideToggle();
@@ -160,6 +146,6 @@ jQuery(document).ready(function ($) {
 
 
 
-    
+
 
 });
