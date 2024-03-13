@@ -47,28 +47,22 @@ class Shortcode
     public function shorturl_handler($atts = null): string
     {
 
-        // If $atts is null or not an array, initialize it as an empty array
-        if (!is_array($atts)) {
-            $atts = [];
-        }
-
-        // Extract shortcode attributes
-        $atts = shortcode_atts([
-            'url' => (empty($_POST['url']) ? '' : filter_var($_POST['url'], FILTER_VALIDATE_URL)),
-            'uri' => (empty($_POST['uri']) ? '' : sanitize_text_field($_POST['uri'])),
-            'valid_until' => (empty($_POST['valid_until']) ? '' : sanitize_text_field($_POST['valid_until'])),
-            'categories' => (empty($_POST['categories']) ? '' : sanitize_text_field($_POST['categories'])),
-            'tags' => (empty($_POST['tags']) ? '' : sanitize_text_field($_POST['tags'])),
-        ], $atts);
+        $aParams = [
+            'url' => filter_var($_POST['url'] ?? '', FILTER_VALIDATE_URL),
+            'uri' => sanitize_text_field($_POST['uri'] ?? ''),
+            'valid_until' => sanitize_text_field($_POST['valid_until'] ?? ''),
+            'categories' => !empty($_POST['categories']) ? array_map('sanitize_text_field', $_POST['categories']) : [],
+            'tags' => !empty($_POST['tags']) ? array_map('sanitize_text_field', $_POST['tags']) : [],
+        ];
 
         $result_message = ''; // Initialize result message
 
         // Check if form is submitted
         if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Check if URL is provided
-            if (!empty($_POST['url'])) {
+            if (!empty($aParams['url'])) {
                 // Call ShortURL::shorten() and add the result if URL is given
-                $result = ShortURL::shorten($atts);
+                $result = ShortURL::shorten($aParams);
                 $result_message = ($result['error'] ? 'Error: ' : 'Short URL: ') . $result['txt'];
             }
         }
@@ -80,7 +74,7 @@ class Shortcode
         $form .= '<h2 class="hndle">Create Short URL</h2>';
         $form .= '<div class="inside">';
         $form .= '<label for="url">Long URL:</label>';
-        $form .= '<input type="text" name="url" value="' . esc_attr($atts['url']) . '">';
+        $form .= '<input type="text" name="url" value="' . esc_attr($aParams['url']) . '">';
         $form .= '<input type="hidden" name="link_id" value="' . (!empty($result['link_id']) ? $result['link_id'] : '') . '">';
         $form .= '</div>';
         $form .= '</div>';

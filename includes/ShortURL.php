@@ -119,16 +119,6 @@ class ShortURL
         $link_categories_table = $wpdb->prefix . 'shorturl_links_categories';
         $link_tags_table = $wpdb->prefix . 'shorturl_links_tags';
 
-
-        // error_log('updateLink');
-        // error_log('link_id = ' . $link_id);
-        // error_log('domain_id = ' . $domain_id);
-        // error_log('shortURL = ' . $shortURL);
-        // error_log('uri = ' . $uri);
-        // error_log('valid_until = ' . $valid_until);
-        // error_log('categories = ' . implode(',', $categories));
-        // error_log('tags = ' . implode(',', $tags));
-
         try {
             // Store in the database    
             $update_result = $wpdb->update(
@@ -306,8 +296,6 @@ class ShortURL
 
     public static function shorten($shortenParams)
     {
-
-
         try {
             $long_url = $shortenParams['url'] ?? null;
             $uri = $shortenParams['uri'] ?? null;
