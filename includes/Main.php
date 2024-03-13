@@ -42,7 +42,6 @@ class Main
         add_action('wp_enqueue_scripts', [$this, 'enqueueScripts']);
         add_action('admin_enqueue_scripts', [$this, 'enqueueScripts']);
 
-        $trigger = new Trigger();
         $settings = new Settings();
         $domains = new CustomerDomains();
         $shortURL = new ShortURL();
@@ -59,7 +58,7 @@ class Main
         wp_enqueue_script('qrious', plugins_url('assets/js/qrious.min.js', plugin_basename($this->pluginFile)), array('jquery'), null, true);
         wp_enqueue_script('rrze-shorturl', plugins_url('src/rrze-shorturl.js', plugin_basename($this->pluginFile)), array('jquery'), null, true);
         wp_enqueue_style('wp-list-table');
-        
+
         // Localize the script with the nonces
         wp_localize_script(
             'rrze-shorturl',
