@@ -209,4 +209,33 @@ jQuery(document).ready(function ($) {
         }
     });
 
+
+    // IdM
+    $('.allow-uri-checkbox, .allow-get-checkbox').change(function() {
+        var id = $(this).data('id');
+        var field = $(this).hasClass('allow-uri-checkbox') ? 'allow_uri' : 'allow_get';
+        var value = $(this).prop('checked') ? 'true' : 'false';
+
+        // Send AJAX request to update allow_uri or allow_get
+        $.ajax({
+            url: rrze_shorturl_ajax_object.ajax_url,
+            type: 'POST',
+            data: {
+                action: 'update_idm',
+                id: id,
+                field: field,
+                value: value,
+                _ajax_nonce: rrze_shorturl_ajax_object.update_shorturl_idm_nonce
+            },
+            success: function(response) {
+                console.log('Field updated successfully');
+                // Reload the page or update UI as needed
+                location.reload();
+            },
+            error: function(xhr, status, error) {
+                console.error('Error updating field:', error);
+            }
+        });
+    });    
+
 });

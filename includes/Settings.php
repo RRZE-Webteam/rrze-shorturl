@@ -8,6 +8,9 @@ class Settings
     {
         add_action('admin_menu', [$this, 'add_options_page']);
         add_action('admin_init', [$this, 'register_settings']);
+
+        add_action('wp_ajax_nopriv_update_idm', [$this, 'update_idm_callback']);
+        add_action('wp_ajax_update_idm', [$this, 'update_idm_callback']);
     }
 
     // Add a menu item to the Settings menu
@@ -21,6 +24,34 @@ class Settings
             [$this, 'render_options_page']
         );
     }
+
+    public function update_idm_callback()
+    {
+        // Check if AJAX request to update allow_uri or allow_get
+        check_ajax_referer('update_shorturl_idm_nonce', '_ajax_nonce');
+
+        global $wpdb;
+
+        $id = intval($_POST['id']);
+        $field = sanitize_text_field($_POST['field']);
+        $value = isset($_POST['value']) && $_POST['value'] === 'true' ? 1 : 0;
+
+        error_log('$value = ' . $value);
+
+        // Update the allow_uri or allow_get field
+        $wpdb->update(
+            $wpdb->prefix . 'shorturl_idms',
+            array($field => $value),
+            array('id' => $id),
+            array('%d'),
+            array('%d')
+        );
+
+        // Return success response
+        wp_send_json_success();
+    }
+
+
 
     // Register settings sections and fields
     public function register_settings()
@@ -65,6 +96,8 @@ class Settings
         register_setting('rrze_shorturl_statistic', 'rrze_shorturl_statistic');
 
     }
+
+
 
     // Render the options page
     public function render_options_page()
@@ -401,17 +434,16 @@ class Settings
     {
         global $wpdb;
 
-                // Determine the current sorting order and column
-                $orderby = isset($_GET['orderby']) ? $_GET['orderby'] : 'idm';
-                $order = isset($_GET['order']) && in_array($_GET['order'], ['asc', 'desc']) ? $_GET['order'] : 'asc';
-        
-    
+        // Determine the current sorting order and column
+        $orderby = isset($_GET['orderby']) ? $_GET['orderby'] : 'idm';
+        $order = isset($_GET['order']) && in_array($_GET['order'], ['asc', 'desc']) ? $_GET['order'] : 'asc';
+
         try {
             // Check if form is submitted
             if (isset($_POST['submit_idm'])) {
                 // Get input data
                 $idm = sanitize_text_field($_POST['idm']);
-                
+
                 // Delete rows if delete checkbox is checked
                 if (!empty($_POST['delete'])) {
                     foreach ($_POST['delete'] as $delete_id) {
@@ -425,19 +457,19 @@ class Settings
                 } elseif (!empty($idm)) { // Add new entry
                     $insert_result = $wpdb->insert(
                         $wpdb->prefix . 'shorturl_idms',
-                        array('idm' => $idm, 'created_by' => 'Admin'),
-                        array('%s', '%s')
+                        array('idm' => $idm, 'created_by' => 'Admin', 'allow_uri' => 0, 'allow_get' => 0),
+                        array('%s', '%s', '%d', '%d')
                     );
-    
+
                     if ($insert_result === false) {
                         $message = __('An error occurred: this IdM already exists.', 'rrze-shorturl');
-                    }else{
+                    } else {
                         $message = __('New IdM has been added.', 'rrze-shorturl');
                     }
-    
+
                 }
             }
-    
+
             // Display form to add/update entries
             ?>
             <?php if (!empty($message)): ?>
@@ -451,18 +483,20 @@ class Settings
                 <table class="wp-list-table widefat fixed striped">
                     <thead>
                         <tr>
-                        <th scope="col"
-                            class="manage-column column-hostname <?php echo $orderby === 'idm' ? 'sorted' : 'sortable'; ?> <?php echo $order; ?>"
-                            data-sort="<?php echo $orderby === 'idm' ? $order : 'asc'; ?>">
-                            <a
-                                href="<?php echo admin_url('admin.php?page=rrze-shorturl&tab=idm&orderby=idm&order=' . ($orderby === 'idm' && $order === 'asc' ? 'desc' : 'asc')); ?>">
-                                <span>IdM</span>
-                                <span class="sorting-indicators"><span class="sorting-indicator asc"
-                                        aria-hidden="true"></span><span class="sorting-indicator desc"
-                                        aria-hidden="true"></span></span>
-                            </a>
-                        </th>                            
-                        <th scope="col">Delete</th>
+                            <th scope="col"
+                                class="manage-column column-hostname <?php echo $orderby === 'idm' ? 'sorted' : 'sortable'; ?> <?php echo $order; ?>"
+                                data-sort="<?php echo $orderby === 'idm' ? $order : 'asc'; ?>">
+                                <a
+                                    href="<?php echo admin_url('admin.php?page=rrze-shorturl&tab=idm&orderby=idm&order=' . ($orderby === 'idm' && $order === 'asc' ? 'desc' : 'asc')); ?>">
+                                    <span>IdM</span>
+                                    <span class="sorting-indicators"><span class="sorting-indicator asc"
+                                            aria-hidden="true"></span><span class="sorting-indicator desc"
+                                            aria-hidden="true"></span></span>
+                                </a>
+                            </th>
+                            <th scope="col">Allow URI</th>
+                            <th scope="col">Allow GET</th>
+                            <th scope="col">Delete</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -473,7 +507,15 @@ class Settings
                             foreach ($idms as $idm) {
                                 ?>
                                 <tr>
-                                    <td><?php echo $idm->idm; ?></td>
+                                    <td>
+                                        <?php echo $idm->idm; ?>
+                                    </td>
+                                    <td>
+                                        <input type="checkbox" class="allow-uri-checkbox" data-id="<?php echo $idm->id; ?>" <?php echo $idm->allow_uri ? 'checked' : ''; ?>>
+                                    </td>
+                                    <td>
+                                        <input type="checkbox" class="allow-get-checkbox" data-id="<?php echo $idm->id; ?>" <?php echo $idm->allow_get ? 'checked' : ''; ?>>
+                                    </td>
                                     <td><input type="checkbox" name="delete[]" value="<?php echo $idm->id; ?>"></td>
                                 </tr>
                                 <?php
@@ -481,7 +523,7 @@ class Settings
                         }
                         ?>
                         <tr>
-                            <td colspan="2"><input type="text" name="idm" id="idm" value=""></td>
+                            <td colspan="4"><input type="text" name="idm" id="idm" value=""></td>
                         </tr>
                     </tbody>
                 </table>
@@ -496,7 +538,7 @@ class Settings
             error_log("Error in render_idm_section: " . $e->getMessage());
         }
     }
-            
+
     public function render_statistic_section()
     {
         global $wpdb;

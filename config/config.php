@@ -162,6 +162,8 @@ function create_custom_tables()
             "shorturl_idms" => "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}shorturl_idms (
                 id mediumint(9) NOT NULL AUTO_INCREMENT,
                 idm VARCHAR(255) UNIQUE NOT NULL,
+                allow_uri BOOLEAN DEFAULT FALSE,
+                allow_get BOOLEAN DEFAULT FALSE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 created_by VARCHAR(255) NOT NULL,
                 PRIMARY KEY (id)

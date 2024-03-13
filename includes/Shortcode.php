@@ -26,7 +26,6 @@ class Shortcode
         add_action('wp_ajax_delete_link', [$this, 'delete_link_callback']);
     }
 
-
     private function get_link_data_by_id($link_id)
     {
         global $wpdb;
@@ -318,6 +317,7 @@ class Shortcode
     {
         global $wpdb;
         $bUpdated = false;
+        $message = '';
 
         if (isset($_POST['action']) && $_POST['action'] === 'update_link' && isset($_POST['link_id'])) {
             // UPDATE link
@@ -335,6 +335,7 @@ class Shortcode
             ShortURL::updateLink($aParams['link_id'], $aParams['domain_id'], $aParams['shortURL'], $aParams['uri'], $aParams['valid_until'], $aParams['categories'], $aParams['tags']);
 
             $bUpdated = true;
+            $message = 'Link updated';
         }
 
         $links_table = $wpdb->prefix . 'shorturl_links';
@@ -363,8 +364,11 @@ class Shortcode
 
         $results = $wpdb->get_results($query, ARRAY_A);
 
+        // update message
+        $table = '<div class="updated"><p>' . $message . '</p></div>';
+
         // Generate table
-        $table = '<table class="wp-list-table widefat striped">';
+        $table .= '<table class="wp-list-table widefat striped">';
         // Table header
         $table .= '<thead><tr>';
         $table .= '<th scope="col" class="manage-column column-long-url"><a href="?orderby=long_url&order=' . ($orderby == 'long_url' && $order == 'ASC' ? 'DESC' : 'ASC') . '">Long URL</a></th>';
