@@ -4,6 +4,7 @@ namespace RRZE\ShortURL;
 
 defined('ABSPATH') || exit;
 
+use RRZE\ShortURL\Rights;
 use RRZE\ShortURL\CustomerDomains;
 use RRZE\ShortURL\API;
 use RRZE\ShortURL\ShortURL;
@@ -44,6 +45,7 @@ class Main
         add_action('admin_enqueue_scripts', [$this, 'enqueueScripts']);
 
         $settings = new Settings();
+        $rights = new Rights();
         $domains = new CustomerDomains();
         $shortURL = new ShortURL();
         $api = new API();

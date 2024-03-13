@@ -74,6 +74,8 @@ class ShortURL
 
     public static function getLinkfromDB($domain_id, $long_url)
     {
+        $idm = '';
+
         try {
             global $wpdb;
             $table_name = $wpdb->prefix . 'shorturl_links';
@@ -82,7 +84,6 @@ class ShortURL
             $result = $wpdb->get_results($wpdb->prepare("SELECT id, short_url FROM $table_name WHERE long_url = %s LIMIT 1", $long_url), ARRAY_A);
 
             if (empty($result)) {
-                $idm = '';
                 $long_url = Rights::isAllowedToUseGET($idm) ? $long_url : http_build_url($long_url, array('path', 'scheme', 'host'));
 
                 // Insert into the links table
@@ -350,7 +351,6 @@ class ShortURL
                 // Create shortURL
                 $targetURL = $aDomain['prefix'] . self::cryptNumber($aLink['id']);
             }
-            error_log(json_encode($aLink));
 
             // // Create shortURL
             $shortURL = self::$CONFIG['ShortURLBase'] . $targetURL;
@@ -371,6 +371,8 @@ class ShortURL
 
     public function render_shortcode_creation_form()
     {
+        $idm = '';
+
         if (isset($_POST['submit_shortcode'])) {
             // Handle form submission
             $long_url = isset($_POST['long_url']) ? $_POST['long_url'] : '';

@@ -103,6 +103,7 @@ class Shortcode
 
     public function shorturl_handler($atts = null): string
     {
+        $idm = '';
 
         $aParams = [
             'url' => filter_var($_POST['url'] ?? '', FILTER_VALIDATE_URL),

@@ -36,8 +36,6 @@ class Settings
         $field = sanitize_text_field($_POST['field']);
         $value = isset($_POST['value']) && $_POST['value'] === 'true' ? 1 : 0;
 
-        error_log('$value = ' . $value);
-
         // Update the allow_uri or allow_get field
         $wpdb->update(
             $wpdb->prefix . 'shorturl_idms',
