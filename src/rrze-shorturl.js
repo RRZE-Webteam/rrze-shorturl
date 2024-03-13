@@ -169,6 +169,44 @@ jQuery(document).ready(function ($) {
 
 
 
+    // links
+    // Edit link click handler
+    $(document).on('click', '.edit-link', function (e) {
+        e.preventDefault();
+        var linkId = $(this).data('link-id');
+        var currentUrl = window.location.href;
+        var newUrl = currentUrl.split('?')[0] + '?link_id=' + linkId + '#edit-link-form';
+    
+        window.location.href = newUrl;
+    });
 
+
+    // Delete link click handler
+    $(document).on('click', '.delete-link', function (e) {
+        e.preventDefault();
+        var linkId = $(this).data('link-id');
+        // Ask for confirmation before deleting
+        if (confirm('Are you sure you want to delete this link?')) {
+            // Send an AJAX request to delete the link
+            $.ajax({
+                url: rrze_shorturl_ajax_object.ajax_url,
+                method: 'POST',
+                data: {
+                    action: 'delete_link',
+                    link_id: linkId,
+                    _ajax_nonce: rrze_shorturl_ajax_object.delete_shorturl_link_nonce
+                },
+                success: function (response) {
+                    // Handle success response
+                    console.log('Link deleted successfully');
+                    location.reload();
+                },
+                error: function (xhr, status, error) {
+                    // Handle error response
+                    console.error('Error deleting link:', error);
+                }
+            });
+        }
+    });
 
 });

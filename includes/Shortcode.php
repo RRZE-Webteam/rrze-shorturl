@@ -9,7 +9,6 @@ class Shortcode
     {
         add_shortcode('shorturl', [$this, 'shorturl_handler']);
         add_shortcode('shorturl-list', [$this, 'list_shortcode_handler']);
-        add_shortcode('custom_tag_shortcode', [$this, 'render_custom_tag_shortcode']);
 
         add_action('wp_ajax_nopriv_store_link_category', [$this, 'store_link_category_callback']);
         add_action('wp_ajax_store_link_category', [$this, 'store_link_category_callback']);
@@ -22,8 +21,67 @@ class Shortcode
 
         add_action('wp_ajax_nopriv_update_category_label_action', [$this, 'update_category_label']);
         add_action('wp_ajax_update_category_label_action', [$this, 'update_category_label']);
+
+        add_action('wp_ajax_nopriv_delete_link', [$this, 'delete_link_callback']);
+        add_action('wp_ajax_delete_link', [$this, 'delete_link_callback']);
     }
 
+
+    private function get_link_data_by_id($link_id)
+    {
+        global $wpdb;
+
+        // Define the table names
+        $links_table = $wpdb->prefix . 'shorturl_links';
+        $categories_table = $wpdb->prefix . 'shorturl_links_categories';
+        $tags_table = $wpdb->prefix . 'shorturl_links_tags';
+
+        // Prepare the SQL query to fetch link data by ID
+        $query = $wpdb->prepare("
+            SELECT l.*, GROUP_CONCAT(DISTINCT lc.category_id) AS category_ids, GROUP_CONCAT(DISTINCT lt.tag_id) AS tag_ids
+            FROM $links_table l
+            LEFT JOIN $categories_table AS lc ON l.id = lc.link_id
+            LEFT JOIN $tags_table AS lt ON l.id = lt.link_id
+            WHERE l.id = %d
+            GROUP BY l.id
+        ", $link_id);
+
+        // Execute the query
+        $result = $wpdb->get_row($query, ARRAY_A);
+
+        return $result;
+    }
+
+
+
+    public function delete_link_callback()
+    {
+        global $wpdb;
+
+        // Check if the request is coming from a valid source
+        check_ajax_referer('delete_shorturl_link_nonce', '_ajax_nonce');
+
+        // Get the link ID from the AJAX request
+        $link_id = isset($_POST['link_id']) ? intval($_POST['link_id']) : 0;
+
+        // Delete the link from the database
+        $result = $wpdb->delete(
+            $wpdb->prefix . 'shorturl_links',
+            array('id' => $link_id),
+            array('%d')
+        );
+
+        if ($result !== false) {
+            // Link deleted successfully
+            wp_send_json_success('Link deleted successfully');
+        } else {
+            // Error deleting link
+            wp_send_json_error('Error deleting link');
+        }
+
+        // Always exit to avoid further execution
+        wp_die();
+    }
 
     public function add_shorturl_tag_callback()
     {
@@ -82,13 +140,13 @@ class Shortcode
         $form .= '<p><a href="#" id="show-advanced-settings">Advanced Settings</a></p>';
         $form .= '<div id="div-advanced-settings" style="display: none;">';
         // $form .= '<h2 class="handle">Self-Explanatory URI</h2>';
-        $form .= self::display_shorturl_uri();
+        $form .= self::display_shorturl_uri($aParams['uri']);
         // $form .= '<h2 class="handle">Validity</h2>';
-        $form .= self::display_shorturl_validity();
+        $form .= self::display_shorturl_validity($aParams['valid_until']);
         $form .= '<h2 class="handle">Categories</h2>';
-        $form .= self::display_shorturl_category();
+        $form .= self::display_shorturl_category($aParams['categories']);
         $form .= '<h2 class="handle">Tags</h2>';
-        $form .= self::display_shorturl_tag();
+        $form .= self::display_shorturl_tag($aParams['tags']);
         $form .= '</div>';
 
         $form .= '<input type="submit" id="generate" name="generate" value="Generate">';
@@ -114,7 +172,7 @@ class Shortcode
         return $form;
     }
 
-    public static function display_shorturl_validity()
+    public static function display_shorturl_validity($val)
     {
         // Output HTML
         ob_start();
@@ -122,7 +180,7 @@ class Shortcode
         // Output the form
         ?>
         <label for="valid_until">Valid Until:</label>
-        <input type="date" id="valid_until" name="valid_until" value="">
+        <input type="date" id="valid_until" name="valid_until" value="<?php echo $val; ?>">
         <?php
         return ob_get_clean();
 
@@ -141,48 +199,9 @@ class Shortcode
         wp_die();
     }
 
-    public function render_custom_tag_shortcode()
-    {
-        ob_start();
-        ?>
-        <div class="tagsdiv" id="custom-tagdiv">
-            <div class="jaxtag">
-                <div class="ajaxtag hide-if-no-js">
-                    <label class="screen-reader-text" for="new-tag">Add New Tag</label>
-                    <div class="taghint">Add New Tag</div>
-                    <input type="text" id="new-tag" name="newtag" class="newtag form-input-tip" size="16" autocomplete="off">
-                    <input type="button" class="button tagadd" value="Add">
-                </div>
-            </div>
-        </div>
-        <?php
-        return ob_get_clean();
-    }
 
 
-    public function fetch_custom_tags()
-    {
-        global $wpdb;
-        $tags = $wpdb->get_results("SELECT id, name FROM {$wpdb->prefix}shorturl_tags");
-        return $tags;
-    }
-
-    public function display_custom_tags()
-    {
-        $tags = $this->fetch_custom_tags();
-        $ret = '';
-        if ($tags) {
-            $ret .= '<div class="custom-tags">';
-            foreach ($tags as $tag) {
-                $ret .= '<button class="tag-button" data-tag-id="' . $tag->id . '">' . $tag->name . '</button>';
-            }
-            $ret .= '</div>';
-        }
-        return $ret;
-    }
-
-
-    public static function display_shorturl_category()
+    public static function display_shorturl_category($aVal)
     {
         global $wpdb;
 
@@ -196,7 +215,7 @@ class Shortcode
         ob_start();
         ?>
         <div id="shorturl-category-metabox">
-            <?php self::display_hierarchical_categories($hierarchicalCategories); ?>
+            <?php self::display_hierarchical_categories($hierarchicalCategories, 0, $aVal); ?>
             <p><a href="#" id="add-new-shorturl-category">Add New Category</a></p>
             <div id="new-shorturl-category" style="display: none;">
                 <input type="text" name="new_shorturl_category" placeholder="New Category Name">
@@ -240,17 +259,22 @@ class Shortcode
     }
 
     // Function to display hierarchical categories
-    private static function display_hierarchical_categories($categories, $level = 0)
+    private static function display_hierarchical_categories($categories, $level = 0, $aVal = [])
     {
         foreach ($categories as $category) {
+            $isChecked = in_array($category->id, $aVal) ? 'checked' : '';
+
             echo str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;', $level); // Indent based on level
-            echo '<input type="checkbox" name="categories[]" value="' . esc_attr($category->id) . '" />';
+            echo '<input type="checkbox" name="categories[]" value="' . esc_attr($category->id) . '" ' . $isChecked . ' />';
             echo esc_html($category->label) . '<br>';
+
             if (!empty($category->children)) {
-                self::display_hierarchical_categories($category->children, $level + 1);
+                // Ensure $level is an integer by casting it
+                self::display_hierarchical_categories($category->children, (int) $level + 1, $aVal);
             }
         }
     }
+
 
     public static function getTagLabels()
     {
@@ -260,7 +284,7 @@ class Shortcode
 
     }
 
-    private static function display_shorturl_tag()
+    private static function display_shorturl_tag($aVal)
     {
         global $wpdb;
 
@@ -272,7 +296,11 @@ class Shortcode
             <label for="tag-tokenfield">Tags:</label>
             <select id="tag-tokenfield" name="tags[]" multiple="multiple" style="width: 100%;">
                 <?php foreach ($tags as $tag): ?>
-                    <option value="<?php echo esc_attr($tag->id); ?>">
+                    <?php
+                    // Check if the current tag ID exists in $aVal
+                    $isSelected = in_array($tag->id, $aVal) ? 'selected' : '';
+                    ?>
+                    <option value="<?php echo esc_attr($tag->id); ?>" <?php echo $isSelected; ?>>
                         <?php echo esc_html($tag->label); ?>
                     </option>
                 <?php endforeach; ?>
@@ -286,13 +314,29 @@ class Shortcode
 
 
 
-    public function list_shortcode_handler($atts = null): string
+    public function list_shortcode_handler(): string
     {
-        if (!is_array($atts)) {
-            $atts = [];
+        global $wpdb;
+        $bUpdated = false;
+
+        if (isset($_POST['action']) && $_POST['action'] === 'update_link' && isset($_POST['link_id'])) {
+            // UPDATE link
+
+            $aParams = [
+                'link_id' => htmlspecialchars($_POST['link_id'] ?? ''),
+                'domain_id' => htmlspecialchars($_POST['domain_id'] ?? ''),
+                'shortURL' => filter_var($_POST['shortURL'] ?? '', FILTER_VALIDATE_URL),
+                'uri' => sanitize_text_field($_POST['uri'] ?? ''),
+                'valid_until' => sanitize_text_field($_POST['valid_until'] ?? ''),
+                'categories' => !empty($_POST['categories']) ? array_map('sanitize_text_field', $_POST['categories']) : [],
+                'tags' => !empty($_POST['tags']) ? array_map('sanitize_text_field', $_POST['tags']) : [],
+            ];
+
+            ShortURL::updateLink($aParams['link_id'], $aParams['domain_id'], $aParams['shortURL'], $aParams['uri'], $aParams['valid_until'], $aParams['categories'], $aParams['tags']);
+
+            $bUpdated = true;
         }
 
-        global $wpdb;
         $links_table = $wpdb->prefix . 'shorturl_links';
         $links_categories_table = $wpdb->prefix . 'shorturl_links_categories';
         $links_tags_table = $wpdb->prefix . 'shorturl_links_tags';
@@ -308,7 +352,7 @@ class Shortcode
                      l.long_url, 
                      l.short_url, 
                      l.uri, 
-                     l.valid_until, 
+                     DATE_FORMAT(l.valid_until, '%d.%m.%Y') AS valid_until, 
                      GROUP_CONCAT(DISTINCT lc.category_id) AS category_ids,
                      GROUP_CONCAT(DISTINCT lt.tag_id) AS tag_ids
               FROM $links_table l
@@ -323,14 +367,18 @@ class Shortcode
         $table = '<table class="wp-list-table widefat striped">';
         // Table header
         $table .= '<thead><tr>';
-        $table .= '<th scope="col" class="manage-column column-id"><a href="' . admin_url('admin.php?page=your_page_slug&orderby=id&order=' . ($order == 'ASC' ? 'DESC' : 'ASC')) . '">ID</a></th>';
-        $table .= '<th scope="col" class="manage-column column-long-url"><a href="' . admin_url('admin.php?page=your_page_slug&orderby=long_url&order=' . ($order == 'ASC' ? 'DESC' : 'ASC')) . '">Long URL</a></th>';
-        $table .= '<th scope="col" class="manage-column column-short-url"><a href="' . admin_url('admin.php?page=your_page_slug&orderby=short_url&order=' . ($order == 'ASC' ? 'DESC' : 'ASC')) . '">Short URL</a></th>';
+        $table .= '<th scope="col" class="manage-column column-long-url"><a href="?orderby=long_url&order=' . ($orderby == 'long_url' && $order == 'ASC' ? 'DESC' : 'ASC') . '">Long URL</a></th>';
+        $table .= '<th scope="col" class="manage-column column-short-url"><a href="?orderby=short_url&order=' . ($orderby == 'short_url' && $order == 'ASC' ? 'DESC' : 'ASC') . '">Short URL</a></th>';
         $table .= '<th scope="col" class="manage-column column-uri">URI</th>';
-        $table .= '<th scope="col" class="manage-column column-valid-until">Valid Until</th>';
+        $table .= '<th scope="col" class="manage-column column-valid-until"><a href="?orderby=valid_until&order=' . ($orderby == 'valid_until' && $order == 'ASC' ? 'DESC' : 'ASC') . '">Valid Until</a></th>';
         $table .= '<th scope="col" class="manage-column column-categories">Categories</th>';
         $table .= '<th scope="col" class="manage-column column-tags">Tags</th>';
+        $table .= '<th scope="col" class="manage-column column-actions">Actions</th>';
         $table .= '</tr></thead><tbody>';
+
+        if (empty($results)){
+            $table .= '<tr><td colspan="7">No links stored yet.</td></tr>';
+        }
 
         foreach ($results as $row) {
             // Fetch and concatenate category names
@@ -357,21 +405,67 @@ class Shortcode
 
             // Output table row
             $table .= '<tr>';
-            $table .= '<td class="column-id">' . $row['link_id'] . '</td>';
             $table .= '<td class="column-long-url">' . $row['long_url'] . '</td>';
             $table .= '<td class="column-short-url">' . $row['short_url'] . '</td>';
             $table .= '<td class="column-uri">' . $row['uri'] . '</td>';
             $table .= '<td class="column-valid-until">' . $row['valid_until'] . '</td>';
             $table .= '<td class="column-categories">' . $category_names_str . '</td>';
             $table .= '<td class="column-tags">' . $tag_names_str . '</td>';
+            $table .= '<td class="column-actions"><a href="#" class="edit-link" data-link-id="' . $row['link_id'] . '">Edit</a> | <a href="#" data-link-id="' . $row['link_id'] . '" class="delete-link">Delete</a></td>';
             $table .= '</tr>';
         }
         $table .= '</tbody></table>';
+
+        if (!$bUpdated && !empty($results)) {
+            $table .= $this->display_edit_link_form();
+        }
 
         return $table;
     }
 
 
+
+    private function display_edit_link_form()
+    {
+        $link_id = isset($_GET['link_id']) ? intval($_GET['link_id']) : 0;
+
+        if ($link_id <= 0) {
+            return '';
+        } else {
+            // Load the link data from the database
+            $link_data = $this->get_link_data_by_id($link_id);
+            if (empty($link_data)){
+                return '';
+            }else{
+
+            $aCategories = !empty($link_data['category_ids']) ? explode(',', $link_data['category_ids']) : [];
+            $aTags = !empty($link_data['tag_ids']) ? explode(',', $link_data['tag_ids']) : [];
+
+            // Display the edit form
+            ob_start();
+            ?>
+            <div id="edit-link-form">
+                <h2>Edit Link</h2>
+                <form id="edit-link-form" method="post" action="">
+                    <input type="hidden" name="action" value="update_link">
+                    <input type="hidden" name="link_id" value="<?php echo esc_attr($link_id); ?>">
+                    <input type="hidden" name="domain_id" value="<?php echo esc_attr($link_data['domain_id']); ?>">
+                    <input type="hidden" name="shortURL" value="<?php echo esc_attr($link_data['shortURL']); ?>">
+                    <input type="hidden" name="uri"
+                        value="<?php echo !empty($link_data['uri']) ? esc_attr($link_data['uri']) : ''; ?>">
+                    <?php echo self::display_shorturl_validity($link_data['valid_until']); ?>
+                    <h2 class="handle">Categories</h2>
+                    <?php echo self::display_shorturl_category($aCategories); ?>
+                    <h2 class="handle">Tags</h2>
+                    <?php echo self::display_shorturl_tag($aTags); ?>
+                    <button type="submit">Update Link</button>
+                </form>
+            </div>
+            <?php
+            return ob_get_clean();
+        }
+    }
+}
 
     public static function update_category_label()
     {
@@ -481,13 +575,13 @@ class Shortcode
         }
     }
 
-    public static function display_shorturl_uri()
+    public static function display_shorturl_uri($val)
     {
         ob_start();
         ?>
         <div>
             <label for="self_explanatory_uri">Self-Explanatory URI:</label>
-            <input type="text" id="uri" name="uri" value="">
+            <input type="text" id="uri" name="uri" value="<?php echo $val; ?>">
         </div>
         <?php
         return ob_get_clean();

@@ -58,7 +58,8 @@ class Main
     {
         wp_enqueue_script('qrious', plugins_url('assets/js/qrious.min.js', plugin_basename($this->pluginFile)), array('jquery'), null, true);
         wp_enqueue_script('rrze-shorturl', plugins_url('src/rrze-shorturl.js', plugin_basename($this->pluginFile)), array('jquery'), null, true);
-
+        wp_enqueue_style('wp-list-table');
+        
         // Localize the script with the nonces
         wp_localize_script(
             'rrze-shorturl',
@@ -67,7 +68,8 @@ class Main
                 'ajax_url' => admin_url('admin-ajax.php'),
                 'update_category_label_nonce' => wp_create_nonce('update_category_label_nonce'),
                 'add_shorturl_category_nonce' => wp_create_nonce('add_shorturl_category_nonce'),
-                'add_shorturl_tag_nonce' => wp_create_nonce('add_shorturl_tag_nonce')
+                'add_shorturl_tag_nonce' => wp_create_nonce('add_shorturl_tag_nonce'),
+                'delete_shorturl_link_nonce' => wp_create_nonce('delete_shorturl_link_nonce'),
             )
         );
         
