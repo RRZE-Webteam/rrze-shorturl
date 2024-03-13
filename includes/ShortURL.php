@@ -82,6 +82,9 @@ class ShortURL
             $result = $wpdb->get_results($wpdb->prepare("SELECT id, short_url FROM $table_name WHERE long_url = %s LIMIT 1", $long_url), ARRAY_A);
 
             if (empty($result)) {
+                $idm = '';
+                $long_url = Rights::isAllowedToUseGET($idm) ? $long_url : http_build_url($long_url, array('path', 'scheme', 'host'));
+
                 // Insert into the links table
                 $wpdb->insert(
                     $table_name,
@@ -298,7 +301,7 @@ class ShortURL
     {
         try {
             $long_url = $shortenParams['url'] ?? null;
-            $uri = $shortenParams['uri'] ?? null;
+            $uri = Rights::isAllowedToSetURI() ? sanitize_text_field($_POST['uri'] ?? '') : '';
             $valid_until = $shortenParams['valid_until'] ?? null;
             $categories = $shortenParams['categories'] ?? [];
             $tags = $shortenParams['tags'] ?? [];
@@ -371,7 +374,7 @@ class ShortURL
         if (isset($_POST['submit_shortcode'])) {
             // Handle form submission
             $long_url = isset($_POST['long_url']) ? $_POST['long_url'] : '';
-            $uri = isset($_POST['uri']) ? $_POST['uri'] : '';
+            $uri = Rights::isAllowedToSetURI($idm) ? sanitize_text_field($_POST['uri'] ?? '') : '';
             $valid_until = isset($_POST['valid_until']) ? $_POST['valid_until'] : '';
 
             // Call ShortURL::shorten function
@@ -395,7 +398,11 @@ class ShortURL
             <form method="post">
                 <label for="long-url">Long URL:</label>
                 <input type="text" id="long-url" name="long_url" required>
-                <label for="uri">URI (optional):</label>
+                <?php if (Rights::isAllowedToSetURI($idm)){
+                    echo '<label for="uri">URI (optional):</label>';
+                }
+                ?>
+                
                 <input type="text" id="uri" name="uri">
                 <label for="valid-until">Valid Until:</label>
                 <input type="date" id="valid-until" name="valid_until" required>
