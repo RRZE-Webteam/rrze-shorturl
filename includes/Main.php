@@ -27,7 +27,6 @@ class Main
 
     protected $rights;
 
-    protected $idm;
 
     /**
      * Variablen Werte zuweisen.
@@ -50,7 +49,7 @@ class Main
 
         $settings = new Settings();
         $rightsObj = new Rights();
-        $this->rights = $rightsObj->getRights($this->idm);
+        $this->rights = $rightsObj->getRights();
         $domains = new CustomerDomains();
         $shortURL = new ShortURL($this->rights);
         $api = new API();
