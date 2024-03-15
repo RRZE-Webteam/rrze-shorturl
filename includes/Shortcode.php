@@ -5,11 +5,11 @@ namespace RRZE\ShortURL;
 
 class Shortcode
 {
-    protected $rights;
+    protected static $rights;
 
     public function __construct($rights)
     {
-        $this->rights = $rights;
+        self::$rights = $rights;
 
         add_shortcode('shorturl', [$this, 'shorturl_handler']);
         add_shortcode('shorturl-list', [$this, 'list_shortcode_handler']);
@@ -322,16 +322,17 @@ class Shortcode
             // UPDATE link
 
             $aParams = [
+                'idm_id' => self::$rights['id'],
                 'link_id' => htmlspecialchars($_POST['link_id'] ?? ''),
                 'domain_id' => htmlspecialchars($_POST['domain_id'] ?? ''),
                 'shortURL' => filter_var($_POST['shortURL'] ?? '', FILTER_VALIDATE_URL),
-                'uri' => $this->rights['uri_allowed'] ? sanitize_text_field($_POST['uri'] ?? '') : '',
+                'uri' => self::$rights['uri_allowed'] ? sanitize_text_field($_POST['uri'] ?? '') : '',
                 'valid_until' => sanitize_text_field($_POST['valid_until'] ?? ''),
                 'categories' => !empty($_POST['categories']) ? array_map('sanitize_text_field', $_POST['categories']) : [],
                 'tags' => !empty($_POST['tags']) ? array_map('sanitize_text_field', $_POST['tags']) : [],
             ];
 
-            ShortURL::updateLink($aParams['link_id'], $aParams['domain_id'], $aParams['shortURL'], $aParams['uri'], $aParams['valid_until'], $aParams['categories'], $aParams['tags']);
+            ShortURL::updateLink($aParams['idm_id'], $aParams['link_id'], $aParams['domain_id'], $aParams['shortURL'], $aParams['uri'], $aParams['valid_until'], $aParams['categories'], $aParams['tags']);
 
             $bUpdated = true;
             $message = 'Link updated';
