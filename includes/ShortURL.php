@@ -76,7 +76,7 @@ class ShortURL
     }
 
 
-    public static function getLinkfromDB($domain_id, $long_url)
+    public static function getLinkfromDB($domain_id, $long_url, $idm_id)
     {
         $idm = '';
 
@@ -94,6 +94,7 @@ class ShortURL
                 $wpdb->insert(
                     $table_name,
                     array(
+                        'idm_id' => $idm_id,
                         'domain_id' => (int) $domain_id,
                         'long_url' => $long_url
                     )
@@ -114,6 +115,7 @@ class ShortURL
     }
 
     public static function updateLink(
+        $idm_id,
         $link_id,
         $domain_id,
         $shortURL,
@@ -132,6 +134,7 @@ class ShortURL
             $update_result = $wpdb->update(
                 $table_name,
                 [
+                    'idm_id' => $idm_id,
                     'domain_id' => $domain_id,
                     'short_url' => $shortURL,
                     'uri' => $uri,
@@ -351,7 +354,7 @@ class ShortURL
             }
 
             // Fetch or insert on new
-            $aLink = self::getLinkfromDB($aDomain['id'], $long_url);
+            $aLink = self::getLinkfromDB($aDomain['id'], $long_url, self::$rights['id']);
 
             // Check if already exists in DB 
             if (!empty($aLink['short_url'])) {
@@ -373,7 +376,7 @@ class ShortURL
             // // Create shortURL
             $shortURL = self::$CONFIG['ShortURLBase'] . $targetURL;
 
-            $bUpdated = self::updateLink($aLink['id'], $aDomain['id'], $shortURL, $uri, $valid_until, $categories, $tags);
+            $bUpdated = self::updateLink(self::$rights['id'], $aLink['id'], $aDomain['id'], $shortURL, $uri, $valid_until, $categories, $tags);
 
             if (!$bUpdated) {
                 return ['error' => true, 'txt' => 'Unable to update database table'];
