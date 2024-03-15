@@ -184,7 +184,7 @@ function create_custom_tables()
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 deleted_at TIMESTAMP DEFAULT NULL,
-                valid_until TIMESTAMP DEFAULT NULL,
+                valid_until DATE DEFAULT NULL,
                 active BOOLEAN DEFAULT TRUE,
                 PRIMARY KEY (id),
                 CONSTRAINT fk_domain_id FOREIGN KEY (domain_id) REFERENCES {$wpdb->prefix}shorturl_domains(id) ON DELETE CASCADE,

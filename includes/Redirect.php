@@ -10,7 +10,7 @@ class Redirect
         try {
             $table_name = $wpdb->prefix . 'shorturl_links';
             $results = $wpdb->get_results(
-                "SELECT long_url, short_url, valid_until FROM $table_name WHERE active = 1 AND (valid_until IS NULL OR valid_until > NOW())"
+                "SELECT long_url, short_url, valid_until FROM $table_name WHERE active = 1 AND (valid_until IS NULL OR valid_until > CURDATE())"
             );
     
             if (empty($results)) {

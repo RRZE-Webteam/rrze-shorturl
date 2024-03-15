@@ -281,19 +281,20 @@ class ShortURL
         }
 
         // Convert $valid_until to DateTime object
-        $valid_until_date = date_create($valid_until);
+        $valid_until_date = \DateTime::createFromFormat('Y-m-d', $valid_until);
 
         // Get current date
         $current_date = new \DateTime(); // Using DateTime object directly
-
+        
         // Check if $valid_until is in the past
         if ($valid_until_date < $current_date) {
             return ['error' => true, 'txt' => 'Validity date cannot be in the past.'];
         }
-
+        
         // Calculate one year from now
-        $one_year_from_now = date_add(clone $current_date, date_interval_create_from_date_string('1 year'));
-
+        $one_year_from_now = clone $current_date;
+        $one_year_from_now->add(new \DateInterval('P1Y'));
+        
         // Check if $valid_until is more than one year in the future
         if ($valid_until_date > $one_year_from_now) {
             return ['error' => true, 'txt' => 'Validity cannot be more than one year in the future.'];
