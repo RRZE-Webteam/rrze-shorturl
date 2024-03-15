@@ -4,14 +4,18 @@ namespace RRZE\ShortURL;
 
 class ShortURL
 {
+
+    protected $rights;
+
     public static array $CONFIG = [
         "ShortURLBase" => "http://go.fau.de/",
         "ShortURLModChars" => "abcdefghijklmnopqrstuvwxyz0123456789-",
         "AllowedDomains" => [] // Initialize empty, this will be populated later
     ];
 
-    public function __construct()
+    public function __construct($rights)
     {
+        $this->rights = $rights;
         self::$CONFIG['AllowedDomains'] = self::getAllowedDomains();
     }
 
@@ -302,7 +306,19 @@ class ShortURL
     {
         try {
             $long_url = $shortenParams['url'] ?? null;
-            $uri = Rights::isAllowedToSetURI() ? sanitize_text_field($_POST['uri'] ?? '') : '';
+
+            // Check if 'get_allowed' is false and remove GET parameters if necessary
+            if (!self::$rights['get_allowed'] && $long_url) {
+                // Parse the URL
+                $parsed_url = parse_url($long_url);
+
+                // Reconstruct the URL without the query string
+                $long_url = isset($parsed_url['scheme']) ? $parsed_url['scheme'] . '://' : '';
+                $long_url .= isset($parsed_url['host']) ? $parsed_url['host'] : '';
+                $long_url .= isset($parsed_url['path']) ? $parsed_url['path'] : '';
+            }
+            
+            $uri = self::$rights['uri_allowed'] ? sanitize_text_field($_POST['uri'] ?? '') : '';
             $valid_until = $shortenParams['valid_until'] ?? null;
             $categories = $shortenParams['categories'] ?? [];
             $tags = $shortenParams['tags'] ?? [];
@@ -319,10 +335,12 @@ class ShortURL
                 return ['error' => true, 'txt' => $long_url . 'is not a valid URL'];
             }
 
-            // Validate the URI
-            $isValid = self::isValidURI($uri);
-            if ($isValid !== true) {
-                return ['error' => true, 'txt' => $uri . ' ' . 'is not a valid URI'];
+            if (self::$rights['uri_allowed']){
+                // Validate the URI
+                $isValid = self::isValidURI($uri);
+                if ($isValid !== true) {
+                    return ['error' => true, 'txt' => $uri . ' ' . 'is not a valid URI'];
+                }
             }
 
             // Is it an allowed domain?
@@ -367,63 +385,6 @@ class ShortURL
             return null;
         }
     }
-
-
-    public function render_shortcode_creation_form()
-    {
-        $idm = '';
-
-        if (isset($_POST['submit_shortcode'])) {
-            // Handle form submission
-            $long_url = isset($_POST['long_url']) ? $_POST['long_url'] : '';
-            $uri = Rights::isAllowedToSetURI($idm) ? sanitize_text_field($_POST['uri'] ?? '') : '';
-            $valid_until = isset($_POST['valid_until']) ? $_POST['valid_until'] : '';
-
-            // Call ShortURL::shorten function
-            $shortcode_data = ShortURL::shorten([
-                'url' => $long_url,
-                'uri' => $uri,
-                'valid_until' => $valid_until,
-                // Additional parameters like category and tags can be added here
-            ]);
-
-            // Display result
-            if ($shortcode_data && !isset($shortcode_data['error'])) {
-                echo '<p>Shortcode created: ' . $shortcode_data['txt'] . '</p>';
-            } else {
-                echo '<p>Error: ' . $shortcode_data['txt'] . '</p>';
-            }
-        }
-        ?>
-        <div class="shortcode-creation-form">
-            <h2>Create Shortcode</h2>
-            <form method="post">
-                <label for="long-url">Long URL:</label>
-                <input type="text" id="long-url" name="long_url" required>
-                <?php if (Rights::isAllowedToSetURI($idm)){
-                    echo '<label for="uri">URI (optional):</label>';
-                }
-                ?>
-                
-                <input type="text" id="uri" name="uri">
-                <label for="valid-until">Valid Until:</label>
-                <input type="date" id="valid-until" name="valid_until" required>
-                <!-- Additional fields for category and tags can be added here -->
-                <button type="submit" name="submit_shortcode">Create Shortcode</button>
-            </form>
-        </div>
-        <?php
-    }
-
-
-    /* Test-Data
-
-    https://blogs.fau.de/rewi/2024/02/15/erfolgreiches-pilotprojekt-e-klausuren-in-der-uebung-fuer-fortgeschrittene-im-zivilrecht/
-     
-
-    https://www.germanistik.phil.fau.de/wp-content/plugins/contact-form-7/includes/js/index.js?ver=5.8.7:1
-
-    */
 
 }
 

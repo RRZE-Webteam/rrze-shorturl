@@ -24,15 +24,6 @@ class CustomerDomains
             // Make a GET request to the API
             $response = wp_remote_get($api_url);
 
-            // if (is_wp_error($response)) {
-            //     $error_message = $response->get_error_message();
-            //     error_log("Error retrieving data: $error_message");
-            // } else {
-            //     $response_code = wp_remote_retrieve_response_code($response);
-            //     $response_body = wp_remote_retrieve_body($response);
-            //     error_log("Response code: $response_code, Response body: $response_body");
-            // }
-
             // Check if the request was successful
             if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200) {
                 $body = wp_remote_retrieve_body($response);

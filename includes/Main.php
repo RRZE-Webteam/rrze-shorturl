@@ -25,6 +25,10 @@ class Main
 
     protected $shortcode;
 
+    protected $rights;
+
+    protected $idm;
+
     /**
      * Variablen Werte zuweisen.
      * @param string $pluginFile Pfad- und Dateiname der Plugin-Datei
@@ -45,11 +49,12 @@ class Main
         add_action('admin_enqueue_scripts', [$this, 'enqueueScripts']);
 
         $settings = new Settings();
-        $rights = new Rights();
+        $rightsObj = new Rights();
+        $this->rights = $rightsObj->getRights($this->idm);
         $domains = new CustomerDomains();
-        $shortURL = new ShortURL();
+        $shortURL = new ShortURL($this->rights);
         $api = new API();
-        $this->shortcode = new Shortcode();
+        $this->shortcode = new Shortcode($this->rights);
     }
 
 

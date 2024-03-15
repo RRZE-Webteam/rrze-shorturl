@@ -5,8 +5,12 @@ namespace RRZE\ShortURL;
 
 class Shortcode
 {
-    public function __construct()
+    protected $rights;
+
+    public function __construct($rights)
     {
+        $this->rights = $rights;
+
         add_shortcode('shorturl', [$this, 'shorturl_handler']);
         add_shortcode('shorturl-list', [$this, 'list_shortcode_handler']);
 
@@ -107,7 +111,7 @@ class Shortcode
 
         $aParams = [
             'url' => filter_var($_POST['url'] ?? '', FILTER_VALIDATE_URL),
-            'uri' => Rights::isAllowedToSetURI($idm) ? sanitize_text_field($_POST['uri'] ?? '') : '',
+            'uri' => $this->rights['uri_allowed'] ? sanitize_text_field($_POST['uri'] ?? '') : '',
             'valid_until' => sanitize_text_field($_POST['valid_until'] ?? ''),
             'categories' => !empty($_POST['categories']) ? array_map('sanitize_text_field', $_POST['categories']) : [],
             'tags' => !empty($_POST['tags']) ? array_map('sanitize_text_field', $_POST['tags']) : [],
@@ -139,9 +143,9 @@ class Shortcode
 
         $form .= '<p><a href="#" id="show-advanced-settings">Advanced Settings</a></p>';
         $form .= '<div id="div-advanced-settings" style="display: none;">';
-        // $form .= '<h2 class="handle">Self-Explanatory URI</h2>';
-        $form .= self::display_shorturl_uri($aParams['uri']);
-        // $form .= '<h2 class="handle">Validity</h2>';
+        if ($this->rights['uri_allowed']) {
+            $form .= self::display_shorturl_uri($aParams['uri']);
+        }
         $form .= self::display_shorturl_validity($aParams['valid_until']);
         $form .= '<h2 class="handle">Categories</h2>';
         $form .= self::display_shorturl_category($aParams['categories']);
@@ -174,10 +178,8 @@ class Shortcode
 
     public static function display_shorturl_validity($val)
     {
-        // Output HTML
         ob_start();
 
-        // Output the form
         ?>
         <label for="valid_until">Valid Until:</label>
         <input type="date" id="valid_until" name="valid_until" value="<?php echo $val; ?>">
@@ -190,8 +192,6 @@ class Shortcode
     {
         if (isset($_POST['new_tag'])) {
             $new_tag = sanitize_text_field($_POST['new_tag']);
-            // Add your logic to insert $new_tag into the shorturl_tags table
-            // Replace the following line with your actual database insertion code
             echo 'New tag added: ' . $new_tag;
         } else {
             echo 'Error: No tag provided.';
@@ -310,10 +310,6 @@ class Shortcode
         return ob_get_clean();
     }
 
-
-
-
-
     public function list_shortcode_handler(): string
     {
         global $wpdb;
@@ -327,7 +323,7 @@ class Shortcode
                 'link_id' => htmlspecialchars($_POST['link_id'] ?? ''),
                 'domain_id' => htmlspecialchars($_POST['domain_id'] ?? ''),
                 'shortURL' => filter_var($_POST['shortURL'] ?? '', FILTER_VALIDATE_URL),
-                'uri' => sanitize_text_field($_POST['uri'] ?? ''),
+                'uri' => $this->rights['uri_allowed'] ? sanitize_text_field($_POST['uri'] ?? '') : '',
                 'valid_until' => sanitize_text_field($_POST['valid_until'] ?? ''),
                 'categories' => !empty($_POST['categories']) ? array_map('sanitize_text_field', $_POST['categories']) : [],
                 'tags' => !empty($_POST['tags']) ? array_map('sanitize_text_field', $_POST['tags']) : [],
@@ -381,7 +377,7 @@ class Shortcode
         $table .= '<th scope="col" class="manage-column column-actions">Actions</th>';
         $table .= '</tr></thead><tbody>';
 
-        if (empty($results)){
+        if (empty($results)) {
             $table .= '<tr><td colspan="7">No links stored yet.</td></tr>';
         }
 
@@ -428,8 +424,6 @@ class Shortcode
         return $table;
     }
 
-
-
     private function display_edit_link_form()
     {
         $link_id = isset($_GET['link_id']) ? intval($_GET['link_id']) : 0;
@@ -439,38 +433,37 @@ class Shortcode
         } else {
             // Load the link data from the database
             $link_data = $this->get_link_data_by_id($link_id);
-            if (empty($link_data)){
+            if (empty($link_data)) {
                 return '';
-            }else{
+            } else {
 
-            $aCategories = !empty($link_data['category_ids']) ? explode(',', $link_data['category_ids']) : [];
-            $aTags = !empty($link_data['tag_ids']) ? explode(',', $link_data['tag_ids']) : [];
+                $aCategories = !empty($link_data['category_ids']) ? explode(',', $link_data['category_ids']) : [];
+                $aTags = !empty($link_data['tag_ids']) ? explode(',', $link_data['tag_ids']) : [];
 
-            // Display the edit form
-            ob_start();
-            ?>
-            <div id="edit-link-form">
-                <h2>Edit Link</h2>
-                <form id="edit-link-form" method="post" action="">
-                    <input type="hidden" name="action" value="update_link">
-                    <input type="hidden" name="link_id" value="<?php echo esc_attr($link_id); ?>">
-                    <input type="hidden" name="domain_id" value="<?php echo esc_attr($link_data['domain_id']); ?>">
-                    <input type="hidden" name="shortURL" value="<?php echo esc_attr($link_data['shortURL']); ?>">
-                    <input type="hidden" name="uri"
-                        value="<?php echo !empty($link_data['uri']) ? esc_attr($link_data['uri']) : ''; ?>">
-                    <?php echo self::display_shorturl_validity($link_data['valid_until']); ?>
-                    <h2 class="handle">Categories</h2>
-                    <?php echo self::display_shorturl_category($aCategories); ?>
-                    <h2 class="handle">Tags</h2>
-                    <?php echo self::display_shorturl_tag($aTags); ?>
-                    <button type="submit">Update Link</button>
-                </form>
-            </div>
-            <?php
-            return ob_get_clean();
+                // Display the edit form
+                ob_start();
+                ?>
+                <div id="edit-link-form">
+                    <h2>Edit Link</h2>
+                    <form id="edit-link-form" method="post" action="">
+                        <input type="hidden" name="action" value="update_link">
+                        <input type="hidden" name="link_id" value="<?php echo esc_attr($link_id); ?>">
+                        <input type="hidden" name="domain_id" value="<?php echo esc_attr($link_data['domain_id']); ?>">
+                        <input type="hidden" name="shortURL" value="<?php echo esc_attr($link_data['shortURL']); ?>">
+                        <input type="hidden" name="uri" value="<?php echo !empty($link_data['uri']) ? esc_attr($link_data['uri']) : ''; ?>">
+                        <?php echo self::display_shorturl_validity($link_data['valid_until']); ?>
+                        <h2 class="handle">Categories</h2>
+                        <?php echo self::display_shorturl_category($aCategories); ?>
+                        <h2 class="handle">Tags</h2>
+                        <?php echo self::display_shorturl_tag($aTags); ?>
+                        <button type="submit">Update Link</button>
+                    </form>
+                </div>
+                <?php
+                return ob_get_clean();
+            }
         }
     }
-}
 
     public static function update_category_label()
     {
@@ -593,4 +586,5 @@ class Shortcode
     }
 
 }
+
 

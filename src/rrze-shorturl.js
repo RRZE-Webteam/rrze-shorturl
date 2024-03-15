@@ -57,8 +57,8 @@ jQuery(document).ready(function ($) {
         var id = $(this).data("id");
         var label = $(this).parent().find(".shorturl-category-input").val();
 
-        console.log('label = ' + label);
-        console.log('url = ' + rrze_shorturl_ajax_object.ajax_url);
+        // console.log('label = ' + label);
+        // console.log('url = ' + rrze_shorturl_ajax_object.ajax_url);
 
         // Send AJAX request to update category label
         $.ajax({
