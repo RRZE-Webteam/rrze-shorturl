@@ -35,18 +35,18 @@ const Edit = ({ attributes, setAttributes }) => {
 
         // Initialize clipboard instance
         clipboard = new ClipboardJS('.btn', {
-            text: function() {
+            text: function () {
                 return shortenedUrl;
             }
         });
 
         // Define success and error handlers
-        clipboard.on('success', function(e) {
+        clipboard.on('success', function (e) {
             setCopied(true);
             e.clearSelection();
         });
 
-        clipboard.on('error', function(e) {
+        clipboard.on('error', function (e) {
             console.error('Copy failed:', e.action);
         });
 
@@ -235,7 +235,7 @@ const Edit = ({ attributes, setAttributes }) => {
             }
         }
     };
-        
+
     return (
         <div {...useBlockProps()}>
             <InspectorControls>
@@ -316,18 +316,18 @@ const Edit = ({ attributes, setAttributes }) => {
             {shortenedUrl && (
                 <div>
                     <p>
-                        {__('Shortened URL')}: {shortenedUrl} 
+                        {__('Shortened URL')}: {shortenedUrl}
                         &nbsp;&nbsp;<button class="btn" data-clipboard-target="#foo">
-                        <img
-                src="data:image/svg+xml,%3Csvg height='1024' width='896' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M128 768h256v64H128v-64z m320-384H128v64h320v-64z m128 192V448L384 640l192 192V704h320V576H576z m-288-64H128v64h160v-64zM128 704h160v-64H128v64z m576 64h64v128c-1 18-7 33-19 45s-27 18-45 19H64c-35 0-64-29-64-64V192c0-35 29-64 64-64h192C256 57 313 0 384 0s128 57 128 128h192c35 0 64 29 64 64v320h-64V320H64v576h640V768zM128 256h512c0-35-29-64-64-64h-64c-35 0-64-29-64-64s-29-64-64-64-64 29-64 64-29 64-64 64h-64c-35 0-64 29-64 64z'/%3E%3C/svg%3E"
-                width="13"
-                alt="Copy to clipboard"
-                onClick={handleCopy} // Attach onClick event handler
-                style={{ cursor: 'pointer' }} // Add cursor style to indicate it's clickable
-            />
-            </button> {copied && <span>URL copied!</span>}
+                            <img
+                                src="data:image/svg+xml,%3Csvg height='1024' width='896' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M128 768h256v64H128v-64z m320-384H128v64h320v-64z m128 192V448L384 640l192 192V704h320V576H576z m-288-64H128v64h160v-64zM128 704h160v-64H128v64z m576 64h64v128c-1 18-7 33-19 45s-27 18-45 19H64c-35 0-64-29-64-64V192c0-35 29-64 64-64h192C256 57 313 0 384 0s128 57 128 128h192c35 0 64 29 64 64v320h-64V320H64v576h640V768zM128 256h512c0-35-29-64-64-64h-64c-35 0-64-29-64-64s-29-64-64-64-64 29-64 64-29 64-64 64h-64c-35 0-64 29-64 64z'/%3E%3C/svg%3E"
+                                width="13"
+                                alt="Copy to clipboard"
+                                onClick={handleCopy} // Attach onClick event handler
+                                style={{ cursor: 'pointer' }} // Add cursor style to indicate it's clickable
+                            />
+                        </button> {copied && <span>URL copied!</span>}
                     </p>
-                    <img src={qrCodeUrl} alt="QR Code" />                                        
+                    <img src={qrCodeUrl} alt="QR Code" />
                 </div>
             )}
         </div>

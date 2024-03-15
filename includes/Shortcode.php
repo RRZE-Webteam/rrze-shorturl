@@ -126,16 +126,18 @@ class Shortcode
                 // Call ShortURL::shorten() and add the result if URL is given
                 $result = ShortURL::shorten($aParams);
                 $result_message = ($result['error'] ? 'Error: ' : 'Short URL: ') . $result['txt'];
+                $result_message .= '&nbsp;&nbsp;<button type="button" class="btn" id="copyButton" name="copyButton" data-shortened-url="' . $result['txt'] . '">';
+                $result_message .= '<img src="data:image/svg+xml,%3Csvg height=\'1024\' width=\'896\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M128 768h256v64H128v-64z m320-384H128v64h320v-64z m128 192V448L384 640l192 192V704h320V576H576z m-288-64H128v64h160v-64zM128 704h160v-64H128v64z m576 64h64v128c-1 18-7 33-19 45s-27 18-45 19H64c-35 0-64-29-64-64V192c0-35 29-64 64-64h192C256 57 313 0 384 0s128 57 128 128h192c35 0 64 29 64 64v320h-64V320H64v576h640V768zM128 256h512c0-35-29-64-64-64h-64c-35 0-64-29-64-64s-29-64-64-64-64 29-64 64-29 64-64 64h-64c-35 0-64 29-64 64z\'/%3E%3C/svg%3E" width="13" alt="Copy to clipboard" style="cursor: pointer">';
+                $result_message .= '</button>&nbsp;<span id="tooltip" style="display: none;">Copied to clipboard!</span>';
             }
         }
 
         // Generate form
-        $form = '';
-        $form .= '<form method="post">';
+        $form = '<form id="shorturl-form" method="post">';
         $form .= '<div class="postbox">';
         $form .= '<h2 class="hndle">Create Short URL</h2>';
         $form .= '<div class="inside">';
-        $form .= '<label for="url">Long URL:</label>';
+        $form .= '<label for="url">Long URL:</label>&nbsp;';
         $form .= '<input type="text" name="url" value="' . esc_attr($aParams['url']) . '">';
         $form .= '<input type="hidden" name="link_id" value="' . (!empty($result['link_id']) ? $result['link_id'] : '') . '">';
         $form .= '</div>';

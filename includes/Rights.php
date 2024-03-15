@@ -15,6 +15,16 @@ class Rights
             'get_allowed' => false
         ];
 
+
+        // TEST !!!
+        return [
+            'id' => 1,
+            'uri_allowed' => true,
+            'get_allowed' => true
+        ];
+
+
+
         try {
             if (class_exists('\RRZE\AccessControl\Permissions')) {
                 $permissions = new Permissions();

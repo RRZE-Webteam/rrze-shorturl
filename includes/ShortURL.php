@@ -5,7 +5,7 @@ namespace RRZE\ShortURL;
 class ShortURL
 {
 
-    protected $rights;
+    protected static $rights;
 
     public static array $CONFIG = [
         "ShortURLBase" => "http://go.fau.de/",
@@ -15,7 +15,7 @@ class ShortURL
 
     public function __construct($rights)
     {
-        $this->rights = $rights;
+        self::$rights = $rights;
         self::$CONFIG['AllowedDomains'] = self::getAllowedDomains();
     }
 
@@ -88,7 +88,7 @@ class ShortURL
             $result = $wpdb->get_results($wpdb->prepare("SELECT id, short_url FROM $table_name WHERE long_url = %s LIMIT 1", $long_url), ARRAY_A);
 
             if (empty($result)) {
-                $long_url = Rights::isAllowedToUseGET($idm) ? $long_url : http_build_url($long_url, array('path', 'scheme', 'host'));
+                $long_url = self::$rights['get_allowed'] ? $long_url : http_build_url($long_url, array('path', 'scheme', 'host'));
 
                 // Insert into the links table
                 $wpdb->insert(
@@ -311,15 +311,7 @@ class ShortURL
             $long_url = $shortenParams['url'] ?? null;
 
             // Check if 'get_allowed' is false and remove GET parameters if necessary
-            if (!self::$rights['get_allowed'] && $long_url) {
-                // Parse the URL
-                $parsed_url = parse_url($long_url);
-
-                // Reconstruct the URL without the query string
-                $long_url = isset($parsed_url['scheme']) ? $parsed_url['scheme'] . '://' : '';
-                $long_url .= isset($parsed_url['host']) ? $parsed_url['host'] : '';
-                $long_url .= isset($parsed_url['path']) ? $parsed_url['path'] : '';
-            }
+            $long_url = self::$rights['get_allowed'] ? $long_url : http_build_url($long_url, array('path', 'scheme', 'host'));
             
             $uri = self::$rights['uri_allowed'] ? sanitize_text_field($_POST['uri'] ?? '') : '';
             $valid_until = $shortenParams['valid_until'] ?? null;

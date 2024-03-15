@@ -238,4 +238,56 @@ jQuery(document).ready(function ($) {
         });
     });    
 
+    // Copy to Clipboard
+    function copyToClipboard(shortenedUrl) {
+        if (shortenedUrl) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(shortenedUrl)
+                    .then(() => {
+                        console.log('URL copied!');
+                        showTooltip('URL copied!');
+                    })
+                    .catch(err => {
+                        console.error('Copy failed:', err);
+                    });
+            } else {
+                // Fallback method for browsers that do not support Clipboard API
+                const textArea = document.createElement('textarea');
+                textArea.value = shortenedUrl;
+                textArea.style.position = 'fixed'; // Ensure it's not visible in the viewport
+                document.body.appendChild(textArea);
+                textArea.select(); // Select the text
+                try {
+                    document.execCommand('copy');
+                    console.log('URL copied!');
+                    showTooltip('URL copied!');
+                } catch (err) {
+                    console.error('Copy failed:', err);
+                } finally {
+                    document.body.removeChild(textArea); // Remove the textarea from the DOM
+                }
+            }
+        }
+    }
+    
+    function showTooltip(message) {
+        const tooltip = document.getElementById('tooltip');
+        tooltip.textContent = message;
+        tooltip.style.display = 'inline-block';
+        setTimeout(() => {
+            tooltip.style.display = 'none';
+        }, 2000); // Hide the tooltip after 2 seconds
+    }
+    
+
+    // Attach event listener to the "Copy to clipboard" image
+    $(document).on('click', '#copyButton', function(event) {
+        event.preventDefault();
+        var shortenedUrl = $(this).data('shortened-url');
+        copyToClipboard(shortenedUrl);
+        event.stopPropagation(); // Stop event propagation
+        return false; // Prevent the default action and propagation        
+    });
+
 });
+
