@@ -50,7 +50,7 @@ class API {
         $parameters = $request->get_json_params();
     
         if (empty($parameters['label'])) {
-            return new WP_Error('invalid_name', 'Tag label is required.', array('status' => 400));
+            return new WP_Error('invalid_name', __('Tag label is required.', 'rrze-shorturl'), array('status' => 400));
         }
     
         global $wpdb;
@@ -59,7 +59,7 @@ class API {
         $inserted = $wpdb->insert($table_name, array('label' => sanitize_text_field($parameters['label'])));
     
         if (!$inserted) {
-            return new WP_Error('insert_failed', 'Failed to add tag to the database.', array('status' => 500));
+            return new WP_Error('insert_failed', __('Failed to add tag to the database.', 'rrze-shorturl'), array('status' => 500));
         }
     
         $tag_id = $wpdb->insert_id;
@@ -98,7 +98,7 @@ class API {
         $parameters = $request->get_json_params();
     
         if (empty($parameters['label'])) {
-            return new WP_Error('invalid_name', 'Category label is required.', array('status' => 400));
+            return new WP_Error('invalid_name', __('Category label is required.', 'rrze-shorturl'), array('status' => 400));
         }
     
         global $wpdb;
@@ -107,7 +107,7 @@ class API {
         $inserted = $wpdb->insert($table_name, array('label' => sanitize_text_field($parameters['label'])));
     
         if (!$inserted) {
-            return new WP_Error('insert_failed', 'Failed to add category to the database.', array('status' => 500));
+            return new WP_Error('insert_failed', __('Failed to add category to the database.', 'rrze-shorturl'), array('status' => 500));
         }
     
         $category_id = $wpdb->insert_id;
@@ -125,12 +125,11 @@ class API {
             $categories = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_categories", ARRAY_A);
     
             if (is_wp_error($categories)) {
-                throw new Exception('Error retrieving shorturl categories');
+                throw new Exception(__('Error retrieving shorturl categories', 'rrze-shorturl'));
             }
     
             return new WP_REST_Response($categories, 200);
         } catch (Exception $e) {
-            error_log('Error in get_categories_callback: ' . $e->getMessage());
             return new WP_Error('shorturl_categories_error', $e->getMessage(), array('status' => 500));
         }
     }
@@ -139,36 +138,25 @@ class API {
         try {
             $parameters = $request->get_json_params();
 
-            // Check if the 'url' parameter is provided
             if (!isset($parameters['url'])) {
-                throw new WP_Error('missing_url_parameter', 'URL parameter is missing.');
+                throw new WP_Error('missing_url_parameter', __('URL parameter is missing.', 'rrze-shorturl'));
             }
 
-            // Shorten the URL
             $shortened_url = ShortURL::shorten($parameters);
 
-            // Return the shortened URL in the response
             return new WP_REST_Response($shortened_url, 200);
         } catch (\Exception $e) {
-            // Handle any exceptions that occur
-            // You can log the error, return a WP_Error, or handle it in any other way appropriate for your application
-            error_log('Error in shorten_url_callback: ' . $e->getMessage());
-            return new WP_Error('callback_error', 'Error processing request.');
+            return new WP_Error('callback_error', __('Error processing request.', 'rrze-shorturl'));
         }
     }
 
     public function get_active_short_urls_callback($request) {
         try {
-            // Call the getActiveShortURLs method from the ShortURL class
             $active_short_urls = ShortURL::getActiveShortURLs();
             
-            // Return the active short URLs as JSON
             return new WP_REST_Response($active_short_urls, 200);
         } catch (\Exception $e) {
-            // Handle any exceptions that occur
-            // You can log the error, return a WP_Error, or handle it in any other way appropriate for your application
-            error_log('Error in get_active_short_urls_callback: ' . $e->getMessage());
-            return new WP_Error('callback_error', 'Error processing request.');
+            return new WP_Error('callback_error', __('Error processing request.', 'rrze-shorturl'));
         }
     }
 }

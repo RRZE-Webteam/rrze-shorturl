@@ -109,14 +109,13 @@ class Settings
 
             <h2 class="nav-tab-wrapper">
                 <a href="?page=rrze-shorturl&tab=services"
-                    class="nav-tab <?php echo isset($_GET['tab']) && $_GET['tab'] === 'services' ? 'nav-tab-active' : ''; ?>">Services</a>
+                    class="nav-tab <?php echo isset($_GET['tab']) && $_GET['tab'] === 'services' ? 'nav-tab-active' : ''; ?>"><?php echo __('Services', 'rrze-shorturl'); ?></a>
                 <a href="?page=rrze-shorturl&tab=customer-domains"
-                    class="nav-tab <?php echo isset($_GET['tab']) && $_GET['tab'] === 'customer-domains' ? 'nav-tab-active' : ''; ?>">Customer
-                    Domains</a>
+                    class="nav-tab <?php echo isset($_GET['tab']) && $_GET['tab'] === 'customer-domains' ? 'nav-tab-active' : ''; ?>"><?php echo __('Customers Domains', 'rrze-shorturl'); ?></a>
                 <a href="?page=rrze-shorturl&tab=idm"
                     class="nav-tab <?php echo isset($_GET['tab']) && $_GET['tab'] === 'idm' ? 'nav-tab-active' : ''; ?>">IdM</a>
                 <a href="?page=rrze-shorturl&tab=statistic"
-                    class="nav-tab <?php echo isset($_GET['tab']) && $_GET['tab'] === 'statistic' ? 'nav-tab-active' : ''; ?>">Statistic</a>
+                    class="nav-tab <?php echo isset($_GET['tab']) && $_GET['tab'] === 'statistic' ? 'nav-tab-active' : ''; ?>"><?php echo __('Statistic', 'rrze-shorturl'); ?></a>
             </h2>
 
             <div class="tab-content">
@@ -251,17 +250,12 @@ class Settings
                             }
                             $new_hostname = '';
                             $new_prefix = 0;
-
-
                         }
                     } catch (\Exception $e) {
-                        // Handle \Exceptions
                         $message = __('An error occurred: ', 'rrze-shorturl') . $e->getMessage();
                     }
                 }
-                // Display success message
             } catch (\Exception $e) {
-                // Handle \Exceptions
                 $message = __('An error occurred: ', 'rrze-shorturl') . $e->getMessage();
             }
         }
@@ -296,25 +290,21 @@ class Settings
                     <tbody>
                         <?php foreach ($entries as $entry): ?>
                             <tr>
-                                <td><input type="text" name="hostname[]" value="<?php echo esc_attr($entry->hostname); ?>"
-                                        readonly /></td>
-                                <td><input type="text" name="prefix[]" value="<?php echo esc_attr($entry->prefix); ?>" readonly />
-                                </td>
+                                <td><input type="text" name="hostname[]" value="<?php echo esc_attr($entry->hostname); ?>" readonly /></td>
+                                <td><input type="text" name="prefix[]" value="<?php echo esc_attr($entry->prefix); ?>" readonly /></td>
                                 <td><input type="checkbox" name="delete[]" value="<?php echo esc_attr($entry->id); ?>" /></td>
                             </tr>
                         <?php endforeach; ?>
                         <tr>
-                            <td><input type="text" name="new_hostname"
-                                    value="<?php echo (!empty($new_hostname) ? $new_hostname : ''); ?>" /></td>
-                            <td><input type="text" name="new_prefix"
-                                    value="<?php echo (!empty($new_prefix) ? $new_prefix : ''); ?>" pattern="\d*" /></td>
+                            <td><input type="text" name="new_hostname" value="<?php echo (!empty($new_hostname) ? $new_hostname : ''); ?>" /></td>
+                            <td><input type="text" name="new_prefix" value="<?php echo (!empty($new_prefix) ? $new_prefix : ''); ?>" pattern="\d*" /></td>
                             <td></td>
                         </tr>
                     </tbody>
                 </table>
 
                 <button type="submit" name="submit" class="button button-primary">
-                    <?php _e('Save Changes', 'rrze-shorturl'); ?>
+                    <?php __('Save Changes', 'rrze-shorturl'); ?>
                 </button>
             </form>
         </div>
@@ -331,10 +321,6 @@ class Settings
         // Check if form is submitted
         if (isset($_POST['submit'])) {
             try {
-                // Handle form submission
-                // Validate and process form data
-                // Add new entry or update existing entry
-
                 // Delete selected entries
                 if (!empty($_POST['delete'])) {
                     foreach ($_POST['delete'] as $delete_id) {
@@ -368,13 +354,10 @@ class Settings
 
                         $message = __('New customer domain added successfully.', 'rrze-shorturl');
                     } catch (\Exception $e) {
-                        // Handle exceptions
                         $message = __('An error occurred: ', 'rrze-shorturl') . $e->getMessage();
                     }
                 }
-                // Display success message
             } catch (\Exception $e) {
-                // Handle exceptions
                 $message = __('An error occurred: ', 'rrze-shorturl') . $e->getMessage();
             }
         }
@@ -396,18 +379,17 @@ class Settings
                     <thead>
                         <tr>
                             <th>
-                                <?php _e('Hostname', 'rrze-shorturl'); ?>
+                                <?php __('Hostname', 'rrze-shorturl'); ?>
                             </th>
                             <th>
-                                <?php _e('Delete', 'rrze-shorturl'); ?>
+                                <?php __('Delete', 'rrze-shorturl'); ?>
                             </th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach ($entries as $entry): ?>
                             <tr>
-                                <td><input type="text" name="hostname[]" value="<?php echo esc_attr($entry->hostname); ?>"
-                                        readonly /></td>
+                                <td><input type="text" name="hostname[]" value="<?php echo esc_attr($entry->hostname); ?>" readonly /></td>
                                 <td><input type="checkbox" name="delete[]" value="<?php echo esc_attr($entry->id); ?>" /></td>
                             </tr>
                         <?php endforeach; ?>
@@ -419,7 +401,7 @@ class Settings
                 </table>
 
                 <button type="submit" name="submit" class="button button-primary">
-                    <?php _e('Save Changes', 'rrze-shorturl'); ?>
+                    <?php __('Save Changes', 'rrze-shorturl'); ?>
                 </button>
             </form>
         </div>
@@ -427,7 +409,6 @@ class Settings
 
     }
 
-    // Define the render_idm_section function
     public function render_idm_section()
     {
         global $wpdb;
@@ -439,7 +420,6 @@ class Settings
         try {
             // Check if form is submitted
             if (isset($_POST['submit_idm'])) {
-                // Get input data
                 $idm = sanitize_text_field($_POST['idm']);
 
                 // Delete rows if delete checkbox is checked
@@ -484,36 +464,26 @@ class Settings
                             <th scope="col"
                                 class="manage-column column-hostname <?php echo $orderby === 'idm' ? 'sorted' : 'sortable'; ?> <?php echo $order; ?>"
                                 data-sort="<?php echo $orderby === 'idm' ? $order : 'asc'; ?>">
-                                <a
-                                    href="<?php echo admin_url('admin.php?page=rrze-shorturl&tab=idm&orderby=idm&order=' . ($orderby === 'idm' && $order === 'asc' ? 'desc' : 'asc')); ?>">
+                                <a href="<?php echo admin_url('admin.php?page=rrze-shorturl&tab=idm&orderby=idm&order=' . ($orderby === 'idm' && $order === 'asc' ? 'desc' : 'asc')); ?>">
                                     <span>IdM</span>
-                                    <span class="sorting-indicators"><span class="sorting-indicator asc"
-                                            aria-hidden="true"></span><span class="sorting-indicator desc"
-                                            aria-hidden="true"></span></span>
+                                    <span class="sorting-indicators"><span class="sorting-indicator asc" aria-hidden="true"></span><span class="sorting-indicator desc" aria-hidden="true"></span></span>
                                 </a>
                             </th>
-                            <th scope="col">Allow URI</th>
-                            <th scope="col">Allow GET</th>
-                            <th scope="col">Delete</th>
+                            <th scope="col"><?php echo __('Allow URI', 'rrze-shorturl'); ?></th>
+                            <th scope="col"><?php echo __('Allow GET', 'rrze-shorturl'); ?></th>
+                            <th scope="col"><?php echo __('Delete', 'rrze-shorturl'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php
-                        // Display existing entries in a table
                         $idms = $wpdb->get_results("SELECT * FROM " . $wpdb->prefix . "shorturl_idms ORDER BY " . $orderby . ' ' . $order);
                         if ($idms) {
                             foreach ($idms as $idm) {
                                 ?>
                                 <tr>
-                                    <td>
-                                        <?php echo $idm->idm; ?>
-                                    </td>
-                                    <td>
-                                        <input type="checkbox" class="allow-uri-checkbox" data-id="<?php echo $idm->id; ?>" <?php echo $idm->allow_uri ? 'checked' : ''; ?>>
-                                    </td>
-                                    <td>
-                                        <input type="checkbox" class="allow-get-checkbox" data-id="<?php echo $idm->id; ?>" <?php echo $idm->allow_get ? 'checked' : ''; ?>>
-                                    </td>
+                                    <td><?php echo $idm->idm; ?></td>
+                                    <td><input type="checkbox" class="allow-uri-checkbox" data-id="<?php echo $idm->id; ?>" <?php echo $idm->allow_uri ? 'checked' : ''; ?>></td>
+                                    <td><input type="checkbox" class="allow-get-checkbox" data-id="<?php echo $idm->id; ?>" <?php echo $idm->allow_get ? 'checked' : ''; ?>></td>
                                     <td><input type="checkbox" name="delete[]" value="<?php echo $idm->id; ?>"></td>
                                 </tr>
                                 <?php
@@ -526,12 +496,11 @@ class Settings
                     </tbody>
                 </table>
                 <button type="submit" name="submit_idm" class="button button-primary">
-                    <?php _e('Save Changes', 'rrze-shorturl'); ?>
+                    <?php __('Save Changes', 'rrze-shorturl'); ?>
                 </button>
             </form>
             <?php
         } catch (\Exception $e) {
-            // Handle the exception
             echo '<div class="error notice"><p>' . $e->getMessage() . '</p></div>';
             error_log("Error in render_idm_section: " . $e->getMessage());
         }
@@ -563,12 +532,9 @@ class Settings
                         <th scope="col"
                             class="manage-column column-hostname <?php echo $orderby === 'hostname' ? 'sorted' : 'sortable'; ?> <?php echo $order; ?>"
                             data-sort="<?php echo $orderby === 'hostname' ? $order : 'asc'; ?>">
-                            <a
-                                href="<?php echo admin_url('admin.php?page=rrze-shorturl&tab=statistic&orderby=hostname&order=' . ($orderby === 'hostname' && $order === 'asc' ? 'desc' : 'asc')); ?>">
-                                <span>Hostname</span>
-                                <span class="sorting-indicators"><span class="sorting-indicator asc"
-                                        aria-hidden="true"></span><span class="sorting-indicator desc"
-                                        aria-hidden="true"></span></span>
+                            <a href="<?php echo admin_url('admin.php?page=rrze-shorturl&tab=statistic&orderby=hostname&order=' . ($orderby === 'hostname' && $order === 'asc' ? 'desc' : 'asc')); ?>">
+                                <span><?php echo __('Hostname', 'rrze-shorturl'); ?></span>
+                                <span class="sorting-indicators"><span class="sorting-indicator asc" aria-hidden="true"></span><span class="sorting-indicator desc" aria-hidden="true"></span></span>
                             </a>
                         </th>
                         <th scope="col"
@@ -576,10 +542,8 @@ class Settings
                             data-sort="<?php echo $orderby === 'link_count' ? $order : 'asc'; ?>">
                             <a
                                 href="<?php echo admin_url('admin.php?page=rrze-shorturl&tab=statistic&orderby=link_count&order=' . ($orderby === 'link_count' && $order === 'asc' ? 'desc' : 'asc')); ?>">
-                                <span>Link Count</span>
-                                <span class="sorting-indicators"><span class="sorting-indicator asc"
-                                        aria-hidden="true"></span><span class="sorting-indicator desc"
-                                        aria-hidden="true"></span></span>
+                                <span><?php echo __('Link Count', 'rrze-shorturl'); ?></span>
+                                <span class="sorting-indicators"><span class="sorting-indicator asc" aria-hidden="true"></span><span class="sorting-indicator desc" aria-hidden="true"></span></span>
                             </a>
                         </th>
                     </tr>
@@ -601,12 +565,9 @@ class Settings
                         <th scope="col"
                             class="manage-column column-hostname <?php echo $orderby === 'hostname' ? 'sorted' : 'sortable'; ?> <?php echo $order; ?>"
                             data-sort="<?php echo $orderby === 'hostname' ? $order : 'asc'; ?>">
-                            <a
-                                href="<?php echo admin_url('admin.php?page=rrze-shorturl&tab=statistic&orderby=hostname&order=' . ($orderby === 'hostname' && $order === 'asc' ? 'desc' : 'asc')); ?>">
-                                <span>Hostname</span>
-                                <span class="sorting-indicators"><span class="sorting-indicator asc"
-                                        aria-hidden="true"></span><span class="sorting-indicator desc"
-                                        aria-hidden="true"></span></span>
+                            <a href="<?php echo admin_url('admin.php?page=rrze-shorturl&tab=statistic&orderby=hostname&order=' . ($orderby === 'hostname' && $order === 'asc' ? 'desc' : 'asc')); ?>">
+                                <span><?php echo __('Hostname', 'rrze-shorturl'); ?></span>
+                                <span class="sorting-indicators"><span class="sorting-indicator asc" aria-hidden="true"></span><span class="sorting-indicator desc" aria-hidden="true"></span></span>
                             </a>
                         </th>
                         <th scope="col"
@@ -614,10 +575,8 @@ class Settings
                             data-sort="<?php echo $orderby === 'link_count' ? $order : 'asc'; ?>">
                             <a
                                 href="<?php echo admin_url('admin.php?page=rrze-shorturl&tab=statistic&orderby=link_count&order=' . ($orderby === 'link_count' && $order === 'asc' ? 'desc' : 'asc')); ?>">
-                                <span>Link Count</span>
-                                <span class="sorting-indicators"><span class="sorting-indicator asc"
-                                        aria-hidden="true"></span><span class="sorting-indicator desc"
-                                        aria-hidden="true"></span></span>
+                                <span><?php echo __('Link Count', 'rrze-shorturl'); ?></span>
+                                <span class="sorting-indicators"><span class="sorting-indicator asc" aria-hidden="true"></span><span class="sorting-indicator desc" aria-hidden="true"></span></span>
                             </a>
                         </th>
                     </tr>

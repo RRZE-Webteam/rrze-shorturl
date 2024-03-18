@@ -10,7 +10,7 @@ class ShortURL
     public static array $CONFIG = [
         "ShortURLBase" => "http://go.fau.de/",
         "ShortURLModChars" => "abcdefghijklmnopqrstuvwxyz0123456789-",
-        "AllowedDomains" => [] // Initialize empty, this will be populated later
+        "AllowedDomains" => [],
     ];
 
     public function __construct($rights)
@@ -19,16 +19,13 @@ class ShortURL
         self::$CONFIG['AllowedDomains'] = self::getAllowedDomains();
     }
 
-
     public static function isValidUrl($url)
     {
         try {
-            // Check if the URL is valid
             if (filter_var($url, FILTER_VALIDATE_URL) === false) {
                 return false;
             }
 
-            // Passed all checks, URL is valid
             return true;
         } catch (\Exception $e) {
             error_log("Error in isValidUrl: " . $e->getMessage());
@@ -75,7 +72,6 @@ class ShortURL
         }
     }
 
-
     public static function getLinkfromDB($domain_id, $long_url, $idm_id)
     {
         $idm = '';
@@ -84,7 +80,6 @@ class ShortURL
             global $wpdb;
             $table_name = $wpdb->prefix . 'shorturl_links';
 
-            // Query the links table to get the ID and short_url where long_url matches $long_url
             $result = $wpdb->get_results($wpdb->prepare("SELECT id, short_url FROM $table_name WHERE long_url = %s LIMIT 1", $long_url), ARRAY_A);
 
             if (empty($result)) {
@@ -99,13 +94,10 @@ class ShortURL
                         'long_url' => $long_url
                     )
                 );
-                // Get the ID of the inserted row
                 $link_id = $wpdb->insert_id;
 
-                // Return the array with id and short_url as empty
                 return array('id' => $link_id, 'short_url' => '');
             } else {
-                // Return the array with id and short_url
                 return array('id' => $result[0]['id'], 'short_url' => $result[0]['short_url']);
             }
         } catch (\Exception $e) {
@@ -184,16 +176,11 @@ class ShortURL
         global $wpdb;
 
         try {
-            // Table name
             $table_name = $wpdb->prefix . 'shorturl_domains';
-
-            // Query to select servername from the shorturl_domains table
             $query = "SELECT * FROM $table_name";
 
-            // Execute the query
             $results = $wpdb->get_results($query, ARRAY_A);
 
-            // Extract servernames from the results
             $aDomains = [];
             foreach ($results as $result) {
                 $aDomains[] = $result;
@@ -254,12 +241,9 @@ class ShortURL
     {
         $isValid = true;
 
-        // Check if URI is not empty
         if (trim($uri) !== '') {
-            // Remove spaces from the URI
             $uriWithoutSpaces = preg_replace('/\s/', '', $uri);
 
-            // Check if rawurlencode returns the same value for the URI
             if (rawurlencode($uri) !== rawurlencode($uriWithoutSpaces)) {
                 $isValid = false;
             }
@@ -273,17 +257,13 @@ class ShortURL
         if (empty($valid_until)) {
             return ['error' => false, 'txt' => 'no date given'];
         }
-        // Validate if $valid_until is a valid date
         $parsed_date = date_parse($valid_until);
 
         if ($parsed_date['error_count'] > 0 || !checkdate($parsed_date['month'], $parsed_date['day'], $parsed_date['year'])) {
             return ['error' => true, 'txt' => 'Validity is not a valid date.'];
         }
 
-        // Convert $valid_until to DateTime object
         $valid_until_date = \DateTime::createFromFormat('Y-m-d', $valid_until);
-
-        // Get current date
         $current_date = new \DateTime(); // Using DateTime object directly
         
         // Check if $valid_until is in the past
@@ -311,6 +291,13 @@ class ShortURL
         try {
             $long_url = $shortenParams['url'] ?? null;
 
+            // Is it an allowed domain?
+            $aDomain = self::checkDomain($long_url);
+
+            if ($aDomain['prefix'] == 0) {
+                return ['error' => true, 'txt' => __('Domain is not allowed to use our shortening service.', 'rrze-shorturl')];
+            }
+            
             // Check if 'get_allowed' is false and remove GET parameters if necessary
             $long_url = self::$rights['get_allowed'] ? $long_url : http_build_url($long_url, array('path', 'scheme', 'host'));
             
@@ -328,23 +315,17 @@ class ShortURL
             // Validate the URL
             $isValid = self::isValidUrl($long_url);
             if ($isValid !== true) {
-                return ['error' => true, 'txt' => $long_url . 'is not a valid URL'];
+                return ['error' => true, 'txt' => $long_url . __('is not a valid URL', 'rrze-shorturl')];
             }
 
+            // Validate the URI
             if (self::$rights['uri_allowed']){
-                // Validate the URI
                 $isValid = self::isValidURI($uri);
                 if ($isValid !== true) {
-                    return ['error' => true, 'txt' => $uri . ' ' . 'is not a valid URI'];
+                    return ['error' => true, 'txt' => $uri . ' ' . __('is not a valid URI', 'rrze-shorturl')];
                 }
             }
 
-            // Is it an allowed domain?
-            $aDomain = self::checkDomain($long_url);
-
-            if ($aDomain['prefix'] == 0) {
-                return ['error' => true, 'txt' => 'Domain is not allowed to use our shortening service.'];
-            }
 
             // Fetch or insert on new
             $aLink = self::getLinkfromDB($aDomain['id'], $long_url, self::$rights['id']);
@@ -358,7 +339,7 @@ class ShortURL
             // Create shortURL
             if (!empty($uri)) {
                 if (!self::isUniqueURI($uri)) {
-                    return ['error' => true, 'txt' => $uri . ' is already in use. Try another one.'];
+                    return ['error' => true, 'txt' => $uri . ' ' . __('is already in use. Try another one.', 'rrze-shorturl')];
                 }
                 $targetURL = $uri;
             } else {
@@ -372,7 +353,7 @@ class ShortURL
             $bUpdated = self::updateLink(self::$rights['id'], $aLink['id'], $aDomain['id'], $shortURL, $uri, $valid_until, $categories, $tags);
 
             if (!$bUpdated) {
-                return ['error' => true, 'txt' => 'Unable to update database table'];
+                return ['error' => true, 'txt' => __('Unable to update database table', 'rrze-shorturl')];
             }
 
             return ['error' => false, 'txt' => $shortURL, 'link_id' => $aLink['id']];
