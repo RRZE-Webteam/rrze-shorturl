@@ -277,13 +277,13 @@ class Settings
                     <thead>
                         <tr>
                             <th>
-                                <?php _e('Hostname', 'rrze-shorturl'); ?>
+                                <?php echo __('Hostname', 'rrze-shorturl'); ?>
                             </th>
                             <th>
-                                <?php _e('Prefix', 'rrze-shorturl'); ?>
+                                <?php echo __('Prefix', 'rrze-shorturl'); ?>
                             </th>
                             <th>
-                                <?php _e('Delete', 'rrze-shorturl'); ?>
+                                <?php echo __('Delete', 'rrze-shorturl'); ?>
                             </th>
                         </tr>
                     </thead>
@@ -304,7 +304,7 @@ class Settings
                 </table>
 
                 <button type="submit" name="submit" class="button button-primary">
-                    <?php __('Save Changes', 'rrze-shorturl'); ?>
+                    <?php echo __('Save Changes', 'rrze-shorturl'); ?>
                 </button>
             </form>
         </div>
@@ -379,10 +379,10 @@ class Settings
                     <thead>
                         <tr>
                             <th>
-                                <?php __('Hostname', 'rrze-shorturl'); ?>
+                                <?php echo __('Hostname', 'rrze-shorturl'); ?>
                             </th>
                             <th>
-                                <?php __('Delete', 'rrze-shorturl'); ?>
+                                <?php echo __('Delete', 'rrze-shorturl'); ?>
                             </th>
                         </tr>
                     </thead>
@@ -401,7 +401,7 @@ class Settings
                 </table>
 
                 <button type="submit" name="submit" class="button button-primary">
-                    <?php __('Save Changes', 'rrze-shorturl'); ?>
+                    <?php echo __('Save Changes', 'rrze-shorturl'); ?>
                 </button>
             </form>
         </div>
@@ -476,15 +476,16 @@ class Settings
                     </thead>
                     <tbody>
                         <?php
-                        $idms = $wpdb->get_results("SELECT * FROM " . $wpdb->prefix . "shorturl_idms ORDER BY " . $orderby . ' ' . $order);
+                        $idms = $wpdb->get_results("SELECT * FROM " . $wpdb->prefix . "shorturl_idms ORDER BY " . $orderby . ' ' . $order, ARRAY_A);
+
                         if ($idms) {
                             foreach ($idms as $idm) {
                                 ?>
                                 <tr>
-                                    <td><?php echo $idm->idm; ?></td>
-                                    <td><input type="checkbox" class="allow-uri-checkbox" data-id="<?php echo $idm->id; ?>" <?php echo $idm->allow_uri ? 'checked' : ''; ?>></td>
-                                    <td><input type="checkbox" class="allow-get-checkbox" data-id="<?php echo $idm->id; ?>" <?php echo $idm->allow_get ? 'checked' : ''; ?>></td>
-                                    <td><input type="checkbox" name="delete[]" value="<?php echo $idm->id; ?>"></td>
+                                    <td><?php echo $idm["idm"]; ?></td>
+                                    <td><input type="checkbox" class="allow-uri-checkbox" data-id="<?php echo $idm["id"]; ?>" <?php echo $idm["allow_uri"] ? 'checked' : ''; ?>></td>
+                                    <td><input type="checkbox" class="allow-get-checkbox" data-id="<?php echo $idm["id"]; ?>" <?php echo $idm["allow_get"] ? 'checked' : ''; ?>></td>
+                                    <td><input type="checkbox" name="delete[]" value="<?php echo $idm["id"]; ?>"></td>
                                 </tr>
                                 <?php
                             }
@@ -496,7 +497,7 @@ class Settings
                     </tbody>
                 </table>
                 <button type="submit" name="submit_idm" class="button button-primary">
-                    <?php __('Save Changes', 'rrze-shorturl'); ?>
+                    <?php echo __('Save Changes', 'rrze-shorturl'); ?>
                 </button>
             </form>
             <?php

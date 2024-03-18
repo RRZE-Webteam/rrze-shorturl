@@ -111,7 +111,7 @@ class Shortcode
 
         $aParams = [
             'url' => filter_var($_POST['url'] ?? '', FILTER_VALIDATE_URL),
-            'uri' => $this->rights['uri_allowed'] ? sanitize_text_field($_POST['uri'] ?? '') : '',
+            'uri' => self::$rights['uri_allowed'] ? sanitize_text_field($_POST['uri'] ?? '') : '',
             'valid_until' => sanitize_text_field($_POST['valid_until'] ?? ''),
             'categories' => !empty($_POST['categories']) ? array_map('sanitize_text_field', $_POST['categories']) : [],
             'tags' => !empty($_POST['tags']) ? array_map('sanitize_text_field', $_POST['tags']) : [],
@@ -145,7 +145,7 @@ class Shortcode
 
         $form .= '<p><a href="#" id="show-advanced-settings">' . __('Advanced Settings', 'rrze-shorturl') . '</a></p>';
         $form .= '<div id="div-advanced-settings" style="display: none;">';
-        if ($this->rights['uri_allowed']) {
+        if (self::$rights['uri_allowed']) {
             $form .= self::display_shorturl_uri($aParams['uri']);
         }
         $form .= self::display_shorturl_validity($aParams['valid_until']);
