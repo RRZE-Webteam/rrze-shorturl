@@ -26,22 +26,20 @@ class CustomerDomains
 
                 error_log('fetch_and_store_customerdomains_from_api()' . $body);
 
-                if (!empty($data)) {
+                if (!empty ($data)) {
                     foreach ($data as $entry) {
-                        if ($entry['aktiv'] == 1) {
-                            $wpdb->query(
-                                $wpdb->prepare(
-                                    "INSERT IGNORE INTO {$wpdb->prefix}shorturl_domains (hostname, prefix) VALUES (%s, 1)",
-                                    $entry['hostname']
-                                )
-                            );
-                        }
+                        $wpdb->query(
+                            $wpdb->prepare(
+                                "INSERT IGNORE INTO {$wpdb->prefix}shorturl_domains (hostname, prefix) VALUES (%s, 1)",
+                                $entry['hostname']
+                            )
+                        );
                     }
-                }else{
+                } else {
                     error_log('fetch_and_store_customerdomains_from_api() $data is empty');
 
                 }
-            }else{
+            } else {
                 error_log('fetch_and_store_customerdomains_from_api() API returns ' . wp_remote_retrieve_response_code($response));
             }
         } catch (\Exception $e) {
