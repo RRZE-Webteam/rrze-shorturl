@@ -6,7 +6,7 @@ Plugin URI:      https://gitlab.rrze.fau.de/rrze-webteam/rrze-shorturl
 Description:     Plugin, um URLs zu verkürzen. 
 Version:         0.1.47
 Requires at least: 6.4
-Requires PHP:      8.3
+Requires PHP:      8.2
 Author:          RRZE Webteam
 Author URI:      https://blogs.fau.de/webworking/
 License:         GNU General Public License v2
@@ -20,8 +20,8 @@ namespace RRZE\ShortURL;
 defined('ABSPATH') || exit;
 
 require_once 'config/config.php';
-const RRZE_PHP_VERSION = '8.0';
-const RRZE_WP_VERSION = '6.1';
+const RRZE_PHP_VERSION = '8.2';
+const RRZE_WP_VERSION = '6.4';
 
 use RRZE\ShortURL\Main;
 

@@ -5,10 +5,10 @@ class CustomerDomains
 {
     public function __construct()
     {
-        if (!wp_next_scheduled('fetch_and_store_customerdomains')) {
-            wp_schedule_event(time(), 'hourly', 'fetch_and_store_customerdomains');
+        if (!wp_next_scheduled('rrze_shorturl_fetch_and_store_customerdomains')) {
+            wp_schedule_event(time(), 'hourly', 'rrze_shorturl_fetch_and_store_customerdomains');
         }
-        add_action('fetch_and_store_customerdomains', array($this, 'fetch_and_store_customerdomains_from_api'));
+        add_action('rrze_shorturl_fetch_and_store_customerdomains', array($this, 'fetch_and_store_customerdomains_from_api'));
     }
 
     public function fetch_and_store_customerdomains_from_api()
@@ -24,6 +24,8 @@ class CustomerDomains
                 $body = wp_remote_retrieve_body($response);
                 $data = json_decode($body, true);
 
+                error_log('fetch_and_store_customerdomains_from_api()' . $body);
+
                 if (!empty($data)) {
                     foreach ($data as $entry) {
                         if ($entry['aktiv'] == 1) {
@@ -35,7 +37,12 @@ class CustomerDomains
                             );
                         }
                     }
+                }else{
+                    error_log('fetch_and_store_customerdomains_from_api() $data is empty');
+
                 }
+            }else{
+                error_log('fetch_and_store_customerdomains_from_api() API returns ' . wp_remote_retrieve_response_code($response));
             }
         } catch (\Exception $e) {
             error_log('An error occurred: ' . $e->getMessage());
