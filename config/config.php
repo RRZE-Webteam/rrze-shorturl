@@ -8,7 +8,8 @@ defined('ABSPATH') || exit;
 
 // TEST DATA
 
-function fill_test_data() {
+function fill_test_data()
+{
     global $wpdb;
 
     // Insert test data into the shorturl_tags table
@@ -39,8 +40,8 @@ function fill_test_data() {
         )
     );
 
-     // Insert test data into the shorturl_categories table with hierarchy
-     $wpdb->insert(
+    // Insert test data into the shorturl_categories table with hierarchy
+    $wpdb->insert(
         $wpdb->prefix . 'shorturl_categories',
         array(
             'label' => 'Parent Category'
@@ -69,7 +70,7 @@ function fill_test_data() {
 
 /**
  * Gibt der Name der Option zurück.
- * @return array [description]
+ * @return string [description]
  */
 function getOptionName()
 {
@@ -217,9 +218,9 @@ function create_custom_tables()
                 CONSTRAINT fk_tag_id FOREIGN KEY (tag_id) REFERENCES {$wpdb->prefix}shorturl_tags(id) ON DELETE CASCADE
             ) $charset_collate"
         ];
-        
+
         // Require dbDelta once
-        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        require_once (ABSPATH . 'wp-admin/includes/upgrade.php');
 
         // Loop through table creation queries
         foreach ($table_queries as $table_name => $sql) {
@@ -243,9 +244,8 @@ function create_custom_tables()
             END IF;
         END;
         ";
-        
+
         $wpdb->query($trigger_sql);
-    
 
         // Validate Hostname
         $trigger_sql = "

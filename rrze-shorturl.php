@@ -107,7 +107,7 @@ function deactivation()
     Config\drop_custom_tables();
 
     // delete the cron to fetch customer domains
-    wp_clear_scheduled_hook('fetch_and_store_customerdomains');
+    wp_clear_scheduled_hook('rrze_shorturl_fetch_and_store_customerdomains');
 }
 
 

@@ -17,14 +17,11 @@ class CustomerDomains
 
         try {
             $api_url = 'https://www.wmp.rrze.fau.de/api/server/type/1,2,16,18/active/1';
-
             $response = wp_remote_get($api_url);
 
             if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200) {
                 $body = wp_remote_retrieve_body($response);
                 $data = json_decode($body, true);
-
-                error_log('fetch_and_store_customerdomains_from_api()' . $body);
 
                 if (!empty ($data)) {
                     foreach ($data as $entry) {
@@ -37,7 +34,6 @@ class CustomerDomains
                     }
                 } else {
                     error_log('fetch_and_store_customerdomains_from_api() $data is empty');
-
                 }
             } else {
                 error_log('fetch_and_store_customerdomains_from_api() API returns ' . wp_remote_retrieve_response_code($response));
