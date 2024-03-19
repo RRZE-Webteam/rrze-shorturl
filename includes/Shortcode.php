@@ -14,6 +14,7 @@ class Shortcode
         add_shortcode('shorturl', [$this, 'shorturl_handler']);
         add_shortcode('shorturl-list', [$this, 'shortcode_list_handler']);
         add_shortcode('shorturl-categories', [$this, 'shortcode_categories_handler']);
+        add_shortcode('shorturl-tags', [$this, 'shortcode_tags_handler']);
 
         add_action('wp_ajax_nopriv_store_link_category', [$this, 'store_link_category_callback']);
         add_action('wp_ajax_store_link_category', [$this, 'store_link_category_callback']);
@@ -34,6 +35,57 @@ class Shortcode
         add_action('wp_ajax_delete_link', [$this, 'delete_link_callback']);
     }
 
+
+    public function shortcode_tags_handler(): string
+    {
+        global $wpdb;
+    
+        // Fetch tags along with their corresponding link counts
+        $tags_query = "SELECT t.id, t.label, COUNT(lt.link_id) AS link_count
+                       FROM {$wpdb->prefix}shorturl_tags t
+                       LEFT JOIN {$wpdb->prefix}shorturl_links_tags lt ON t.id = lt.tag_id
+                       GROUP BY t.id, t.label
+                       ORDER BY t.label ASC";
+    
+        $tags = $wpdb->get_results($tags_query, ARRAY_A);
+    
+        // Begin HTML table
+        $table_html = '<table class="wp-list-table widefat">';
+        // Table header
+        $table_html .= '<thead><tr>';
+        $table_html .= '<th scope="col" class="manage-column column-label">' . __('Tag', 'rrze-shorturl') . '</th>';
+        $table_html .= '<th scope="col" class="manage-column column-link-count">' . __('Count', 'rrze-shorturl') . '</th>';
+        $table_html .= '<th scope="col" class="manage-column column-actions">' . __('Actions', 'rrze-shorturl') . '</th>';
+        $table_html .= '</tr></thead>';
+        $table_html .= '<tbody>';
+    
+        // Iterate over each tag
+        foreach ($tags as $tag) {
+            $tag_id = $tag['id'];
+            $tag_label = $tag['label'];
+            $link_count = $tag['link_count'];
+    
+            // Add row for each tag
+            $table_html .= '<tr>';
+            $table_html .= '<td class="column-label">' . esc_html($tag_label) . '</td>';
+            $table_html .= '<td class="column-link-count">' . esc_html($link_count) . '</td>';
+            $table_html .= '<td class="column-actions">
+                                <a href="#" class="edit-tag" data-tag-id="' . esc_attr($tag_id) . '">' . __('Edit', 'rrze-shorturl') . '</a> | 
+                                <a href="#" class="delete-tag" data-tag-id="' . esc_attr($tag_id) . '">' . __('Delete', 'rrze-shorturl') . '</a>
+                            </td>';
+            $table_html .= '</tr>';
+        }
+    
+        // Add row for actions (add new tag)
+        $table_html .= '<tr>';
+        $table_html .= '<td colspan="3" class="column-actions"><a href="#" id="add-new-tag">' . __('Add New Tag', 'rrze-shorturl') . '</a></td>';
+        $table_html .= '</tr>';
+    
+        $table_html .= '</tbody></table>';
+    
+        return $table_html;
+    }
+    
     public function shortcode_categories_handler() {
         global $wpdb;
     
@@ -358,6 +410,9 @@ class Shortcode
         $categories_table = $wpdb->prefix . 'shorturl_categories';
         $tags_table = $wpdb->prefix . 'shorturl_tags';
     
+        // Fetch all categories
+        $categories = $wpdb->get_results("SELECT id, label FROM $categories_table", ARRAY_A);
+    
         // Determine the column to sort by and sort order
         $orderby = isset($_GET['orderby']) ? $_GET['orderby'] : 'id';
         $order = isset($_GET['order']) ? $_GET['order'] : 'ASC';
@@ -375,20 +430,44 @@ class Shortcode
               LEFT JOIN $links_tags_table AS lt ON l.id = lt.link_id
               GROUP BY l.id, l.long_url, l.short_url, l.uri, l.valid_until";
     
-        // Handle filtering by category
+        // Handle filtering by category or tag
         $filter_category = isset($_GET['filter_category']) ? intval($_GET['filter_category']) : 0;
+        $filter_tag = isset($_GET['filter_tag']) ? intval($_GET['filter_tag']) : 0;
+    
         if ($filter_category > 0) {
             $query .= " HAVING FIND_IN_SET('$filter_category', category_ids) > 0";
+        }
+    
+        if ($filter_tag > 0) {
+            $query .= " HAVING FIND_IN_SET('$filter_tag', tag_ids) > 0";
         }
     
         $query .= " ORDER BY $orderby $order";
     
         $results = $wpdb->get_results($query, ARRAY_A);
     
-        // update message
+        // Update message
         $table = '<div class="updated"><p>' . $message . '</p></div>';
     
+        // Generate category filter dropdown
+        $category_filter_dropdown = '<select name="filter_category">';
+        $category_filter_dropdown .= '<option value="0">All Categories</option>';
+        foreach ($categories as $category) {
+            $category_filter_dropdown .= '<option value="' . $category['id'] . '"' . ($filter_category == $category['id'] ? ' selected' : '') . '>' . $category['label'] . '</option>';
+        }
+        $category_filter_dropdown .= '</select>';
+    
+        // Generate filter button
+        $filter_button = '<button type="submit">Filter</button>';
+    
+        // Generate form for category filtering
+        $category_filter_form = '<form method="get">';
+        $category_filter_form .= $category_filter_dropdown;
+        $category_filter_form .= '&nbsp;' . $filter_button;
+        $category_filter_form .= '</form>';
+    
         // Generate table
+        $table .= $category_filter_form;
         $table .= '<table class="wp-list-table widefat striped">';
         // Table header
         $table .= '<thead><tr>';
@@ -417,13 +496,13 @@ class Shortcode
             }
             $category_names_str = implode(', ', $category_names);
     
-            // Fetch and concatenate tag names
+            // Fetch and concatenate tag names with links
             $tag_ids = !empty($row['tag_ids']) ? explode(',', $row['tag_ids']) : [];
             $tag_names = [];
             foreach ($tag_ids as $tag_id) {
                 $tag_name = $wpdb->get_var("SELECT label FROM $tags_table WHERE id = $tag_id");
                 if ($tag_name) {
-                    $tag_names[] = $tag_name;
+                    $tag_names[] = '<a href="?filter_tag=' . $tag_id . '">' . $tag_name . '</a>';
                 }
             }
             $tag_names_str = implode(', ', $tag_names);
@@ -447,7 +526,7 @@ class Shortcode
     
         return $table;
     }
-    
+                    
     private function display_edit_link_form()
     {
         $link_id = isset($_GET['link_id']) ? intval($_GET['link_id']) : 0;
