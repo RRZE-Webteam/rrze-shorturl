@@ -77,6 +77,7 @@ class Main
                 'add_shorturl_tag_nonce' => wp_create_nonce('add_shorturl_tag_nonce'),
                 'delete_shorturl_link_nonce' => wp_create_nonce('delete_shorturl_link_nonce'),
                 'update_shorturl_idm_nonce' => wp_create_nonce('update_shorturl_idm_nonce'),
+                'update_shorturl_category_nonce' => wp_create_nonce('update_shorturl_category_nonce'),
             )
         );
         

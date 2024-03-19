@@ -176,7 +176,7 @@ jQuery(document).ready(function ($) {
         var linkId = $(this).data('link-id');
         var currentUrl = window.location.href;
         var newUrl = currentUrl.split('?')[0] + '?link_id=' + linkId + '#edit-link-form';
-    
+
         window.location.href = newUrl;
     });
 
@@ -211,7 +211,7 @@ jQuery(document).ready(function ($) {
 
 
     // IdM
-    $('.allow-uri-checkbox, .allow-get-checkbox').change(function() {
+    $('.allow-uri-checkbox, .allow-get-checkbox').change(function () {
         var id = $(this).data('id');
         var field = $(this).hasClass('allow-uri-checkbox') ? 'allow_uri' : 'allow_get';
         var value = $(this).prop('checked') ? 'true' : 'false';
@@ -227,16 +227,16 @@ jQuery(document).ready(function ($) {
                 value: value,
                 _ajax_nonce: rrze_shorturl_ajax_object.update_shorturl_idm_nonce
             },
-            success: function(response) {
+            success: function (response) {
                 console.log('Field updated successfully');
                 // Reload the page or update UI as needed
                 location.reload();
             },
-            error: function(xhr, status, error) {
+            error: function (xhr, status, error) {
                 console.error('Error updating field:', error);
             }
         });
-    });    
+    });
 
     // Copy to Clipboard
     function copyToClipboard(shortenedUrl) {
@@ -269,7 +269,7 @@ jQuery(document).ready(function ($) {
             }
         }
     }
-    
+
     function showTooltip(message) {
         const tooltip = document.getElementById('tooltip');
         tooltip.textContent = message;
@@ -278,10 +278,10 @@ jQuery(document).ready(function ($) {
             tooltip.style.display = 'none';
         }, 2000); // Hide the tooltip after 2 seconds
     }
-    
+
 
     // Attach event listener to the "Copy to clipboard" image
-    $(document).on('click', '#copyButton', function(event) {
+    $(document).on('click', '#copyButton', function (event) {
         event.preventDefault();
         var shortenedUrl = $(this).data('shortened-url');
         copyToClipboard(shortenedUrl);
@@ -289,5 +289,58 @@ jQuery(document).ready(function ($) {
         return false; // Prevent the default action and propagation        
     });
 
+
+    // Categories
+    // Add mouseover event to show "Edit" link
+    $('table.shorturl-categories tbody').on('mouseover', 'td.category-label', function () {
+        if (!$(this).find('.edit-link').length) {
+            $(this).append('<a href="#" class="edit-link">Edit</a>');
+        }
+    });
+
+    // Remove "Edit" link on mouseout, unless it's being hovered or clicked
+    $('table.shorturl-categories tbody').on('mouseout', 'td.category-label', function (e) {
+        var editLink = $(this).find('.edit-link');
+        if (!editLink.is(':hover') && !editLink.hasClass('editing')) {
+            editLink.remove();
+        }
+    });
+
+    // Handle "Edit" link click event
+    $('table.shorturl-categories tbody').on('click', '.edit-link', function (e) {
+        e.preventDefault(); // Prevent default link behavior
+        e.stopPropagation(); // Prevent event bubbling
+        $(this).hide(); // Hide the "Edit" link    
+        var labelSpan = $(this).closest('td').find('span'); // Find the <span> element containing the label text
+        var labelText = labelSpan.text().trim(); // Get the text content of the <span> element
+        labelSpan.html('<input type="text" class="category-input">').find('.category-input').val(labelText); // Replace the <span> content with the input field and set its value to the label text
+        $('.category-input').focus().select();
+        $(this).addClass('editing'); // Mark as editing
+    });
+
+    // Handle input blur (editing finished)
+    $('table.shorturl-categories tbody').on('blur', '.category-input', function () {
+        var newValue = $(this).val().trim();
+        var categoryId = $(this).closest('td').data('id');
+        var editLink = $(this).parent().find('.edit-link');
+
+        // Send AJAX request to update the label in the database
+        $.ajax({
+            url: rrze_shorturl_ajax_object.ajax_url,
+            type: 'POST',
+            data: {
+                action: 'update_shorturl_category_label',
+                category_id: categoryId,
+                updated_label: newValue,
+                _ajax_nonce: rrze_shorturl_ajax_object.update_category_label_nonce
+            },
+            success: function (response) {
+                // Update the label cell with the new value
+                var labelSpan = $('<span>').text(newValue); // Create a span containing the new label text
+                $(this).parent().empty().append(labelSpan); // Empty the cell and append the span containing the new label text
+                editLink.show(); // Show the "Edit" link again
+            }.bind(this) // Ensure 'this' refers to the correct element inside the success callback
+        });
+    });
 });
 

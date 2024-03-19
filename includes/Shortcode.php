@@ -12,7 +12,8 @@ class Shortcode
         self::$rights = $rights;
 
         add_shortcode('shorturl', [$this, 'shorturl_handler']);
-        add_shortcode('shorturl-list', [$this, 'list_shortcode_handler']);
+        add_shortcode('shorturl-list', [$this, 'shortcode_list_handler']);
+        add_shortcode('shorturl-categories', [$this, 'shortcode_categories_handler']);
 
         add_action('wp_ajax_nopriv_store_link_category', [$this, 'store_link_category_callback']);
         add_action('wp_ajax_store_link_category', [$this, 'store_link_category_callback']);
@@ -26,10 +27,51 @@ class Shortcode
         add_action('wp_ajax_nopriv_update_category_label_action', [$this, 'update_category_label']);
         add_action('wp_ajax_update_category_label_action', [$this, 'update_category_label']);
 
+        add_action('wp_ajax_nopriv_update_shorturl_category_label', [$this, 'update_category_label']);
+        add_action('wp_ajax_update_shorturl_category_label', [$this, 'update_category_label']);
+
         add_action('wp_ajax_nopriv_delete_link', [$this, 'delete_link_callback']);
         add_action('wp_ajax_delete_link', [$this, 'delete_link_callback']);
     }
 
+    public function shortcode_categories_handler() {
+        global $wpdb;
+    
+        // Get all categories from the shorturl_categories table
+        $categories = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_categories");
+    
+        // Start building the table
+        $output = '<table class="wp-list-table widefat striped shorturl-categories">';
+        $output .= '<thead><tr><th class="sortable">Category</th></tr></thead>';
+        $output .= '<tbody>';
+    
+        // Loop through each category
+        foreach ($categories as $category) {
+            // Fetch the parent category hierarchy if it exists
+            $parent_hierarchy = '';
+            $parent_id = $category->parent_id;
+            while ($parent_id != 0) {
+                $parent_category = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}shorturl_categories WHERE id = %d", $parent_id));
+                if ($parent_category) {
+                    $parent_hierarchy = '-' . $parent_hierarchy;
+                    $parent_id = $parent_category->parent_id;
+                } else {
+                    break;
+                }
+            }
+    
+            // Build the table row
+            $output .= '<tr>';
+            $output .= '<td class="category-label" data-id="' . $category->id . '">' . $parent_hierarchy . '<span>' . esc_html($category->label) . '</span></td>';
+            $output .= '</tr>';
+        }
+    
+        $output .= '</tbody></table>';
+    
+        // Echo the generated table
+        echo $output;
+    }
+        
     private function get_link_data_by_id($link_id)
     {
         global $wpdb;
@@ -284,7 +326,7 @@ class Shortcode
         return ob_get_clean();
     }
 
-    public function list_shortcode_handler(): string
+    public function shortcode_list_handler(): string
     {
         global $wpdb;
         $bUpdated = false;
