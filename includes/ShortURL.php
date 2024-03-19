@@ -142,7 +142,6 @@ class ShortURL
 
                 // Insert new categories
                 if (!empty($categories)) {
-
                     foreach ($categories as $category_id) {
                         $wpdb->insert(
                             $link_categories_table,
@@ -332,7 +331,6 @@ class ShortURL
 
             // Check if already exists in DB 
             if (!empty($aLink['short_url'])) {
-                // url found in DB => return it
                 return ['error' => false, 'txt' => $aLink['short_url']];
             }
 
@@ -347,8 +345,12 @@ class ShortURL
                 $targetURL = $aDomain['prefix'] . self::cryptNumber($aLink['id']);
             }
 
-            // // Create shortURL
-            $shortURL = self::$CONFIG['ShortURLBase'] . $targetURL;
+            if (empty($aLink['short_url'])) {
+                // Create shortURL
+                $shortURL = self::$CONFIG['ShortURLBase'] . $targetURL;
+            }else{
+                $shortURL = $aLink['short_url'];
+            }
 
             $bUpdated = self::updateLink(self::$rights['id'], $aLink['id'], $aDomain['id'], $shortURL, $uri, $valid_until, $categories, $tags);
 

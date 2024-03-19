@@ -331,10 +331,10 @@ class Shortcode
         global $wpdb;
         $bUpdated = false;
         $message = '';
-
+    
         if (isset($_POST['action']) && $_POST['action'] === 'update_link' && isset($_POST['link_id'])) {
             // UPDATE link
-
+    
             $aParams = [
                 'idm_id' => self::$rights['id'],
                 'link_id' => htmlspecialchars($_POST['link_id'] ?? ''),
@@ -345,23 +345,23 @@ class Shortcode
                 'categories' => !empty($_POST['categories']) ? array_map('sanitize_text_field', $_POST['categories']) : [],
                 'tags' => !empty($_POST['tags']) ? array_map('sanitize_text_field', $_POST['tags']) : [],
             ];
-
+    
             ShortURL::updateLink($aParams['idm_id'], $aParams['link_id'], $aParams['domain_id'], $aParams['shortURL'], $aParams['uri'], $aParams['valid_until'], $aParams['categories'], $aParams['tags']);
-
+    
             $bUpdated = true;
             $message = __('Link updated', 'rrze-shorturl');
         }
-
+    
         $links_table = $wpdb->prefix . 'shorturl_links';
         $links_categories_table = $wpdb->prefix . 'shorturl_links_categories';
         $links_tags_table = $wpdb->prefix . 'shorturl_links_tags';
         $categories_table = $wpdb->prefix . 'shorturl_categories';
         $tags_table = $wpdb->prefix . 'shorturl_tags';
-
+    
         // Determine the column to sort by and sort order
         $orderby = isset($_GET['orderby']) ? $_GET['orderby'] : 'id';
         $order = isset($_GET['order']) ? $_GET['order'] : 'ASC';
-
+    
         // Prepare SQL query to fetch post IDs from wp_postmeta and their associated category names
         $query = "SELECT l.id AS link_id, 
                      l.long_url, 
@@ -373,14 +373,21 @@ class Shortcode
               FROM $links_table l
               LEFT JOIN $links_categories_table AS lc ON l.id = lc.link_id
               LEFT JOIN $links_tags_table AS lt ON l.id = lt.link_id
-              GROUP BY l.id, l.long_url, l.short_url, l.uri, l.valid_until
-              ORDER BY $orderby $order";
-
+              GROUP BY l.id, l.long_url, l.short_url, l.uri, l.valid_until";
+    
+        // Handle filtering by category
+        $filter_category = isset($_GET['filter_category']) ? intval($_GET['filter_category']) : 0;
+        if ($filter_category > 0) {
+            $query .= " HAVING FIND_IN_SET('$filter_category', category_ids) > 0";
+        }
+    
+        $query .= " ORDER BY $orderby $order";
+    
         $results = $wpdb->get_results($query, ARRAY_A);
-
+    
         // update message
         $table = '<div class="updated"><p>' . $message . '</p></div>';
-
+    
         // Generate table
         $table .= '<table class="wp-list-table widefat striped">';
         // Table header
@@ -393,23 +400,23 @@ class Shortcode
         $table .= '<th scope="col" class="manage-column column-tags">' . __('Tags', 'rrze-shorturl') . '</th>';
         $table .= '<th scope="col" class="manage-column column-actions">' . __('Actions', 'rrze-shorturl') . '</th>';
         $table .= '</tr></thead><tbody>';
-
+    
         if (empty($results)) {
             $table .= '<tr><td colspan="7">' . __('No links stored yet', 'rrze-shorturl') . '</td></tr>';
         }
-
+    
         foreach ($results as $row) {
-            // Fetch and concatenate category names
+            // Fetch and concatenate category names with links
             $category_ids = !empty($row['category_ids']) ? explode(',', $row['category_ids']) : [];
             $category_names = [];
             foreach ($category_ids as $category_id) {
                 $category_name = $wpdb->get_var("SELECT label FROM $categories_table WHERE id = $category_id");
                 if ($category_name) {
-                    $category_names[] = $category_name;
+                    $category_names[] = '<a href="?filter_category=' . $category_id . '">' . $category_name . '</a>';
                 }
             }
             $category_names_str = implode(', ', $category_names);
-
+    
             // Fetch and concatenate tag names
             $tag_ids = !empty($row['tag_ids']) ? explode(',', $row['tag_ids']) : [];
             $tag_names = [];
@@ -420,7 +427,7 @@ class Shortcode
                 }
             }
             $tag_names_str = implode(', ', $tag_names);
-
+    
             // Output table row
             $table .= '<tr>';
             $table .= '<td class="column-long-url">' . $row['long_url'] . '</td>';
@@ -433,14 +440,14 @@ class Shortcode
             $table .= '</tr>';
         }
         $table .= '</tbody></table>';
-
+    
         if (!$bUpdated && !empty($results)) {
             $table .= $this->display_edit_link_form();
         }
-
+    
         return $table;
     }
-
+    
     private function display_edit_link_form()
     {
         $link_id = isset($_GET['link_id']) ? intval($_GET['link_id']) : 0;
