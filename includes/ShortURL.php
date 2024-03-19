@@ -301,7 +301,7 @@ class ShortURL
             $long_url = self::$rights['get_allowed'] ? $long_url : http_build_url($long_url, array('path', 'scheme', 'host'));
             
             $uri = self::$rights['uri_allowed'] ? sanitize_text_field($_POST['uri'] ?? '') : '';
-            $valid_until = $shortenParams['valid_until'] ?? null;
+            $valid_until = isset($shortenParams['valid_until']) && $shortenParams['valid_until'] !== '' ? $shortenParams['valid_until'] : date('Y-m-d', strtotime('+1 year'));
             $categories = $shortenParams['categories'] ?? [];
             $tags = $shortenParams['tags'] ?? [];
 
