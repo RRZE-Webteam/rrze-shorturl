@@ -13,9 +13,11 @@ class ShortURL
         "AllowedDomains" => [],
     ];
 
-    public function __construct($rights)
+    public function __construct()
     {
-        self::$rights = $rights;
+        $rightsObj = new Rights();
+        self::$rights = $rightsObj->getRights();
+
         self::$CONFIG['AllowedDomains'] = self::getAllowedDomains();
     }
 

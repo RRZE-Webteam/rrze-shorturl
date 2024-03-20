@@ -48,12 +48,10 @@ class Main
         add_action('admin_enqueue_scripts', [$this, 'enqueueScripts']);
 
         $settings = new Settings();
-        $rightsObj = new Rights();
-        $this->rights = $rightsObj->getRights();
         $domains = new CustomerDomains();
-        $shortURL = new ShortURL($this->rights);
+        $shortURL = new ShortURL();
         $api = new API();
-        $this->shortcode = new Shortcode($this->rights);
+        $shortcode = new Shortcode();
     }
 
 

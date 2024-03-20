@@ -7,9 +7,10 @@ class Shortcode
 {
     protected static $rights;
 
-    public function __construct($rights)
+    public function __construct()
     {
-        self::$rights = $rights;
+        $rightsObj = new Rights();
+        self::$rights = $rightsObj->getRights();
 
         add_shortcode('shorturl', [$this, 'shorturl_handler']);
         add_shortcode('shorturl-list', [$this, 'shortcode_list_handler']);
