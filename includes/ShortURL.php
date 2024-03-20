@@ -330,9 +330,9 @@ class ShortURL
             $aLink = self::getLinkfromDB($aDomain['id'], $long_url, self::$rights['id']);
 
             // Check if already exists in DB 
-            if (!empty($aLink['short_url'])) {
-                return ['error' => false, 'txt' => $aLink['short_url']];
-            }
+            // if (!empty($aLink['short_url'])) {
+            //     return ['error' => false, 'txt' => $aLink['short_url']];
+            // }
 
             // Create shortURL
             if (!empty($uri)) {
@@ -354,7 +354,7 @@ class ShortURL
 
             $bUpdated = self::updateLink(self::$rights['id'], $aLink['id'], $aDomain['id'], $shortURL, $uri, $valid_until, $categories, $tags);
 
-            if (!$bUpdated) {
+            if ($bUpdated === false) {
                 return ['error' => true, 'txt' => __('Unable to update database table', 'rrze-shorturl')];
             }
 
