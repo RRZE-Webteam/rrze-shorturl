@@ -159,74 +159,85 @@ function create_custom_tables()
 
     try {
         // Define table creation queries
-        $table_queries = [
-            "shorturl_idms" => "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}shorturl_idms (
-                id mediumint(9) NOT NULL AUTO_INCREMENT,
-                idm VARCHAR(255) UNIQUE NOT NULL,
-                allow_uri BOOLEAN DEFAULT FALSE,
-                allow_get BOOLEAN DEFAULT FALSE,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                created_by VARCHAR(255) NOT NULL,
-                PRIMARY KEY (id)
-            ) $charset_collate",
-            "shorturl_domains" => "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}shorturl_domains (
-                id mediumint(9) NOT NULL AUTO_INCREMENT,
-                hostname varchar(255) NOT NULL DEFAULT '' UNIQUE,
-                prefix int(1) NOT NULL DEFAULT 1,
-                PRIMARY KEY (id)
-            ) $charset_collate",
-            "shorturl_links" => "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}shorturl_links (
-                id mediumint(9) NOT NULL AUTO_INCREMENT,
-                domain_id mediumint(9) NOT NULL,            
-                long_url varchar(255) UNIQUE NOT NULL,
-                short_url varchar(255) NOT NULL,
-                uri varchar(255) DEFAULT NULL,
-                idm_id mediumint(9) NOT NULL DEFAULT 1,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                deleted_at TIMESTAMP DEFAULT NULL,
-                valid_until DATE DEFAULT NULL,
-                active BOOLEAN DEFAULT TRUE,
-                PRIMARY KEY (id),
-                CONSTRAINT fk_domain_id FOREIGN KEY (domain_id) REFERENCES {$wpdb->prefix}shorturl_domains(id) ON DELETE CASCADE,
-                CONSTRAINT fk_idm_id FOREIGN KEY (idm_id) REFERENCES {$wpdb->prefix}shorturl_idms(id)
-            ) $charset_collate",
-            "shorturl_categories" => "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}shorturl_categories (
-                id mediumint(9) NOT NULL AUTO_INCREMENT,
-                label varchar(255) NOT NULL UNIQUE,
-                parent_id mediumint(9),
-                PRIMARY KEY (id),
-                CONSTRAINT fk_parent_id FOREIGN KEY (parent_id) REFERENCES {$wpdb->prefix}shorturl_categories(id)
-            ) $charset_collate",
-            "shorturl_tags" => "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}shorturl_tags (
-                id mediumint(9) NOT NULL AUTO_INCREMENT,
-                label varchar(255) NOT NULL UNIQUE,
-                PRIMARY KEY (id)
-            ) $charset_collate",
-            "shorturl_links_categories" => "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}shorturl_links_categories (
-                link_id mediumint(9) NOT NULL,
-                category_id mediumint(9) NOT NULL,
-                PRIMARY KEY (link_id, category_id),
-                CONSTRAINT fk_link_id FOREIGN KEY (link_id) REFERENCES {$wpdb->prefix}shorturl_links(id) ON DELETE CASCADE,
-                CONSTRAINT fk_category_id FOREIGN KEY (category_id) REFERENCES {$wpdb->prefix}shorturl_categories(id) ON DELETE CASCADE
-            ) $charset_collate",
-            "shorturl_links_tags" => "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}shorturl_links_tags (
-                link_id mediumint(9) NOT NULL,
-                tag_id mediumint(9) NOT NULL,
-                PRIMARY KEY (link_id, tag_id),
-                CONSTRAINT fk_link_id2 FOREIGN KEY (link_id) REFERENCES {$wpdb->prefix}shorturl_links(id) ON DELETE CASCADE,
-                CONSTRAINT fk_tag_id FOREIGN KEY (tag_id) REFERENCES {$wpdb->prefix}shorturl_tags(id) ON DELETE CASCADE
-            ) $charset_collate"
-        ];
-
-        // Require dbDelta once
         require_once (ABSPATH . 'wp-admin/includes/upgrade.php');
 
-        // Loop through table creation queries
-        foreach ($table_queries as $table_name => $sql) {
-            // Execute SQL query
-            dbDelta($sql);
-        }
+        // Create shorturl_idms table
+        $sql = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}shorturl_idms (
+            id mediumint(9) NOT NULL AUTO_INCREMENT,
+            idm VARCHAR(255) UNIQUE NOT NULL,
+            allow_uri BOOLEAN DEFAULT FALSE,
+            allow_get BOOLEAN DEFAULT FALSE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            created_by VARCHAR(255) NOT NULL,
+            PRIMARY KEY (id)
+        ) $charset_collate";
+        dbDelta($sql);
+
+        // Create shorturl_domains table
+        $sql = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}shorturl_domains (
+            id mediumint(9) NOT NULL AUTO_INCREMENT,
+            hostname varchar(255) NOT NULL DEFAULT '' UNIQUE,
+            prefix int(1) NOT NULL DEFAULT 1,
+            PRIMARY KEY (id)
+        ) $charset_collate";
+        dbDelta($sql);
+
+        // Create shorturl_links table
+        $sql = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}shorturl_links (
+            id mediumint(9) NOT NULL AUTO_INCREMENT,
+            domain_id mediumint(9) NOT NULL,            
+            long_url varchar(255) UNIQUE NOT NULL,
+            short_url varchar(255) NOT NULL,
+            uri varchar(255) DEFAULT NULL,
+            idm_id mediumint(9) NOT NULL DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            deleted_at TIMESTAMP NULL DEFAULT NULL,
+            valid_until DATE DEFAULT NULL,
+            active BOOLEAN DEFAULT TRUE,
+            PRIMARY KEY (id),
+            CONSTRAINT fk_domain_id FOREIGN KEY (domain_id) REFERENCES {$wpdb->prefix}shorturl_domains(id) ON DELETE CASCADE,
+            CONSTRAINT fk_idm_id FOREIGN KEY (idm_id) REFERENCES {$wpdb->prefix}shorturl_idms(id)
+        ) $charset_collate";
+        dbDelta($sql);
+
+        // Create shorturl_categories table
+        $sql = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}shorturl_categories (
+            id mediumint(9) NOT NULL AUTO_INCREMENT,
+            label varchar(255) NOT NULL UNIQUE,
+            parent_id mediumint(9),
+            PRIMARY KEY (id),
+            CONSTRAINT fk_parent_id FOREIGN KEY (parent_id) REFERENCES {$wpdb->prefix}shorturl_categories(id)
+        ) $charset_collate";
+        dbDelta($sql);
+
+        // Create shorturl_tags table
+        $sql = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}shorturl_tags (
+            id mediumint(9) NOT NULL AUTO_INCREMENT,
+            label varchar(255) NOT NULL UNIQUE,
+            PRIMARY KEY (id)
+        ) $charset_collate";
+        dbDelta($sql);
+
+        // Create shorturl_links_categories table
+        $sql = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}shorturl_links_categories (
+            link_id mediumint(9) NOT NULL,
+            category_id mediumint(9) NOT NULL,
+            PRIMARY KEY (link_id, category_id),
+            CONSTRAINT fk_link_id FOREIGN KEY (link_id) REFERENCES {$wpdb->prefix}shorturl_links(id) ON DELETE CASCADE,
+            CONSTRAINT fk_category_id FOREIGN KEY (category_id) REFERENCES {$wpdb->prefix}shorturl_categories(id) ON DELETE CASCADE
+        ) $charset_collate";
+        dbDelta($sql);
+
+        // Create shorturl_links_tags table
+        $sql = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}shorturl_links_tags (
+            link_id mediumint(9) NOT NULL,
+            tag_id mediumint(9) NOT NULL,
+            PRIMARY KEY (link_id, tag_id),
+            CONSTRAINT fk_link_id2 FOREIGN KEY (link_id) REFERENCES {$wpdb->prefix}shorturl_links(id) ON DELETE CASCADE,
+            CONSTRAINT fk_tag_id FOREIGN KEY (tag_id) REFERENCES {$wpdb->prefix}shorturl_tags(id) ON DELETE CASCADE
+        ) $charset_collate";
+        dbDelta($sql);
 
         // Create some triggers to let the database do some job, too ;)
         // Validate URL

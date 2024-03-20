@@ -156,7 +156,7 @@ jQuery(document).ready(function ($) {
                         var newCategoryId = response.data.category_id;
                         $('input[name="shorturl_categories[]"][value="' + newCategoryId + '"]').prop('checked', true);
 
-                        alert('Category added successfully!');
+                        // alert('Category added successfully!');
                     } else {
                         alert('Failed to add category. Please try again.');
                     }

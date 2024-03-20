@@ -84,8 +84,8 @@ class ShortURL
 
             $result = $wpdb->get_results($wpdb->prepare("SELECT id, short_url FROM $table_name WHERE long_url = %s LIMIT 1", $long_url), ARRAY_A);
 
-            if (empty($result)) {
-                $long_url = self::$rights['get_allowed'] ? $long_url : http_build_url($long_url, array('path', 'scheme', 'host'));
+            if (empty ($result)) {
+                $long_url = self::$rights['get_allowed'] ? $long_url : \http_build_url($long_url, array('path', 'scheme', 'host'));
 
                 // Insert into the links table
                 $wpdb->insert(
@@ -143,7 +143,7 @@ class ShortURL
                 $wpdb->delete($link_tags_table, ['link_id' => $link_id]);
 
                 // Insert new categories
-                if (!empty($categories)) {
+                if (!empty ($categories)) {
                     foreach ($categories as $category_id) {
                         $wpdb->insert(
                             $link_categories_table,
@@ -153,7 +153,7 @@ class ShortURL
                 }
 
                 // Insert new tags
-                if (!empty($tags)) {
+                if (!empty ($tags)) {
                     foreach ($tags as $tag_id) {
                         $wpdb->insert(
                             $link_tags_table,
@@ -255,7 +255,7 @@ class ShortURL
 
     public static function isValidDate($valid_until)
     {
-        if (empty($valid_until)) {
+        if (empty ($valid_until)) {
             return ['error' => false, 'txt' => 'no date given'];
         }
         $parsed_date = date_parse($valid_until);
@@ -266,16 +266,16 @@ class ShortURL
 
         $valid_until_date = \DateTime::createFromFormat('Y-m-d', $valid_until);
         $current_date = new \DateTime(); // Using DateTime object directly
-        
+
         // Check if $valid_until is in the past
         if ($valid_until_date < $current_date) {
             return ['error' => true, 'txt' => 'Validity date cannot be in the past.'];
         }
-        
+
         // Calculate one year from now
         $one_year_from_now = clone $current_date;
         $one_year_from_now->add(new \DateInterval('P1Y'));
-        
+
         // Check if $valid_until is more than one year in the future
         if ($valid_until_date > $one_year_from_now) {
             return ['error' => true, 'txt' => 'Validity cannot be more than one year in the future.'];
@@ -286,6 +286,23 @@ class ShortURL
     }
 
 
+
+    private static function add_url_components($url, $components)
+    {
+        $parsed_url = parse_url($url);
+        $new_url = '';
+
+        foreach ($components as $component) {
+            if (isset ($parsed_url[$component])) {
+                if ($component == 'scheme'){
+                    $parsed_url[$component] .= '://';
+                }
+                $new_url .= $parsed_url[$component];
+            }
+        }
+
+        return $new_url;
+    }
 
     public static function shorten($shortenParams)
     {
@@ -298,12 +315,13 @@ class ShortURL
             if ($aDomain['prefix'] == 0) {
                 return ['error' => true, 'txt' => __('Domain is not allowed to use our shortening service.', 'rrze-shorturl')];
             }
-            
+
             // Check if 'get_allowed' is false and remove GET parameters if necessary
-            $long_url = self::$rights['get_allowed'] ? $long_url : http_build_url($long_url, array('path', 'scheme', 'host'));
-            
+            // $long_url = self::$rights['get_allowed'] ? $long_url : \http_build_url($long_url, array('path', 'scheme', 'host'));
+            $long_url = self::$rights['get_allowed'] ? $long_url : self::add_url_components($long_url, array('scheme', 'host', 'path'));
+
             $uri = self::$rights['uri_allowed'] ? sanitize_text_field($_POST['uri'] ?? '') : '';
-            $valid_until = isset($shortenParams['valid_until']) && $shortenParams['valid_until'] !== '' ? $shortenParams['valid_until'] : date('Y-m-d', strtotime('+1 year'));
+            $valid_until = isset ($shortenParams['valid_until']) && $shortenParams['valid_until'] !== '' ? $shortenParams['valid_until'] : date('Y-m-d', strtotime('+1 year'));
             $categories = $shortenParams['categories'] ?? [];
             $tags = $shortenParams['tags'] ?? [];
 
@@ -320,7 +338,7 @@ class ShortURL
             }
 
             // Validate the URI
-            if (self::$rights['uri_allowed']){
+            if (self::$rights['uri_allowed']) {
                 $isValid = self::isValidURI($uri);
                 if ($isValid !== true) {
                     return ['error' => true, 'txt' => $uri . ' ' . __('is not a valid URI', 'rrze-shorturl')];
@@ -337,7 +355,7 @@ class ShortURL
             // }
 
             // Create shortURL
-            if (!empty($uri)) {
+            if (!empty ($uri)) {
                 if (!self::isUniqueURI($uri)) {
                     return ['error' => true, 'txt' => $uri . ' ' . __('is already in use. Try another one.', 'rrze-shorturl')];
                 }
@@ -347,10 +365,10 @@ class ShortURL
                 $targetURL = $aDomain['prefix'] . self::cryptNumber($aLink['id']);
             }
 
-            if (empty($aLink['short_url'])) {
+            if (empty ($aLink['short_url'])) {
                 // Create shortURL
                 $shortURL = self::$CONFIG['ShortURLBase'] . $targetURL;
-            }else{
+            } else {
                 $shortURL = $aLink['short_url'];
             }
 

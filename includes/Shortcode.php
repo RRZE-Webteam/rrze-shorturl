@@ -278,7 +278,7 @@ class Shortcode
 
     }
 
-    public static function display_shorturl_category($aVal)
+    public static function display_shorturl_category($aVal = [])
     {
         global $wpdb;
 
@@ -294,7 +294,7 @@ class Shortcode
         <div id="shorturl-category-metabox">
             <?php self::display_hierarchical_categories($hierarchicalCategories, 0, $aVal); ?>
             <p><a href="#" id="add-new-shorturl-category"><?php echo  __('Add New Category', 'rrze-shorturl'); ?></a></p>
-            <div id="new-shorturl-category" style="display: none;">
+            <div id="new-shorturl-category">
                 <input type="text" name="new_shorturl_category" placeholder="<?php echo __('New Category Name', 'rrze-shorturl'); ?>">
                 <select name="parent_category">
                     <option value="0"><?php echo __('None', 'rrze-shorturl'); ?></option>
@@ -606,7 +606,7 @@ class Shortcode
         check_ajax_referer('add_shorturl_category_nonce', '_ajax_nonce');
 
         $category_name = isset($_POST['categoryName']) ? sanitize_text_field($_POST['categoryName']) : '';
-        $parent_category = isset($_POST['parentCategory']) ? intval($_POST['parentCategory']) : 0;
+        $parent_category = isset($_POST['parentCategory']) && $_POST['parentCategory'] != 0 ? intval($_POST['parentCategory']) : null;
 
         if (empty($category_name)) {
             wp_send_json_error(__('Category name is required.', 'rrze-shorturl'));
