@@ -24,10 +24,15 @@ class Rights
         ];
 
 
-
         try {
             if (class_exists('\RRZE\AccessControl\Permissions')) {
                 $permissions = new Permissions();
+
+                error_log('in Rights : ' . json_encode($permissions));
+                echo '<pre>';
+                var_dump($permissions);
+                exit;
+
                 $idm = $permissions->personAttributes['idm']; // key überprüfen, wie der genau heißt
 
                 if ($idm) {
