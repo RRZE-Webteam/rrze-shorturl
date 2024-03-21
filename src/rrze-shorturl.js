@@ -342,5 +342,35 @@ jQuery(document).ready(function ($) {
             }.bind(this) // Ensure 'this' refers to the correct element inside the success callback
         });
     });
+
+
+    // Delete link click handler
+    $(document).on('click', '.delete-category', function (e) {
+        e.preventDefault();
+        var categoryId = $(this).data('category-id');
+        // Ask for confirmation before deleting
+        if (confirm('Are you sure you want to delete this category?')) {
+            // Send an AJAX request to delete the category
+            $.ajax({
+                url: rrze_shorturl_ajax_object.ajax_url,
+                method: 'POST',
+                data: {
+                    action: 'delete_category',
+                    category_id: categoryId,
+                    _ajax_nonce: rrze_shorturl_ajax_object.delete_shorturl_category_nonce
+                },
+                success: function (response) {
+                    // Handle success response
+                    console.log('Category deleted successfully');
+                    location.reload();
+                },
+                error: function (xhr, status, error) {
+                    // Handle error response
+                    console.error('Error deleting category:', error);
+                }
+            });
+        }
+    });
+
 });
 

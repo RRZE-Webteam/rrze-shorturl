@@ -16,6 +16,7 @@ class Rights
             $personAttributes = $permissionsInstance->personAttributes;
             $this->idm = $personAttributes['urn:mace:dir:attribute-def:uid'][0];
         } else {
+            $this->idm = 'system';
             error_log('\RRZE\AccessControl\Permissions is not available');
         }
     }
