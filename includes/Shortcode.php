@@ -94,13 +94,15 @@ class Shortcode
     {
         global $wpdb;
 
-        $categories = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_categories WHERE id != {$category_id}");
-
+        $categories = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_categories");
+        
         // Build the hierarchical structure for each category
         $categories_with_hierarchy = array();
         foreach ($categories as $category) {
-            $category->hierarchy = $this->build_category_hierarchy_table($category, $categories);
-            $categories_with_hierarchy[] = $category;
+            if ($category->id != $category_id){
+                $category->hierarchy = $this->build_category_hierarchy_table($category, $categories);
+                $categories_with_hierarchy[] = $category;
+            }
         }
 
         // Sort categories by hierarchy
@@ -112,8 +114,8 @@ class Shortcode
         $output .= '<select id="parent_category" name="parent_category">';
         $output .= '<option value="0">None</option>';
         foreach ($categories_with_hierarchy as $category) {
-            $selected = ($category->id == $parent_id) ? 'SELECTED' : '';
-            $output .= '<option id="'.$category->id.'" ' . $selected . '>' . esc_html($category->hierarchy . $category->label) . '</option>';
+            // $selected = (!empty($parent_id) && ($category->id == $parent_id)) ? 'SELECTED' : '';
+            $output .= '<option value="'.$category->id.'" ' . $selected . '>' . esc_html($category->hierarchy . $category->label) . '</option>';
         }
         $output .= '</select>';
 
@@ -125,10 +127,10 @@ class Shortcode
         global $wpdb;
 
         // Edit Category
-        if (isset ($_POST['edit_category'])) {
-            $category_id = intval($_POST['category_id']);
+        if (!empty($_POST['edit_category'])) {
+            $category_id = (int)$_POST['category_id'];
             $category_label = sanitize_text_field($_POST['category_label']);
-            $parent_category = !empty ($_POST['parent_category']) ? intval($_POST['parent_category']) : null;
+            $parent_category = !empty($_POST['parent_category'])? (int)$_POST['parent_category'] : null;
 
             // Update the category in the database
             $wpdb->update(
@@ -144,10 +146,10 @@ class Shortcode
 
             // Return to the table after editing
             return $this->display_categories_table();
-        } elseif (isset ($_POST['add_category'])) {
+        } elseif (!empty($_POST['add_category'])) {
             // Add Category
             $category_label = sanitize_text_field($_POST['category_label']);
-            $parent_category = !empty ($_POST['parent_category']) ? intval($_POST['parent_category']) : null;
+            $parent_category = !empty($_POST['parent_category'])? (int)$_POST['parent_category'] : null;
 
             if (!empty($category_label)){
                 // Insert Category
@@ -163,9 +165,9 @@ class Shortcode
         }
 
         // Check if an edit form should be displayed
-        if (isset ($_GET['action']) && $_GET['action'] === 'edit_category' && isset ($_GET['category_id'])) {
+        if (!empty($_GET['action']) && $_GET['action'] === 'edit_category' && !empty($_GET['category_id'])) {
             // Retrieve category details based on category ID
-            $category_id = intval($_GET['category_id']);
+            $category_id = (int)$_GET['category_id'];
             $category = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}shorturl_categories WHERE id = %d", $category_id));
 
             // If category is found, display edit form
@@ -175,7 +177,14 @@ class Shortcode
                 $output .= '<label for="category_label">Category Label:</label><br>';
                 $output .= '<input type="text" id="category_label" name="category_label" value="' . esc_attr($category->label) . '"><br>';
 
-                $output .= $this->makeCategoryDropdown($category_id, $category->parent_id);
+                // var_dump($category->parent_id);
+                // echo is_null($category->parent_id) ? 'ja ist NULL' : 'nein';
+                // echo empty($category->parent_id) ? 'ja ist empty' : 'nein, ist nicht empty';
+                // exit;
+                $parent_id = !empty($category->parent_id) ? $category->parent_id : 0;
+                // var_dump($parent_id);
+                // exit;
+                $output .= $this->makeCategoryDropdown($category_id, $parent_id);
 
                 // Hidden field for category ID
                 $output .= '<input type="hidden" name="category_id" value="' . esc_attr($category_id) . '">';
@@ -243,20 +252,6 @@ class Shortcode
         $output .= '</tr>';
 
         $output .= '</tbody></table>';
-
-        // Include jQuery
-        wp_enqueue_script('jquery');
-
-        // jQuery script to handle showing/hiding edit forms
-        $output .= '<script>
-                        jQuery(document).ready(function($) {
-                            $(".edit-category-button").click(function() {
-                                var categoryId = $(this).data("category-id");
-                                $(".edit-category-form[data-category-id=" + categoryId + "]").toggle();
-                                $(".wp-list-table").hide(); // Hide the category table
-                            });
-                        });
-                    </script>';
 
         return $output;
     }
@@ -327,7 +322,7 @@ class Shortcode
         check_ajax_referer('delete_shorturl_link_nonce', '_ajax_nonce');
 
         // Get the link ID from the AJAX request
-        $link_id = isset ($_POST['link_id']) ? intval($_POST['link_id']) : 0;
+        $link_id = !empty($_POST['link_id']) ? (int)$_POST['link_id'] : 0;
 
         // Delete the link from the database
         $result = $wpdb->delete(
@@ -356,7 +351,7 @@ class Shortcode
         check_ajax_referer('delete_shorturl_category_nonce', '_ajax_nonce');
 
         // Get the category ID from the AJAX request
-        $category_id = isset ($_POST['category_id']) ? intval($_POST['category_id']) : 0;
+        $category_id = !empty($_POST['category_id']) ? (int)$_POST['category_id'] : 0;
 
         // Get the parent_id of the category being deleted
         $parent_id = $wpdb->get_var($wpdb->prepare("SELECT parent_id FROM {$wpdb->prefix}shorturl_categories WHERE id = %d", $category_id));
@@ -405,7 +400,7 @@ class Shortcode
     {
         check_ajax_referer('add_shorturl_tag_nonce', '_ajax_nonce');
 
-        if (isset ($_POST['new_tag_name'])) {
+        if (!empty($_POST['new_tag_name'])) {
             global $wpdb;
             $newTagName = sanitize_text_field($_POST['new_tag_name']);
             // Insert the new tag into the database
@@ -615,7 +610,7 @@ class Shortcode
         $bUpdated = false;
         $message = '';
 
-        if (isset ($_POST['action']) && $_POST['action'] === 'update_link' && isset ($_POST['link_id'])) {
+        if (!empty($_POST['action']) && $_POST['action'] === 'update_link' && !empty($_POST['link_id'])) {
             // UPDATE link
 
             $aParams = [
@@ -645,8 +640,8 @@ class Shortcode
         $categories = $wpdb->get_results("SELECT id, label FROM $categories_table", ARRAY_A);
 
         // Determine the column to sort by and sort order
-        $orderby = isset ($_GET['orderby']) ? $_GET['orderby'] : 'id';
-        $order = isset ($_GET['order']) ? $_GET['order'] : 'ASC';
+        $orderby = !empty($_GET['orderby']) ? $_GET['orderby'] : 'id';
+        $order = !empty($_GET['order']) ? $_GET['order'] : 'ASC';
 
         // Prepare SQL query to fetch post IDs from wp_postmeta and their associated category names
         $query = "SELECT l.id AS link_id, 
@@ -662,8 +657,8 @@ class Shortcode
               GROUP BY l.id, l.long_url, l.short_url, l.uri, l.valid_until";
 
         // Handle filtering by category or tag
-        $filter_category = isset ($_GET['filter_category']) ? intval($_GET['filter_category']) : 0;
-        $filter_tag = isset ($_GET['filter_tag']) ? intval($_GET['filter_tag']) : 0;
+        $filter_category = !empty($_GET['filter_category']) ? (int)$_GET['filter_category'] : 0;
+        $filter_tag = !empty($_GET['filter_tag']) ? (int)$_GET['filter_tag'] : 0;
 
         if ($filter_category > 0) {
             $query .= " HAVING FIND_IN_SET('$filter_category', category_ids) > 0";
@@ -760,7 +755,7 @@ class Shortcode
 
     private function display_edit_link_form()
     {
-        $link_id = isset ($_GET['link_id']) ? intval($_GET['link_id']) : 0;
+        $link_id = !empty($_GET['link_id']) ? (int)$_GET['link_id'] : 0;
 
         if ($link_id <= 0) {
             return '';
@@ -811,14 +806,14 @@ class Shortcode
     public static function update_category_label()
     {
         // Verify nonce
-        if (!isset ($_POST['_ajax_nonce']) || !wp_verify_nonce($_POST['_ajax_nonce'], 'update_category_label_nonce')) {
+        if (!!empty($_POST['_ajax_nonce']) || !wp_verify_nonce($_POST['_ajax_nonce'], 'update_category_label_nonce')) {
             wp_send_json_error('Nonce verification failed.');
         }
 
         global $wpdb;
 
         // Get category ID and updated label from AJAX request
-        $category_id = intval($_POST['category_id']);
+        $category_id = (int)$_POST['category_id'];
         $updated_label = sanitize_text_field($_POST['updated_label']);
 
         // Update category label in the database
@@ -844,8 +839,8 @@ class Shortcode
     {
         check_ajax_referer('add_shorturl_category_nonce', '_ajax_nonce');
 
-        $category_name = isset ($_POST['categoryName']) ? sanitize_text_field($_POST['categoryName']) : '';
-        $parent_category = isset ($_POST['parentCategory']) && $_POST['parentCategory'] != 0 ? intval($_POST['parentCategory']) : null;
+        $category_name = !empty($_POST['categoryName']) ? sanitize_text_field($_POST['categoryName']) : '';
+        $parent_category = !empty($_POST['parentCategory']) ? (int)$_POST['parentCategory'] : null;
 
         if (empty ($category_name)) {
             wp_send_json_error(__('Category name is required.', 'rrze-shorturl'));
@@ -887,8 +882,8 @@ class Shortcode
     {
         check_ajax_referer('store-link-category', '_ajax_nonce');
 
-        $link_id = isset ($_POST['linkId']) ? intval($_POST['linkId']) : 0;
-        $category_id = isset ($_POST['categoryId']) ? intval($_POST['categoryId']) : 0;
+        $link_id = !empty($_POST['linkId']) ? (int)$_POST['linkId'] : 0;
+        $category_id = !empty($_POST['categoryId']) ? (int)$_POST['categoryId'] : 0;
 
         if ($link_id <= 0 || $category_id <= 0) {
             wp_send_json_error(__('Invalid link ID or category ID.', 'rrze-shorturl'));

@@ -187,7 +187,7 @@ function create_custom_tables()
             id mediumint(9) NOT NULL AUTO_INCREMENT,
             domain_id mediumint(9) NOT NULL,            
             long_url varchar(255) UNIQUE NOT NULL,
-            short_url varchar(255) NOT NULL,
+            short_url varchar(255) NULL DEFAULT NULL,
             uri varchar(255) DEFAULT NULL,
             idm_id mediumint(9) NOT NULL DEFAULT 1,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -250,7 +250,7 @@ function create_custom_tables()
                 SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid long_url format';
             END IF;
         
-            IF NEW.short_url NOT REGEXP '^https?://.*$' THEN
+            IF NEW.short_url IS NOT NULL AND NEW.short_url NOT REGEXP '^https?://.*$' THEN
                 SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid short_url format';
             END IF;
         END;

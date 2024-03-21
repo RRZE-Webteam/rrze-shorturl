@@ -85,7 +85,7 @@ class ShortURL
             $result = $wpdb->get_results($wpdb->prepare("SELECT id, short_url FROM $table_name WHERE long_url = %s LIMIT 1", $long_url), ARRAY_A);
 
             if (empty ($result)) {
-                $long_url = self::$rights['get_allowed'] ? $long_url : \http_build_url($long_url, array('path', 'scheme', 'host'));
+                $long_url = self::$rights['get_allowed'] ? $long_url : self::add_url_components($long_url, array('scheme', 'host', 'path'));
 
                 // Insert into the links table
                 $wpdb->insert(
@@ -317,7 +317,6 @@ class ShortURL
             }
 
             // Check if 'get_allowed' is false and remove GET parameters if necessary
-            // $long_url = self::$rights['get_allowed'] ? $long_url : \http_build_url($long_url, array('path', 'scheme', 'host'));
             $long_url = self::$rights['get_allowed'] ? $long_url : self::add_url_components($long_url, array('scheme', 'host', 'path'));
 
             $uri = self::$rights['uri_allowed'] ? sanitize_text_field($_POST['uri'] ?? '') : '';

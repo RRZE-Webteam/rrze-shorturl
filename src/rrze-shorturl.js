@@ -372,5 +372,12 @@ jQuery(document).ready(function ($) {
         }
     });
 
+    // Edit Category
+    $(".edit-category-button").click(function() {
+        var categoryId = $(this).data("category-id");
+        $(".edit-category-form[data-category-id=" + categoryId + "]").toggle();
+        $(".wp-list-table").hide();
+    });
+
 });
 
