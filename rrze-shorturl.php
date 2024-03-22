@@ -4,7 +4,7 @@
 Plugin Name:     RRZE ShortURL
 Plugin URI:      https://gitlab.rrze.fau.de/rrze-webteam/rrze-shorturl
 Description:     Plugin, um URLs zu verkürzen. 
-Version:         0.1.60
+Version:         0.1.61
 Requires at least: 6.4
 Requires PHP:      8.2
 Author:          RRZE Webteam
@@ -106,8 +106,9 @@ function deactivation()
     // clean up the database
     Config\drop_custom_tables();
 
-    // delete the cron to fetch customer domains
+    // delete the cron to fetch customer domains & to make the .htaccess
     wp_clear_scheduled_hook('rrze_shorturl_fetch_and_store_customerdomains');
+    wp_clear_scheduled_hook('rrze_shorturl_make_htaccess');
 }
 
 
