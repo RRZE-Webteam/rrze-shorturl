@@ -344,7 +344,7 @@ jQuery(document).ready(function ($) {
     });
 
 
-    // Delete link click handler
+    // Delete Category
     $(document).on('click', '.delete-category', function (e) {
         e.preventDefault();
         var categoryId = $(this).data('category-id');
@@ -379,5 +379,34 @@ jQuery(document).ready(function ($) {
         $(".wp-list-table").hide();
     });
 
+    // Edit Tag
+    $(".edit-tag-button").click(function() {
+        var tagId = $(this).data("tag-id");
+        $(".edit-tag-form[data-tag-id=" + tagId + "]").toggle();
+        $(".wp-list-table").hide();
+    });
+
+    // Delete Tag
+    $(document).on('click', '.delete-tag', function (e) {
+        e.preventDefault();
+        var tagId = $(this).data('tag-id');
+        if (confirm('Are you sure you want to delete this tag?')) {
+            $.ajax({
+                url: rrze_shorturl_ajax_object.ajax_url,
+                method: 'POST',
+                data: {
+                    action: 'delete_tag',
+                    tag_id: tagId,
+                    _ajax_nonce: rrze_shorturl_ajax_object.delete_shorturl_tag_nonce
+                },
+                success: function (response) {
+                    location.reload();
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error deleting tag:', error);
+                }
+            });
+        }
+    });
 });
 
