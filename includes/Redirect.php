@@ -4,6 +4,40 @@ namespace RRZE\ShortURL;
 
 class Redirect
 {
+    public function __construct()
+    {
+        if (!wp_next_scheduled('rrze_shorturl_make_htaccess')) {
+            wp_schedule_event(time(), 'hourly', 'rrze_shorturl_make_htaccess');
+        }
+        add_action('rrze_shorturl_make_htaccess', array($this, 'make_htaccess'));
+    }
+
+    public function make_htaccess(){
+        $htaccess_file = ABSPATH . '.htaccess';
+        $content = file_get_contents($htaccess_file);
+
+        $begin_marker = '# BEGIN ShortURL';
+        $end_marker = '# END ShortURL';
+        $begin_pos = strpos($content, $begin_marker);
+        $end_pos = strpos($content, $end_marker);
+
+        // Remove everything between the markers if found
+        if ($begin_pos !== false && $end_pos !== false) {
+            $content = substr_replace($content, '', $begin_pos, $end_pos - $begin_pos + strlen($end_marker));
+        }
+
+        $redirect_rules = self::generate_redirect_rules();
+
+        // Add the new rules and markers
+        $new_content = "# BEGIN ShortURL\n";
+        $new_content .= $redirect_rules . "\n";
+        $new_content .= "# END ShortURL\n";
+
+        // Write the updated content back to the .htaccess file
+        file_put_contents($htaccess_file, $new_content);
+    }
+
+
     public static function generate_redirect_rules() {
         global $wpdb;
     
