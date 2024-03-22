@@ -118,6 +118,7 @@ jQuery(document).ready(function ($) {
 
 
     // Categories
+    $('#new-shorturl-category').slideToggle();
     $('#add-new-shorturl-category').on('click', function (e) {
         e.preventDefault();
         $('#new-shorturl-category').slideToggle();

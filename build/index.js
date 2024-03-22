@@ -264,7 +264,8 @@ const Edit = ({
   }, (0,react__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.DateTimePicker, {
     currentDate: validUntil,
     onChange: onChangeValidUntil,
-    is12Hour: false,
+    timeFormat: false // Set to false to disable time selection
+    ,
     minDate: new Date(),
     maxDate: new Date(new Date().getFullYear() + 1, new Date().getMonth(), new Date().getDate()),
     isInvalidDate: date => {

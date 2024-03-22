@@ -4,70 +4,6 @@ namespace RRZE\ShortURL\Config;
 
 defined('ABSPATH') || exit;
 
-
-
-// TEST DATA
-
-function fill_test_data()
-{
-    global $wpdb;
-
-    // Insert test data into the shorturl_tags table
-    $wpdb->insert(
-        $wpdb->prefix . 'shorturl_tags',
-        array(
-            'label' => 'Tag 1',
-        )
-    );
-    $wpdb->insert(
-        $wpdb->prefix . 'shorturl_tags',
-        array(
-            'label' => 'Tag 2',
-        )
-    );
-
-    // Insert test data into the shorturl_categories table
-    $wpdb->insert(
-        $wpdb->prefix . 'shorturl_categories',
-        array(
-            'label' => 'Category 1',
-        )
-    );
-    $wpdb->insert(
-        $wpdb->prefix . 'shorturl_categories',
-        array(
-            'label' => 'Category 2',
-        )
-    );
-
-    // Insert test data into the shorturl_categories table with hierarchy
-    $wpdb->insert(
-        $wpdb->prefix . 'shorturl_categories',
-        array(
-            'label' => 'Parent Category'
-        )
-    );
-    $parent_id = $wpdb->insert_id; // Get the ID of the inserted parent category
-
-    // Insert child categories
-    $wpdb->insert(
-        $wpdb->prefix . 'shorturl_categories',
-        array(
-            'label' => 'Child Category 1',
-            'parent_id' => $parent_id, // Set parent_id to the ID of the parent category
-        )
-    );
-    $wpdb->insert(
-        $wpdb->prefix . 'shorturl_categories',
-        array(
-            'label' => 'Child Category 2',
-            'parent_id' => $parent_id, // Set parent_id to the ID of the parent category
-        )
-    );
-}
-
-
-
 /**
  * Gibt der Name der Option zurück.
  * @return string [description]
@@ -305,6 +241,4 @@ function create_custom_tables()
         // Handle the exception
         error_log("Error in create_custom_tables: " . $e->getMessage());
     }
-
-    fill_test_data();
 }

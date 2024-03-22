@@ -356,7 +356,7 @@ class Shortcode
 
     private function add_category_form()
     {
-        $output = '<h2>Add New Category</h2>';
+        $output = '<h2>' . __('Add New Category', 'rrze-shorturl') . '</h2>';
         $output .= '<form method="post">';
         $output .= '<label for="category_label">Category Label:</label><br>';
         $output .= '<input type="text" id="category_label" name="category_label" value=""><br>';
@@ -632,7 +632,7 @@ class Shortcode
                     </option>
                     <?php self::display_parent_categories_dropdown($hierarchicalCategories); ?>
                 </select>
-                <input type="button" value="<?php echo __('Add new category', 'rrze-shorturl'); ?>"
+                <br><input type="button" value="<?php echo __('Add new category', 'rrze-shorturl'); ?>"
                     id="add-shorturl-category-btn">
             </div>
         </div>
