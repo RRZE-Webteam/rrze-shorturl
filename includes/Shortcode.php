@@ -98,7 +98,7 @@ class Shortcode
                 $output .= '<input type="hidden" name="tag_id" value="' . esc_attr($tag_id) . '">';
 
                 // Submit button
-                $output .= '<input type="submit" name="edit_tag" value="Save Changes">';
+                $output .= '<br><input type="submit" name="edit_tag" value="Save Changes">';
                 $output .= '&nbsp;<a href="' . esc_url(remove_query_arg('action')) . '" class="button">Cancel</a>';
 
                 $output .= '</form>';
@@ -170,7 +170,7 @@ class Shortcode
         $output .= '<form method="post">';
         $output .= '<label for="tag_label">Tag Label:</label><br>';
         $output .= '<input type="text" id="tag_label" name="tag_label" value=""><br>';
-        $output .= '<input type="submit" name="add_tag" value="Add Tag">';
+        $output .= '<br><input type="submit" name="add_tag" value="Add Tag">';
         $output .= '&nbsp;<a href="' . esc_url(remove_query_arg('action')) . '" class="button">Cancel</a>';
         $output .= '</form>';
 
@@ -265,20 +265,13 @@ class Shortcode
                 $output .= '<label for="category_label">Category Label:</label><br>';
                 $output .= '<input type="text" id="category_label" name="category_label" value="' . esc_attr($category->label) . '"><br>';
 
-                // var_dump($category->parent_id);
-                // echo is_null($category->parent_id) ? 'ja ist NULL' : 'nein';
-                // echo empty($category->parent_id) ? 'ja ist empty' : 'nein, ist nicht empty';
-                // exit;
                 $parent_id = !empty ($category->parent_id) ? $category->parent_id : 0;
-                // var_dump($parent_id);
-                // exit;
+
                 $output .= $this->makeCategoryDropdown($category_id, $parent_id);
 
-                // Hidden field for category ID
                 $output .= '<input type="hidden" name="category_id" value="' . esc_attr($category_id) . '">';
 
-                // Submit button
-                $output .= '<input type="submit" name="edit_category" value="Save Changes">';
+                $output .= '<br><input type="submit" name="edit_category" value="Save Changes">';
                 $output .= '&nbsp;<a href="' . esc_url(remove_query_arg('action')) . '" class="button">Cancel</a>';
 
                 $output .= '</form>';
@@ -329,7 +322,7 @@ class Shortcode
             $output .= '<td class="column-label">' . esc_html($category->hierarchy . $category->label) . '</td>';
             $output .= '<td class="column-actions">
                             <a href="?action=edit_category&category_id=' . esc_attr($category->id) . '">' . __('Edit', 'rrze-shorturl') . '</a> | 
-                            <a href="#" class="delete-category" data-category-id="' . esc_attr($category->id) . '">' . __('Delete', 'rrze-shorturl') . '</a>
+                            <a href="" class="delete-category" data-category-id="' . esc_attr($category->id) . '">' . __('Delete', 'rrze-shorturl') . '</a>
                         </td>';
             $output .= '</tr>';
         }
@@ -368,7 +361,7 @@ class Shortcode
         $output .= '<label for="category_label">Category Label:</label><br>';
         $output .= '<input type="text" id="category_label" name="category_label" value=""><br>';
         $output .= $this->makeCategoryDropdown();
-        $output .= '<input type="submit" name="add_category" value="Add Category">';
+        $output .= '<br><input type="submit" name="add_category" value="Add Category">';
         $output .= '&nbsp;<a href="' . esc_url(remove_query_arg('action')) . '" class="button">Cancel</a>';
         $output .= '</form>';
 

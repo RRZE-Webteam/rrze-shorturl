@@ -1,17 +1,13 @@
 jQuery(document).ready(function ($) {
-    var advancedSettingsChanged = false; // Variable to track changes in advanced settings
+    var advancedSettingsChanged = false;
 
-    // Function to handle form submission for both customer domains and services
     function handleFormSubmission() {
         // If the delete action is triggered
         if ($(this).find('input[type="checkbox"]:checked').length > 0) {
-            // Determine the confirmation message based on the form
             var confirmationMessage = 'WARNING! Are you sure you want to delete the selected entries? All Short URLs related to them will be deleted, too. This action cannot be undone.';
 
-            // Ask for confirmation
             var confirmDelete = confirm(confirmationMessage);
 
-            // If the user confirms, proceed with the delete action
             if (!confirmDelete) {
                 return false; // Prevent form submission
             }
@@ -57,34 +53,26 @@ jQuery(document).ready(function ($) {
         var id = $(this).data("id");
         var label = $(this).parent().find(".shorturl-category-input").val();
 
-        // console.log('label = ' + label);
-        // console.log('url = ' + rrze_shorturl_ajax_object.ajax_url);
-
-        // Send AJAX request to update category label
         $.ajax({
             url: rrze_shorturl_ajax_object.ajax_url,
             type: 'POST',
-            dataType: 'json', // Specify that the response should be treated as JSON
+            dataType: 'json',
             data: {
                 action: 'update_category_label_action',
                 category_id: id,
                 updated_label: label,
-                _ajax_nonce: rrze_shorturl_ajax_object.update_category_label_nonce, // Pass nonce                    
+                _ajax_nonce: rrze_shorturl_ajax_object.update_category_label_nonce,
             },
             success: function (response) {
-                // Display message
                 $("p").html(response.data);
                 // Replace input field with label after successful update
                 $(".shorturl-category-input[data-id='" + id + "']").parent().html("<span class='category-label'>" + label + "</span>");
             },
             error: function (xhr, status, error) {
-                // Display error message
                 console.error('THIS IS AN ERROR! ' + xhr.responseText);
             }
         });
     });
-
-
 
     // tokenfield for tags
     $('#tag-tokenfield').select2({
@@ -129,7 +117,7 @@ jQuery(document).ready(function ($) {
     });
 
 
-    // categories
+    // Categories
     $('#add-new-shorturl-category').on('click', function (e) {
         e.preventDefault();
         $('#new-shorturl-category').slideToggle();
@@ -155,8 +143,6 @@ jQuery(document).ready(function ($) {
                         // Check the checkbox for the newly added category
                         var newCategoryId = response.data.category_id;
                         $('input[name="shorturl_categories[]"][value="' + newCategoryId + '"]').prop('checked', true);
-
-                        // alert('Category added successfully!');
                     } else {
                         alert('Failed to add category. Please try again.');
                     }
@@ -169,8 +155,8 @@ jQuery(document).ready(function ($) {
 
 
 
-    // links
-    // Edit link click handler
+    // Links
+    // Edit link
     $(document).on('click', '.edit-link', function (e) {
         e.preventDefault();
         var linkId = $(this).data('link-id');
@@ -181,13 +167,11 @@ jQuery(document).ready(function ($) {
     });
 
 
-    // Delete link click handler
+    // Delete link
     $(document).on('click', '.delete-link', function (e) {
         e.preventDefault();
         var linkId = $(this).data('link-id');
-        // Ask for confirmation before deleting
         if (confirm('Are you sure you want to delete this link?')) {
-            // Send an AJAX request to delete the link
             $.ajax({
                 url: rrze_shorturl_ajax_object.ajax_url,
                 method: 'POST',
@@ -197,12 +181,9 @@ jQuery(document).ready(function ($) {
                     _ajax_nonce: rrze_shorturl_ajax_object.delete_shorturl_link_nonce
                 },
                 success: function (response) {
-                    // Handle success response
-                    console.log('Link deleted successfully');
                     location.reload();
                 },
                 error: function (xhr, status, error) {
-                    // Handle error response
                     console.error('Error deleting link:', error);
                 }
             });
@@ -216,7 +197,6 @@ jQuery(document).ready(function ($) {
         var field = $(this).hasClass('allow-uri-checkbox') ? 'allow_uri' : 'allow_get';
         var value = $(this).prop('checked') ? 'true' : 'false';
 
-        // Send AJAX request to update allow_uri or allow_get
         $.ajax({
             url: rrze_shorturl_ajax_object.ajax_url,
             type: 'POST',
@@ -228,8 +208,6 @@ jQuery(document).ready(function ($) {
                 _ajax_nonce: rrze_shorturl_ajax_object.update_shorturl_idm_nonce
             },
             success: function (response) {
-                console.log('Field updated successfully');
-                // Reload the page or update UI as needed
                 location.reload();
             },
             error: function (xhr, status, error) {
@@ -256,10 +234,9 @@ jQuery(document).ready(function ($) {
                 textArea.value = shortenedUrl;
                 textArea.style.position = 'fixed'; // Ensure it's not visible in the viewport
                 document.body.appendChild(textArea);
-                textArea.select(); // Select the text
+                textArea.select();
                 try {
                     document.execCommand('copy');
-                    console.log('URL copied!');
                     showTooltip('URL copied!');
                 } catch (err) {
                     console.error('Copy failed:', err);
@@ -291,7 +268,6 @@ jQuery(document).ready(function ($) {
 
 
     // Categories
-    // Add mouseover event to show "Edit" link
     $('table.shorturl-categories tbody').on('mouseover', 'td.category-label', function () {
         if (!$(this).find('.edit-link').length) {
             $(this).append('<a href="#" class="edit-link">Edit</a>');
@@ -308,8 +284,8 @@ jQuery(document).ready(function ($) {
 
     // Handle "Edit" link click event
     $('table.shorturl-categories tbody').on('click', '.edit-link', function (e) {
-        e.preventDefault(); // Prevent default link behavior
-        e.stopPropagation(); // Prevent event bubbling
+        e.preventDefault();
+        e.stopPropagation();
         $(this).hide(); // Hide the "Edit" link    
         var labelSpan = $(this).closest('td').find('span'); // Find the <span> element containing the label text
         var labelText = labelSpan.text().trim(); // Get the text content of the <span> element
@@ -348,9 +324,7 @@ jQuery(document).ready(function ($) {
     $(document).on('click', '.delete-category', function (e) {
         e.preventDefault();
         var categoryId = $(this).data('category-id');
-        // Ask for confirmation before deleting
         if (confirm('Are you sure you want to delete this category?')) {
-            // Send an AJAX request to delete the category
             $.ajax({
                 url: rrze_shorturl_ajax_object.ajax_url,
                 method: 'POST',
@@ -360,12 +334,12 @@ jQuery(document).ready(function ($) {
                     _ajax_nonce: rrze_shorturl_ajax_object.delete_shorturl_category_nonce
                 },
                 success: function (response) {
-                    // Handle success response
-                    console.log('Category deleted successfully');
-                    location.reload();
+                    // Remove 'action' query parameter from URL ( if we'd use location.reload(); instead the browser would ask to send the form again)
+                    var url = window.location.href;
+                    url = url.split('?')[0]; // Remove query string
+                    window.location.href = url; // Reload the page without the 'action' parameter
                 },
                 error: function (xhr, status, error) {
-                    // Handle error response
                     console.error('Error deleting category:', error);
                 }
             });
@@ -373,14 +347,14 @@ jQuery(document).ready(function ($) {
     });
 
     // Edit Category
-    $(".edit-category-button").click(function() {
+    $(".edit-category-button").click(function () {
         var categoryId = $(this).data("category-id");
         $(".edit-category-form[data-category-id=" + categoryId + "]").toggle();
         $(".wp-list-table").hide();
     });
 
     // Edit Tag
-    $(".edit-tag-button").click(function() {
+    $(".edit-tag-button").click(function () {
         var tagId = $(this).data("tag-id");
         $(".edit-tag-form[data-tag-id=" + tagId + "]").toggle();
         $(".wp-list-table").hide();
@@ -400,7 +374,10 @@ jQuery(document).ready(function ($) {
                     _ajax_nonce: rrze_shorturl_ajax_object.delete_shorturl_tag_nonce
                 },
                 success: function (response) {
-                    location.reload();
+                    // Remove 'action' query parameter from URL ( if we'd use location.reload(); instead the browser would ask to send the form again)
+                    var url = window.location.href;
+                    url = url.split('?')[0]; // Remove query string
+                    window.location.href = url; // Reload the page without the 'action' parameter
                 },
                 error: function (xhr, status, error) {
                     console.error('Error deleting tag:', error);
