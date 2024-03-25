@@ -1,10 +1,12 @@
+const { __, _x, _n, sprintf } = wp.i18n;
+
 jQuery(document).ready(function ($) {
     var advancedSettingsChanged = false;
 
     function handleFormSubmission() {
         // If the delete action is triggered
         if ($(this).find('input[type="checkbox"]:checked').length > 0) {
-            var confirmationMessage = 'WARNING! Are you sure you want to delete the selected entries? All Short URLs related to them will be deleted, too. This action cannot be undone.';
+            var confirmationMessage = __('WARNING! Are you sure you want to delete the selected entries? All Short URLs related to them will be deleted, too. This action cannot be undone.', 'rrze-shorturl');
 
             var confirmDelete = confirm(confirmationMessage);
 
@@ -78,7 +80,7 @@ jQuery(document).ready(function ($) {
     $('#tag-tokenfield').select2({
         tags: true,
         tokenSeparators: [','],
-        placeholder: 'Add tags'
+        placeholder: __('Add tags', 'rrze-shorturl')
     });
 
 
@@ -123,8 +125,8 @@ jQuery(document).ready(function ($) {
         e.preventDefault();
         $('#new-shorturl-category').slideToggle();
     });
-
-    $('#add-shorturl-category-btn').on('click', function (e) {
+    
+    $(document).on('click', '#add-shorturl-category-btn', function (e) {
         e.preventDefault();
         var categoryName = $('input[name=new_shorturl_category]').val();
         if (categoryName) {
@@ -145,12 +147,12 @@ jQuery(document).ready(function ($) {
                         var newCategoryId = response.data.category_id;
                         $('input[name="shorturl_categories[]"][value="' + newCategoryId + '"]').prop('checked', true);
                     } else {
-                        alert('Failed to add category. Please try again.');
+                        alert(__('Failed to add category. Please try again.', 'rrze-shorturl'));
                     }
                 }
             });
         } else {
-            alert('Please enter a category name.');
+            alert(__('Please enter a category name.', 'rrze-shorturl'));
         }
     });
 
@@ -238,7 +240,7 @@ jQuery(document).ready(function ($) {
                 textArea.select();
                 try {
                     document.execCommand('copy');
-                    showTooltip('URL copied!');
+                    showTooltip(__('URL copied!', 'rrze-shorturl'));
                 } catch (err) {
                     console.error('Copy failed:', err);
                 } finally {
@@ -271,7 +273,7 @@ jQuery(document).ready(function ($) {
     // Categories
     $('table.shorturl-categories tbody').on('mouseover', 'td.category-label', function () {
         if (!$(this).find('.edit-link').length) {
-            $(this).append('<a href="#" class="edit-link">Edit</a>');
+            $(this).append('<a href="#" class="edit-link">' + __('Edit', 'rrze-shorturl') + '</a>');
         }
     });
 
@@ -325,7 +327,7 @@ jQuery(document).ready(function ($) {
     $(document).on('click', '.delete-category', function (e) {
         e.preventDefault();
         var categoryId = $(this).data('category-id');
-        if (confirm('Are you sure you want to delete this category?')) {
+        if (confirm(__('Are you sure you want to delete this category?', 'rrze-shorturl'))) {
             $.ajax({
                 url: rrze_shorturl_ajax_object.ajax_url,
                 method: 'POST',
@@ -365,7 +367,7 @@ jQuery(document).ready(function ($) {
     $(document).on('click', '.delete-tag', function (e) {
         e.preventDefault();
         var tagId = $(this).data('tag-id');
-        if (confirm('Are you sure you want to delete this tag?')) {
+        if (confirm(__('Are you sure you want to delete this tag?', 'rrze-shorturl'))) {
             $.ajax({
                 url: rrze_shorturl_ajax_object.ajax_url,
                 method: 'POST',

@@ -91,14 +91,14 @@ class Shortcode
             if ($tag) {
                 // Start building the form
                 $output = '<form method="post">';
-                $output .= '<label for="tag_label">Tag Label:</label><br>';
+                $output .= '<label for="tag_label">'. __('Tag Label', 'rrze-shorturl') . ':</label><br>';
                 $output .= '<input type="text" id="tag_label" name="tag_label" value="' . esc_attr($tag->label) . '"><br>';
 
                 // Hidden field for tag ID
                 $output .= '<input type="hidden" name="tag_id" value="' . esc_attr($tag_id) . '">';
 
                 // Submit button
-                $output .= '<br><input type="submit" name="edit_tag" value="Save Changes">';
+                $output .= '<br><input type="submit" name="edit_tag" value="' . __('Save Changes', 'rrze-shorturl') . '">';
                 $output .= '&nbsp;<a href="' . esc_url(remove_query_arg('action')) . '" class="button">Cancel</a>';
 
                 $output .= '</form>';
@@ -166,12 +166,12 @@ class Shortcode
 
     private function add_tag_form()
     {
-        $output = '<h2>Add New Tag</h2>';
+        $output = '<h2>' . __('Add New Tag', 'rrze-shorturl') . '</h2>';
         $output .= '<form method="post">';
-        $output .= '<label for="tag_label">Tag Label:</label><br>';
+        $output .= '<label for="tag_label">' . __('Tag Label', 'rrze-shorturl') . ':</label><br>';
         $output .= '<input type="text" id="tag_label" name="tag_label" value=""><br>';
-        $output .= '<br><input type="submit" name="add_tag" value="Add Tag">';
-        $output .= '&nbsp;<a href="' . esc_url(remove_query_arg('action')) . '" class="button">Cancel</a>';
+        $output .= '<br><input type="submit" name="add_tag" value="' . __('Add Tag', 'rrze-shorturl') . '">';
+        $output .= '&nbsp;<a href="' . esc_url(remove_query_arg('action')) . '" class="button">'. __('Cancel', 'rrze-shorturl') . '</a>';
         $output .= '</form>';
 
         return $output;
@@ -200,7 +200,7 @@ class Shortcode
 
         $output = '<label for="parent_category">' . __('Parent Category', 'rrze-shorturl') . ':</label><br>';
         $output .= '<select id="parent_category" name="parent_category">';
-        $output .= '<option value="0">None</option>';
+        $output .= '<option value="0">'. __('None', 'rrze-shorturl') . '</option>';
         foreach ($categories_with_hierarchy as $category) {
             $selected = (!empty($parent_id) && ($category->id == $parent_id)) ? 'SELECTED' : '';
             $output .= '<option value="' . $category->id . '" ' . $selected . '>' . esc_html($category->hierarchy . $category->label) . '</option>';
@@ -262,7 +262,7 @@ class Shortcode
             if ($category) {
                 // Start building the form
                 $output = '<form method="post">';
-                $output .= '<label for="category_label">Category Label:</label><br>';
+                $output .= '<label for="category_label">' . __('Category Label', 'rrze-shorturl') . ':</label><br>';
                 $output .= '<input type="text" id="category_label" name="category_label" value="' . esc_attr($category->label) . '"><br>';
 
                 $parent_id = !empty ($category->parent_id) ? $category->parent_id : 0;
@@ -271,8 +271,8 @@ class Shortcode
 
                 $output .= '<input type="hidden" name="category_id" value="' . esc_attr($category_id) . '">';
 
-                $output .= '<br><input type="submit" name="edit_category" value="Save Changes">';
-                $output .= '&nbsp;<a href="' . esc_url(remove_query_arg('action')) . '" class="button">Cancel</a>';
+                $output .= '<br><input type="submit" name="edit_category" value="' . __('Save Changes', 'rrze-shorturl') . '">';
+                $output .= '&nbsp;<a href="' . esc_url(remove_query_arg('action')) . '" class="button">' . __('Cancel', 'rrze-shorturl') . '</a>';
 
                 $output .= '</form>';
 
@@ -358,11 +358,11 @@ class Shortcode
     {
         $output = '<h2>' . __('Add New Category', 'rrze-shorturl') . '</h2>';
         $output .= '<form method="post">';
-        $output .= '<label for="category_label">Category Label:</label><br>';
+        $output .= '<label for="category_label">' . __('Category Label', 'rrze-shorturl') . ':</label><br>';
         $output .= '<input type="text" id="category_label" name="category_label" value=""><br>';
         $output .= $this->makeCategoryDropdown();
-        $output .= '<br><input type="submit" name="add_category" value="Add Category">';
-        $output .= '&nbsp;<a href="' . esc_url(remove_query_arg('action')) . '" class="button">Cancel</a>';
+        $output .= '<br><input type="submit" name="add_category" value="' . __('Add Category', 'rrze-shorturl') . '">';
+        $output .= '&nbsp;<a href="' . esc_url(remove_query_arg('action')) . '" class="button">' . __('Cancel', 'rrze-shorturl') . '</a>';
         $output .= '</form>';
 
         return $output;
@@ -755,6 +755,7 @@ class Shortcode
 
         // Prepare SQL query to fetch post IDs from wp_postmeta and their associated category names
         $query = "SELECT l.id AS link_id, 
+                     l.idm_id,
                      l.long_url, 
                      l.short_url, 
                      l.uri, 
@@ -787,7 +788,7 @@ class Shortcode
 
         // Generate category filter dropdown
         $category_filter_dropdown = '<select name="filter_category">';
-        $category_filter_dropdown .= '<option value="0">All Categories</option>';
+        $category_filter_dropdown .= '<option value="0">' . __('All Categories', 'rrze-shorturl') . '</option>';
         foreach ($categories as $category) {
             $category_filter_dropdown .= '<option value="' . $category['id'] . '"' . ($filter_category == $category['id'] ? ' selected' : '') . '>' . $category['label'] . '</option>';
         }
@@ -851,7 +852,7 @@ class Shortcode
             $table .= '<td class="column-valid-until">' . $row['valid_until'] . '</td>';
             $table .= '<td class="column-categories">' . $category_names_str . '</td>';
             $table .= '<td class="column-tags">' . $tag_names_str . '</td>';
-            $table .= '<td class="column-actions"><a href="#" class="edit-link" data-link-id="' . $row['link_id'] . '">' . __('Edit', 'rrze-shorturl') . '</a> | <a href="#" data-link-id="' . $row['link_id'] . '" class="delete-link">' . __('Delete', 'rrze-shorturl') . '</a></td>';
+            $table .= '<td class="column-actions"><a href="#" class="edit-link" data-link-id="' . $row['link_id'] . '">' . __('Edit', 'rrze-shorturl') . '</a>' . (self::$rights['id'] == $row['idm_id'] ? ' | <a href="#" data-link-id="' . $row['link_id'] . '" class="delete-link">' . __('Delete', 'rrze-shorturl') . '</a>' : '') . '</td>';
             $table .= '</tr>';
         }
         $table .= '</tbody></table>';

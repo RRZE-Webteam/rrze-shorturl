@@ -1,0 +1,424 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: RRZE ShortURL\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-03-25 11:12+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: \n"
+"Language: \n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Loco https://localise.biz/\n"
+"X-Loco-Version: 2.6.7; wp-6.4.3\n"
+"X-Domain: rrze-shorturl"
+
+#: includes/Shortcode.php:136 includes/Shortcode.php:314
+#: includes/Shortcode.php:816
+msgid "Actions"
+msgstr ""
+
+#: includes/Shortcode.php:364
+msgid "Add Category"
+msgstr ""
+
+#: includes/Shortcode.php:332 includes/Shortcode.php:359
+#: includes/Shortcode.php:624
+msgid "Add New Category"
+msgstr ""
+
+#: includes/Shortcode.php:635
+msgid "Add new category"
+msgstr ""
+
+#: includes/Shortcode.php:159
+msgid "Add New Tag"
+msgstr ""
+
+#: includes/Shortcode.php:566
+msgid "Advanced Settings"
+msgstr ""
+
+#: includes/Settings.php:473
+msgid "Allow GET"
+msgstr ""
+
+#: includes/Settings.php:472
+msgid "Allow URI"
+msgstr ""
+
+#: includes/Settings.php:245 includes/Settings.php:255
+#: includes/Settings.php:259 includes/Settings.php:357
+#: includes/Settings.php:361
+msgid "An error occurred: "
+msgstr ""
+
+#: includes/Settings.php:443
+msgid "An error occurred: this IdM already exists."
+msgstr ""
+
+#: includes/Shortcode.php:1011
+msgid "Association already exists."
+msgstr ""
+
+#: build/block.json:1 src/block.json:1
+msgctxt "block description"
+msgid "A block to shorten URLs."
+msgstr ""
+
+#: build/block.json:1 src/block.json:1
+msgctxt "block keyword"
+msgid "shorten"
+msgstr ""
+
+#: build/block.json:1 src/block.json:1
+msgctxt "block keyword"
+msgid "url"
+msgstr ""
+
+#: build/block.json:1 src/block.json:1
+msgctxt "block title"
+msgid "Shorten URL RRZE"
+msgstr ""
+
+#: includes/Shortcode.php:174 includes/Shortcode.php:275
+#: includes/Shortcode.php:365
+msgid "Cancel"
+msgstr ""
+
+#: includes/Shortcode.php:572 includes/Shortcode.php:814
+#: includes/Shortcode.php:898
+msgid "Categories"
+msgstr ""
+
+#: includes/Shortcode.php:313
+msgid "Category"
+msgstr ""
+
+#: includes/Shortcode.php:469
+msgid "Category deleted successfully"
+msgstr ""
+
+#: includes/Shortcode.php:265 includes/Shortcode.php:361
+msgid "Category Label"
+msgstr ""
+
+#: includes/API.php:101
+msgid "Category label is required."
+msgstr ""
+
+#: includes/Shortcode.php:1017
+msgid "Category linked to the link successfully."
+msgstr ""
+
+#: includes/Shortcode.php:956
+msgid "Category name is required."
+msgstr ""
+
+#: includes/Shortcode.php:936
+msgid "Category updated"
+msgstr ""
+
+#: includes/Shortcode.php:551
+msgid "Copied to clipboard"
+msgstr ""
+
+#: includes/Shortcode.php:550
+msgid "Copy to clipboard"
+msgstr ""
+
+#: includes/Shortcode.php:135
+msgid "Count"
+msgstr ""
+
+#: includes/Shortcode.php:558
+msgid "Create Short URL"
+msgstr ""
+
+#: includes/Settings.php:114
+msgid "Customers Domains"
+msgstr ""
+
+#: includes/Settings.php:286 includes/Settings.php:385
+#: includes/Settings.php:474 includes/Shortcode.php:152
+#: includes/Shortcode.php:325 includes/Shortcode.php:854
+msgid "Delete"
+msgstr ""
+
+#: includes/ShortURL.php:316
+msgid "Domain is not allowed to use our shortening service."
+msgstr ""
+
+#: includes/Shortcode.php:151 includes/Shortcode.php:324
+#: includes/Shortcode.php:854
+msgid "Edit"
+msgstr ""
+
+#: includes/Shortcode.php:887
+msgid "Edit Link"
+msgstr ""
+
+#: includes/Shortcode.php:472
+msgid "Error deleting category"
+msgstr ""
+
+#: includes/Shortcode.php:420
+msgid "Error deleting link"
+msgstr ""
+
+#: includes/Shortcode.php:520
+msgid "Error deleting tag"
+msgstr ""
+
+#: includes/API.php:149 includes/API.php:159
+msgid "Error processing request."
+msgstr ""
+
+#: includes/API.php:128
+msgid "Error retrieving shorturl categories"
+msgstr ""
+
+#: includes/Shortcode.php:939
+msgid "Error: Could not update category"
+msgstr ""
+
+#: includes/API.php:110
+msgid "Failed to add category to the database."
+msgstr ""
+
+#: includes/Shortcode.php:977
+msgid "Failed to add category. Please try again."
+msgstr ""
+
+#: includes/API.php:62
+msgid "Failed to add tag to the database."
+msgstr ""
+
+#: includes/Shortcode.php:1019
+msgid "Failed to link category to the link. Please try again."
+msgstr ""
+
+#: config/config.php:45
+msgid "For more information"
+msgstr ""
+
+#: includes/Shortcode.php:578
+msgid "Generate"
+msgstr ""
+
+#: config/config.php:42
+msgid "Here comes the Context Help content."
+msgstr ""
+
+#: includes/Settings.php:280 includes/Settings.php:382
+#: includes/Settings.php:537 includes/Settings.php:570
+msgid "Hostname"
+msgstr ""
+
+#: includes/Settings.php:228
+msgid "Hostname is not valid."
+msgstr ""
+
+#. Author URI of the plugin
+msgid "https://blogs.fau.de/webworking/"
+msgstr ""
+
+#. URI of the plugin
+msgid "https://gitlab.rrze.fau.de/rrze-webteam/rrze-shorturl"
+msgstr ""
+
+#: includes/Settings.php:340
+msgid "Invalid hostname."
+msgstr ""
+
+#: includes/Shortcode.php:999
+msgid "Invalid link ID or category ID."
+msgstr ""
+
+#: includes/ShortURL.php:359
+msgid "is already in use. Try another one."
+msgstr ""
+
+#: includes/ShortURL.php:343
+msgid "is not a valid URI"
+msgstr ""
+
+#: includes/ShortURL.php:336
+msgid "is not a valid URL"
+msgstr ""
+
+#: includes/Settings.php:546 includes/Settings.php:579
+msgid "Link Count"
+msgstr ""
+
+#: includes/Shortcode.php:417
+msgid "Link deleted successfully"
+msgstr ""
+
+#: includes/Shortcode.php:740
+msgid "Link updated"
+msgstr ""
+
+#: config/config.php:60
+msgid "Logfile"
+msgstr ""
+
+#: includes/Shortcode.php:560 includes/Shortcode.php:810
+msgid "Long URL"
+msgstr ""
+
+#: includes/Shortcode.php:628
+msgid "New Category Name"
+msgstr ""
+
+#: includes/Settings.php:355
+msgid "New customer domain added successfully."
+msgstr ""
+
+#: includes/Settings.php:445
+msgid "New IdM has been added."
+msgstr ""
+
+#: includes/Settings.php:242
+msgid "New service added successfully."
+msgstr ""
+
+#: includes/Shortcode.php:820
+msgid "No links stored yet"
+msgstr ""
+
+#: includes/Shortcode.php:203 includes/Shortcode.php:631
+msgid "None"
+msgstr ""
+
+#: config/config.php:44
+msgid "Overview"
+msgstr ""
+
+#: includes/Shortcode.php:201
+msgid "Parent Category"
+msgstr ""
+
+#: rrze-shorturl.php:76
+msgid "Plugin RRZE-AC is mandatory."
+msgstr ""
+
+#. Description of the plugin
+msgid "Plugin, um URLs zu verkürzen."
+msgstr ""
+
+#: includes/Settings.php:283
+msgid "Prefix"
+msgstr ""
+
+#. Name of the plugin
+#: config/config.php:24 config/config.php:25
+msgid "RRZE ShortURL"
+msgstr ""
+
+#: config/config.php:28
+msgid "RRZE ShortURL Settings"
+msgstr ""
+
+#. Author of the plugin
+msgid "RRZE Webteam"
+msgstr ""
+
+#: config/config.php:45
+msgid "RRZE Webteam on Github"
+msgstr ""
+
+#: includes/Settings.php:307 includes/Settings.php:404
+#: includes/Settings.php:500 includes/Shortcode.php:101
+#: includes/Shortcode.php:274
+msgid "Save Changes"
+msgstr ""
+
+#: includes/Settings.php:216 includes/Settings.php:329
+msgid "Selected entries deleted successfully."
+msgstr ""
+
+#: includes/Settings.php:434
+msgid "Selected IdMs have been deleted."
+msgstr ""
+
+#: includes/Shortcode.php:1030
+msgid "Self-Explanatory URI"
+msgstr ""
+
+#: includes/Settings.php:112
+msgid "Services"
+msgstr ""
+
+#: includes/Shortcode.php:811
+msgid "Short URL"
+msgstr ""
+
+#: includes/Settings.php:118
+msgid "Statistic"
+msgstr ""
+
+#: includes/Shortcode.php:134
+msgid "Tag"
+msgstr ""
+
+#: includes/Shortcode.php:518
+msgid "Tag deleted successfully"
+msgstr ""
+
+#: includes/Shortcode.php:94
+msgid "Tag Label"
+msgstr ""
+
+#: includes/API.php:53
+msgid "Tag label is required."
+msgstr ""
+
+#: includes/Shortcode.php:574 includes/Shortcode.php:600
+#: includes/Shortcode.php:699 includes/Shortcode.php:815
+#: includes/Shortcode.php:902
+msgid "Tags"
+msgstr ""
+
+#: rrze-shorturl.php:71
+#, php-format
+msgid ""
+"The server is running PHP version %1$s. The Plugin requires at least PHP "
+"version %2$s."
+msgstr ""
+
+#: rrze-shorturl.php:74
+#, php-format
+msgid ""
+"The server is running WordPress version %1$s. The Plugin requires at least "
+"WordPress version %2$s."
+msgstr ""
+
+#: includes/ShortURL.php:377
+msgid "Unable to update database table"
+msgstr ""
+
+#: includes/Shortcode.php:906
+msgid "Update Link"
+msgstr ""
+
+#: includes/API.php:142
+msgid "URL parameter is missing."
+msgstr ""
+
+#: includes/Shortcode.php:813
+msgid "Valid until"
+msgstr ""
+
+#: includes/Settings.php:232
+msgid ""
+"You are trying to enter a customer domain. Please use tab \"Customer "
+"Domains\" to do this."
+msgstr ""
+
+#: includes/Settings.php:210
+msgid "You cannot delete the entry used for our customers."
+msgstr ""
