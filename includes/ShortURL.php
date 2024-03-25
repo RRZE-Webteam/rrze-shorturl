@@ -197,14 +197,14 @@ class ShortURL
     public static function checkDomain($long_url)
     {
         try {
-            $aRet = ["prefix" => 0, "hostname" => ''];
+            $aRet = ['prefix' => 0, 'hostname' => '', "notice" => ''];
 
             $domain = wp_parse_url($long_url, PHP_URL_HOST);
 
             // Check if the extracted domain belongs to one of our allowed domains
             foreach (self::$CONFIG['AllowedDomains'] as $aEntry) {
                 if ($domain === $aEntry['hostname']) {
-                    $aRet = ["id" => $aEntry['id'], "prefix" => $aEntry['prefix'], "hostname" => $aEntry['hostname']];
+                    $aRet = ['id' => $aEntry['id'], 'prefix' => ($aEntry['active'] ? $aEntry['prefix'] : 0), 'hostname' => $aEntry['hostname'], 'notice' => $aEntry['notice']];
                     break;
                 }
             }
@@ -313,7 +313,7 @@ class ShortURL
             $aDomain = self::checkDomain($long_url);
 
             if ($aDomain['prefix'] == 0) {
-                return ['error' => true, 'txt' => __('Domain is not allowed to use our shortening service.', 'rrze-shorturl')];
+                return ['error' => true, 'txt' => __('Domain is not allowed to use our shortening service.', 'rrze-shorturl') . ' ' . $aDomain['notice']];
             }
 
             // Check if 'get_allowed' is false and remove GET parameters if necessary

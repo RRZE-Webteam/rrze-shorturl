@@ -114,6 +114,8 @@ function create_custom_tables()
             id mediumint(9) NOT NULL AUTO_INCREMENT,
             hostname varchar(255) NOT NULL DEFAULT '' UNIQUE,
             prefix int(1) NOT NULL DEFAULT 1,
+            active BOOLEAN DEFAULT TRUE,
+            notice varchar(255) NULL DEFAULT NULL,
             PRIMARY KEY (id)
         ) $charset_collate";
         dbDelta($sql);
