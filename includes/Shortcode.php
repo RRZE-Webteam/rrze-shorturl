@@ -597,7 +597,7 @@ class Shortcode
 
         ?>
         <label for="valid_until">
-            <?php echo __('Tags', 'rrze-shorturl'); ?>:
+            <?php echo __('Valid until', 'rrze-shorturl'); ?>:
         </label>
         <input type="date" id="valid_until" name="valid_until" value="<?php echo $val; ?>">
         <?php
