@@ -344,14 +344,8 @@ class ShortURL
                 }
             }
 
-
             // Fetch or insert on new
             $aLink = self::getLinkfromDB($aDomain['id'], $long_url, self::$rights['id']);
-
-            // Check if already exists in DB 
-            // if (!empty($aLink['short_url'])) {
-            //     return ['error' => false, 'txt' => $aLink['short_url']];
-            // }
 
             // Create shortURL
             if (!empty ($uri)) {
@@ -384,5 +378,27 @@ class ShortURL
         }
     }
 
+    public static function getActiveShortURLs() {
+        global $wpdb;
+
+        try {
+            // Perform the database query to fetch active short URLs
+            $query = "SELECT long_url, short_url FROM {$wpdb->prefix}shorturl_links WHERE active = 1 AND valid_until >= CURDATE()";
+            $results = $wpdb->get_results($query, ARRAY_A);
+
+            if ($results) {
+                // Return the results as JSON
+                return json_encode($results);
+            } else {
+                // If no active short URLs found, return an empty JSON array
+                return json_encode(array());
+            }
+        } catch (Exception $e) {
+            // Handle any exceptions that occur during the database query
+            // You can log the error, display a message, or take other actions
+            error_log("Error fetching active short URLs: " . $e->getMessage());
+            return json_encode(array('error' => 'An error occurred while fetching short URLs.'));
+        }
+    }
 }
 
