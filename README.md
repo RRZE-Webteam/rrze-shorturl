@@ -30,4 +30,5 @@ In den Einstellungen kann Folgendes verwaltet werden:
 - für die Ermittlung der Customer Domains (via REST-API)
 - Generierung der .htaccess 
 
-
+## REST-API
+wp-json/short-url/v1/active-short-urls liefert die Paare "long_url" und "short_url" als JSON
