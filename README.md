@@ -25,10 +25,21 @@ In den Einstellungen kann Folgendes verwaltet werden:
 - IdM: neue IdM werden automatisch erstellt. Hier kann bestimmt werden, welche erweiterten Einstellungen gestattet sind
 - Statistik
 
+## Cronjob
+- rrze_shorturl_fetch_and_store_customerdomains für die Ermittlung der Customer Domains
 
-## Cronjobs
-- für die Ermittlung der Customer Domains (via REST-API)
-- Generierung der .htaccess 
+## REST-API Endpoints (DOMAIN/wp-json/short-url/v1)
+- /active-short-urls (GET) liefert die Paare "long_url" und "short_url" als JSON
+- /shorten (POST) empfängt die Parameter und liefert das Paar 'error'(true/false) und 'txt' (short_url oder error-message) als JSON
+- /categories (GET) liefert die Kategorien als JSON
+- /add-category (POST) trägt eine neue Kategorie mit ggfalls Parent-Kategorie in die Datenbank ein
+- /tags (GET) liefert die Schlagwörter als JSON
+- /add-tags (POST) trägt ein neues Schlagwort in die Datenbank ein
 
-## REST-API
-Endpoint wp-json/short-url/v1/active-short-urls liefert die Paare "long_url" und "short_url" als JSON
+## Installation
+- Plugin auf WordPress Instanz 
+- make_htaccess.php auf den Server kopieren, der die Redirects ausführen soll und mit Cronjob ausführen, der die Redirects ausführen soll
+Wenn make_htaccess.php nicht im Root-Verzeichnis liegt, muss der Pfad zur .htaccess angepasst werden
+
+
+

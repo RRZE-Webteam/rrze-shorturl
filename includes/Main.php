@@ -53,8 +53,6 @@ class Main
         $shortURL = new ShortURL();
         $api = new API();
         $shortcode = new Shortcode();
-
-        $redirect = new Redirect();
     }
 
 
