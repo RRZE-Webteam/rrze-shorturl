@@ -38,8 +38,10 @@ In den Einstellungen kann Folgendes verwaltet werden:
 
 ## Installation
 - Plugin auf WordPress Instanz 
-- make_htaccess.php auf den Server kopieren, der die Redirects ausführen soll und mit Cronjob ausführen, der die Redirects ausführen soll
-Wenn make_htaccess.php nicht im Root-Verzeichnis liegt, muss der Pfad zur .htaccess angepasst werden
+- make_htaccess.php auf den Server kopieren, der die Redirects ausführen soll und über Cronjob aufrufen. Wenn make_htaccess.php nicht im Root-Verzeichnis liegt, muss der Pfad zur .htaccess angepasst werden
+
+# Bespiel für Cronjob, der stündlich die .htaccess aktualisiert
+0 * * * * php /path/to/make_htaccess.php
 
 
 
