@@ -8,7 +8,6 @@ class ShortURL
     protected static $rights;
 
     public static array $CONFIG = [
-        "ShortURLBase" => "http://go.fau.de/",
         "ShortURLModChars" => "abcdefghijklmnopqrstuvwxyz0123456789-",
         "AllowedDomains" => [],
     ];
@@ -197,14 +196,14 @@ class ShortURL
     public static function checkDomain($long_url)
     {
         try {
-            $aRet = ["prefix" => 0, "hostname" => ''];
+            $aRet = ['prefix' => 0, 'hostname' => '', "notice" => ''];
 
             $domain = wp_parse_url($long_url, PHP_URL_HOST);
 
             // Check if the extracted domain belongs to one of our allowed domains
             foreach (self::$CONFIG['AllowedDomains'] as $aEntry) {
                 if ($domain === $aEntry['hostname']) {
-                    $aRet = ["id" => $aEntry['id'], "prefix" => $aEntry['prefix'], "hostname" => $aEntry['hostname']];
+                    $aRet = ['id' => $aEntry['id'], 'prefix' => ($aEntry['active'] ? $aEntry['prefix'] : 0), 'hostname' => $aEntry['hostname'], 'notice' => $aEntry['notice']];
                     break;
                 }
             }
@@ -313,7 +312,7 @@ class ShortURL
             $aDomain = self::checkDomain($long_url);
 
             if ($aDomain['prefix'] == 0) {
-                return ['error' => true, 'txt' => __('Domain is not allowed to use our shortening service.', 'rrze-shorturl')];
+                return ['error' => true, 'txt' => __('Domain is not allowed to use our shortening service.', 'rrze-shorturl') . ' ' . $aDomain['notice']];
             }
 
             // Check if 'get_allowed' is false and remove GET parameters if necessary
@@ -360,7 +359,7 @@ class ShortURL
 
             if (empty ($aLink['short_url'])) {
                 // Create shortURL
-                $shortURL = self::$CONFIG['ShortURLBase'] . $targetURL;
+                $shortURL = $targetURL;
             } else {
                 $shortURL = $aLink['short_url'];
             }
@@ -383,7 +382,7 @@ class ShortURL
 
         try {
             // Perform the database query to fetch active short URLs
-            $query = "SELECT long_url, short_url FROM {$wpdb->prefix}shorturl_links WHERE active = 1 AND valid_until >= CURDATE()";
+            $query = "SELECT long_url, short_url, valid_until FROM {$wpdb->prefix}shorturl_links WHERE active = 1 AND valid_until >= CURDATE()";
             $results = $wpdb->get_results($query, ARRAY_A);
 
             if ($results) {

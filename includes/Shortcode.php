@@ -91,7 +91,7 @@ class Shortcode
             if ($tag) {
                 // Start building the form
                 $output = '<form method="post">';
-                $output .= '<label for="tag_label">'. __('Tag Label', 'rrze-shorturl') . ':</label><br>';
+                $output .= '<label for="tag_label">' . __('Tag Label', 'rrze-shorturl') . ':</label><br>';
                 $output .= '<input type="text" id="tag_label" name="tag_label" value="' . esc_attr($tag->label) . '"><br>';
 
                 // Hidden field for tag ID
@@ -171,7 +171,7 @@ class Shortcode
         $output .= '<label for="tag_label">' . __('Tag Label', 'rrze-shorturl') . ':</label><br>';
         $output .= '<input type="text" id="tag_label" name="tag_label" value=""><br>';
         $output .= '<br><input type="submit" name="add_tag" value="' . __('Add Tag', 'rrze-shorturl') . '">';
-        $output .= '&nbsp;<a href="' . esc_url(remove_query_arg('action')) . '" class="button">'. __('Cancel', 'rrze-shorturl') . '</a>';
+        $output .= '&nbsp;<a href="' . esc_url(remove_query_arg('action')) . '" class="button">' . __('Cancel', 'rrze-shorturl') . '</a>';
         $output .= '</form>';
 
         return $output;
@@ -200,9 +200,9 @@ class Shortcode
 
         $output = '<label for="parent_category">' . __('Parent Category', 'rrze-shorturl') . ':</label><br>';
         $output .= '<select id="parent_category" name="parent_category">';
-        $output .= '<option value="0">'. __('None', 'rrze-shorturl') . '</option>';
+        $output .= '<option value="0">' . __('None', 'rrze-shorturl') . '</option>';
         foreach ($categories_with_hierarchy as $category) {
-            $selected = (!empty($parent_id) && ($category->id == $parent_id)) ? 'SELECTED' : '';
+            $selected = (!empty ($parent_id) && ($category->id == $parent_id)) ? 'SELECTED' : '';
             $output .= '<option value="' . $category->id . '" ' . $selected . '>' . esc_html($category->hierarchy . $category->label) . '</option>';
         }
         $output .= '</select>';
