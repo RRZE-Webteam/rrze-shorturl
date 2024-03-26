@@ -316,51 +316,6 @@ class Settings
     public function render_customer_domains_section()
     {
         global $wpdb;
-        $message = '';
-
-        // Check if form is submitted
-        if (isset($_POST['submit'])) {
-            try {
-                // Delete selected entries
-                if (!empty($_POST['delete'])) {
-                    foreach ($_POST['delete'] as $delete_id) {
-                        $wpdb->delete("{$wpdb->prefix}shorturl_domains", array('id' => $delete_id), array('%d'));
-                    }
-                    $message = __('Selected entries deleted successfully.', 'rrze-shorturl');
-                }
-
-                // Add new entry
-                if (!empty($_POST['new_hostname'])) {
-                    try {
-                        // Sanitize input data
-                        $hostname = sanitize_text_field($_POST['new_hostname']);
-
-                        // Validate hostname
-                        if (!filter_var($hostname, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)) {
-                            throw new \Exception(__('Invalid hostname.', 'rrze-shorturl'));
-                        }
-
-                        // Insert new entry into the database
-                        $wpdb->insert(
-                            "{$wpdb->prefix}shorturl_domains",
-                            array(
-                                'hostname' => $hostname
-                            )
-                        );
-
-                        if ($wpdb->last_error) {
-                            throw new \Exception($wpdb->last_error);
-                        }
-
-                        $message = __('New customer domain added successfully.', 'rrze-shorturl');
-                    } catch (\Exception $e) {
-                        $message = __('An error occurred: ', 'rrze-shorturl') . $e->getMessage();
-                    }
-                }
-            } catch (\Exception $e) {
-                $message = __('An error occurred: ', 'rrze-shorturl') . $e->getMessage();
-            }
-        }
 
         // Fetch entries from shorturl_domains table where prefix is 1
         $entries = $wpdb->get_results($wpdb->prepare("SELECT * FROM {$wpdb->prefix}shorturl_domains WHERE prefix = %d AND NOT hostname = 'reserved for our customers' ORDER BY hostname", 1));
@@ -382,31 +337,26 @@ class Settings
                                 <?php echo __('Hostname', 'rrze-shorturl'); ?>
                             </th>
                             <th>
-                                <?php echo __('Delete', 'rrze-shorturl'); ?>
+                                <?php echo __('Active', 'rrze-shorturl'); ?>
+                            </th>
+                            <th>
+                                <?php echo __('Notice', 'rrze-shorturl'); ?>
                             </th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach ($entries as $entry): ?>
                             <tr>
-                                <td><input type="text" name="hostname[]" value="<?php echo esc_attr($entry->hostname); ?>" readonly /></td>
-                                <td><input type="checkbox" name="delete[]" value="<?php echo esc_attr($entry->id); ?>" /></td>
+                                <td><?php echo esc_attr($entry->hostname); ?></td>
+                                <td><?php echo $entry->active == 1 ? '&#10004;' : '&#10008;'; ?></td>
+                                <td><?php echo esc_attr($entry->notice); ?></td>
                             </tr>
                         <?php endforeach; ?>
-                        <tr>
-                            <td><input type="text" name="new_hostname" value="" /></td>
-                            <td></td>
-                        </tr>
                     </tbody>
                 </table>
-
-                <button type="submit" name="submit" class="button button-primary">
-                    <?php echo __('Save Changes', 'rrze-shorturl'); ?>
-                </button>
             </form>
         </div>
         <?php
-
     }
 
     public function render_idm_section()

@@ -8,6 +8,7 @@ class ShortURL
     protected static $rights;
 
     public static array $CONFIG = [
+        "ShortURLBase" => "http://go.fau.de/",
         "ShortURLModChars" => "abcdefghijklmnopqrstuvwxyz0123456789-",
         "AllowedDomains" => [],
     ];
@@ -359,7 +360,7 @@ class ShortURL
 
             if (empty ($aLink['short_url'])) {
                 // Create shortURL
-                $shortURL = $targetURL;
+                $shortURL = self::$CONFIG['ShortURLBase'] . $targetURL;
             } else {
                 $shortURL = $aLink['short_url'];
             }
