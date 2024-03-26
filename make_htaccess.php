@@ -1,6 +1,5 @@
 <?php
 $shorturl_domain = "https://go-fau.test.rrze.fau.de"; // Domain on which the plugin rrze-shorturl runs
-$this_domain = 'http' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 's' : '') . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
 
 try {
     $response = file_get_contents($domain . "/wp-json/short-url/v1/active-short-urls");
@@ -16,7 +15,7 @@ try {
     // Generate RewriteRules
     $rules = '';
     foreach ($short_urls as $url) {
-        $short_url = $this_domain . '/' . esc_url_raw($url['short_url']);
+        $short_url = esc_url_raw($url['short_url']);
         $long_url = esc_url_raw($url['long_url']);
         $expires = ($url['valid_until']) ? date('D, d M Y H:i:s', strtotime($url['valid_until'])) . ' GMT' : '';
 
