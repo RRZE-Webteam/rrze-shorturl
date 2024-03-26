@@ -3,7 +3,7 @@ import { registerBlockType } from '@wordpress/blocks';
 
 // Import Edit and Save components
 import metadata from './block.json';
-import Edit from './edit';
+import Edit from './edit.js';
 
 // Register block type
 registerBlockType( metadata.name, {
