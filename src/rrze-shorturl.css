@@ -38,7 +38,53 @@
 }
 
 .link-disabled {
-    pointer-events: none; /* Verhindert Klicken auf das Element */
-    color: gray; /* Ändert die Farbe des Links, um deaktiviert auszusehen */
-    cursor: not-allowed; /* Ändert den Cursor, um anzuzeigen, dass das Element nicht klickbar ist */
+    pointer-events: none; /* prevents clicking on the element */
+    color: gray;
+    cursor: not-allowed; /* changes cursor to show that the element is not clickable */
 }
+
+#qr-container {
+    position: relative;
+    width: 200px;
+    height: 200px;
+}
+
+#qr {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+#qr-logo {
+    z-index: 2;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 50px;
+    height: auto;
+}
+
+.tooltip {
+    position: absolute;
+    background-color: black;
+    color: white;
+    padding: 5px;
+    border-radius: 6px;
+    display: none; /* Initially hide the tooltip */
+}
+
+.tooltip::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -5px;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent black transparent transparent;
+}
+
+
