@@ -20,9 +20,26 @@ jQuery(document).ready(function ($) {
     $('#customer-domains-form, #services-form').on('submit', handleFormSubmission);
 
     // Toggle Advanced Settings
+    $('#show-advanced-settings').addClass('link-disabled');
+
+    $('#url').on('input', function() {
+        var url = $(this).val();
+        if (url.trim() !== '') {
+            $('#show-advanced-settings').attr('href', '#').removeClass('link-disabled');
+        } else {
+            $('#show-advanced-settings').removeAttr('href').addClass('link-disabled');
+        }
+    });
+
     $('#show-advanced-settings').on('click', function (e) {
         e.preventDefault();
         $('#div-advanced-settings').slideToggle();
+        $('.shorturl-arrow').toggleClass('up');
+        if ($('.shorturl-arrow').hasClass('up')) {
+            $('.shorturl-arrow').html('&#9650;');
+        } else {
+            $('.shorturl-arrow').html('&#9660;');
+        }        
     });
 
     // Event listener for changes in the advanced settings

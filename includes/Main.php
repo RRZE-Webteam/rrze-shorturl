@@ -63,7 +63,8 @@ class Main
     {
         wp_enqueue_script('wp-i18n');
         wp_enqueue_script('qrious', plugins_url('assets/js/qrious.min.js', plugin_basename($this->pluginFile)), array('jquery'), null, true);
-        wp_enqueue_script('rrze-shorturl', plugins_url('assets/js/rrze-shorturl.min.js', plugin_basename($this->pluginFile)), array('jquery'), null, true);
+        // wp_enqueue_script('rrze-shorturl', plugins_url('assets/js/rrze-shorturl.min.js', plugin_basename($this->pluginFile)), array('jquery'), null, true);
+        wp_enqueue_script('rrze-shorturl', plugins_url('src/rrze-shorturl.js', plugin_basename($this->pluginFile)), array('jquery'), null, true);
         wp_enqueue_style('wp-list-table');
 
         // Localize the script with the nonces
@@ -86,7 +87,8 @@ class Main
         wp_enqueue_script('select2', plugins_url('assets/js/select2.min.js', plugin_basename($this->pluginFile)), array('jquery'), null, true);
         wp_enqueue_style('select2', plugins_url('assets/css/select2.min.css', plugin_basename($this->pluginFile)));
 
-        wp_enqueue_style('rrze-shorturl-css', plugins_url('assets/css/rrze-shorturl.min.css', plugin_basename($this->pluginFile)));
+        // wp_enqueue_style('rrze-shorturl-css', plugins_url('assets/css/rrze-shorturl.min.css', plugin_basename($this->pluginFile)));
+        wp_enqueue_style('rrze-shorturl-css', plugins_url('src/rrze-shorturl.css', plugin_basename($this->pluginFile)));
     }
 
 

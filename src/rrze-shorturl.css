@@ -32,3 +32,13 @@
 .wp-list-table tbody tr:nth-child(even) {
     background-color: #f9f9f9;
 }
+
+.shorturl-arrow.up::after {
+    /* yes, it is empty. we need it to toggle  */
+}
+
+.link-disabled {
+    pointer-events: none; /* Verhindert Klicken auf das Element */
+    color: gray; /* Ändert die Farbe des Links, um deaktiviert auszusehen */
+    cursor: not-allowed; /* Ändert den Cursor, um anzuzeigen, dass das Element nicht klickbar ist */
+}

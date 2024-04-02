@@ -556,12 +556,11 @@ class Shortcode
         $form .= '<h2 class="hndle">' . __('Create Short URL', 'rrze-shorturl') . '</h2>';
         $form .= '<div class="inside">';
         $form .= '<label for="url">' . __('Long URL', 'rrze-shorturl') . ':</label>&nbsp;';
-        $form .= '<input type="text" name="url" value="' . esc_attr($aParams['url']) . '">';
+        $form .= '<input type="text" name="url" id="url" value="' . esc_attr($aParams['url']) . '">';
         $form .= '<input type="hidden" name="link_id" value="' . (!empty ($result['link_id']) ? $result['link_id'] : '') . '">';
         $form .= '</div>';
         $form .= '</div>';
-
-        $form .= '<p><a href="#" id="show-advanced-settings">' . __('Advanced Settings', 'rrze-shorturl') . '</a></p>';
+        $form .= '<p><a href="#" id="show-advanced-settings" disabled>' . __('Advanced Settings', 'rrze-shorturl') . '</a> <span class="shorturl-arrow">&#9660;</span></p>';
         $form .= '<div id="div-advanced-settings" style="display: none;">';
         if (self::$rights['uri_allowed']) {
             $form .= self::display_shorturl_uri($aParams['uri']);
@@ -624,7 +623,7 @@ class Shortcode
             <div id="new-shorturl-category">
                 <input type="text" name="new_shorturl_category"
                     placeholder="<?php echo __('New Category Name', 'rrze-shorturl'); ?>">
-                <select name="parent_category">
+                    <br /><?php echo __('Parent:', 'rrze-shorturl');?> <select name="parent_category">
                     <option value="0">
                         <?php echo __('None', 'rrze-shorturl'); ?>
                     </option>
