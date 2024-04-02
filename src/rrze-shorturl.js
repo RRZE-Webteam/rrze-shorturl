@@ -3,6 +3,13 @@ const { __, _x, _n, sprintf } = wp.i18n;
 jQuery(document).ready(function ($) {
     var advancedSettingsChanged = false;
 
+    // Make some fancy QR
+    var qr = new QRious({
+        element: document.getElementById("qr"),
+        value: "<?php echo $result['txt']; ?>",
+        size: 200,
+        });    
+
     function handleFormSubmission() {
         // If the delete action is triggered
         if ($(this).find('input[type="checkbox"]:checked').length > 0) {
@@ -20,9 +27,26 @@ jQuery(document).ready(function ($) {
     $('#customer-domains-form, #services-form').on('submit', handleFormSubmission);
 
     // Toggle Advanced Settings
+    $('#show-advanced-settings').addClass('link-disabled');
+
+    $('#url').on('input', function() {
+        var url = $(this).val();
+        if (url.trim() !== '') {
+            $('#show-advanced-settings').attr('href', '#').removeClass('link-disabled');
+        } else {
+            $('#show-advanced-settings').removeAttr('href').addClass('link-disabled');
+        }
+    });
+
     $('#show-advanced-settings').on('click', function (e) {
         e.preventDefault();
         $('#div-advanced-settings').slideToggle();
+        $('.shorturl-arrow').toggleClass('up');
+        if ($('.shorturl-arrow').hasClass('up')) {
+            $('.shorturl-arrow').html('&#9650;');
+        } else {
+            $('.shorturl-arrow').html('&#9660;');
+        }        
     });
 
     // Event listener for changes in the advanced settings
@@ -195,7 +219,7 @@ jQuery(document).ready(function ($) {
 
 
     // IdM
-    $('.allow-uri-checkbox, .allow-get-checkbox').change(function () {
+    $(document).on('change', '.allow-uri-checkbox, .allow-get-checkbox', function () {    
         var id = $(this).data('id');
         var field = $(this).hasClass('allow-uri-checkbox') ? 'allow_uri' : 'allow_get';
         var value = $(this).prop('checked') ? 'true' : 'false';
@@ -253,7 +277,7 @@ jQuery(document).ready(function ($) {
     function showTooltip(message) {
         const tooltip = document.getElementById('tooltip');
         tooltip.textContent = message;
-        tooltip.style.display = 'inline-block';
+        tooltip.style.display = 'inline-block';    
         setTimeout(() => {
             tooltip.style.display = 'none';
         }, 2000); // Hide the tooltip after 2 seconds
@@ -350,14 +374,14 @@ jQuery(document).ready(function ($) {
     });
 
     // Edit Category
-    $(".edit-category-button").click(function () {
+    $(document).on('click', '.edit-category-button', function () {    
         var categoryId = $(this).data("category-id");
         $(".edit-category-form[data-category-id=" + categoryId + "]").toggle();
         $(".wp-list-table").hide();
     });
 
     // Edit Tag
-    $(".edit-tag-button").click(function () {
+    $(document).on('click', '.edit-tag-button', function () {    
         var tagId = $(this).data("tag-id");
         $(".edit-tag-form[data-tag-id=" + tagId + "]").toggle();
         $(".wp-list-table").hide();
