@@ -5,43 +5,63 @@ use WP_REST_Response;
 use WP_Error;
 
 class API {
+    protected static $rights;
+    
     public function __construct() {
         add_action('rest_api_init', array($this, 'register_rest_endpoints'));
+
+        $rightsObj = new Rights();
+        self::$rights = $rightsObj->getRights();
+
     }
 
     public function register_rest_endpoints() {
         register_rest_route('short-url/v1', '/shorten', array(
             'methods' => 'POST',
             'callback' => array($this, 'shorten_url_callback'),
+            'permission_callback' => function () {
+                return self::$rights['id'] !== 0;
+            }
         ));
 
         register_rest_route('short-url/v1', '/active-short-urls', array(
             'methods' => 'GET',
             'callback' => array($this, 'get_active_short_urls_callback'),
+            'permission_callback' => function () {
+                return self::$rights['id'] !== 0;
+            }
         ));
 
         register_rest_route('short-url/v1', '/categories', array(
             'methods' => 'GET',
             'callback' => array($this, 'get_categories_callback'),
+            'permission_callback' => function () {
+                return self::$rights['id'] !== 0;
+            }
         ));
 
         register_rest_route('short-url/v1', '/add-category', array(
             'methods' => 'POST',
             'callback' => array($this, 'add_category_callback'),
-            // 'permission_callback' => function () {
-            //     return current_user_can('manage_options');
-            // },
+            'permission_callback' => function () {
+                return self::$rights['id'] !== 0;
+            }
         ));  
         
         register_rest_route('short-url/v1', '/tags', array(
             'methods' => 'GET',
             'callback' => array($this, 'get_tags_callback'),
+            'permission_callback' => function () {
+                return self::$rights['id'] !== 0;
+            }
         ));
 
         register_rest_route( 'short-url/v1', '/add-tag', array(
             'methods'             => 'POST',
             'callback'            => array($this, 'add_tag_callback'),
-            // 'permission_callback' => 'rest_allow_authenticated', // Set your permission callback function
+            'permission_callback' => function () {
+                return self::$rights['id'] !== 0;
+            }
         ) );
     }
 

@@ -1,12 +1,14 @@
-const { __, _x, _n, sprintf } = wp.i18n;
+import { __, _x, _n, sprintf } from '@wordpress/i18n';
 
 jQuery(document).ready(function ($) {
-    var advancedSettingsChanged = false;
-
+    
     // Make some fancy QR
+    var inputField = document.getElementById("shortened_url");
+    var qrValue = inputField ? inputField.value : "https://www.fau.de";
+
     var qr = new QRious({
         element: document.getElementById("qr"),
-        value: "<?php echo $result['txt']; ?>",
+        value: qrValue,
         size: 200,
         });    
 
