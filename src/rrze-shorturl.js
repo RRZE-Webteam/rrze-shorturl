@@ -1,4 +1,5 @@
-import { __, _x, _n, sprintf } from '@wordpress/i18n';
+// import { __, _x, _n, sprintf } from '@wordpress/i18n';
+
 
 jQuery(document).ready(function ($) {
     
@@ -30,13 +31,16 @@ jQuery(document).ready(function ($) {
 
     // Toggle Advanced Settings
     $('#show-advanced-settings').addClass('link-disabled');
+    $('#shorturl-arrow').addClass('link-disabled');
 
     $('#url').on('input', function() {
         var url = $(this).val();
         if (url.trim() !== '') {
             $('#show-advanced-settings').attr('href', '#').removeClass('link-disabled');
+            $('#shorturl-arrow').removeClass('link-disabled');
         } else {
             $('#show-advanced-settings').removeAttr('href').addClass('link-disabled');
+            $('#shorturl-arrow').addClass('link-disabled');
         }
     });
 

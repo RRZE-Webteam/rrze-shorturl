@@ -37,9 +37,13 @@
     /* yes, it is empty. we need it to toggle  */
 }
 
+#show-advanced-settings{
+    text-decoration-color: unset; /* Theme set's this attribute. In .js we delete it to make it easier to change the links color dynamically */
+}
+
 .link-disabled {
     pointer-events: none; /* prevents clicking on the element */
-    color: gray;
+    color: gray !important;
     cursor: not-allowed; /* changes cursor to show that the element is not clickable */
 }
 
