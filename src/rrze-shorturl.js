@@ -27,14 +27,14 @@ jQuery(document).ready(function ($) {
     $('#customer-domains-form, #services-form').on('submit', handleFormSubmission);
 
     // Toggle Advanced Settings
-    $('#show-advanced-settings').addClass('link-disabled');
+    $('#show-advanced-settings').addClass('shorturl-link-disabled');
 
     $('#url').on('input', function() {
         var url = $(this).val();
         if (url.trim() !== '') {
-            $('#show-advanced-settings').attr('href', '#').removeClass('link-disabled');
+            $('#show-advanced-settings').attr('href', '#').removeClass('shorturl-link-disabled');
         } else {
-            $('#show-advanced-settings').removeAttr('href').addClass('link-disabled');
+            $('#show-advanced-settings').removeAttr('href').addClass('shorturl-link-disabled');
         }
     });
 
@@ -275,12 +275,12 @@ jQuery(document).ready(function ($) {
     }
 
     function showTooltip(message) {
-        const tooltip = document.getElementById('tooltip');
-        tooltip.textContent = message;
-        tooltip.style.display = 'inline-block';    
+        const shorturl-tooltip = document.getElementById('shorturl-tooltip');
+        shorturl-tooltip.textContent = message;
+        shorturl-tooltip.style.display = 'inline-block';    
         setTimeout(() => {
-            tooltip.style.display = 'none';
-        }, 2000); // Hide the tooltip after 2 seconds
+            shorturl-tooltip.style.display = 'none';
+        }, 2000); // Hide the shorturl-tooltip after 2 seconds
     }
 
 
@@ -377,14 +377,14 @@ jQuery(document).ready(function ($) {
     $(document).on('click', '.edit-category-button', function () {    
         var categoryId = $(this).data("category-id");
         $(".edit-category-form[data-category-id=" + categoryId + "]").toggle();
-        $(".wp-list-table").hide();
+        $(".shorturl-wp-list-table").hide();
     });
 
     // Edit Tag
     $(document).on('click', '.edit-tag-button', function () {    
         var tagId = $(this).data("tag-id");
         $(".edit-tag-form[data-tag-id=" + tagId + "]").toggle();
-        $(".wp-list-table").hide();
+        $(".shorturl-wp-list-table").hide();
     });
 
     // Delete Tag

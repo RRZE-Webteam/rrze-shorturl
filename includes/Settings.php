@@ -273,7 +273,7 @@ class Settings
                 </div>
             <?php endif; ?>
             <form method="post" action="" id="services-form">
-                <table class="wp-list-table widefat fixed striped">
+                <table class="shorturl-wp-list-table widefat fixed striped">
                     <thead>
                         <tr>
                             <th>
@@ -330,7 +330,7 @@ class Settings
                 </div>
             <?php endif; ?>
             <form method="post" action="" id="customer-domains-form">
-                <table class="wp-list-table widefat fixed striped">
+                <table class="shorturl-wp-list-table widefat fixed striped">
                     <thead>
                         <tr>
                             <th>
@@ -408,7 +408,7 @@ class Settings
                 </div>
             <?php endif; ?>
             <form method="post">
-                <table class="wp-list-table widefat fixed striped">
+                <table class="shorturl-wp-list-table widefat fixed striped">
                     <thead>
                         <tr>
                             <th scope="col"
@@ -475,7 +475,7 @@ class Settings
         // Output the statistics table
         ?>
         <div class="wrap">
-            <table class="wp-list-table widefat striped">
+            <table class="shorturl-wp-list-table widefat striped">
                 <thead>
                     <tr>
                         <th scope="col"
