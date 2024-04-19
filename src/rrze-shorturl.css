@@ -13,23 +13,23 @@
 }
 
 /* frontend-table-styles.css */
-.wp-list-table {
+.shorturl-wp-list-table {
     width: 100%;
     border-collapse: collapse;
 }
 
-.wp-list-table th,
-.wp-list-table td {
+.shorturl-wp-list-table th,
+.shorturl-wp-list-table td {
     padding: 10px;
     border: 1px solid #ccc;
 }
 
-.wp-list-table th {
+.shorturl-wp-list-table th {
     background-color: #f1f1f1;
     font-weight: bold;
 }
 
-.wp-list-table tbody tr:nth-child(even) {
+.shorturl-wp-list-table tbody tr:nth-child(even) {
     background-color: #f9f9f9;
 }
 
@@ -37,9 +37,9 @@
     /* yes, it is empty. we need it to toggle  */
 }
 
-.link-disabled {
+.shorturl-link-disabled {
     pointer-events: none; /* prevents clicking on the element */
-    color: gray;
+    color: gray !important;
     cursor: not-allowed; /* changes cursor to show that the element is not clickable */
 }
 
@@ -67,16 +67,16 @@
     height: auto;
 }
 
-.tooltip {
+.shorturl-tooltip {
     position: absolute;
     background-color: black;
     color: white;
     padding: 5px;
     border-radius: 6px;
-    display: none; /* Initially hide the tooltip */
+    display: none; /* Initially hide the shorturl-tooltip */
 }
 
-.tooltip::after {
+.shorturl-tooltip::after {
     content: '';
     position: absolute;
     top: 50%;

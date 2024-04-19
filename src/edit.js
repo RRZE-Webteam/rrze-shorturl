@@ -197,7 +197,7 @@ const Edit = ({ attributes, setAttributes }) => {
             .catch(error => console.error('Error:', error));
     };
 
-    const generateQRCode = (text) => {
+    function generateQRCode(text) {
         const qr = new QRious({
             element: document.getElementById('qrcode'),
             value: text,

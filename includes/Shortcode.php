@@ -128,7 +128,7 @@ class Shortcode
         $tags = $wpdb->get_results($tags_query, ARRAY_A);
 
         // Begin HTML table
-        $table_html = '<table class="wp-list-table widefat">';
+        $table_html = '<table class="shorturl-wp-list-table widefat">';
         // Table header
         $table_html .= '<thead><tr>';
         $table_html .= '<th scope="col" class="manage-column column-label">' . __('Tag', 'rrze-shorturl') . '</th>';
@@ -308,7 +308,7 @@ class Shortcode
         });
 
         // Start building the table
-        $output = '<table class="wp-list-table widefat">';
+        $output = '<table class="shorturl-wp-list-table widefat">';
         $output .= '<thead><tr>';
         $output .= '<th scope="col" class="manage-column column-label">' . __('Category', 'rrze-shorturl') . '</th>';
         $output .= '<th scope="col" class="manage-column column-actions">' . __('Actions', 'rrze-shorturl') . '</th>';
@@ -546,7 +546,7 @@ class Shortcode
                 // Call ShortURL::shorten() and add the result if URL is given
                 $result = ShortURL::shorten($aParams);
                 $result_message = ($result['error'] ? 'Error: ' : 'Short URL: ') . $result['txt'];
-                $result_message .= (!$result['error'] ? '&nbsp;&nbsp;<button type="button" class="btn" id="copyButton" name="copyButton" data-shortened-url="' . $result['txt'] . '"><img src="data:image/svg+xml,%3Csvg height=\'1024\' width=\'896\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M128 768h256v64H128v-64z m320-384H128v64h320v-64z m128 192V448L384 640l192 192V704h320V576H576z m-288-64H128v64h160v-64zM128 704h160v-64H128v64z m576 64h64v128c-1 18-7 33-19 45s-27 18-45 19H64c-35 0-64-29-64-64V192c0-35 29-64 64-64h192C256 57 313 0 384 0s128 57 128 128h192c35 0 64 29 64 64v320h-64V320H64v576h640V768zM128 256h512c0-35-29-64-64-64h-64c-35 0-64-29-64-64s-29-64-64-64-64 29-64 64-29 64-64 64h-64c-35 0-64 29-64 64z\' fill=\'%23000000\' /%3E%3C/svg%3E" width="13" alt="' . __('Copy to clipboard', 'rrze-shorturl') . '" style="cursor: pointer"></button>&nbsp;&nbsp;<span id="tooltip" class="tooltip">' . __('Copied to clipboard', 'rrze-shorturl') . '</span>' : '');
+                $result_message .= (!$result['error'] ? '&nbsp;&nbsp;<button type="button" class="btn" id="copyButton" name="copyButton" data-shortened-url="' . $result['txt'] . '"><img src="data:image/svg+xml,%3Csvg height=\'1024\' width=\'896\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M128 768h256v64H128v-64z m320-384H128v64h320v-64z m128 192V448L384 640l192 192V704h320V576H576z m-288-64H128v64h160v-64zM128 704h160v-64H128v64z m576 64h64v128c-1 18-7 33-19 45s-27 18-45 19H64c-35 0-64-29-64-64V192c0-35 29-64 64-64h192C256 57 313 0 384 0s128 57 128 128h192c35 0 64 29 64 64v320h-64V320H64v576h640V768zM128 256h512c0-35-29-64-64-64h-64c-35 0-64-29-64-64s-29-64-64-64-64 29-64 64-29 64-64 64h-64c-35 0-64 29-64 64z\' fill=\'%23000000\' /%3E%3C/svg%3E" width="13" alt="' . __('Copy to clipboard', 'rrze-shorturl') . '" style="cursor: pointer"></button>&nbsp;&nbsp;<span id="shorturl-tooltip" class="shorturl-tooltip">' . __('Copied to clipboard', 'rrze-shorturl') . '</span>' : '');
             }
         }
 
@@ -560,7 +560,7 @@ class Shortcode
         $form .= '<input type="hidden" name="link_id" value="' . (!empty ($result['link_id']) ? $result['link_id'] : '') . '">';
         $form .= '</div>';
         $form .= '</div>';
-        $form .= '<p><a href="#" id="show-advanced-settings" disabled>' . __('Advanced Settings', 'rrze-shorturl') . '</a> <span class="shorturl-arrow">&#9660;</span></p>';
+        $form .= '<p><a href="#" id="show-advanced-settings" disabled>' . __('Advanced Settings', 'rrze-shorturl') . '</a> <span id="shorturl-arrow" class="shorturl-arrow">&#9660;</span></p>';
         $form .= '<div id="div-advanced-settings" style="display: none;">';
         if (self::$rights['uri_allowed']) {
             $form .= self::display_shorturl_uri($aParams['uri']);
@@ -573,14 +573,15 @@ class Shortcode
         $form .= '</div>';
 
         $form .= '<input type="submit" id="generate" name="generate" value="' . __('Generate', 'rrze-shorturl') . '">';
-        $form .= '</form>';
 
         // Display result message
         $form .= '<div><p>' . $result_message;
         $form .= '</p>';
         if (!empty ($result) && !$result['error']) {
+            $form .= '<input id="shortened_url" name="shortened_url" type="hidden" value="'.$result['txt'].'">';
             $form .= '<div id="qr-container"><canvas id="qr"></canvas><img src="' . plugins_url('../', __FILE__) . 'assets/img/FAU.svg' . '" id="qr-logo"></div>';
         }
+        $form .= '</form>';
 
         return $form;
     }
@@ -799,7 +800,7 @@ class Shortcode
 
         // Generate table
         $table .= $category_filter_form;
-        $table .= '<table class="wp-list-table widefat striped">';
+        $table .= '<table class="shorturl-wp-list-table widefat striped">';
         // Table header
         $table .= '<thead><tr>';
         $table .= '<th scope="col" class="manage-column column-long-url"><a href="?orderby=long_url&order=' . ($orderby == 'long_url' && $order == 'ASC' ? 'DESC' : 'ASC') . '">' . __('Long URL', 'rrze-shorturl') . '</a></th>';
