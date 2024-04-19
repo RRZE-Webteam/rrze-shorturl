@@ -560,7 +560,7 @@ class Shortcode
         $form .= '<input type="hidden" name="link_id" value="' . (!empty ($result['link_id']) ? $result['link_id'] : '') . '">';
         $form .= '</div>';
         $form .= '</div>';
-        $form .= '<p><a href="#" id="show-advanced-settings" disabled>' . __('Advanced Settings', 'rrze-shorturl') . '</a> <span class="shorturl-arrow">&#9660;</span></p>';
+        $form .= '<p><a href="#" id="show-advanced-settings" disabled>' . __('Advanced Settings', 'rrze-shorturl') . '</a> <span id="shorturl-arrow" class="shorturl-arrow">&#9660;</span></p>';
         $form .= '<div id="div-advanced-settings" style="display: none;">';
         if (self::$rights['uri_allowed']) {
             $form .= self::display_shorturl_uri($aParams['uri']);
@@ -573,14 +573,15 @@ class Shortcode
         $form .= '</div>';
 
         $form .= '<input type="submit" id="generate" name="generate" value="' . __('Generate', 'rrze-shorturl') . '">';
-        $form .= '</form>';
 
         // Display result message
         $form .= '<div><p>' . $result_message;
         $form .= '</p>';
         if (!empty ($result) && !$result['error']) {
+            $form .= '<input id="shortened_url" name="shortened_url" type="hidden" value="'.$result['txt'].'">';
             $form .= '<div id="qr-container"><canvas id="qr"></canvas><img src="' . plugins_url('../', __FILE__) . 'assets/img/FAU.svg' . '" id="qr-logo"></div>';
         }
+        $form .= '</form>';
 
         return $form;
     }

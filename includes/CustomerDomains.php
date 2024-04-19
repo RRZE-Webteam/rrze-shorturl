@@ -39,10 +39,10 @@ class CustomerDomains
                             $notice = __('Impressum fehlt.', 'rrze-shorturl');
                             $active = 0;
                         }elseif (empty ($entry['content']['tos']['Datenschutz']['href'])) {
-                            $notice = __('Datenschutz fehlt.', 'rrze-shorturl');
+                            $notice = __('Datenschutzerklärung fehlt.', 'rrze-shorturl');
                             $active = 0;
                         }elseif (empty ($entry['content']['tos']['Barrierefreiheit']['href'])) {
-                            $notice = __('Barrierefreiheit fehlt.', 'rrze-shorturl');
+                            $notice = __('Barrierefreiheitserklärung fehlt.', 'rrze-shorturl');
                             $active = 0;
                         }
     

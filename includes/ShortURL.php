@@ -8,7 +8,7 @@ class ShortURL
     protected static $rights;
 
     public static array $CONFIG = [
-        "ShortURLBase" => "http://go.fau.de/",
+        "ShortURLBase" => "https://go.fau.de/",
         "ShortURLModChars" => "abcdefghijklmnopqrstuvwxyz0123456789-",
         "AllowedDomains" => [],
     ];
@@ -383,7 +383,7 @@ class ShortURL
 
         try {
             // Perform the database query to fetch active short URLs
-            $query = "SELECT long_url, short_url, valid_until FROM {$wpdb->prefix}shorturl_links WHERE active = 1 AND valid_until >= CURDATE()";
+            $query = "SELECT long_url, short_url, valid_until FROM {$wpdb->prefix}shorturl_links WHERE active = 1 AND valid_until >= CURDATE() ORDER BY created_at DESC";
             $results = $wpdb->get_results($query, ARRAY_A);
 
             if ($results) {

@@ -120,11 +120,22 @@ function create_custom_tables()
         ) $charset_collate";
         dbDelta($sql);
 
+        // Create shorturl_services table
+        $sql = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}shorturl_services (
+            id mediumint(9) NOT NULL AUTO_INCREMENT,
+            hostname varchar(255) NOT NULL DEFAULT '' UNIQUE,
+            prefix int(1) NOT NULL DEFAULT 1,
+            active BOOLEAN DEFAULT TRUE,
+            notice varchar(255) NULL DEFAULT NULL,
+            PRIMARY KEY (id)
+        ) $charset_collate";
+        dbDelta($sql);
+
         // Create shorturl_links table
         $sql = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}shorturl_links (
             id mediumint(9) NOT NULL AUTO_INCREMENT,
             domain_id mediumint(9) NOT NULL,            
-            long_url varchar(255) UNIQUE NOT NULL,
+            long_url varchar(255) NOT NULL,
             short_url varchar(255) NULL DEFAULT NULL,
             uri varchar(255) DEFAULT NULL,
             idm_id mediumint(9) NOT NULL DEFAULT 1,
@@ -233,7 +244,7 @@ function create_custom_tables()
         foreach ($aEntries as $entry) {
             $wpdb->query(
                 $wpdb->prepare(
-                    "INSERT IGNORE INTO {$wpdb->prefix}shorturl_domains (hostname, prefix) VALUES (%s, %d)",
+                    "INSERT IGNORE INTO {$wpdb->prefix}shorturl_services (hostname, prefix) VALUES (%s, %d)",
                     $entry['hostname'],
                     $entry['prefix']
                 )

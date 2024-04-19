@@ -39,7 +39,7 @@
 
 .shorturl-link-disabled {
     pointer-events: none; /* prevents clicking on the element */
-    color: gray;
+    color: gray !important;
     cursor: not-allowed; /* changes cursor to show that the element is not clickable */
 }
 
