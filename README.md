@@ -29,6 +29,7 @@ In den Einstellungen kann Folgendes verwaltet werden:
 - rrze_shorturl_fetch_and_store_customerdomains für die Ermittlung der Customer Domains
 
 ## REST-API Endpoints (DOMAIN/wp-json/short-url/v1)
+Alle Endpoints sind zugriffsgeschützt.
 - /active-short-urls (GET) liefert die Paare "long_url" und "short_url" als JSON
 - /shorten (POST) empfängt die Parameter und liefert das Paar 'error'(true/false) und 'txt' (short_url oder error-message) als JSON
 - /categories (GET) liefert die Kategorien als JSON
