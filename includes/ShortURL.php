@@ -11,6 +11,7 @@ class ShortURL
         "ShortURLBase" => "https://go.fau.de/",
         "ShortURLModChars" => "abcdefghijklmnopqrstuvwxyz0123456789-",
         "AllowedDomains" => [],
+        "Services" => [],
     ];
 
     public function __construct()
@@ -19,6 +20,7 @@ class ShortURL
         self::$rights = $rightsObj->getRights();
 
         self::$CONFIG['AllowedDomains'] = self::getAllowedDomains();
+        self::$CONFIG['Services'] = self::getServices();
     }
 
     public static function isValidUrl($url)
@@ -170,6 +172,27 @@ class ShortURL
     }
 
 
+    public static function getServices(){
+        global $wpdb;
+
+        try {
+            $table_name = $wpdb->prefix . 'shorturl_services';
+            $query = "SELECT * FROM $table_name";
+
+            $results = $wpdb->get_results($query, ARRAY_A);
+
+            $aDomains = [];
+            foreach ($results as $result) {
+                $aDomains[] = $result;
+            }
+
+            return $aDomains;
+        } catch (\Exception $e) {
+            error_log("Error in getServices: " . $e->getMessage());
+            return null;
+        }
+    }
+
     // Function to retrieve our domains from the database
     public static function getAllowedDomains()
     {
@@ -196,9 +219,15 @@ class ShortURL
     public static function checkDomain($long_url)
     {
         try {
-            $aRet = ['prefix' => 0, 'hostname' => '', "notice" => ''];
+            $aRet = ['prefix' => 0, 'hostname' => '', "notice" => __('Domain is not allowed to use our shortening service.', 'rrze-shorturl')];
 
             $domain = wp_parse_url($long_url, PHP_URL_HOST);
+
+            // Check if domain is a service
+            if (in_array($domain, self::$CONFIG['AllowedDomains'])){
+                $aRet['notice'] = __('You\'ve tried to shorten a service domain. Services will automatically be shortened and redirected.', 'rrze-shorturl');
+                return $aRet;
+            }
 
             // Check if the extracted domain belongs to one of our allowed domains
             foreach (self::$CONFIG['AllowedDomains'] as $aEntry) {
@@ -312,7 +341,7 @@ class ShortURL
             $aDomain = self::checkDomain($long_url);
 
             if ($aDomain['prefix'] == 0) {
-                return ['error' => true, 'txt' => __('Domain is not allowed to use our shortening service.', 'rrze-shorturl') . ' ' . $aDomain['notice']];
+                return ['error' => true, 'txt' => $aDomain['notice']];
             }
 
             // Check if 'get_allowed' is false and remove GET parameters if necessary
