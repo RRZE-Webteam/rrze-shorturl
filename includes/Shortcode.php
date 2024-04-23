@@ -560,8 +560,10 @@ class Shortcode
         $form .= '<input type="hidden" name="link_id" value="' . (!empty ($result['link_id']) ? $result['link_id'] : '') . '">';
         $form .= '</div>';
         $form .= '</div>';
-        $form .= '<p><a href="#" id="show-advanced-settings" disabled>' . __('Advanced Settings', 'rrze-shorturl') . '</a> <span id="shorturl-arrow" class="shorturl-arrow">&#9660;</span></p>';
-        $form .= '<div id="div-advanced-settings" style="display: none;">';
+        $form .= '<button popovertarget="shorturl-advanced-settings" id="show-advanced-settings" disabled>' . __('Advanced Settings', 'rrze-shorturl') . '</button>';
+        // $form .= '<p><a href="#" id="show-advanced-settings" disabled>' . __('Advanced Settings', 'rrze-shorturl') . '</a> <span id="shorturl-arrow" class="shorturl-arrow">&#9660;</span></p>';
+        // $form .= '<div id="shorturl-advanced-settings" style="display: none;">';
+        $form .= '<div id="shorturl-advanced-settings" popover>';
         if (self::$rights['uri_allowed']) {
             $form .= self::display_shorturl_uri($aParams['uri']);
         }

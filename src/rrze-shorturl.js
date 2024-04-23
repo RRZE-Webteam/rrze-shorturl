@@ -43,7 +43,7 @@ jQuery(document).ready(function ($) {
 
     $('#show-advanced-settings').on('click', function (e) {
         e.preventDefault();
-        $('#div-advanced-settings').slideToggle();
+        $('#shorturl-advanced-settings').slideToggle();
         $('.shorturl-arrow').toggleClass('up');
         if ($('.shorturl-arrow').hasClass('up')) {
             $('.shorturl-arrow').html('&#9650;');
@@ -53,7 +53,7 @@ jQuery(document).ready(function ($) {
     });
 
     // Event listener for changes in the advanced settings
-    $('#div-advanced-settings input[type="text"], #div-advanced-settings input[type="date"], #div-advanced-settings select').on('change', function () {
+    $('#shorturl-advanced-settings input[type="text"], #shorturl-advanced-settings input[type="date"], #shorturl-advanced-settings select').on('change', function () {
         $("#generate").prop('value', 'Update');
     });
 
