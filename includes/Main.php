@@ -9,7 +9,6 @@ use RRZE\ShortURL\CustomerDomains;
 use RRZE\ShortURL\API;
 use RRZE\ShortURL\ShortURL;
 use RRZE\ShortURL\Shortcode;
-use RRZE\ShortURL\Redirect;
 
 /**
  * Hauptklasse (Main)

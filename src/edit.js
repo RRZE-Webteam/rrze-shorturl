@@ -12,11 +12,11 @@ const Edit = ({ attributes, setAttributes }) => {
     const [selfExplanatoryUri, setSelfExplanatoryUri] = useState('');
     const [validUntil, setValidUntil] = useState(defaultValidUntil);
     const [selectedCategories, setSelectedCategories] = useState([]);
-    const [selectedTags, setSelectedTags] = useState([]);
+    // const [selectedTags, setSelectedTags] = useState([]);
     const [errorMessage, setErrorMessage] = useState('');
     const [qrCodeUrl, setQrCodeUrl] = useState('');
     const [categoriesOptions, setCategoriesOptions] = useState([]);
-    const [tagSuggestions, setTagSuggestions] = useState([]);
+    // const [tagSuggestions, setTagSuggestions] = useState([]);
     const [copied, setCopied] = useState(false);
     let clipboard; // Declare clipboard variable
 
@@ -78,21 +78,21 @@ const Edit = ({ attributes, setAttributes }) => {
             });
 
         // Fetch tags from shorturl_tags table
-        fetch('/wp-json/short-url/v1/tags')
-            .then(response => response.json())
-            .then(data => {
-                console.log('ShortURL Tags Data:', data);
-                if (Array.isArray(data)) {
-                    const tagSuggestions = data.map(tag => ({ id: tag.id, value: tag.label }));
-                    setTagSuggestions(tagSuggestions);
-                } else {
-                    console.log('No tags found.');
-                    setTagSuggestions([]);
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching shorturl_tags:', error);
-            });
+        // fetch('/wp-json/short-url/v1/tags')
+        //     .then(response => response.json())
+        //     .then(data => {
+        //         console.log('ShortURL Tags Data:', data);
+        //         if (Array.isArray(data)) {
+        //             const tagSuggestions = data.map(tag => ({ id: tag.id, value: tag.label }));
+        //             setTagSuggestions(tagSuggestions);
+        //         } else {
+        //             console.log('No tags found.');
+        //             setTagSuggestions([]);
+        //         }
+        //     })
+        //     .catch(error => {
+        //         console.error('Error fetching shorturl_tags:', error);
+        //     });
 
     }, [shortenedUrl]);
 
@@ -135,36 +135,36 @@ const Edit = ({ attributes, setAttributes }) => {
             }
         }
 
-        if (isValid) {
-            const allTagIds = selectedTags.map(tag => tag.id);
+        // if (isValid) {
+        //     const allTagIds = selectedTags.map(tag => tag.id);
 
-            const newTags = selectedTags.filter(tag => !tagSuggestions.some(suggestion => suggestion.value === tag.value));
+        //     const newTags = selectedTags.filter(tag => !tagSuggestions.some(suggestion => suggestion.value === tag.value));
 
-            if (newTags.length > 0) {
-                Promise.all(newTags.map(newTag => {
-                    return fetch('/wp-json/short-url/v1/add-tag', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ label: newTag.value })
-                    }).then(response => {
-                        if (!response.ok) {
-                            throw new Error('Failed to add tag');
-                        }
-                        return response.json();
-                    }).then(newTag => newTag.id);
-                })).then(newTagIds => {
-                    const combinedTagIds = [...allTagIds, ...newTagIds];
-                    continueShorteningUrl(combinedTagIds);
-                }).catch(error => {
-                    console.error('Error adding tag:', error);
-                    setErrorMessage('Error: Failed to add tag');
-                });
-            } else {
-                continueShorteningUrl(allTagIds);
-            }
-        }
+        //     if (newTags.length > 0) {
+        //         Promise.all(newTags.map(newTag => {
+        //             return fetch('/wp-json/short-url/v1/add-tag', {
+        //                 method: 'POST',
+        //                 headers: {
+        //                     'Content-Type': 'application/json',
+        //                 },
+        //                 body: JSON.stringify({ label: newTag.value })
+        //             }).then(response => {
+        //                 if (!response.ok) {
+        //                     throw new Error('Failed to add tag');
+        //                 }
+        //                 return response.json();
+        //             }).then(newTag => newTag.id);
+        //         })).then(newTagIds => {
+        //             const combinedTagIds = [...allTagIds, ...newTagIds];
+        //             continueShorteningUrl(combinedTagIds);
+        //         }).catch(error => {
+        //             console.error('Error adding tag:', error);
+        //             setErrorMessage('Error: Failed to add tag');
+        //         });
+        //     } else {
+        //         continueShorteningUrl(allTagIds);
+        //     }
+        // }
     };
 
     const continueShorteningUrl = (tags) => {
@@ -172,8 +172,8 @@ const Edit = ({ attributes, setAttributes }) => {
             url: url.trim(),
             uri: selfExplanatoryUri,
             valid_until: validUntil,
-            categories: selectedCategories,
-            tags: tags
+            categories: selectedCategories
+            // , tags: tags
         };
 
         fetch('/wp-json/short-url/v1/shorten', {
@@ -281,7 +281,7 @@ const Edit = ({ attributes, setAttributes }) => {
                     ))}
                     <a href="#" onClick={handleAddCategory}>Add New Category</a>
                 </PanelBody>
-                <PanelBody title={__('Tags')}>
+                {/* <PanelBody title={__('Tags')}>
                     <FormTokenField
                         label="Tags"
                         value={selectedTags.map(tag => tag.value)} // Extracting values from selectedTags
@@ -294,7 +294,7 @@ const Edit = ({ attributes, setAttributes }) => {
                             setSelectedTags(updatedTags);
                         }}
                     />
-                </PanelBody>
+                </PanelBody> */}
             </InspectorControls>
 
             <TextControl
