@@ -63,6 +63,47 @@ class API {
         //         return self::$rights['id'] !== 0;
         //     }
         // ) );
+
+        // Register REST API query filters
+        add_action('rest_api_init', [$this, 'addRestQueryFilters']);
+    }
+
+
+    /**
+     * Add filters to the REST API query
+     */
+    public function addRestQueryFilters()
+    {
+        // Add filter parameters to the object query
+        add_filter('rest_shorturl_query', [$this, 'addFilterParam'], 10, 2);
+        // Add filter parameters to the categories query
+        add_filter('rest_shorturl_category_query', [$this, 'addFilterParam'], 10, 2);
+        // Add filter parameters to the tags query
+        add_filter('rest_shorturl_tag_query', [$this, 'addFilterParam'], 10, 2);
+    }
+
+    /**
+     * Add filter parameters to the query
+     *
+     * @param array $args
+     * @param array $request
+     * @return array
+     */
+    public function addFilterParam($args, $request)
+    {
+        if (empty($request['filter']) || !is_array($request['filter'])) {
+            return $args;
+        }
+        global $wp;
+        $filter = $request['filter'];
+
+        $vars = apply_filters('query_vars', $wp->public_query_vars);
+        foreach ($vars as $var) {
+            if (isset($filter[$var])) {
+                $args[$var] = $filter[$var];
+            }
+        }
+        return $args;
     }
 
     // public function add_tag_callback($request) {
