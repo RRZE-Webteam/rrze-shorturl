@@ -30,27 +30,32 @@ jQuery(document).ready(function ($) {
     $('#customer-domains-form, #services-form').on('submit', handleFormSubmission);
 
     // Toggle Advanced Settings
-    $('#show-advanced-settings').addClass('shorturl-link-disabled');
+    // $('#show-advanced-settings').addClass('shorturl-link-disabled');
 
-    $('#url').on('input', function() {
-        var url = $(this).val();
-        if (url.trim() !== '') {
-            $('#show-advanced-settings').attr('href', '#').removeClass('shorturl-link-disabled');
-        } else {
-            $('#show-advanced-settings').removeAttr('href').addClass('shorturl-link-disabled');
-        }
-    });
+    // $('#url').on('input', function() {
+    //     var url = $(this).val();
+    //     if (url.trim() !== '') {
+    //         $('#show-advanced-settings').attr('href', '#').removeClass('shorturl-link-disabled');
+    //     } else {
+    //         $('#show-advanced-settings').removeAttr('href').addClass('shorturl-link-disabled');
+    //     }
+    // });
 
-    $('#show-advanced-settings').on('click', function (e) {
-        e.preventDefault();
-        $('#shorturl-advanced-settings').slideToggle();
-        $('.shorturl-arrow').toggleClass('up');
-        if ($('.shorturl-arrow').hasClass('up')) {
-            $('.shorturl-arrow').html('&#9650;');
-        } else {
-            $('.shorturl-arrow').html('&#9660;');
-        }        
-    });
+    // $('#show-advanced-settings').on('click', function (e) {
+    //     e.preventDefault();
+    //     $('#shorturl-advanced-settings').slideToggle();
+    //     $('.shorturl-arrow').toggleClass('up');
+    //     if ($('.shorturl-arrow').hasClass('up')) {
+    //         $('.shorturl-arrow').html('&#9650;');
+    //     } else {
+    //         $('.shorturl-arrow').html('&#9660;');
+    //     }        
+    // });
+
+    // Show advanced settings is a button inside a form. We need to prevent his default actions
+    // $('button[popovertarget]').on('click', function(event) {
+    //     event.preventDefault();
+    //   });
 
     // Event listener for changes in the advanced settings
     $('#shorturl-advanced-settings input[type="text"], #shorturl-advanced-settings input[type="date"], #shorturl-advanced-settings select').on('change', function () {

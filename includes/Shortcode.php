@@ -551,7 +551,8 @@ class Shortcode
         }
 
         // Generate form
-        $form = '<form id="shorturl-form" method="post">';
+        $form = '<button popovertarget="shorturl-advanced-settings" id="show-advanced-settings" type="submit" formnovalidate>' . __('Advanced Settings', 'rrze-shorturl') . '</button>';
+        $form .= '<form id="shorturl-form" method="post">';
         $form .= '<div class="postbox">';
         $form .= '<h2 class="hndle">' . __('Create Short URL', 'rrze-shorturl') . '</h2>';
         $form .= '<div class="inside">';
@@ -560,7 +561,6 @@ class Shortcode
         $form .= '<input type="hidden" name="link_id" value="' . (!empty ($result['link_id']) ? $result['link_id'] : '') . '">';
         $form .= '</div>';
         $form .= '</div>';
-        $form .= '<button popovertarget="shorturl-advanced-settings" id="show-advanced-settings" disabled>' . __('Advanced Settings', 'rrze-shorturl') . '</button>';
         // $form .= '<p><a href="#" id="show-advanced-settings" disabled>' . __('Advanced Settings', 'rrze-shorturl') . '</a> <span id="shorturl-arrow" class="shorturl-arrow">&#9660;</span></p>';
         // $form .= '<div id="shorturl-advanced-settings" style="display: none;">';
         $form .= '<div id="shorturl-advanced-settings" popover>';
@@ -584,6 +584,14 @@ class Shortcode
             $form .= '<div id="qr-container"><canvas id="qr"></canvas><img src="' . plugins_url('../', __FILE__) . 'assets/img/FAU.svg' . '" id="qr-logo"></div>';
         }
         $form .= '</form>';
+
+        // $form = '<button popovertarget="my-popover"> Open Popover </button><form>
+
+        // <div id="my-popover" popover>
+        //   <p>I am a popover with more information. Hit <kbd>esc</kbd> or click away to close me.<p>
+        // </div></form>';
+
+        
 
         return $form;
     }
