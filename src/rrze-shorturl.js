@@ -58,7 +58,7 @@ jQuery(document).ready(function ($) {
     //   });
 
     // Event listener for changes in the advanced settings
-    $('#shorturl-advanced-settings input[type="text"], #shorturl-advanced-settings input[type="date"], #shorturl-advanced-settings select').on('change', function () {
+    $('.shorturl-advanced-settings input[type="text"], .shorturl-advanced-settings input[type="date"], .shorturl-advanced-settings select').on('change', function () {
         $("#generate").prop('value', 'Update');
     });
 

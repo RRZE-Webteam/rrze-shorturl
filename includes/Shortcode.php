@@ -556,11 +556,12 @@ class Shortcode
         $form .= '<h2 class="hndle">' . __('Create Short URL', 'rrze-shorturl') . '</h2>';
         $form .= '<div class="inside">';
         $form .= '<label for="url">' . __('Long URL', 'rrze-shorturl') . ':</label>&nbsp;';
-        $form .= '<input type="text" name="url" id="url" value="' . esc_attr($aParams['url']) . '">';
+        $form .= '<input type="text" name="url" id="url" value="' . esc_attr($aParams['url']) . '" placeholder="https://">';
         $form .= '<input type="hidden" name="link_id" value="' . (!empty($result['link_id']) ? $result['link_id'] : '') . '">';
+        $form .= '<input type="submit" id="generate" name="generate" value="' . __('Generate', 'rrze-shorturl') . '">';
         $form .= '</div>';
         $form .= '</div>';
-        $form .= '<div id="shorturl-advanced-settings" popover anchor="btn-show-advanced-settings">';
+        $form .= '<div class="shorturl-advanced-settings" popover anchor="btn-show-advanced-settings">';
         if (self::$rights['uri_allowed']) {
             $form .= self::display_shorturl_uri($aParams['uri']);
         }
@@ -569,8 +570,7 @@ class Shortcode
         $form .= self::display_shorturl_category($aParams['categories']);
         $form .= '</div>';
 
-        $form .= '<input type="submit" id="generate" name="generate" value="' . __('Generate', 'rrze-shorturl') . '">';
-        $form .= '<button popovertarget="shorturl-advanced-settings" id="btn-show-advanced-settings" type="button">' . __('Advanced Settings', 'rrze-shorturl') . '</button>';
+        $form .= '<button id="btn-show-advanced-settings" type="button" aria-controls="shorturl-advanced-settings" aria-expanded="false">' . __('Advanced Settings', 'rrze-shorturl') . '</button>';
 
         // Display result message
         $form .= '<div><p>' . $result_message;
