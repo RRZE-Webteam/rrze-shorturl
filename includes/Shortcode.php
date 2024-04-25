@@ -650,8 +650,8 @@ class Shortcode
         $form .= '<h6 class="handle">' . __('Categories', 'rrze-shorturl') . '</h6>';
         $form .= self::display_shorturl_category($aParams['categories']);
         $form .= '</div>';
-
-        $form .= '<button id="btn-show-advanced-settings" type="button" aria-controls="shorturl-advanced-settings" aria-expanded="false">' . __('Advanced Settings', 'rrze-shorturl') . '</button>';
+        // $form .= '<button id="btn-show-advanced-settings" type="button" popovertarget="shorturl-advanced-settings" aria-controls="shorturl-advanced-settings" aria-expanded="false">' . __('Advanced Settings', 'rrze-shorturl') . '</button>';
+        $form .= '<button id="btn-show-advanced-settings" type="button" popovertarget="shorturl-advanced-settings">' . __('Advanced Settings', 'rrze-shorturl') . '</button>';
 
         // Display result message
         $form .= '<div><p>' . $result_message;
