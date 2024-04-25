@@ -72,6 +72,8 @@
     transform: translate(-50%, -50%);
     width: 50px;
     height: auto;
+    border: 5px solid white;
+    background-color: white;
 }
 
 .shorturl-error-msg {
