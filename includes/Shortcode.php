@@ -202,7 +202,7 @@ class Shortcode
         $output .= '<select id="parent_category" name="parent_category">';
         $output .= '<option value="0">' . __('None', 'rrze-shorturl') . '</option>';
         foreach ($categories_with_hierarchy as $category) {
-            $selected = (!empty ($parent_id) && ($category->id == $parent_id)) ? 'SELECTED' : '';
+            $selected = (!empty($parent_id) && ($category->id == $parent_id)) ? 'SELECTED' : '';
             $output .= '<option value="' . $category->id . '" ' . $selected . '>' . esc_html($category->hierarchy . $category->label) . '</option>';
         }
         $output .= '</select>';
@@ -215,10 +215,10 @@ class Shortcode
         global $wpdb;
 
         // Edit Category
-        if (!empty ($_POST['edit_category'])) {
+        if (!empty($_POST['edit_category'])) {
             $category_id = (int) $_POST['category_id'];
             $category_label = sanitize_text_field($_POST['category_label']);
-            $parent_category = !empty ($_POST['parent_category']) ? (int) $_POST['parent_category'] : null;
+            $parent_category = !empty($_POST['parent_category']) ? (int) $_POST['parent_category'] : null;
 
             // Update the category in the database
             $wpdb->update(
@@ -234,12 +234,12 @@ class Shortcode
 
             // Return to the table after editing
             return $this->display_categories_table();
-        } elseif (!empty ($_POST['add_category'])) {
+        } elseif (!empty($_POST['add_category'])) {
             // Add Category
             $category_label = sanitize_text_field($_POST['category_label']);
-            $parent_category = !empty ($_POST['parent_category']) ? (int) $_POST['parent_category'] : null;
+            $parent_category = !empty($_POST['parent_category']) ? (int) $_POST['parent_category'] : null;
 
-            if (!empty ($category_label)) {
+            if (!empty($category_label)) {
                 // Insert Category
                 $wpdb->insert(
                     "{$wpdb->prefix}shorturl_categories",
@@ -253,7 +253,7 @@ class Shortcode
         }
 
         // Check if an edit form should be displayed
-        if (!empty ($_GET['action']) && $_GET['action'] === 'edit_category' && !empty ($_GET['category_id'])) {
+        if (!empty($_GET['action']) && $_GET['action'] === 'edit_category' && !empty($_GET['category_id'])) {
             // Retrieve category details based on category ID
             $category_id = (int) $_GET['category_id'];
             $category = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}shorturl_categories WHERE id = %d", $category_id));
@@ -265,7 +265,7 @@ class Shortcode
                 $output .= '<label for="category_label">' . __('Category Label', 'rrze-shorturl') . ':</label><br>';
                 $output .= '<input type="text" id="category_label" name="category_label" value="' . esc_attr($category->label) . '"><br>';
 
-                $parent_id = !empty ($category->parent_id) ? $category->parent_id : 0;
+                $parent_id = !empty($category->parent_id) ? $category->parent_id : 0;
 
                 $output .= $this->makeCategoryDropdown($category_id, $parent_id);
 
@@ -278,7 +278,7 @@ class Shortcode
 
                 return $output;
             }
-        } elseif (isset ($_GET['action']) && $_GET['action'] === 'add_new_category') {
+        } elseif (isset($_GET['action']) && $_GET['action'] === 'add_new_category') {
             // display add category form
             return $this->add_category_form();
         }
@@ -403,7 +403,7 @@ class Shortcode
         check_ajax_referer('delete_shorturl_link_nonce', '_ajax_nonce');
 
         // Get the link ID from the AJAX request
-        $link_id = !empty ($_POST['link_id']) ? (int) $_POST['link_id'] : 0;
+        $link_id = !empty($_POST['link_id']) ? (int) $_POST['link_id'] : 0;
 
         // Delete the link from the database
         $result = $wpdb->delete(
@@ -432,7 +432,7 @@ class Shortcode
         check_ajax_referer('delete_shorturl_category_nonce', '_ajax_nonce');
 
         // Get the category ID from the AJAX request
-        $category_id = !empty ($_POST['category_id']) ? (int) $_POST['category_id'] : 0;
+        $category_id = !empty($_POST['category_id']) ? (int) $_POST['category_id'] : 0;
 
         // Get the parent_id of the category being deleted
         $parent_id = $wpdb->get_var($wpdb->prepare("SELECT parent_id FROM {$wpdb->prefix}shorturl_categories WHERE id = %d", $category_id));
@@ -533,7 +533,7 @@ class Shortcode
             'url' => filter_var($_POST['url'] ?? '', FILTER_VALIDATE_URL),
             'uri' => self::$rights['uri_allowed'] ? sanitize_text_field($_POST['uri'] ?? '') : '',
             'valid_until' => sanitize_text_field($_POST['valid_until'] ?? ''),
-            'categories' => !empty ($_POST['categories']) ? array_map('sanitize_text_field', $_POST['categories']) : [],
+            'categories' => !empty($_POST['categories']) ? array_map('sanitize_text_field', $_POST['categories']) : [],
             // 'tags' => !empty ($_POST['tags']) ? array_map('sanitize_text_field', $_POST['tags']) : [],
         ];
 
@@ -542,56 +542,44 @@ class Shortcode
         // Check if form is submitted
         if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Check if URL is provided
-            if (!empty ($aParams['url'])) {
+            if (!empty($aParams['url'])) {
                 // Call ShortURL::shorten() and add the result if URL is given
                 $result = ShortURL::shorten($aParams);
                 $result_message = ($result['error'] ? 'Error: ' : 'Short URL: ') . $result['txt'];
-                $result_message .= (!$result['error'] ? '&nbsp;&nbsp;<button type="button" class="btn" id="copyButton" name="copyButton" data-shortened-url="' . $result['txt'] . '"><img src="data:image/svg+xml,%3Csvg height=\'1024\' width=\'896\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M128 768h256v64H128v-64z m320-384H128v64h320v-64z m128 192V448L384 640l192 192V704h320V576H576z m-288-64H128v64h160v-64zM128 704h160v-64H128v64z m576 64h64v128c-1 18-7 33-19 45s-27 18-45 19H64c-35 0-64-29-64-64V192c0-35 29-64 64-64h192C256 57 313 0 384 0s128 57 128 128h192c35 0 64 29 64 64v320h-64V320H64v576h640V768zM128 256h512c0-35-29-64-64-64h-64c-35 0-64-29-64-64s-29-64-64-64-64 29-64 64-29 64-64 64h-64c-35 0-64 29-64 64z\' fill=\'%23000000\' /%3E%3C/svg%3E" width="13" alt="' . __('Copy to clipboard', 'rrze-shorturl') . '" style="cursor: pointer"></button>&nbsp;&nbsp;<span id="shorturl-tooltip" class="shorturl-tooltip">' . __('Copied to clipboard', 'rrze-shorturl') . '</span>' : '');
+                $result_message .= (!$result['error'] ? '&nbsp;&nbsp;<button type="button" class="btn" id="copyButton" name="copyButton" data-shortened-url="' . $result['txt'] . '"><img class="shorturl-img" src="data:image/svg+xml,%3Csvg height=\'1024\' width=\'896\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M128 768h256v64H128v-64z m320-384H128v64h320v-64z m128 192V448L384 640l192 192V704h320V576H576z m-288-64H128v64h160v-64zM128 704h160v-64H128v64z m576 64h64v128c-1 18-7 33-19 45s-27 18-45 19H64c-35 0-64-29-64-64V192c0-35 29-64 64-64h192C256 57 313 0 384 0s128 57 128 128h192c35 0 64 29 64 64v320h-64V320H64v576h640V768zM128 256h512c0-35-29-64-64-64h-64c-35 0-64-29-64-64s-29-64-64-64-64 29-64 64-29 64-64 64h-64c-35 0-64 29-64 64z\' fill=\'%23000000\' /%3E%3C/svg%3E" alt="' . __('Copy to clipboard', 'rrze-shorturl') . '"></button>&nbsp;&nbsp;<span id="shorturl-tooltip" class="shorturl-tooltip">' . __('Copied to clipboard', 'rrze-shorturl') . '</span>' : '');
             }
         }
 
         // Generate form
-        $form = '<button popovertarget="shorturl-advanced-settings" id="show-advanced-settings" type="submit" formnovalidate>' . __('Advanced Settings', 'rrze-shorturl') . '</button>';
-        $form .= '<form id="shorturl-form" method="post">';
+        $form = '<form id="shorturl-form" method="post">';
         $form .= '<div class="postbox">';
         $form .= '<h2 class="hndle">' . __('Create Short URL', 'rrze-shorturl') . '</h2>';
         $form .= '<div class="inside">';
         $form .= '<label for="url">' . __('Long URL', 'rrze-shorturl') . ':</label>&nbsp;';
         $form .= '<input type="text" name="url" id="url" value="' . esc_attr($aParams['url']) . '">';
-        $form .= '<input type="hidden" name="link_id" value="' . (!empty ($result['link_id']) ? $result['link_id'] : '') . '">';
+        $form .= '<input type="hidden" name="link_id" value="' . (!empty($result['link_id']) ? $result['link_id'] : '') . '">';
         $form .= '</div>';
         $form .= '</div>';
-        // $form .= '<p><a href="#" id="show-advanced-settings" disabled>' . __('Advanced Settings', 'rrze-shorturl') . '</a> <span id="shorturl-arrow" class="shorturl-arrow">&#9660;</span></p>';
-        // $form .= '<div id="shorturl-advanced-settings" style="display: none;">';
-        $form .= '<div id="shorturl-advanced-settings" popover>';
+        $form .= '<div id="shorturl-advanced-settings" popover anchor="btn-show-advanced-settings">';
         if (self::$rights['uri_allowed']) {
             $form .= self::display_shorturl_uri($aParams['uri']);
         }
         $form .= self::display_shorturl_validity($aParams['valid_until']);
-        $form .= '<h2 class="handle">' . __('Categories', 'rrze-shorturl') . '</h2>';
+        $form .= '<h6 class="handle">' . __('Categories', 'rrze-shorturl') . '</h6>';
         $form .= self::display_shorturl_category($aParams['categories']);
-        // $form .= '<h2 class="handle">' . __('Tags', 'rrze-shorturl') . '</h2>';
-        // $form .= self::display_shorturl_tag($aParams['tags']);
         $form .= '</div>';
 
         $form .= '<input type="submit" id="generate" name="generate" value="' . __('Generate', 'rrze-shorturl') . '">';
+        $form .= '<button popovertarget="shorturl-advanced-settings" id="btn-show-advanced-settings" type="button">' . __('Advanced Settings', 'rrze-shorturl') . '</button>';
 
         // Display result message
         $form .= '<div><p>' . $result_message;
         $form .= '</p>';
-        if (!empty ($result) && !$result['error']) {
-            $form .= '<input id="shortened_url" name="shortened_url" type="hidden" value="'.$result['txt'].'">';
+        if (!empty($result) && !$result['error']) {
+            $form .= '<input id="shortened_url" name="shortened_url" type="hidden" value="' . $result['txt'] . '">';
             $form .= '<div id="qr-container"><canvas id="qr"></canvas><img src="' . plugins_url('../', __FILE__) . 'assets/img/FAU.svg' . '" id="qr-logo"></div>';
         }
         $form .= '</form>';
-
-        // $form = '<button popovertarget="my-popover"> Open Popover </button><form>
-
-        // <div id="my-popover" popover>
-        //   <p>I am a popover with more information. Hit <kbd>esc</kbd> or click away to close me.<p>
-        // </div></form>';
-
-        
 
         return $form;
     }
@@ -629,14 +617,16 @@ class Shortcode
                     <?php echo __('Add New Category', 'rrze-shorturl'); ?>
                 </a></p>
             <div id="new-shorturl-category">
-                <input type="text" name="new_shorturl_category"
+                <label for="new_shorturl_category"><?php echo __('New Category Name', 'rrze-shorturl'); ?>:</label>
+                <input type="text" id="new_shorturl_category" name="new_shorturl_category"
                     placeholder="<?php echo __('New Category Name', 'rrze-shorturl'); ?>">
-                    <br /><?php echo __('Parent:', 'rrze-shorturl');?> <select name="parent_category">
-                    <option value="0">
-                        <?php echo __('None', 'rrze-shorturl'); ?>
-                    </option>
+                <br>
+                <label for="parent_category"><?php echo __('Parent Category', 'rrze-shorturl'); ?>:</label>
+                <select id="parent_category" name="parent_category">
+                    <option value="0"><?php echo __('None', 'rrze-shorturl'); ?></option>
                     <?php self::display_parent_categories_dropdown($hierarchicalCategories); ?>
                 </select>
+
                 <br><input type="button" value="<?php echo __('Add new category', 'rrze-shorturl'); ?>"
                     id="add-shorturl-category-btn">
             </div>
@@ -649,7 +639,7 @@ class Shortcode
     {
         foreach ($categories as $category) {
             echo '<option value="' . esc_attr($category->id) . '">' . str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;', $level) . esc_html($category->label) . '</option>';
-            if (!empty ($category->children)) {
+            if (!empty($category->children)) {
                 self::display_parent_categories_dropdown($category->children, $level + 1);
             }
         }
@@ -683,7 +673,7 @@ class Shortcode
             echo '<input type="checkbox" name="categories[]" value="' . esc_attr($category->id) . '" ' . $isChecked . ' />';
             echo esc_html($category->label) . '<br>';
 
-            if (!empty ($category->children)) {
+            if (!empty($category->children)) {
                 // Ensure $level is an integer by casting it
                 self::display_hierarchical_categories($category->children, (int) $level + 1, $aVal);
             }
@@ -698,7 +688,7 @@ class Shortcode
         $bUpdated = false;
         $message = '';
 
-        if (!empty ($_POST['action']) && $_POST['action'] === 'update_link' && !empty ($_POST['link_id'])) {
+        if (!empty($_POST['action']) && $_POST['action'] === 'update_link' && !empty($_POST['link_id'])) {
             // UPDATE link
 
             $aParams = [
@@ -708,7 +698,7 @@ class Shortcode
                 'shortURL' => filter_var($_POST['shortURL'] ?? '', FILTER_VALIDATE_URL),
                 'uri' => self::$rights['uri_allowed'] ? sanitize_text_field($_POST['uri'] ?? '') : '',
                 'valid_until' => sanitize_text_field($_POST['valid_until'] ?? ''),
-                'categories' => !empty ($_POST['categories']) ? array_map('sanitize_text_field', $_POST['categories']) : []
+                'categories' => !empty($_POST['categories']) ? array_map('sanitize_text_field', $_POST['categories']) : []
             ];
 
             ShortURL::updateLink($aParams['idm_id'], $aParams['link_id'], $aParams['domain_id'], $aParams['shortURL'], $aParams['uri'], $aParams['valid_until'], $aParams['categories'], $aParams['tags']);
@@ -727,8 +717,8 @@ class Shortcode
         $categories = $wpdb->get_results("SELECT id, label FROM $categories_table", ARRAY_A);
 
         // Determine the column to sort by and sort order
-        $orderby = !empty ($_GET['orderby']) ? $_GET['orderby'] : 'id';
-        $order = !empty ($_GET['order']) ? $_GET['order'] : 'ASC';
+        $orderby = !empty($_GET['orderby']) ? $_GET['orderby'] : 'id';
+        $order = !empty($_GET['order']) ? $_GET['order'] : 'ASC';
 
         // Prepare SQL query to fetch post IDs from wp_postmeta and their associated category names
         $query = "SELECT l.id AS link_id, 
@@ -744,7 +734,7 @@ class Shortcode
               GROUP BY l.id, l.long_url, l.short_url, l.uri, l.valid_until";
 
         // Handle filtering by category or tag
-        $filter_category = !empty ($_GET['filter_category']) ? (int) $_GET['filter_category'] : 0;
+        $filter_category = !empty($_GET['filter_category']) ? (int) $_GET['filter_category'] : 0;
         // $filter_tag = !empty ($_GET['filter_tag']) ? (int) $_GET['filter_tag'] : 0;
 
         if ($filter_category > 0) {
@@ -793,13 +783,13 @@ class Shortcode
         $table .= '<th scope="col" class="manage-column column-actions">' . __('Actions', 'rrze-shorturl') . '</th>';
         $table .= '</tr></thead><tbody>';
 
-        if (empty ($results)) {
+        if (empty($results)) {
             $table .= '<tr><td colspan="7">' . __('No links stored yet', 'rrze-shorturl') . '</td></tr>';
         }
 
         foreach ($results as $row) {
             // Fetch and concatenate category names with links
-            $category_ids = !empty ($row['category_ids']) ? explode(',', $row['category_ids']) : [];
+            $category_ids = !empty($row['category_ids']) ? explode(',', $row['category_ids']) : [];
             $category_names = [];
             foreach ($category_ids as $category_id) {
                 $category_name = $wpdb->get_var("SELECT label FROM $categories_table WHERE id = $category_id");
@@ -833,7 +823,7 @@ class Shortcode
         }
         $table .= '</tbody></table>';
 
-        if (!$bUpdated && !empty ($results)) {
+        if (!$bUpdated && !empty($results)) {
             $table .= $this->display_edit_link_form();
         }
 
@@ -842,19 +832,19 @@ class Shortcode
 
     private function display_edit_link_form()
     {
-        $link_id = !empty ($_GET['link_id']) ? (int) $_GET['link_id'] : 0;
+        $link_id = !empty($_GET['link_id']) ? (int) $_GET['link_id'] : 0;
 
         if ($link_id <= 0) {
             return '';
         } else {
             // Load the link data from the database
             $link_data = $this->get_link_data_by_id($link_id);
-            if (empty ($link_data)) {
+            if (empty($link_data)) {
                 return '';
             } else {
 
-                $aCategories = !empty ($link_data['category_ids']) ? explode(',', $link_data['category_ids']) : [];
-                $aTags = !empty ($link_data['tag_ids']) ? explode(',', $link_data['tag_ids']) : [];
+                $aCategories = !empty($link_data['category_ids']) ? explode(',', $link_data['category_ids']) : [];
+                $aTags = !empty($link_data['tag_ids']) ? explode(',', $link_data['tag_ids']) : [];
 
                 // Display the edit form
                 ob_start();
@@ -869,7 +859,7 @@ class Shortcode
                         <input type="hidden" name="domain_id" value="<?php echo esc_attr($link_data['domain_id']); ?>">
                         <input type="hidden" name="shortURL" value="<?php echo esc_attr($link_data['shortURL']); ?>">
                         <input type="hidden" name="uri"
-                            value="<?php echo !empty ($link_data['uri']) ? esc_attr($link_data['uri']) : ''; ?>">
+                            value="<?php echo !empty($link_data['uri']) ? esc_attr($link_data['uri']) : ''; ?>">
                         <?php echo self::display_shorturl_validity($link_data['valid_until']); ?>
                         <h2 class="handle">
                             <?php echo __('Categories', 'rrze-shorturl'); ?>
@@ -889,7 +879,7 @@ class Shortcode
     public static function update_category_label()
     {
         // Verify nonce
-        if (!!empty ($_POST['_ajax_nonce']) || !wp_verify_nonce($_POST['_ajax_nonce'], 'update_category_label_nonce')) {
+        if (!!empty($_POST['_ajax_nonce']) || !wp_verify_nonce($_POST['_ajax_nonce'], 'update_category_label_nonce')) {
             wp_send_json_error('Nonce verification failed.');
         }
 
@@ -922,10 +912,10 @@ class Shortcode
     {
         check_ajax_referer('add_shorturl_category_nonce', '_ajax_nonce');
 
-        $category_name = !empty ($_POST['categoryName']) ? sanitize_text_field($_POST['categoryName']) : '';
-        $parent_category = !empty ($_POST['parentCategory']) ? (int) $_POST['parentCategory'] : null;
+        $category_name = !empty($_POST['categoryName']) ? sanitize_text_field($_POST['categoryName']) : '';
+        $parent_category = !empty($_POST['parentCategory']) ? (int) $_POST['parentCategory'] : null;
 
-        if (empty ($category_name)) {
+        if (empty($category_name)) {
             wp_send_json_error(__('Category name is required.', 'rrze-shorturl'));
         }
 
@@ -965,8 +955,8 @@ class Shortcode
     {
         check_ajax_referer('store-link-category', '_ajax_nonce');
 
-        $link_id = !empty ($_POST['linkId']) ? (int) $_POST['linkId'] : 0;
-        $category_id = !empty ($_POST['categoryId']) ? (int) $_POST['categoryId'] : 0;
+        $link_id = !empty($_POST['linkId']) ? (int) $_POST['linkId'] : 0;
+        $category_id = !empty($_POST['categoryId']) ? (int) $_POST['categoryId'] : 0;
 
         if ($link_id <= 0 || $category_id <= 0) {
             wp_send_json_error(__('Invalid link ID or category ID.', 'rrze-shorturl'));
