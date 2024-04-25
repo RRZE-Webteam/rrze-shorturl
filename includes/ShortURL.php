@@ -8,7 +8,6 @@ class ShortURL
     protected static $rights;
 
     public static array $CONFIG = [
-        "ShortURLBase" => "https://go.fau.de/",
         "ShortURLModChars" => "abcdefghijklmnopqrstuvwxyz0123456789-",
         "AllowedDomains" => [],
         "Services" => [],
@@ -16,15 +15,11 @@ class ShortURL
 
     public function __construct()
     {
-
-        $options = get_option('rrze-shorturl');
-        // var_dump($options);
-        // exit;
-
-
         $rightsObj = new Rights();
         self::$rights = $rightsObj->getRights();
 
+        $options = get_option('rrze-shorturl');
+        self::$CONFIG['ShortURLBase'] = '(!empty($options['ShortURLBase']) ? $options['ShortURLBase'] : 'https://go.fau.de/');
         self::$CONFIG['AllowedDomains'] = self::getAllowedDomains();
         self::$CONFIG['Services'] = self::getServices();
     }
