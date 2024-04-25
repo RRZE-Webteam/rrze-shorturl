@@ -19,7 +19,7 @@ class ShortURL
         self::$rights = $rightsObj->getRights();
 
         $options = get_option('rrze-shorturl');
-        self::$CONFIG['ShortURLBase'] = '(!empty($options['ShortURLBase']) ? $options['ShortURLBase'] : 'https://go.fau.de/');
+        self::$CONFIG['ShortURLBase'] = (!empty($options['ShortURLBase']) ? $options['ShortURLBase'] : 'https://go.fau.de/');
         self::$CONFIG['AllowedDomains'] = self::getAllowedDomains();
         self::$CONFIG['Services'] = self::getServices();
     }
