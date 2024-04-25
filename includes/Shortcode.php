@@ -16,6 +16,7 @@ class Shortcode
         add_shortcode('shorturl-list', [$this, 'shortcode_list_handler']);
         add_shortcode('shorturl-categories', [$this, 'shortcode_categories_handler']);
         // add_shortcode('shorturl-tags', [$this, 'shortcode_tags_handler']);
+        add_shortcode('shorturl-services', [$this, 'shortcode_services_handler']);
 
         add_action('wp_ajax_nopriv_store_link_category', [$this, 'store_link_category_callback']);
         add_action('wp_ajax_store_link_category', [$this, 'store_link_category_callback']);
@@ -114,6 +115,86 @@ class Shortcode
     //     return $this->display_tags_table();
     // }
 
+    // private function display_tags_table(): string
+    // {
+    //     global $wpdb;
+
+    //     // Fetch tags along with their corresponding link counts
+    //     $tags_query = "SELECT t.id, t.label, COUNT(lt.link_id) AS link_count
+    //                    FROM {$wpdb->prefix}shorturl_tags t
+    //                    LEFT JOIN {$wpdb->prefix}shorturl_links_tags lt ON t.id = lt.tag_id
+    //                    GROUP BY t.id, t.label
+    //                    ORDER BY t.label ASC";
+
+    //     $tags = $wpdb->get_results($tags_query, ARRAY_A);
+
+    //     // Begin HTML table
+    //     $table_html = '<table class="shorturl-wp-list-table widefat">';
+    //     // Table header
+    //     $table_html .= '<thead><tr>';
+    //     $table_html .= '<th scope="col" class="manage-column column-label">' . __('Tag', 'rrze-shorturl') . '</th>';
+    //     $table_html .= '<th scope="col" class="manage-column column-link-count">' . __('Count', 'rrze-shorturl') . '</th>';
+    //     $table_html .= '<th scope="col" class="manage-column column-actions">' . __('Actions', 'rrze-shorturl') . '</th>';
+    //     $table_html .= '</tr></thead>';
+    //     $table_html .= '<tbody>';
+
+    //     // Iterate over each tag
+    //     foreach ($tags as $tag) {
+    //         $tag_id = $tag['id'];
+    //         $tag_label = $tag['label'];
+    //         $link_count = $tag['link_count'];
+
+    //         // Add row for each tag
+    //         $table_html .= '<tr>';
+    //         $table_html .= '<td class="column-label">' . esc_html($tag_label) . '</td>';
+    //         $table_html .= '<td class="column-link-count">' . esc_html($link_count) . '</td>';
+    //         $table_html .= '<td class="column-actions">
+    //                         <a href="?action=edit_tag&tag_id=' . esc_attr($tag_id) . '">' . __('Edit', 'rrze-shorturl') . '</a> | 
+    //                         <a href="#" class="delete-tag" data-tag-id="' . esc_attr($tag_id) . '">' . __('Delete', 'rrze-shorturl') . '</a>
+    //                     </td>';
+    //         $table_html .= '</tr>';
+    //     }
+
+    //     // Add row for actions (add new tag)
+    //     $table_html .= '<tr>';
+    //     $table_html .= '<td colspan="3" class="column-actions"><a href="?action=add_new_tag">' . __('Add New Tag', 'rrze-shorturl') . '</a></td>';
+    //     $table_html .= '</tr>';
+
+    //     $table_html .= '</tbody></table>';
+
+    //     return $table_html;
+    // }
+
+    // private function add_tag_form()
+    // {
+    //     $output = '<h2>' . __('Add New Tag', 'rrze-shorturl') . '</h2>';
+    //     $output .= '<form method="post">';
+    //     $output .= '<label for="tag_label">' . __('Tag Label', 'rrze-shorturl') . ':</label><br>';
+    //     $output .= '<input type="text" id="tag_label" name="tag_label" value=""><br>';
+    //     $output .= '<br><input type="submit" name="add_tag" value="' . __('Add Tag', 'rrze-shorturl') . '">';
+    //     $output .= '&nbsp;<a href="' . esc_url(remove_query_arg('action')) . '" class="button">' . __('Cancel', 'rrze-shorturl') . '</a>';
+    //     $output .= '</form>';
+
+    //     return $output;
+    // }
+
+
+    public function shortcode_services_handler(): string
+    {
+        $services = ShortURL::getServices();
+    
+        $html = '<table class="shorturl-wp-list-table widefat">';
+        $html .= '<thead><tr><th>' . __('Service Name', 'text-domain') . '</th></tr></thead>';
+        $html .= '<tbody>';
+    
+        foreach ($services as $service) {
+            $html .= '<tr><td>' . esc_html($service['hostname']) . '</td></tr>';
+        }
+    
+        $html .= '</tbody></table>';
+        return $html;
+    }
+    
     // private function display_tags_table(): string
     // {
     //     global $wpdb;
