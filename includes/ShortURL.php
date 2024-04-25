@@ -16,6 +16,12 @@ class ShortURL
 
     public function __construct()
     {
+
+        $options = get_option('rrze-shorturl');
+        // var_dump($options);
+        // exit;
+
+
         $rightsObj = new Rights();
         self::$rights = $rightsObj->getRights();
 
