@@ -70,7 +70,7 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 50px;
+    width: 40px;
     height: auto;
     border: 5px solid white;
     background-color: white;
@@ -80,8 +80,8 @@
     color: 'red';
 }
 
-.shorturl-img {
-    width: 13px;
+.shorturl-copy-img {
+    width: 20px;
     cursor: pointer; /* indicate it's clickable */
 }
 
@@ -93,7 +93,6 @@
     padding: 5px;
     border-radius: 6px;
     display: none;
-    /* Initially hide the shorturl-tooltip */
 }
 
 .shorturl-tooltip::after {

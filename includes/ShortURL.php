@@ -387,7 +387,9 @@ class ShortURL
                 $targetURL = $aDomain['prefix'] . self::cryptNumber($aLink['id']);
             }
 
-            if (empty ($aLink['short_url'])) {
+
+
+            if (empty($aLink['short_url'])) {
                 // Create shortURL
                 $shortURL = self::$CONFIG['ShortURLBase'] . $targetURL;
             } else {
