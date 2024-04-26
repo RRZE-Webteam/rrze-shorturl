@@ -19,6 +19,7 @@
 	"dependencies": {
 		"bootstrap-tokenfield": "^0.12.0",
 		"clipboard": "^2.0.11",
-		"use-clipboard-copy": "^0.2.0"
+		"use-clipboard-copy": "^0.2.0",
+		"webpack-dev-middleware": "^5.3.4"
 	}
 }
