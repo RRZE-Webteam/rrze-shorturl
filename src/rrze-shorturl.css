@@ -1,15 +1,20 @@
 .shorturl-edit-container {
-    display: flex; /* Use flexbox layout */
-    align-items: center; /* Center items vertically */
+    display: flex;
+    /* Use flexbox layout */
+    align-items: center;
+    /* Center items vertically */
 }
 
 .shorturl-category-input {
-    flex: 1; /* Allow input field to grow and fill remaining space */
-    margin-right: 10px; /* Add some spacing between input and button */
+    flex: 1;
+    /* Allow input field to grow and fill remaining space */
+    margin-right: 10px;
+    /* Add some spacing between input and button */
 }
 
 .shorturl-update-category {
-    margin-left: 10px; /* Add some spacing between button and input */
+    margin-left: 10px;
+    /* Add some spacing between button and input */
 }
 
 /* frontend-table-styles.css */
@@ -38,9 +43,11 @@
 }
 
 .shorturl-link-disabled {
-    pointer-events: none; /* prevents clicking on the element */
+    pointer-events: none;
+    /* prevents clicking on the element */
     color: gray !important;
-    cursor: not-allowed; /* changes cursor to show that the element is not clickable */
+    cursor: not-allowed;
+    /* changes cursor to show that the element is not clickable */
 }
 
 #qr-container {
@@ -63,9 +70,21 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 50px;
+    width: 40px;
     height: auto;
+    border: 5px solid white;
+    background-color: white;
 }
+
+.shorturl-error-msg {
+    color: 'red';
+}
+
+.shorturl-copy-img {
+    width: 20px;
+    cursor: pointer; /* indicate it's clickable */
+}
+
 
 .shorturl-tooltip {
     position: absolute;
@@ -73,7 +92,7 @@
     color: white;
     padding: 5px;
     border-radius: 6px;
-    display: none; /* Initially hide the shorturl-tooltip */
+    display: none;
 }
 
 .shorturl-tooltip::after {
@@ -87,4 +106,30 @@
     border-color: transparent black transparent transparent;
 }
 
+[popover] {
+    font-weight: 400;
+    padding: 1rem 1.5rem;
+    border-radius: 0.5rem;
+    line-height: 1.4;
+    top: 2rem;
+    margin: 0 auto;
+    border: 1px solid #000;
+}
 
+/*   IS-OPEN STATE   */
+[popover]:popover-open {
+    translate: 0 0;
+}
+
+/*   EXIT STATE   */
+[popover] {
+    transition: translate 0.7s ease-out, display 0.7s ease-out allow-discrete;
+    translate: 0 -22rem;
+}
+
+/*  BEFORE-OPEN STATE   */
+@starting-style {
+    [popover]:popover-open {
+        translate: 0 -22rem;
+    }
+}

@@ -12,11 +12,11 @@ const Edit = ({ attributes, setAttributes }) => {
     const [selfExplanatoryUri, setSelfExplanatoryUri] = useState('');
     const [validUntil, setValidUntil] = useState(defaultValidUntil);
     const [selectedCategories, setSelectedCategories] = useState([]);
-    const [selectedTags, setSelectedTags] = useState([]);
+    // const [selectedTags, setSelectedTags] = useState([]);
     const [errorMessage, setErrorMessage] = useState('');
     const [qrCodeUrl, setQrCodeUrl] = useState('');
     const [categoriesOptions, setCategoriesOptions] = useState([]);
-    const [tagSuggestions, setTagSuggestions] = useState([]);
+    // const [tagSuggestions, setTagSuggestions] = useState([]);
     const [copied, setCopied] = useState(false);
     let clipboard; // Declare clipboard variable
 
@@ -78,21 +78,21 @@ const Edit = ({ attributes, setAttributes }) => {
             });
 
         // Fetch tags from shorturl_tags table
-        fetch('/wp-json/short-url/v1/tags')
-            .then(response => response.json())
-            .then(data => {
-                console.log('ShortURL Tags Data:', data);
-                if (Array.isArray(data)) {
-                    const tagSuggestions = data.map(tag => ({ id: tag.id, value: tag.label }));
-                    setTagSuggestions(tagSuggestions);
-                } else {
-                    console.log('No tags found.');
-                    setTagSuggestions([]);
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching shorturl_tags:', error);
-            });
+        // fetch('/wp-json/short-url/v1/tags')
+        //     .then(response => response.json())
+        //     .then(data => {
+        //         console.log('ShortURL Tags Data:', data);
+        //         if (Array.isArray(data)) {
+        //             const tagSuggestions = data.map(tag => ({ id: tag.id, value: tag.label }));
+        //             setTagSuggestions(tagSuggestions);
+        //         } else {
+        //             console.log('No tags found.');
+        //             setTagSuggestions([]);
+        //         }
+        //     })
+        //     .catch(error => {
+        //         console.error('Error fetching shorturl_tags:', error);
+        //     });
 
     }, [shortenedUrl]);
 
@@ -135,36 +135,36 @@ const Edit = ({ attributes, setAttributes }) => {
             }
         }
 
-        if (isValid) {
-            const allTagIds = selectedTags.map(tag => tag.id);
+        // if (isValid) {
+        //     const allTagIds = selectedTags.map(tag => tag.id);
 
-            const newTags = selectedTags.filter(tag => !tagSuggestions.some(suggestion => suggestion.value === tag.value));
+        //     const newTags = selectedTags.filter(tag => !tagSuggestions.some(suggestion => suggestion.value === tag.value));
 
-            if (newTags.length > 0) {
-                Promise.all(newTags.map(newTag => {
-                    return fetch('/wp-json/short-url/v1/add-tag', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ label: newTag.value })
-                    }).then(response => {
-                        if (!response.ok) {
-                            throw new Error('Failed to add tag');
-                        }
-                        return response.json();
-                    }).then(newTag => newTag.id);
-                })).then(newTagIds => {
-                    const combinedTagIds = [...allTagIds, ...newTagIds];
-                    continueShorteningUrl(combinedTagIds);
-                }).catch(error => {
-                    console.error('Error adding tag:', error);
-                    setErrorMessage('Error: Failed to add tag');
-                });
-            } else {
-                continueShorteningUrl(allTagIds);
-            }
-        }
+        //     if (newTags.length > 0) {
+        //         Promise.all(newTags.map(newTag => {
+        //             return fetch('/wp-json/short-url/v1/add-tag', {
+        //                 method: 'POST',
+        //                 headers: {
+        //                     'Content-Type': 'application/json',
+        //                 },
+        //                 body: JSON.stringify({ label: newTag.value })
+        //             }).then(response => {
+        //                 if (!response.ok) {
+        //                     throw new Error('Failed to add tag');
+        //                 }
+        //                 return response.json();
+        //             }).then(newTag => newTag.id);
+        //         })).then(newTagIds => {
+        //             const combinedTagIds = [...allTagIds, ...newTagIds];
+        //             continueShorteningUrl(combinedTagIds);
+        //         }).catch(error => {
+        //             console.error('Error adding tag:', error);
+        //             setErrorMessage('Error: Failed to add tag');
+        //         });
+        //     } else {
+        //         continueShorteningUrl(allTagIds);
+        //     }
+        // }
     };
 
     const continueShorteningUrl = (tags) => {
@@ -172,8 +172,8 @@ const Edit = ({ attributes, setAttributes }) => {
             url: url.trim(),
             uri: selfExplanatoryUri,
             valid_until: validUntil,
-            categories: selectedCategories,
-            tags: tags
+            categories: selectedCategories
+            // , tags: tags
         };
 
         fetch('/wp-json/short-url/v1/shorten', {
@@ -281,7 +281,7 @@ const Edit = ({ attributes, setAttributes }) => {
                     ))}
                     <a href="#" onClick={handleAddCategory}>Add New Category</a>
                 </PanelBody>
-                <PanelBody title={__('Tags')}>
+                {/* <PanelBody title={__('Tags')}>
                     <FormTokenField
                         label="Tags"
                         value={selectedTags.map(tag => tag.value)} // Extracting values from selectedTags
@@ -294,7 +294,7 @@ const Edit = ({ attributes, setAttributes }) => {
                             setSelectedTags(updatedTags);
                         }}
                     />
-                </PanelBody>
+                </PanelBody> */}
             </InspectorControls>
 
             <TextControl
@@ -307,7 +307,7 @@ const Edit = ({ attributes, setAttributes }) => {
             </Button>
 
             {errorMessage && (
-                <p style={{ color: 'red' }}>
+                <p class="shorturl-error-msg">
                     {errorMessage}
                 </p>
             )}
@@ -320,10 +320,9 @@ const Edit = ({ attributes, setAttributes }) => {
                         &nbsp;&nbsp;<button class="btn" data-clipboard-target="#foo">
                             <img
                                 src="data:image/svg+xml,%3Csvg height='1024' width='896' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M128 768h256v64H128v-64z m320-384H128v64h320v-64z m128 192V448L384 640l192 192V704h320V576H576z m-288-64H128v64h160v-64zM128 704h160v-64H128v64z m576 64h64v128c-1 18-7 33-19 45s-27 18-45 19H64c-35 0-64-29-64-64V192c0-35 29-64 64-64h192C256 57 313 0 384 0s128 57 128 128h192c35 0 64 29 64 64v320h-64V320H64v576h640V768zM128 256h512c0-35-29-64-64-64h-64c-35 0-64-29-64-64s-29-64-64-64-64 29-64 64-29 64-64 64h-64c-35 0-64 29-64 64z'/%3E%3C/svg%3E"
-                                width="13"
                                 alt="Copy to clipboard"
-                                onClick={handleCopy} // Attach onClick event handler
-                                style={{ cursor: 'pointer' }} // Add cursor style to indicate it's clickable
+                                onClick={handleCopy}
+                                class="shorturl-copy-img"
                             />
                         </button> {copied && <span>URL copied!</span>}
                     </p>

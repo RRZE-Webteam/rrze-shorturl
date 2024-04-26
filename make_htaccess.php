@@ -29,19 +29,24 @@ try {
         throw new Exception("Failed to read .htaccess file.");
     }
 
-    // Delete existing rules including markers
+    // Delete existing rules between markers
     $marker_start = "# BEGIN ShortURL\n";
     $marker_end = "# END ShortURL\n";
     $pattern = '/' . preg_quote($marker_start, '/') . '.*?' . preg_quote($marker_end, '/') . '/s';
     $htaccess_content = preg_replace($pattern, '', $htaccess_content);
-    if ($htaccess_content === null) {
-        throw new Exception("Failed to delete existing rules between markers.");
-    }
 
-    // Insert new rules between markers
-    $htaccess_content = $marker_start . $rules . $marker_end . $htaccess_content;
-    if ($htaccess_content === false) {
-        throw new Exception("Failed to insert new rules between markers.");
+    // Generate new rules section
+    $new_rules_section = $marker_start . $rules . $marker_end;
+
+    // Check if the WordPress standard comment exists
+    $standard_comment = "# BEGIN WordPress\n";
+    $pos = strpos($htaccess_content, $standard_comment);
+    if ($pos !== false) {
+        // Insert new rules before the standard WordPress comment
+        $htaccess_content = substr_replace($htaccess_content, $new_rules_section, $pos, 0);
+    } else {
+        // Insert new rules at the beginning of the .htaccess file
+        $htaccess_content = $new_rules_section . $htaccess_content;
     }
 
     // Save .htaccess content

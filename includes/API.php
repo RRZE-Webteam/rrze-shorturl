@@ -48,69 +48,110 @@ class API {
             }
         ));  
         
-        register_rest_route('short-url/v1', '/tags', array(
-            'methods' => 'GET',
-            'callback' => array($this, 'get_tags_callback'),
-            'permission_callback' => function () {
-                return self::$rights['id'] !== 0;
-            }
-        ));
+        // register_rest_route('short-url/v1', '/tags', array(
+        //     'methods' => 'GET',
+        //     'callback' => array($this, 'get_tags_callback'),
+        //     'permission_callback' => function () {
+        //         return self::$rights['id'] !== 0;
+        //     }
+        // ));
 
-        register_rest_route( 'short-url/v1', '/add-tag', array(
-            'methods'             => 'POST',
-            'callback'            => array($this, 'add_tag_callback'),
-            'permission_callback' => function () {
-                return self::$rights['id'] !== 0;
-            }
-        ) );
+        // register_rest_route( 'short-url/v1', '/add-tag', array(
+        //     'methods'             => 'POST',
+        //     'callback'            => array($this, 'add_tag_callback'),
+        //     'permission_callback' => function () {
+        //         return self::$rights['id'] !== 0;
+        //     }
+        // ) );
+
+        // Register REST API query filters
+        add_action('rest_api_init', [$this, 'addRestQueryFilters']);
     }
 
-    public function add_tag_callback($request) {
 
-        $parameters = $request->get_json_params();
-    
-        if (empty($parameters['label'])) {
-            return new WP_Error('invalid_name', __('Tag label is required.', 'rrze-shorturl'), array('status' => 400));
-        }
-    
-        global $wpdb;
-        $table_name = $wpdb->prefix . 'shorturl_tags';
-    
-        $inserted = $wpdb->insert($table_name, array('label' => sanitize_text_field($parameters['label'])));
-    
-        if (!$inserted) {
-            return new WP_Error('insert_failed', __('Failed to add tag to the database.', 'rrze-shorturl'), array('status' => 500));
-        }
-    
-        $tag_id = $wpdb->insert_id;
-    
-        $tags = array('id' => $tag_id, 'label' => $parameters['label']);
-
-        return new WP_REST_Response($tags, 200);
-
+    /**
+     * Add filters to the REST API query
+     */
+    public function addRestQueryFilters()
+    {
+        // Add filter parameters to the object query
+        add_filter('rest_shorturl_query', [$this, 'addFilterParam'], 10, 2);
+        // Add filter parameters to the categories query
+        add_filter('rest_shorturl_category_query', [$this, 'addFilterParam'], 10, 2);
+        // Add filter parameters to the tags query
+        add_filter('rest_shorturl_tag_query', [$this, 'addFilterParam'], 10, 2);
     }
+
+    /**
+     * Add filter parameters to the query
+     *
+     * @param array $args
+     * @param array $request
+     * @return array
+     */
+    public function addFilterParam($args, $request)
+    {
+        if (empty($request['filter']) || !is_array($request['filter'])) {
+            return $args;
+        }
+        global $wp;
+        $filter = $request['filter'];
+
+        $vars = apply_filters('query_vars', $wp->public_query_vars);
+        foreach ($vars as $var) {
+            if (isset($filter[$var])) {
+                $args[$var] = $filter[$var];
+            }
+        }
+        return $args;
+    }
+
+    // public function add_tag_callback($request) {
+
+    //     $parameters = $request->get_json_params();
+    
+    //     if (empty($parameters['label'])) {
+    //         return new WP_Error('invalid_name', __('Tag label is required.', 'rrze-shorturl'), array('status' => 400));
+    //     }
+    
+    //     global $wpdb;
+    //     $table_name = $wpdb->prefix . 'shorturl_tags';
+    
+    //     $inserted = $wpdb->insert($table_name, array('label' => sanitize_text_field($parameters['label'])));
+    
+    //     if (!$inserted) {
+    //         return new WP_Error('insert_failed', __('Failed to add tag to the database.', 'rrze-shorturl'), array('status' => 500));
+    //     }
+    
+    //     $tag_id = $wpdb->insert_id;
+    
+    //     $tags = array('id' => $tag_id, 'label' => $parameters['label']);
+
+    //     return new WP_REST_Response($tags, 200);
+
+    // }
     
     // Callback function to get tags
-    function get_tags_callback( $request ) {
-        global $wpdb;
+    // function get_tags_callback( $request ) {
+    //     global $wpdb;
     
-        // Query tags from the database
-        $tags = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}shorturl_tags" );
+    //     // Query tags from the database
+    //     $tags = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}shorturl_tags" );
     
-        // Initialize an empty array to store tag data
-        $tag_data = array();
+    //     // Initialize an empty array to store tag data
+    //     $tag_data = array();
     
-        // Loop through the tags and extract required data
-        foreach ( $tags as $tag ) {
-            $tag_data[] = array(
-                'id'    => $tag->id,
-                'label' => $tag->label,
-            );
-        }
+    //     // Loop through the tags and extract required data
+    //     foreach ( $tags as $tag ) {
+    //         $tag_data[] = array(
+    //             'id'    => $tag->id,
+    //             'label' => $tag->label,
+    //         );
+    //     }
     
-        // Return the tag data as a JSON response
-        return new WP_REST_Response($tag_data, 200);
-    }
+    //     // Return the tag data as a JSON response
+    //     return new WP_REST_Response($tag_data, 200);
+    // }
     
 
     public function add_category_callback($request) {

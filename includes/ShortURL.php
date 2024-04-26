@@ -8,9 +8,9 @@ class ShortURL
     protected static $rights;
 
     public static array $CONFIG = [
-        "ShortURLBase" => "https://go.fau.de/",
         "ShortURLModChars" => "abcdefghijklmnopqrstuvwxyz0123456789-",
         "AllowedDomains" => [],
+        "Services" => [],
     ];
 
     public function __construct()
@@ -18,7 +18,10 @@ class ShortURL
         $rightsObj = new Rights();
         self::$rights = $rightsObj->getRights();
 
+        $options = get_option('rrze-shorturl');
+        self::$CONFIG['ShortURLBase'] = (!empty($options['ShortURLBase']) ? $options['ShortURLBase'] : 'https://go.fau.de/');
         self::$CONFIG['AllowedDomains'] = self::getAllowedDomains();
+        self::$CONFIG['Services'] = self::getServices();
     }
 
     public static function isValidUrl($url)
@@ -115,13 +118,12 @@ class ShortURL
         $shortURL,
         $uri,
         $valid_until,
-        $categories,
-        $tags
+        $categories
     ) {
         global $wpdb;
         $table_name = $wpdb->prefix . 'shorturl_links';
         $link_categories_table = $wpdb->prefix . 'shorturl_links_categories';
-        $link_tags_table = $wpdb->prefix . 'shorturl_links_tags';
+        // $link_tags_table = $wpdb->prefix . 'shorturl_links_tags';
 
         try {
             // Store in the database    
@@ -140,7 +142,7 @@ class ShortURL
             if ($update_result !== false) {
                 // Delete existing categories and tags for the link
                 $wpdb->delete($link_categories_table, ['link_id' => $link_id]);
-                $wpdb->delete($link_tags_table, ['link_id' => $link_id]);
+                // $wpdb->delete($link_tags_table, ['link_id' => $link_id]);
 
                 // Insert new categories
                 if (!empty ($categories)) {
@@ -153,14 +155,14 @@ class ShortURL
                 }
 
                 // Insert new tags
-                if (!empty ($tags)) {
-                    foreach ($tags as $tag_id) {
-                        $wpdb->insert(
-                            $link_tags_table,
-                            ['link_id' => $link_id, 'tag_id' => $tag_id]
-                        );
-                    }
-                }
+                // if (!empty ($tags)) {
+                //     foreach ($tags as $tag_id) {
+                //         $wpdb->insert(
+                //             $link_tags_table,
+                //             ['link_id' => $link_id, 'tag_id' => $tag_id]
+                //         );
+                //     }
+                // }
             }
 
             return $update_result;
@@ -170,6 +172,27 @@ class ShortURL
         }
     }
 
+
+    public static function getServices(){
+        global $wpdb;
+
+        try {
+            $table_name = $wpdb->prefix . 'shorturl_services';
+            $query = "SELECT * FROM $table_name";
+
+            $results = $wpdb->get_results($query, ARRAY_A);
+
+            $aDomains = [];
+            foreach ($results as $result) {
+                $aDomains[] = $result;
+            }
+
+            return $aDomains;
+        } catch (\Exception $e) {
+            error_log("Error in getServices: " . $e->getMessage());
+            return null;
+        }
+    }
 
     // Function to retrieve our domains from the database
     public static function getAllowedDomains()
@@ -197,9 +220,15 @@ class ShortURL
     public static function checkDomain($long_url)
     {
         try {
-            $aRet = ['prefix' => 0, 'hostname' => '', "notice" => ''];
+            $aRet = ['prefix' => 0, 'hostname' => '', "notice" => __('Domain is not allowed to use our shortening service.', 'rrze-shorturl')];
 
             $domain = wp_parse_url($long_url, PHP_URL_HOST);
+
+            // Check if domain is a service
+            if (in_array($domain, self::$CONFIG['AllowedDomains'])){
+                $aRet['notice'] = __('You\'ve tried to shorten a service domain. Services will automatically be shortened and redirected.', 'rrze-shorturl');
+                return $aRet;
+            }
 
             // Check if the extracted domain belongs to one of our allowed domains
             foreach (self::$CONFIG['AllowedDomains'] as $aEntry) {
@@ -313,7 +342,7 @@ class ShortURL
             $aDomain = self::checkDomain($long_url);
 
             if ($aDomain['prefix'] == 0) {
-                return ['error' => true, 'txt' => __('Domain is not allowed to use our shortening service.', 'rrze-shorturl') . ' ' . $aDomain['notice']];
+                return ['error' => true, 'txt' => $aDomain['notice']];
             }
 
             // Check if 'get_allowed' is false and remove GET parameters if necessary
@@ -322,7 +351,7 @@ class ShortURL
             $uri = self::$rights['uri_allowed'] ? sanitize_text_field($_POST['uri'] ?? '') : '';
             $valid_until = isset ($shortenParams['valid_until']) && $shortenParams['valid_until'] !== '' ? $shortenParams['valid_until'] : date('Y-m-d', strtotime('+1 year'));
             $categories = $shortenParams['categories'] ?? [];
-            $tags = $shortenParams['tags'] ?? [];
+            // $tags = $shortenParams['tags'] ?? [];
 
             // Validate the Date
             $isValid = self::isValidDate($valid_until);
@@ -358,14 +387,17 @@ class ShortURL
                 $targetURL = $aDomain['prefix'] . self::cryptNumber($aLink['id']);
             }
 
-            if (empty ($aLink['short_url'])) {
+
+
+            if (empty($aLink['short_url'])) {
                 // Create shortURL
                 $shortURL = self::$CONFIG['ShortURLBase'] . $targetURL;
             } else {
                 $shortURL = $aLink['short_url'];
             }
 
-            $bUpdated = self::updateLink(self::$rights['id'], $aLink['id'], $aDomain['id'], $shortURL, $uri, $valid_until, $categories, $tags);
+            // $bUpdated = self::updateLink(self::$rights['id'], $aLink['id'], $aDomain['id'], $shortURL, $uri, $valid_until, $categories, $tags);
+            $bUpdated = self::updateLink(self::$rights['id'], $aLink['id'], $aDomain['id'], $shortURL, $uri, $valid_until, $categories);
 
             if ($bUpdated === false) {
                 return ['error' => true, 'txt' => __('Unable to update database table', 'rrze-shorturl')];

@@ -30,32 +30,37 @@ jQuery(document).ready(function ($) {
     $('#customer-domains-form, #services-form').on('submit', handleFormSubmission);
 
     // Toggle Advanced Settings
-    $('#show-advanced-settings').addClass('shorturl-link-disabled');
+    // $('#show-advanced-settings').addClass('shorturl-link-disabled');
 
-    $('#url').on('input', function() {
-        var url = $(this).val();
-        if (url.trim() !== '') {
-            $('#show-advanced-settings').attr('href', '#').removeClass('shorturl-link-disabled');
-        } else {
-            $('#show-advanced-settings').removeAttr('href').addClass('shorturl-link-disabled');
-        }
-    });
+    // $('#url').on('input', function() {
+    //     var url = $(this).val();
+    //     if (url.trim() !== '') {
+    //         $('#show-advanced-settings').attr('href', '#').removeClass('shorturl-link-disabled');
+    //     } else {
+    //         $('#show-advanced-settings').removeAttr('href').addClass('shorturl-link-disabled');
+    //     }
+    // });
 
-    $('#show-advanced-settings').on('click', function (e) {
-        e.preventDefault();
-        $('#div-advanced-settings').slideToggle();
-        $('.shorturl-arrow').toggleClass('up');
-        if ($('.shorturl-arrow').hasClass('up')) {
-            $('.shorturl-arrow').html('&#9650;');
-        } else {
-            $('.shorturl-arrow').html('&#9660;');
-        }        
-    });
+    // $('#show-advanced-settings').on('click', function (e) {
+    //     e.preventDefault();
+    //     $('#shorturl-advanced-settings').slideToggle();
+    //     $('.shorturl-arrow').toggleClass('up');
+    //     if ($('.shorturl-arrow').hasClass('up')) {
+    //         $('.shorturl-arrow').html('&#9650;');
+    //     } else {
+    //         $('.shorturl-arrow').html('&#9660;');
+    //     }        
+    // });
+
+    // Show advanced settings is a button inside a form. We need to prevent his default actions
+    // $('button[popovertarget]').on('click', function(event) {
+    //     event.preventDefault();
+    //   });
 
     // Event listener for changes in the advanced settings
-    $('#div-advanced-settings input[type="text"], #div-advanced-settings input[type="date"], #div-advanced-settings select').on('change', function () {
-        $("#generate").prop('value', 'Update');
-    });
+    // $('.shorturl-advanced-settings input[type="text"], .shorturl-advanced-settings input[type="date"], .shorturl-advanced-settings select').on('change', function () {
+    //     $("#generate").prop('value', 'Update');
+    // });
 
 
     $(document).on("mouseover", ".shorturl-category-row", function () {
@@ -104,46 +109,46 @@ jQuery(document).ready(function ($) {
     });
 
     // tokenfield for tags
-    $('#tag-tokenfield').select2({
-        tags: true,
-        tokenSeparators: [','],
-        placeholder: __('Add tags', 'rrze-shorturl')
-    });
+    // $('#tag-tokenfield').select2({
+    //     tags: true,
+    //     tokenSeparators: [','],
+    //     placeholder: __('Add tags', 'rrze-shorturl')
+    // });
 
 
-    $('#tag-tokenfield').on('select2:selecting', function (e) {
-        var tagValue = e.params.args.data.text;
+    // $('#tag-tokenfield').on('select2:selecting', function (e) {
+    //     var tagValue = e.params.args.data.text;
 
-        if (e.params.args.data.id === e.params.args.data.text) {
-            $.ajax({
-                url: rrze_shorturl_ajax_object.ajax_url,
-                method: 'POST',
-                data: {
-                    action: 'add_shorturl_tag',
-                    new_tag_name: tagValue,
-                    dataType: 'json',
-                    _ajax_nonce: rrze_shorturl_ajax_object.add_shorturl_tag_nonce
-                },
-                success: function (response) {
-                    if (response.success) {
-                        var newTagId = response.data.id;
+    //     if (e.params.args.data.id === e.params.args.data.text) {
+    //         $.ajax({
+    //             url: rrze_shorturl_ajax_object.ajax_url,
+    //             method: 'POST',
+    //             data: {
+    //                 action: 'add_shorturl_tag',
+    //                 new_tag_name: tagValue,
+    //                 dataType: 'json',
+    //                 _ajax_nonce: rrze_shorturl_ajax_object.add_shorturl_tag_nonce
+    //             },
+    //             success: function (response) {
+    //                 if (response.success) {
+    //                     var newTagId = response.data.id;
 
-                        // Workaround: remove the option that select2 automatically has added (with the wrong value)
-                        $('#tag-tokenfield option[value="' + tagValue + '"]').remove();
-                        // Append the new tag
-                        $('#tag-tokenfield').append('<option value="' + newTagId + '" selected>' + tagValue + '</option>');
-                        $('#tag-tokenfield').trigger('change');
+    //                     // Workaround: remove the option that select2 automatically has added (with the wrong value)
+    //                     $('#tag-tokenfield option[value="' + tagValue + '"]').remove();
+    //                     // Append the new tag
+    //                     $('#tag-tokenfield').append('<option value="' + newTagId + '" selected>' + tagValue + '</option>');
+    //                     $('#tag-tokenfield').trigger('change');
 
-                    } else {
-                        console.error('Error adding tag:', response.error);
-                    }
-                },
-                error: function (xhr, status, error) {
-                    console.error('Error adding tag:', error);
-                }
-            });
-        }
-    });
+    //                 } else {
+    //                     console.error('Error adding tag:', response.error);
+    //                 }
+    //             },
+    //             error: function (xhr, status, error) {
+    //                 console.error('Error adding tag:', error);
+    //             }
+    //         });
+    //     }
+    // });
 
 
     // Categories
@@ -278,11 +283,11 @@ jQuery(document).ready(function ($) {
     }
 
     function showTooltip(message) {
-        const shorturl-tooltip = document.getElementById('shorturl-tooltip');
-        shorturl-tooltip.textContent = message;
-        shorturl-tooltip.style.display = 'inline-block';    
+        const shorturl_tooltip = document.getElementById('shorturl-tooltip');
+        shorturl_tooltip.textContent = message;
+        shorturl_tooltip.style.display = 'inline-block';    
         setTimeout(() => {
-            shorturl-tooltip.style.display = 'none';
+            shorturl_tooltip.style.display = 'none';
         }, 2000); // Hide the shorturl-tooltip after 2 seconds
     }
 
@@ -384,36 +389,36 @@ jQuery(document).ready(function ($) {
     });
 
     // Edit Tag
-    $(document).on('click', '.edit-tag-button', function () {    
-        var tagId = $(this).data("tag-id");
-        $(".edit-tag-form[data-tag-id=" + tagId + "]").toggle();
-        $(".shorturl-wp-list-table").hide();
-    });
+    // $(document).on('click', '.edit-tag-button', function () {    
+    //     var tagId = $(this).data("tag-id");
+    //     $(".edit-tag-form[data-tag-id=" + tagId + "]").toggle();
+    //     $(".shorturl-wp-list-table").hide();
+    // });
 
     // Delete Tag
-    $(document).on('click', '.delete-tag', function (e) {
-        e.preventDefault();
-        var tagId = $(this).data('tag-id');
-        if (confirm(__('Are you sure you want to delete this tag?', 'rrze-shorturl'))) {
-            $.ajax({
-                url: rrze_shorturl_ajax_object.ajax_url,
-                method: 'POST',
-                data: {
-                    action: 'delete_tag',
-                    tag_id: tagId,
-                    _ajax_nonce: rrze_shorturl_ajax_object.delete_shorturl_tag_nonce
-                },
-                success: function (response) {
-                    // Remove 'action' query parameter from URL ( if we'd use location.reload(); instead the browser would ask to send the form again)
-                    var url = window.location.href;
-                    url = url.split('?')[0]; // Remove query string
-                    window.location.href = url; // Reload the page without the 'action' parameter
-                },
-                error: function (xhr, status, error) {
-                    console.error('Error deleting tag:', error);
-                }
-            });
-        }
-    });
+    // $(document).on('click', '.delete-tag', function (e) {
+    //     e.preventDefault();
+    //     var tagId = $(this).data('tag-id');
+    //     if (confirm(__('Are you sure you want to delete this tag?', 'rrze-shorturl'))) {
+    //         $.ajax({
+    //             url: rrze_shorturl_ajax_object.ajax_url,
+    //             method: 'POST',
+    //             data: {
+    //                 action: 'delete_tag',
+    //                 tag_id: tagId,
+    //                 _ajax_nonce: rrze_shorturl_ajax_object.delete_shorturl_tag_nonce
+    //             },
+    //             success: function (response) {
+    //                 // Remove 'action' query parameter from URL ( if we'd use location.reload(); instead the browser would ask to send the form again)
+    //                 var url = window.location.href;
+    //                 url = url.split('?')[0]; // Remove query string
+    //                 window.location.href = url; // Reload the page without the 'action' parameter
+    //             },
+    //             error: function (xhr, status, error) {
+    //                 console.error('Error deleting tag:', error);
+    //             }
+    //         });
+    //     }
+    // });
 });
 

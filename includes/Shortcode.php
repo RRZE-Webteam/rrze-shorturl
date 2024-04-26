@@ -15,7 +15,8 @@ class Shortcode
         add_shortcode('shorturl', [$this, 'shorturl_handler']);
         add_shortcode('shorturl-list', [$this, 'shortcode_list_handler']);
         add_shortcode('shorturl-categories', [$this, 'shortcode_categories_handler']);
-        add_shortcode('shorturl-tags', [$this, 'shortcode_tags_handler']);
+        // add_shortcode('shorturl-tags', [$this, 'shortcode_tags_handler']);
+        add_shortcode('shorturl-services', [$this, 'shortcode_services_handler']);
 
         add_action('wp_ajax_nopriv_store_link_category', [$this, 'store_link_category_callback']);
         add_action('wp_ajax_store_link_category', [$this, 'store_link_category_callback']);
@@ -43,139 +44,219 @@ class Shortcode
     }
 
 
-    public function shortcode_tags_handler(): string
+    // public function shortcode_tags_handler(): string
+    // {
+    //     global $wpdb;
+
+    //     // Edit Tag
+    //     if (!empty ($_POST['edit_tag'])) {
+    //         $tag_id = (int) $_POST['tag_id'];
+    //         $tag_label = sanitize_text_field($_POST['tag_label']);
+
+    //         // Update the tag in the database
+    //         $wpdb->update(
+    //             "{$wpdb->prefix}shorturl_tags",
+    //             array(
+    //                 'label' => $tag_label,
+    //             ),
+    //             array('id' => $tag_id),
+    //             array('%s', '%d'),
+    //             array('%d')
+    //         );
+
+    //         // Return to the table after editing
+    //         return $this->display_tags_table();
+    //     } elseif (!empty ($_POST['add_tag'])) {
+    //         // Add tag
+    //         $tag_label = sanitize_text_field($_POST['tag_label']);
+
+    //         if (!empty ($tag_label)) {
+    //             // Insert tag
+    //             $wpdb->insert(
+    //                 "{$wpdb->prefix}shorturl_tags",
+    //                 array(
+    //                     'label' => $tag_label
+    //                 )
+    //             );
+    //         }
+    //         return $this->display_tags_table();
+    //     }
+
+    //     // Check if an edit form should be displayed
+    //     if (!empty ($_GET['action']) && $_GET['action'] === 'edit_tag' && !empty ($_GET['tag_id'])) {
+    //         // Retrieve tag details based on tag ID
+    //         $tag_id = (int) $_GET['tag_id'];
+    //         $tag = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}shorturl_tags WHERE id = %d", $tag_id));
+
+    //         // If tag is found, display edit form
+    //         if ($tag) {
+    //             // Start building the form
+    //             $output = '<form method="post">';
+    //             $output .= '<label for="tag_label">' . __('Tag Label', 'rrze-shorturl') . ':</label><br>';
+    //             $output .= '<input type="text" id="tag_label" name="tag_label" value="' . esc_attr($tag->label) . '"><br>';
+
+    //             // Hidden field for tag ID
+    //             $output .= '<input type="hidden" name="tag_id" value="' . esc_attr($tag_id) . '">';
+
+    //             // Submit button
+    //             $output .= '<br><input type="submit" name="edit_tag" value="' . __('Save Changes', 'rrze-shorturl') . '">';
+    //             $output .= '&nbsp;<a href="' . esc_url(remove_query_arg('action')) . '" class="button">Cancel</a>';
+
+    //             $output .= '</form>';
+
+    //             return $output;
+    //         }
+    //     } elseif (isset ($_GET['action']) && $_GET['action'] === 'add_new_tag') {
+    //         // display add tag form
+    //         return $this->add_tag_form();
+    //     }
+
+    //     // If no editing is happening, display the categories table
+    //     return $this->display_tags_table();
+    // }
+
+    // private function display_tags_table(): string
+    // {
+    //     global $wpdb;
+
+    //     // Fetch tags along with their corresponding link counts
+    //     $tags_query = "SELECT t.id, t.label, COUNT(lt.link_id) AS link_count
+    //                    FROM {$wpdb->prefix}shorturl_tags t
+    //                    LEFT JOIN {$wpdb->prefix}shorturl_links_tags lt ON t.id = lt.tag_id
+    //                    GROUP BY t.id, t.label
+    //                    ORDER BY t.label ASC";
+
+    //     $tags = $wpdb->get_results($tags_query, ARRAY_A);
+
+    //     // Begin HTML table
+    //     $table_html = '<table class="shorturl-wp-list-table widefat">';
+    //     // Table header
+    //     $table_html .= '<thead><tr>';
+    //     $table_html .= '<th scope="col" class="manage-column column-label">' . __('Tag', 'rrze-shorturl') . '</th>';
+    //     $table_html .= '<th scope="col" class="manage-column column-link-count">' . __('Count', 'rrze-shorturl') . '</th>';
+    //     $table_html .= '<th scope="col" class="manage-column column-actions">' . __('Actions', 'rrze-shorturl') . '</th>';
+    //     $table_html .= '</tr></thead>';
+    //     $table_html .= '<tbody>';
+
+    //     // Iterate over each tag
+    //     foreach ($tags as $tag) {
+    //         $tag_id = $tag['id'];
+    //         $tag_label = $tag['label'];
+    //         $link_count = $tag['link_count'];
+
+    //         // Add row for each tag
+    //         $table_html .= '<tr>';
+    //         $table_html .= '<td class="column-label">' . esc_html($tag_label) . '</td>';
+    //         $table_html .= '<td class="column-link-count">' . esc_html($link_count) . '</td>';
+    //         $table_html .= '<td class="column-actions">
+    //                         <a href="?action=edit_tag&tag_id=' . esc_attr($tag_id) . '">' . __('Edit', 'rrze-shorturl') . '</a> | 
+    //                         <a href="#" class="delete-tag" data-tag-id="' . esc_attr($tag_id) . '">' . __('Delete', 'rrze-shorturl') . '</a>
+    //                     </td>';
+    //         $table_html .= '</tr>';
+    //     }
+
+    //     // Add row for actions (add new tag)
+    //     $table_html .= '<tr>';
+    //     $table_html .= '<td colspan="3" class="column-actions"><a href="?action=add_new_tag">' . __('Add New Tag', 'rrze-shorturl') . '</a></td>';
+    //     $table_html .= '</tr>';
+
+    //     $table_html .= '</tbody></table>';
+
+    //     return $table_html;
+    // }
+
+    // private function add_tag_form()
+    // {
+    //     $output = '<h2>' . __('Add New Tag', 'rrze-shorturl') . '</h2>';
+    //     $output .= '<form method="post">';
+    //     $output .= '<label for="tag_label">' . __('Tag Label', 'rrze-shorturl') . ':</label><br>';
+    //     $output .= '<input type="text" id="tag_label" name="tag_label" value=""><br>';
+    //     $output .= '<br><input type="submit" name="add_tag" value="' . __('Add Tag', 'rrze-shorturl') . '">';
+    //     $output .= '&nbsp;<a href="' . esc_url(remove_query_arg('action')) . '" class="button">' . __('Cancel', 'rrze-shorturl') . '</a>';
+    //     $output .= '</form>';
+
+    //     return $output;
+    // }
+
+
+    public function shortcode_services_handler(): string
     {
-        global $wpdb;
-
-        // Edit Tag
-        if (!empty ($_POST['edit_tag'])) {
-            $tag_id = (int) $_POST['tag_id'];
-            $tag_label = sanitize_text_field($_POST['tag_label']);
-
-            // Update the tag in the database
-            $wpdb->update(
-                "{$wpdb->prefix}shorturl_tags",
-                array(
-                    'label' => $tag_label,
-                ),
-                array('id' => $tag_id),
-                array('%s', '%d'),
-                array('%d')
-            );
-
-            // Return to the table after editing
-            return $this->display_tags_table();
-        } elseif (!empty ($_POST['add_tag'])) {
-            // Add tag
-            $tag_label = sanitize_text_field($_POST['tag_label']);
-
-            if (!empty ($tag_label)) {
-                // Insert tag
-                $wpdb->insert(
-                    "{$wpdb->prefix}shorturl_tags",
-                    array(
-                        'label' => $tag_label
-                    )
-                );
-            }
-            return $this->display_tags_table();
+        $services = ShortURL::getServices();
+    
+        $html = '<table class="shorturl-wp-list-table widefat">';
+        $html .= '<thead><tr><th>' . __('Service Name', 'text-domain') . '</th></tr></thead>';
+        $html .= '<tbody>';
+    
+        foreach ($services as $service) {
+            $html .= '<tr><td>' . esc_html($service['hostname']) . '</td></tr>';
         }
-
-        // Check if an edit form should be displayed
-        if (!empty ($_GET['action']) && $_GET['action'] === 'edit_tag' && !empty ($_GET['tag_id'])) {
-            // Retrieve tag details based on tag ID
-            $tag_id = (int) $_GET['tag_id'];
-            $tag = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}shorturl_tags WHERE id = %d", $tag_id));
-
-            // If tag is found, display edit form
-            if ($tag) {
-                // Start building the form
-                $output = '<form method="post">';
-                $output .= '<label for="tag_label">' . __('Tag Label', 'rrze-shorturl') . ':</label><br>';
-                $output .= '<input type="text" id="tag_label" name="tag_label" value="' . esc_attr($tag->label) . '"><br>';
-
-                // Hidden field for tag ID
-                $output .= '<input type="hidden" name="tag_id" value="' . esc_attr($tag_id) . '">';
-
-                // Submit button
-                $output .= '<br><input type="submit" name="edit_tag" value="' . __('Save Changes', 'rrze-shorturl') . '">';
-                $output .= '&nbsp;<a href="' . esc_url(remove_query_arg('action')) . '" class="button">Cancel</a>';
-
-                $output .= '</form>';
-
-                return $output;
-            }
-        } elseif (isset ($_GET['action']) && $_GET['action'] === 'add_new_tag') {
-            // display add tag form
-            return $this->add_tag_form();
-        }
-
-        // If no editing is happening, display the categories table
-        return $this->display_tags_table();
+    
+        $html .= '</tbody></table>';
+        return $html;
     }
+    
+    // private function display_tags_table(): string
+    // {
+    //     global $wpdb;
 
-    private function display_tags_table(): string
-    {
-        global $wpdb;
+    //     // Fetch tags along with their corresponding link counts
+    //     $tags_query = "SELECT t.id, t.label, COUNT(lt.link_id) AS link_count
+    //                    FROM {$wpdb->prefix}shorturl_tags t
+    //                    LEFT JOIN {$wpdb->prefix}shorturl_links_tags lt ON t.id = lt.tag_id
+    //                    GROUP BY t.id, t.label
+    //                    ORDER BY t.label ASC";
 
-        // Fetch tags along with their corresponding link counts
-        $tags_query = "SELECT t.id, t.label, COUNT(lt.link_id) AS link_count
-                       FROM {$wpdb->prefix}shorturl_tags t
-                       LEFT JOIN {$wpdb->prefix}shorturl_links_tags lt ON t.id = lt.tag_id
-                       GROUP BY t.id, t.label
-                       ORDER BY t.label ASC";
+    //     $tags = $wpdb->get_results($tags_query, ARRAY_A);
 
-        $tags = $wpdb->get_results($tags_query, ARRAY_A);
+    //     // Begin HTML table
+    //     $table_html = '<table class="shorturl-wp-list-table widefat">';
+    //     // Table header
+    //     $table_html .= '<thead><tr>';
+    //     $table_html .= '<th scope="col" class="manage-column column-label">' . __('Tag', 'rrze-shorturl') . '</th>';
+    //     $table_html .= '<th scope="col" class="manage-column column-link-count">' . __('Count', 'rrze-shorturl') . '</th>';
+    //     $table_html .= '<th scope="col" class="manage-column column-actions">' . __('Actions', 'rrze-shorturl') . '</th>';
+    //     $table_html .= '</tr></thead>';
+    //     $table_html .= '<tbody>';
 
-        // Begin HTML table
-        $table_html = '<table class="shorturl-wp-list-table widefat">';
-        // Table header
-        $table_html .= '<thead><tr>';
-        $table_html .= '<th scope="col" class="manage-column column-label">' . __('Tag', 'rrze-shorturl') . '</th>';
-        $table_html .= '<th scope="col" class="manage-column column-link-count">' . __('Count', 'rrze-shorturl') . '</th>';
-        $table_html .= '<th scope="col" class="manage-column column-actions">' . __('Actions', 'rrze-shorturl') . '</th>';
-        $table_html .= '</tr></thead>';
-        $table_html .= '<tbody>';
+    //     // Iterate over each tag
+    //     foreach ($tags as $tag) {
+    //         $tag_id = $tag['id'];
+    //         $tag_label = $tag['label'];
+    //         $link_count = $tag['link_count'];
 
-        // Iterate over each tag
-        foreach ($tags as $tag) {
-            $tag_id = $tag['id'];
-            $tag_label = $tag['label'];
-            $link_count = $tag['link_count'];
+    //         // Add row for each tag
+    //         $table_html .= '<tr>';
+    //         $table_html .= '<td class="column-label">' . esc_html($tag_label) . '</td>';
+    //         $table_html .= '<td class="column-link-count">' . esc_html($link_count) . '</td>';
+    //         $table_html .= '<td class="column-actions">
+    //                         <a href="?action=edit_tag&tag_id=' . esc_attr($tag_id) . '">' . __('Edit', 'rrze-shorturl') . '</a> | 
+    //                         <a href="#" class="delete-tag" data-tag-id="' . esc_attr($tag_id) . '">' . __('Delete', 'rrze-shorturl') . '</a>
+    //                     </td>';
+    //         $table_html .= '</tr>';
+    //     }
 
-            // Add row for each tag
-            $table_html .= '<tr>';
-            $table_html .= '<td class="column-label">' . esc_html($tag_label) . '</td>';
-            $table_html .= '<td class="column-link-count">' . esc_html($link_count) . '</td>';
-            $table_html .= '<td class="column-actions">
-                            <a href="?action=edit_tag&tag_id=' . esc_attr($tag_id) . '">' . __('Edit', 'rrze-shorturl') . '</a> | 
-                            <a href="#" class="delete-tag" data-tag-id="' . esc_attr($tag_id) . '">' . __('Delete', 'rrze-shorturl') . '</a>
-                        </td>';
-            $table_html .= '</tr>';
-        }
+    //     // Add row for actions (add new tag)
+    //     $table_html .= '<tr>';
+    //     $table_html .= '<td colspan="3" class="column-actions"><a href="?action=add_new_tag">' . __('Add New Tag', 'rrze-shorturl') . '</a></td>';
+    //     $table_html .= '</tr>';
 
-        // Add row for actions (add new tag)
-        $table_html .= '<tr>';
-        $table_html .= '<td colspan="3" class="column-actions"><a href="?action=add_new_tag">' . __('Add New Tag', 'rrze-shorturl') . '</a></td>';
-        $table_html .= '</tr>';
+    //     $table_html .= '</tbody></table>';
 
-        $table_html .= '</tbody></table>';
+    //     return $table_html;
+    // }
 
-        return $table_html;
-    }
+    // private function add_tag_form()
+    // {
+    //     $output = '<h2>' . __('Add New Tag', 'rrze-shorturl') . '</h2>';
+    //     $output .= '<form method="post">';
+    //     $output .= '<label for="tag_label">' . __('Tag Label', 'rrze-shorturl') . ':</label><br>';
+    //     $output .= '<input type="text" id="tag_label" name="tag_label" value=""><br>';
+    //     $output .= '<br><input type="submit" name="add_tag" value="' . __('Add Tag', 'rrze-shorturl') . '">';
+    //     $output .= '&nbsp;<a href="' . esc_url(remove_query_arg('action')) . '" class="button">' . __('Cancel', 'rrze-shorturl') . '</a>';
+    //     $output .= '</form>';
 
-    private function add_tag_form()
-    {
-        $output = '<h2>' . __('Add New Tag', 'rrze-shorturl') . '</h2>';
-        $output .= '<form method="post">';
-        $output .= '<label for="tag_label">' . __('Tag Label', 'rrze-shorturl') . ':</label><br>';
-        $output .= '<input type="text" id="tag_label" name="tag_label" value=""><br>';
-        $output .= '<br><input type="submit" name="add_tag" value="' . __('Add Tag', 'rrze-shorturl') . '">';
-        $output .= '&nbsp;<a href="' . esc_url(remove_query_arg('action')) . '" class="button">' . __('Cancel', 'rrze-shorturl') . '</a>';
-        $output .= '</form>';
-
-        return $output;
-    }
+    //     return $output;
+    // }
 
 
     public function makeCategoryDropdown($category_id = 0, $parent_id = 0)
@@ -202,7 +283,7 @@ class Shortcode
         $output .= '<select id="parent_category" name="parent_category">';
         $output .= '<option value="0">' . __('None', 'rrze-shorturl') . '</option>';
         foreach ($categories_with_hierarchy as $category) {
-            $selected = (!empty ($parent_id) && ($category->id == $parent_id)) ? 'SELECTED' : '';
+            $selected = (!empty($parent_id) && ($category->id == $parent_id)) ? 'SELECTED' : '';
             $output .= '<option value="' . $category->id . '" ' . $selected . '>' . esc_html($category->hierarchy . $category->label) . '</option>';
         }
         $output .= '</select>';
@@ -215,10 +296,10 @@ class Shortcode
         global $wpdb;
 
         // Edit Category
-        if (!empty ($_POST['edit_category'])) {
+        if (!empty($_POST['edit_category'])) {
             $category_id = (int) $_POST['category_id'];
             $category_label = sanitize_text_field($_POST['category_label']);
-            $parent_category = !empty ($_POST['parent_category']) ? (int) $_POST['parent_category'] : null;
+            $parent_category = !empty($_POST['parent_category']) ? (int) $_POST['parent_category'] : null;
 
             // Update the category in the database
             $wpdb->update(
@@ -234,12 +315,12 @@ class Shortcode
 
             // Return to the table after editing
             return $this->display_categories_table();
-        } elseif (!empty ($_POST['add_category'])) {
+        } elseif (!empty($_POST['add_category'])) {
             // Add Category
             $category_label = sanitize_text_field($_POST['category_label']);
-            $parent_category = !empty ($_POST['parent_category']) ? (int) $_POST['parent_category'] : null;
+            $parent_category = !empty($_POST['parent_category']) ? (int) $_POST['parent_category'] : null;
 
-            if (!empty ($category_label)) {
+            if (!empty($category_label)) {
                 // Insert Category
                 $wpdb->insert(
                     "{$wpdb->prefix}shorturl_categories",
@@ -253,7 +334,7 @@ class Shortcode
         }
 
         // Check if an edit form should be displayed
-        if (!empty ($_GET['action']) && $_GET['action'] === 'edit_category' && !empty ($_GET['category_id'])) {
+        if (!empty($_GET['action']) && $_GET['action'] === 'edit_category' && !empty($_GET['category_id'])) {
             // Retrieve category details based on category ID
             $category_id = (int) $_GET['category_id'];
             $category = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}shorturl_categories WHERE id = %d", $category_id));
@@ -265,7 +346,7 @@ class Shortcode
                 $output .= '<label for="category_label">' . __('Category Label', 'rrze-shorturl') . ':</label><br>';
                 $output .= '<input type="text" id="category_label" name="category_label" value="' . esc_attr($category->label) . '"><br>';
 
-                $parent_id = !empty ($category->parent_id) ? $category->parent_id : 0;
+                $parent_id = !empty($category->parent_id) ? $category->parent_id : 0;
 
                 $output .= $this->makeCategoryDropdown($category_id, $parent_id);
 
@@ -278,7 +359,7 @@ class Shortcode
 
                 return $output;
             }
-        } elseif (isset ($_GET['action']) && $_GET['action'] === 'add_new_category') {
+        } elseif (isset($_GET['action']) && $_GET['action'] === 'add_new_category') {
             // display add category form
             return $this->add_category_form();
         }
@@ -403,7 +484,7 @@ class Shortcode
         check_ajax_referer('delete_shorturl_link_nonce', '_ajax_nonce');
 
         // Get the link ID from the AJAX request
-        $link_id = !empty ($_POST['link_id']) ? (int) $_POST['link_id'] : 0;
+        $link_id = !empty($_POST['link_id']) ? (int) $_POST['link_id'] : 0;
 
         // Delete the link from the database
         $result = $wpdb->delete(
@@ -432,7 +513,7 @@ class Shortcode
         check_ajax_referer('delete_shorturl_category_nonce', '_ajax_nonce');
 
         // Get the category ID from the AJAX request
-        $category_id = !empty ($_POST['category_id']) ? (int) $_POST['category_id'] : 0;
+        $category_id = !empty($_POST['category_id']) ? (int) $_POST['category_id'] : 0;
 
         // Get the parent_id of the category being deleted
         $parent_id = $wpdb->get_var($wpdb->prepare("SELECT parent_id FROM {$wpdb->prefix}shorturl_categories WHERE id = %d", $category_id));
@@ -477,52 +558,52 @@ class Shortcode
     }
 
 
-    public function add_shorturl_tag_callback()
-    {
-        check_ajax_referer('add_shorturl_tag_nonce', '_ajax_nonce');
+    // public function add_shorturl_tag_callback()
+    // {
+    //     check_ajax_referer('add_shorturl_tag_nonce', '_ajax_nonce');
 
-        if (!empty ($_POST['new_tag_name'])) {
-            global $wpdb;
-            $newTagName = sanitize_text_field($_POST['new_tag_name']);
-            // Insert the new tag into the database
-            $wpdb->insert(
-                $wpdb->prefix . 'shorturl_tags',
-                array('label' => $newTagName),
-                array('%s')
-            );
-            // Return the ID of the newly inserted tag
-            return wp_send_json_success(['id' => $wpdb->insert_id]);
-        }
-        wp_die();
-    }
+    //     if (!empty ($_POST['new_tag_name'])) {
+    //         global $wpdb;
+    //         $newTagName = sanitize_text_field($_POST['new_tag_name']);
+    //         // Insert the new tag into the database
+    //         $wpdb->insert(
+    //             $wpdb->prefix . 'shorturl_tags',
+    //             array('label' => $newTagName),
+    //             array('%s')
+    //         );
+    //         // Return the ID of the newly inserted tag
+    //         return wp_send_json_success(['id' => $wpdb->insert_id]);
+    //     }
+    //     wp_die();
+    // }
 
 
-    public function delete_tag_callback()
-    {
-        global $wpdb;
+    // public function delete_tag_callback()
+    // {
+    //     global $wpdb;
 
-        // Check if the request is coming from a valid source
-        check_ajax_referer('delete_shorturl_tag_nonce', '_ajax_nonce');
+    //     // Check if the request is coming from a valid source
+    //     check_ajax_referer('delete_shorturl_tag_nonce', '_ajax_nonce');
 
-        // Get the tag ID from the AJAX request
-        $tag_id = !empty ($_POST['tag_id']) ? (int) $_POST['tag_id'] : 0;
+    //     // Get the tag ID from the AJAX request
+    //     $tag_id = !empty ($_POST['tag_id']) ? (int) $_POST['tag_id'] : 0;
 
-        // Delete the tag from the database
-        $result = $wpdb->delete(
-            $wpdb->prefix . 'shorturl_tags',
-            array('id' => $tag_id),
-            array('%d')
-        );
+    //     // Delete the tag from the database
+    //     $result = $wpdb->delete(
+    //         $wpdb->prefix . 'shorturl_tags',
+    //         array('id' => $tag_id),
+    //         array('%d')
+    //     );
 
-        if ($result !== false) {
-            wp_send_json_success(__('Tag deleted successfully', 'rrze-shorturl'));
-        } else {
-            wp_send_json_error(__('Error deleting tag', 'rrze-shorturl'));
-        }
+    //     if ($result !== false) {
+    //         wp_send_json_success(__('Tag deleted successfully', 'rrze-shorturl'));
+    //     } else {
+    //         wp_send_json_error(__('Error deleting tag', 'rrze-shorturl'));
+    //     }
 
-        // Always exit to avoid further execution
-        wp_die();
-    }
+    //     // Always exit to avoid further execution
+    //     wp_die();
+    // }
 
 
     public function shorturl_handler($atts = null): string
@@ -533,8 +614,8 @@ class Shortcode
             'url' => filter_var($_POST['url'] ?? '', FILTER_VALIDATE_URL),
             'uri' => self::$rights['uri_allowed'] ? sanitize_text_field($_POST['uri'] ?? '') : '',
             'valid_until' => sanitize_text_field($_POST['valid_until'] ?? ''),
-            'categories' => !empty ($_POST['categories']) ? array_map('sanitize_text_field', $_POST['categories']) : [],
-            'tags' => !empty ($_POST['tags']) ? array_map('sanitize_text_field', $_POST['tags']) : [],
+            'categories' => !empty($_POST['categories']) ? array_map('sanitize_text_field', $_POST['categories']) : [],
+            // 'tags' => !empty ($_POST['tags']) ? array_map('sanitize_text_field', $_POST['tags']) : [],
         ];
 
         $result_message = ''; // Initialize result message
@@ -542,44 +623,42 @@ class Shortcode
         // Check if form is submitted
         if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Check if URL is provided
-            if (!empty ($aParams['url'])) {
+            if (!empty($aParams['url'])) {
                 // Call ShortURL::shorten() and add the result if URL is given
                 $result = ShortURL::shorten($aParams);
                 $result_message = ($result['error'] ? 'Error: ' : 'Short URL: ') . $result['txt'];
-                $result_message .= (!$result['error'] ? '&nbsp;&nbsp;<button type="button" class="btn" id="copyButton" name="copyButton" data-shortened-url="' . $result['txt'] . '"><img src="data:image/svg+xml,%3Csvg height=\'1024\' width=\'896\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M128 768h256v64H128v-64z m320-384H128v64h320v-64z m128 192V448L384 640l192 192V704h320V576H576z m-288-64H128v64h160v-64zM128 704h160v-64H128v64z m576 64h64v128c-1 18-7 33-19 45s-27 18-45 19H64c-35 0-64-29-64-64V192c0-35 29-64 64-64h192C256 57 313 0 384 0s128 57 128 128h192c35 0 64 29 64 64v320h-64V320H64v576h640V768zM128 256h512c0-35-29-64-64-64h-64c-35 0-64-29-64-64s-29-64-64-64-64 29-64 64-29 64-64 64h-64c-35 0-64 29-64 64z\' fill=\'%23000000\' /%3E%3C/svg%3E" width="13" alt="' . __('Copy to clipboard', 'rrze-shorturl') . '" style="cursor: pointer"></button>&nbsp;&nbsp;<span id="shorturl-tooltip" class="shorturl-tooltip">' . __('Copied to clipboard', 'rrze-shorturl') . '</span>' : '');
+                $result_message .= (!$result['error'] ? '&nbsp;&nbsp;<button type="button" class="btn" id="copyButton" name="copyButton" data-shortened-url="' . $result['txt'] . '"><img class="shorturl-copy-img" src="data:image/svg+xml,%3Csvg height=\'1024\' width=\'896\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M128 768h256v64H128v-64z m320-384H128v64h320v-64z m128 192V448L384 640l192 192V704h320V576H576z m-288-64H128v64h160v-64zM128 704h160v-64H128v64z m576 64h64v128c-1 18-7 33-19 45s-27 18-45 19H64c-35 0-64-29-64-64V192c0-35 29-64 64-64h192C256 57 313 0 384 0s128 57 128 128h192c35 0 64 29 64 64v320h-64V320H64v576h640V768zM128 256h512c0-35-29-64-64-64h-64c-35 0-64-29-64-64s-29-64-64-64-64 29-64 64-29 64-64 64h-64c-35 0-64 29-64 64z\' fill=\'%23FFFFFF\' /%3E%3C/svg%3E" alt="' . __('Copy to clipboard', 'rrze-shorturl') . '"></button>&nbsp;&nbsp;<span id="shorturl-tooltip" class="shorturl-tooltip">' . __('Copied to clipboard', 'rrze-shorturl') . '</span>' : '');
             }
         }
 
         // Generate form
         $form = '<form id="shorturl-form" method="post">';
         $form .= '<div class="postbox">';
-        $form .= '<h2 class="hndle">' . __('Create Short URL', 'rrze-shorturl') . '</h2>';
+        $form .= '<h2 class="handle">' . __('Create Short URL', 'rrze-shorturl') . '</h2>';
         $form .= '<div class="inside">';
         $form .= '<label for="url">' . __('Long URL', 'rrze-shorturl') . ':</label>&nbsp;';
-        $form .= '<input type="text" name="url" id="url" value="' . esc_attr($aParams['url']) . '">';
-        $form .= '<input type="hidden" name="link_id" value="' . (!empty ($result['link_id']) ? $result['link_id'] : '') . '">';
+        $form .= '<input type="text" name="url" id="url" value="' . esc_attr($aParams['url']) . '" placeholder="https://">';
+        $form .= '<input type="submit" id="generate" name="generate" value="' . __('Shorten', 'rrze-shorturl') . '">';
+        $form .= '<input type="hidden" name="link_id" value="' . (!empty($result['link_id']) ? $result['link_id'] : '') . '">';
         $form .= '</div>';
         $form .= '</div>';
-        $form .= '<p><a href="#" id="show-advanced-settings" disabled>' . __('Advanced Settings', 'rrze-shorturl') . '</a> <span id="shorturl-arrow" class="shorturl-arrow">&#9660;</span></p>';
-        $form .= '<div id="div-advanced-settings" style="display: none;">';
+        $form .= '<div id="shorturl-advanced-settings" class="shorturl-advanced-settings" popover>';
         if (self::$rights['uri_allowed']) {
             $form .= self::display_shorturl_uri($aParams['uri']);
         }
         $form .= self::display_shorturl_validity($aParams['valid_until']);
-        $form .= '<h2 class="handle">' . __('Categories', 'rrze-shorturl') . '</h2>';
+        $form .= '<h6 class="handle">' . __('Categories', 'rrze-shorturl') . '</h6>';
         $form .= self::display_shorturl_category($aParams['categories']);
-        $form .= '<h2 class="handle">' . __('Tags', 'rrze-shorturl') . '</h2>';
-        $form .= self::display_shorturl_tag($aParams['tags']);
         $form .= '</div>';
-
-        $form .= '<input type="submit" id="generate" name="generate" value="' . __('Generate', 'rrze-shorturl') . '">';
+        $form .= '<button id="btn-show-advanced-settings" type="button" popovertarget="shorturl-advanced-settings">' . __('Advanced Settings', 'rrze-shorturl') . '</button>';
 
         // Display result message
         $form .= '<div><p>' . $result_message;
         $form .= '</p>';
-        if (!empty ($result) && !$result['error']) {
-            $form .= '<input id="shortened_url" name="shortened_url" type="hidden" value="'.$result['txt'].'">';
+        if (!empty($result) && !$result['error']) {
+            $form .= '<input id="shortened_url" name="shortened_url" type="hidden" value="' . $result['txt'] . '">';
             $form .= '<div id="qr-container"><canvas id="qr"></canvas><img src="' . plugins_url('../', __FILE__) . 'assets/img/FAU.svg' . '" id="qr-logo"></div>';
+            // $form .= '<div id="qr-container"><canvas id="qr"></canvas></div>';
         }
         $form .= '</form>';
 
@@ -619,14 +698,16 @@ class Shortcode
                     <?php echo __('Add New Category', 'rrze-shorturl'); ?>
                 </a></p>
             <div id="new-shorturl-category">
-                <input type="text" name="new_shorturl_category"
+                <label for="new_shorturl_category"><?php echo __('New Category Name', 'rrze-shorturl'); ?>:</label>
+                <input type="text" id="new_shorturl_category" name="new_shorturl_category"
                     placeholder="<?php echo __('New Category Name', 'rrze-shorturl'); ?>">
-                    <br /><?php echo __('Parent:', 'rrze-shorturl');?> <select name="parent_category">
-                    <option value="0">
-                        <?php echo __('None', 'rrze-shorturl'); ?>
-                    </option>
+                <br>
+                <label for="parent_category"><?php echo __('Parent Category', 'rrze-shorturl'); ?>:</label>
+                <select id="parent_category" name="parent_category">
+                    <option value="0"><?php echo __('None', 'rrze-shorturl'); ?></option>
                     <?php self::display_parent_categories_dropdown($hierarchicalCategories); ?>
                 </select>
+
                 <br><input type="button" value="<?php echo __('Add new category', 'rrze-shorturl'); ?>"
                     id="add-shorturl-category-btn">
             </div>
@@ -639,7 +720,7 @@ class Shortcode
     {
         foreach ($categories as $category) {
             echo '<option value="' . esc_attr($category->id) . '">' . str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;', $level) . esc_html($category->label) . '</option>';
-            if (!empty ($category->children)) {
+            if (!empty($category->children)) {
                 self::display_parent_categories_dropdown($category->children, $level + 1);
             }
         }
@@ -673,7 +754,7 @@ class Shortcode
             echo '<input type="checkbox" name="categories[]" value="' . esc_attr($category->id) . '" ' . $isChecked . ' />';
             echo esc_html($category->label) . '<br>';
 
-            if (!empty ($category->children)) {
+            if (!empty($category->children)) {
                 // Ensure $level is an integer by casting it
                 self::display_hierarchical_categories($category->children, (int) $level + 1, $aVal);
             }
@@ -681,33 +762,6 @@ class Shortcode
     }
 
 
-    private static function display_shorturl_tag($aVal)
-    {
-        global $wpdb;
-
-        $tags = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_tags");
-
-        ob_start();
-        ?>
-        <div id="shorturl-tag-metabox">
-            <label for="tag-tokenfield">
-                <?php echo __('Tags', 'rrze-shorturl'); ?>:
-            </label>
-            <select id="tag-tokenfield" name="tags[]" multiple="multiple" style="width: 100%;">
-                <?php foreach ($tags as $tag): ?>
-                    <?php
-                    // Check if the current tag ID exists in $aVal
-                    $isSelected = in_array($tag->id, $aVal) ? 'selected' : '';
-                    ?>
-                    <option value="<?php echo esc_attr($tag->id); ?>" <?php echo $isSelected; ?>>
-                        <?php echo esc_html($tag->label); ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        <?php
-        return ob_get_clean();
-    }
 
     public function shortcode_list_handler(): string
     {
@@ -715,7 +769,7 @@ class Shortcode
         $bUpdated = false;
         $message = '';
 
-        if (!empty ($_POST['action']) && $_POST['action'] === 'update_link' && !empty ($_POST['link_id'])) {
+        if (!empty($_POST['action']) && $_POST['action'] === 'update_link' && !empty($_POST['link_id'])) {
             // UPDATE link
 
             $aParams = [
@@ -725,8 +779,7 @@ class Shortcode
                 'shortURL' => filter_var($_POST['shortURL'] ?? '', FILTER_VALIDATE_URL),
                 'uri' => self::$rights['uri_allowed'] ? sanitize_text_field($_POST['uri'] ?? '') : '',
                 'valid_until' => sanitize_text_field($_POST['valid_until'] ?? ''),
-                'categories' => !empty ($_POST['categories']) ? array_map('sanitize_text_field', $_POST['categories']) : [],
-                'tags' => !empty ($_POST['tags']) ? array_map('sanitize_text_field', $_POST['tags']) : [],
+                'categories' => !empty($_POST['categories']) ? array_map('sanitize_text_field', $_POST['categories']) : []
             ];
 
             ShortURL::updateLink($aParams['idm_id'], $aParams['link_id'], $aParams['domain_id'], $aParams['shortURL'], $aParams['uri'], $aParams['valid_until'], $aParams['categories'], $aParams['tags']);
@@ -737,7 +790,7 @@ class Shortcode
 
         $links_table = $wpdb->prefix . 'shorturl_links';
         $links_categories_table = $wpdb->prefix . 'shorturl_links_categories';
-        $links_tags_table = $wpdb->prefix . 'shorturl_links_tags';
+        // $links_tags_table = $wpdb->prefix . 'shorturl_links_tags';
         $categories_table = $wpdb->prefix . 'shorturl_categories';
         $tags_table = $wpdb->prefix . 'shorturl_tags';
 
@@ -745,8 +798,8 @@ class Shortcode
         $categories = $wpdb->get_results("SELECT id, label FROM $categories_table", ARRAY_A);
 
         // Determine the column to sort by and sort order
-        $orderby = !empty ($_GET['orderby']) ? $_GET['orderby'] : 'id';
-        $order = !empty ($_GET['order']) ? $_GET['order'] : 'ASC';
+        $orderby = !empty($_GET['orderby']) ? $_GET['orderby'] : 'id';
+        $order = !empty($_GET['order']) ? $_GET['order'] : 'ASC';
 
         // Prepare SQL query to fetch post IDs from wp_postmeta and their associated category names
         $query = "SELECT l.id AS link_id, 
@@ -755,24 +808,23 @@ class Shortcode
                      l.short_url, 
                      l.uri, 
                      DATE_FORMAT(l.valid_until, '%d.%m.%Y') AS valid_until, 
-                     GROUP_CONCAT(DISTINCT lc.category_id) AS category_ids,
-                     GROUP_CONCAT(DISTINCT lt.tag_id) AS tag_ids
+                     GROUP_CONCAT(DISTINCT lc.category_id) AS category_ids
+                    --  , GROUP_CONCAT(DISTINCT lt.tag_id) AS tag_ids
               FROM $links_table l
               LEFT JOIN $links_categories_table AS lc ON l.id = lc.link_id
-              LEFT JOIN $links_tags_table AS lt ON l.id = lt.link_id
               GROUP BY l.id, l.long_url, l.short_url, l.uri, l.valid_until";
 
         // Handle filtering by category or tag
-        $filter_category = !empty ($_GET['filter_category']) ? (int) $_GET['filter_category'] : 0;
-        $filter_tag = !empty ($_GET['filter_tag']) ? (int) $_GET['filter_tag'] : 0;
+        $filter_category = !empty($_GET['filter_category']) ? (int) $_GET['filter_category'] : 0;
+        // $filter_tag = !empty ($_GET['filter_tag']) ? (int) $_GET['filter_tag'] : 0;
 
         if ($filter_category > 0) {
             $query .= " HAVING FIND_IN_SET('$filter_category', category_ids) > 0";
         }
 
-        if ($filter_tag > 0) {
-            $query .= " HAVING FIND_IN_SET('$filter_tag', tag_ids) > 0";
-        }
+        // if ($filter_tag > 0) {
+        //     $query .= " HAVING FIND_IN_SET('$filter_tag', tag_ids) > 0";
+        // }
 
         $query .= " ORDER BY $orderby $order";
 
@@ -812,13 +864,13 @@ class Shortcode
         $table .= '<th scope="col" class="manage-column column-actions">' . __('Actions', 'rrze-shorturl') . '</th>';
         $table .= '</tr></thead><tbody>';
 
-        if (empty ($results)) {
+        if (empty($results)) {
             $table .= '<tr><td colspan="7">' . __('No links stored yet', 'rrze-shorturl') . '</td></tr>';
         }
 
         foreach ($results as $row) {
             // Fetch and concatenate category names with links
-            $category_ids = !empty ($row['category_ids']) ? explode(',', $row['category_ids']) : [];
+            $category_ids = !empty($row['category_ids']) ? explode(',', $row['category_ids']) : [];
             $category_names = [];
             foreach ($category_ids as $category_id) {
                 $category_name = $wpdb->get_var("SELECT label FROM $categories_table WHERE id = $category_id");
@@ -829,15 +881,15 @@ class Shortcode
             $category_names_str = implode(', ', $category_names);
 
             // Fetch and concatenate tag names with links
-            $tag_ids = !empty ($row['tag_ids']) ? explode(',', $row['tag_ids']) : [];
-            $tag_names = [];
-            foreach ($tag_ids as $tag_id) {
-                $tag_name = $wpdb->get_var("SELECT label FROM $tags_table WHERE id = $tag_id");
-                if ($tag_name) {
-                    $tag_names[] = '<a href="?filter_tag=' . $tag_id . '">' . $tag_name . '</a>';
-                }
-            }
-            $tag_names_str = implode(', ', $tag_names);
+            // $tag_ids = !empty ($row['tag_ids']) ? explode(',', $row['tag_ids']) : [];
+            // $tag_names = [];
+            // foreach ($tag_ids as $tag_id) {
+            //     $tag_name = $wpdb->get_var("SELECT label FROM $tags_table WHERE id = $tag_id");
+            //     if ($tag_name) {
+            //         $tag_names[] = '<a href="?filter_tag=' . $tag_id . '">' . $tag_name . '</a>';
+            //     }
+            // }
+            // $tag_names_str = implode(', ', $tag_names);
 
             // Output table row
             $table .= '<tr>';
@@ -846,13 +898,13 @@ class Shortcode
             $table .= '<td class="column-uri">' . $row['uri'] . '</td>';
             $table .= '<td class="column-valid-until">' . $row['valid_until'] . '</td>';
             $table .= '<td class="column-categories">' . $category_names_str . '</td>';
-            $table .= '<td class="column-tags">' . $tag_names_str . '</td>';
+            // $table .= '<td class="column-tags">' . $tag_names_str . '</td>';
             $table .= '<td class="column-actions"><a href="#" class="edit-link" data-link-id="' . $row['link_id'] . '">' . __('Edit', 'rrze-shorturl') . '</a>' . (self::$rights['id'] == $row['idm_id'] ? ' | <a href="#" data-link-id="' . $row['link_id'] . '" class="delete-link">' . __('Delete', 'rrze-shorturl') . '</a>' : '') . '</td>';
             $table .= '</tr>';
         }
         $table .= '</tbody></table>';
 
-        if (!$bUpdated && !empty ($results)) {
+        if (!$bUpdated && !empty($results)) {
             $table .= $this->display_edit_link_form();
         }
 
@@ -861,19 +913,19 @@ class Shortcode
 
     private function display_edit_link_form()
     {
-        $link_id = !empty ($_GET['link_id']) ? (int) $_GET['link_id'] : 0;
+        $link_id = !empty($_GET['link_id']) ? (int) $_GET['link_id'] : 0;
 
         if ($link_id <= 0) {
             return '';
         } else {
             // Load the link data from the database
             $link_data = $this->get_link_data_by_id($link_id);
-            if (empty ($link_data)) {
+            if (empty($link_data)) {
                 return '';
             } else {
 
-                $aCategories = !empty ($link_data['category_ids']) ? explode(',', $link_data['category_ids']) : [];
-                $aTags = !empty ($link_data['tag_ids']) ? explode(',', $link_data['tag_ids']) : [];
+                $aCategories = !empty($link_data['category_ids']) ? explode(',', $link_data['category_ids']) : [];
+                $aTags = !empty($link_data['tag_ids']) ? explode(',', $link_data['tag_ids']) : [];
 
                 // Display the edit form
                 ob_start();
@@ -888,16 +940,12 @@ class Shortcode
                         <input type="hidden" name="domain_id" value="<?php echo esc_attr($link_data['domain_id']); ?>">
                         <input type="hidden" name="shortURL" value="<?php echo esc_attr($link_data['shortURL']); ?>">
                         <input type="hidden" name="uri"
-                            value="<?php echo !empty ($link_data['uri']) ? esc_attr($link_data['uri']) : ''; ?>">
+                            value="<?php echo !empty($link_data['uri']) ? esc_attr($link_data['uri']) : ''; ?>">
                         <?php echo self::display_shorturl_validity($link_data['valid_until']); ?>
                         <h2 class="handle">
                             <?php echo __('Categories', 'rrze-shorturl'); ?>
                         </h2>
                         <?php echo self::display_shorturl_category($aCategories); ?>
-                        <h2 class="handle">
-                            <?php echo __('Tags', 'rrze-shorturl'); ?>
-                        </h2>
-                        <?php echo self::display_shorturl_tag($aTags); ?>
                         <button type="submit">
                             <?php echo __('Update Link', 'rrze-shorturl'); ?>
                         </button>
@@ -912,7 +960,7 @@ class Shortcode
     public static function update_category_label()
     {
         // Verify nonce
-        if (!!empty ($_POST['_ajax_nonce']) || !wp_verify_nonce($_POST['_ajax_nonce'], 'update_category_label_nonce')) {
+        if (!!empty($_POST['_ajax_nonce']) || !wp_verify_nonce($_POST['_ajax_nonce'], 'update_category_label_nonce')) {
             wp_send_json_error('Nonce verification failed.');
         }
 
@@ -945,10 +993,10 @@ class Shortcode
     {
         check_ajax_referer('add_shorturl_category_nonce', '_ajax_nonce');
 
-        $category_name = !empty ($_POST['categoryName']) ? sanitize_text_field($_POST['categoryName']) : '';
-        $parent_category = !empty ($_POST['parentCategory']) ? (int) $_POST['parentCategory'] : null;
+        $category_name = !empty($_POST['categoryName']) ? sanitize_text_field($_POST['categoryName']) : '';
+        $parent_category = !empty($_POST['parentCategory']) ? (int) $_POST['parentCategory'] : null;
 
-        if (empty ($category_name)) {
+        if (empty($category_name)) {
             wp_send_json_error(__('Category name is required.', 'rrze-shorturl'));
         }
 
@@ -988,8 +1036,8 @@ class Shortcode
     {
         check_ajax_referer('store-link-category', '_ajax_nonce');
 
-        $link_id = !empty ($_POST['linkId']) ? (int) $_POST['linkId'] : 0;
-        $category_id = !empty ($_POST['categoryId']) ? (int) $_POST['categoryId'] : 0;
+        $link_id = !empty($_POST['linkId']) ? (int) $_POST['linkId'] : 0;
+        $category_id = !empty($_POST['categoryId']) ? (int) $_POST['categoryId'] : 0;
 
         if ($link_id <= 0 || $category_id <= 0) {
             wp_send_json_error(__('Invalid link ID or category ID.', 'rrze-shorturl'));
