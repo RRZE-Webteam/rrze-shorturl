@@ -182,19 +182,19 @@ class Shortcode
     public function shortcode_services_handler(): string
     {
         $services = ShortURL::getServices();
-    
+
         $html = '<table class="shorturl-wp-list-table widefat">';
         $html .= '<thead><tr><th>' . __('Service Name', 'text-domain') . '</th></tr></thead>';
         $html .= '<tbody>';
-    
+
         foreach ($services as $service) {
             $html .= '<tr><td>' . esc_html($service['hostname']) . '</td></tr>';
         }
-    
+
         $html .= '</tbody></table>';
         return $html;
     }
-    
+
     // private function display_tags_table(): string
     // {
     //     global $wpdb;
@@ -619,14 +619,12 @@ class Shortcode
         ];
 
         $result_message = ''; // Initialize result message
-
         // Check if form is submitted
         if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Check if URL is provided
             if (!empty($aParams['url'])) {
-                // Call ShortURL::shorten() and add the result if URL is given
                 $result = ShortURL::shorten($aParams);
-                $result_message = ($result['error'] ? 'Error: ' : 'Short URL: ') . $result['txt'];
+                $result_message = ($result['error'] ? 'Error: ' : 'Short link: ') . $result['txt'];
                 $result_message .= (!$result['error'] ? '&nbsp;&nbsp;<button type="button" class="btn" id="copyButton" name="copyButton" data-shortened-url="' . $result['txt'] . '"><img class="shorturl-copy-img" src="data:image/svg+xml,%3Csvg height=\'1024\' width=\'896\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M128 768h256v64H128v-64z m320-384H128v64h320v-64z m128 192V448L384 640l192 192V704h320V576H576z m-288-64H128v64h160v-64zM128 704h160v-64H128v64z m576 64h64v128c-1 18-7 33-19 45s-27 18-45 19H64c-35 0-64-29-64-64V192c0-35 29-64 64-64h192C256 57 313 0 384 0s128 57 128 128h192c35 0 64 29 64 64v320h-64V320H64v576h640V768zM128 256h512c0-35-29-64-64-64h-64c-35 0-64-29-64-64s-29-64-64-64-64 29-64 64-29 64-64 64h-64c-35 0-64 29-64 64z\' fill=\'%23FFFFFF\' /%3E%3C/svg%3E" alt="' . __('Copy to clipboard', 'rrze-shorturl') . '"></button>&nbsp;&nbsp;<span id="shorturl-tooltip" class="shorturl-tooltip">' . __('Copied to clipboard', 'rrze-shorturl') . '</span>' : '');
             }
         }
@@ -636,7 +634,7 @@ class Shortcode
         $form .= '<div class="postbox">';
         $form .= '<h2 class="handle">' . __('Create Short URL', 'rrze-shorturl') . '</h2>';
         $form .= '<div class="inside">';
-        $form .= '<label for="url">' . __('Long URL', 'rrze-shorturl') . ':</label>&nbsp;';
+        $form .= '<label for="url">' . __('Your link', 'rrze-shorturl') . ':</label>&nbsp;';
         $form .= '<input type="text" name="url" id="url" value="' . esc_attr($aParams['url']) . '" placeholder="https://">';
         $form .= '<input type="submit" id="generate" name="generate" value="' . __('Shorten', 'rrze-shorturl') . '">';
         $form .= '<input type="hidden" name="link_id" value="' . (!empty($result['link_id']) ? $result['link_id'] : '') . '">';
@@ -658,7 +656,6 @@ class Shortcode
         if (!empty($result) && !$result['error']) {
             $form .= '<input id="shortened_url" name="shortened_url" type="hidden" value="' . $result['txt'] . '">';
             $form .= '<div id="qr-container"><canvas id="qr"></canvas><img src="' . plugins_url('../', __FILE__) . 'assets/img/FAU.svg' . '" id="qr-logo"></div>';
-            // $form .= '<div id="qr-container"><canvas id="qr"></canvas></div>';
         }
         $form .= '</form>';
 
@@ -801,18 +798,26 @@ class Shortcode
         $orderby = !empty($_GET['orderby']) ? $_GET['orderby'] : 'id';
         $order = !empty($_GET['order']) ? $_GET['order'] : 'ASC';
 
+        $own_links = !empty($_GET['own_links']) ? $_GET['own_links'] : 0;
+
         // Prepare SQL query to fetch post IDs from wp_postmeta and their associated category names
         $query = "SELECT l.id AS link_id, 
-                     l.idm_id,
-                     l.long_url, 
-                     l.short_url, 
-                     l.uri, 
-                     DATE_FORMAT(l.valid_until, '%d.%m.%Y') AS valid_until, 
-                     GROUP_CONCAT(DISTINCT lc.category_id) AS category_ids
-                    --  , GROUP_CONCAT(DISTINCT lt.tag_id) AS tag_ids
-              FROM $links_table l
-              LEFT JOIN $links_categories_table AS lc ON l.id = lc.link_id
-              GROUP BY l.id, l.long_url, l.short_url, l.uri, l.valid_until";
+                 l.idm_id,
+                 l.long_url, 
+                 l.short_url, 
+                 l.uri, 
+                 DATE_FORMAT(l.valid_until, '%d.%m.%Y') AS valid_until, 
+                 GROUP_CONCAT(DISTINCT lc.category_id) AS category_ids
+                --  , GROUP_CONCAT(DISTINCT lt.tag_id) AS tag_ids
+          FROM $links_table l
+          LEFT JOIN $links_categories_table AS lc ON l.id = lc.link_id";
+
+        // Additional filter based on $own_links checkbox
+        if ($own_links == 1) {
+            $query .= " WHERE l.idm_id = " . self::$rights['id'];
+        }
+
+        $query .= " GROUP BY l.id, l.long_url, l.short_url, l.uri, l.valid_until";
 
         // Handle filtering by category or tag
         $filter_category = !empty($_GET['filter_category']) ? (int) $_GET['filter_category'] : 0;
@@ -844,10 +849,13 @@ class Shortcode
         // Generate filter button
         $filter_button = '<button type="submit">Filter</button>';
 
+        $checkbox = '<input type="checkbox" name="own_links" value="1" ' . ($own_links == 1 ? 'checked' : '') . '>' . __('My links only', 'rrze-shorturl');
+
         // Generate form for category filtering
         $category_filter_form = '<form method="get">';
         $category_filter_form .= $category_filter_dropdown;
         $category_filter_form .= '&nbsp;' . $filter_button;
+        $category_filter_form .= '&nbsp;' . $checkbox;
         $category_filter_form .= '</form>';
 
         // Generate table
@@ -860,7 +868,7 @@ class Shortcode
         $table .= '<th scope="col" class="manage-column column-uri">URI</th>';
         $table .= '<th scope="col" class="manage-column column-valid-until"><a href="?orderby=valid_until&order=' . ($orderby == 'valid_until' && $order == 'ASC' ? 'DESC' : 'ASC') . '">' . __('Valid until', 'rrze-shorturl') . '</a></th>';
         $table .= '<th scope="col" class="manage-column column-categories">' . __('Categories', 'rrze-shorturl') . '</th>';
-        $table .= '<th scope="col" class="manage-column column-tags">' . __('Tags', 'rrze-shorturl') . '</th>';
+        // $table .= '<th scope="col" class="manage-column column-tags">' . __('Tags', 'rrze-shorturl') . '</th>';
         $table .= '<th scope="col" class="manage-column column-actions">' . __('Actions', 'rrze-shorturl') . '</th>';
         $table .= '</tr></thead><tbody>';
 

@@ -2,7 +2,7 @@
 $shorturl_domain = "https://go-fau.test.rrze.fau.de"; // Domain on which the plugin rrze-shorturl runs
 
 try {
-    $response = file_get_contents($domain . "/wp-json/short-url/v1/active-short-urls");
+    $response = file_get_contents($shorturl_domain . "/wp-json/short-url/v1/active-short-urls");
     if ($response === false) {
         throw new Exception("Failed to fetch short URLs from the REST API endpoint.");
     }

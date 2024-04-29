@@ -8,9 +8,7 @@ class ShortURL
     protected static $rights;
 
     public static array $CONFIG = [
-        "ShortURLModChars" => "abcdefghijklmnopqrstuvwxyz0123456789-",
-        "AllowedDomains" => [],
-        "Services" => [],
+        "ShortURLModChars" => "abcdefghijklmnopqrstuvwxyz0123456789-"
     ];
 
     public function __construct()
@@ -18,8 +16,11 @@ class ShortURL
         $rightsObj = new Rights();
         self::$rights = $rightsObj->getRights();
 
-        $options = get_option('rrze-shorturl');
+        $options = json_decode(get_option('rrze-shorturl'), true);
+
         self::$CONFIG['ShortURLBase'] = (!empty($options['ShortURLBase']) ? $options['ShortURLBase'] : 'https://go.fau.de/');
+        self::$CONFIG['maxShortening'] = (!empty($options['maxShortening']) ? $options['maxShortening'] : 60);
+        
         self::$CONFIG['AllowedDomains'] = self::getAllowedDomains();
         self::$CONFIG['Services'] = self::getServices();
     }
@@ -333,9 +334,42 @@ class ShortURL
         return $new_url;
     }
 
+    private static function countShortenings() {
+        global $wpdb;
+    
+        try {
+            $query = $wpdb->prepare("
+                SELECT COUNT(*) AS count_shortenings
+                FROM {$wpdb->prefix}shorturl_links
+                WHERE idm_id = %d
+                AND created_at >= %s
+            ", self::$rights['id'], date('Y-m-d H:i:s', strtotime('-60 minutes')));
+            $result = $wpdb->get_row($query);
+    
+            if ($result === null) {
+                throw new Exception('Database query returned null.');
+            }
+    
+            $count = isset($result->count_shortenings) ? $result->count_shortenings : 0;
+            return $count;
+        } catch (Exception $e) {
+            error_log('Error in countShortenings(): ' . $e->getMessage());
+            return 0;
+        }
+    }
+
+    private static function maxShorteningReached(){
+        return self::countShortenings() >= self::$CONFIG['maxShortening'];
+    }
+    
     public static function shorten($shortenParams)
     {
         try {
+            // check if maximum shortenings is reached
+            if (self::maxShorteningReached()){
+                return ['error' => true, 'txt' => sprintf(__('You cannot shorten more than %s links per hour', 'rrze-shorturl'), self::$CONFIG['maxShortening'])];
+            }
+
             $long_url = $shortenParams['url'] ?? null;
 
             // Is it an allowed domain?
@@ -386,8 +420,6 @@ class ShortURL
                 // Create shortURL
                 $targetURL = $aDomain['prefix'] . self::cryptNumber($aLink['id']);
             }
-
-
 
             if (empty($aLink['short_url'])) {
                 // Create shortURL
