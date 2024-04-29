@@ -182,19 +182,19 @@ class Shortcode
     public function shortcode_services_handler(): string
     {
         $services = ShortURL::getServices();
-    
+
         $html = '<table class="shorturl-wp-list-table widefat">';
         $html .= '<thead><tr><th>' . __('Service Name', 'text-domain') . '</th></tr></thead>';
         $html .= '<tbody>';
-    
+
         foreach ($services as $service) {
             $html .= '<tr><td>' . esc_html($service['hostname']) . '</td></tr>';
         }
-    
+
         $html .= '</tbody></table>';
         return $html;
     }
-    
+
     // private function display_tags_table(): string
     // {
     //     global $wpdb;
@@ -801,18 +801,26 @@ class Shortcode
         $orderby = !empty($_GET['orderby']) ? $_GET['orderby'] : 'id';
         $order = !empty($_GET['order']) ? $_GET['order'] : 'ASC';
 
+        $own_links = !empty($_GET['own_links']) ? $_GET['own_links'] : 0;
+
         // Prepare SQL query to fetch post IDs from wp_postmeta and their associated category names
         $query = "SELECT l.id AS link_id, 
-                     l.idm_id,
-                     l.long_url, 
-                     l.short_url, 
-                     l.uri, 
-                     DATE_FORMAT(l.valid_until, '%d.%m.%Y') AS valid_until, 
-                     GROUP_CONCAT(DISTINCT lc.category_id) AS category_ids
-                    --  , GROUP_CONCAT(DISTINCT lt.tag_id) AS tag_ids
-              FROM $links_table l
-              LEFT JOIN $links_categories_table AS lc ON l.id = lc.link_id
-              GROUP BY l.id, l.long_url, l.short_url, l.uri, l.valid_until";
+                 l.idm_id,
+                 l.long_url, 
+                 l.short_url, 
+                 l.uri, 
+                 DATE_FORMAT(l.valid_until, '%d.%m.%Y') AS valid_until, 
+                 GROUP_CONCAT(DISTINCT lc.category_id) AS category_ids
+                --  , GROUP_CONCAT(DISTINCT lt.tag_id) AS tag_ids
+          FROM $links_table l
+          LEFT JOIN $links_categories_table AS lc ON l.id = lc.link_id";
+
+        // Additional filter based on $own_links checkbox
+        if ($own_links == 1) {
+            $query .= " WHERE l.idm_id = " . self::$rights['id'];
+        }
+
+        $query .= " GROUP BY l.id, l.long_url, l.short_url, l.uri, l.valid_until";
 
         // Handle filtering by category or tag
         $filter_category = !empty($_GET['filter_category']) ? (int) $_GET['filter_category'] : 0;
@@ -844,10 +852,13 @@ class Shortcode
         // Generate filter button
         $filter_button = '<button type="submit">Filter</button>';
 
+        $checkbox = '<input type="checkbox" name="own_links" value="1" ' . ($own_links == 1 ? 'checked' : '') . '>' . __('My links only', 'rrze-shorturl');
+
         // Generate form for category filtering
         $category_filter_form = '<form method="get">';
         $category_filter_form .= $category_filter_dropdown;
         $category_filter_form .= '&nbsp;' . $filter_button;
+        $category_filter_form .= '&nbsp;' . $checkbox;
         $category_filter_form .= '</form>';
 
         // Generate table
@@ -860,7 +871,7 @@ class Shortcode
         $table .= '<th scope="col" class="manage-column column-uri">URI</th>';
         $table .= '<th scope="col" class="manage-column column-valid-until"><a href="?orderby=valid_until&order=' . ($orderby == 'valid_until' && $order == 'ASC' ? 'DESC' : 'ASC') . '">' . __('Valid until', 'rrze-shorturl') . '</a></th>';
         $table .= '<th scope="col" class="manage-column column-categories">' . __('Categories', 'rrze-shorturl') . '</th>';
-        $table .= '<th scope="col" class="manage-column column-tags">' . __('Tags', 'rrze-shorturl') . '</th>';
+        // $table .= '<th scope="col" class="manage-column column-tags">' . __('Tags', 'rrze-shorturl') . '</th>';
         $table .= '<th scope="col" class="manage-column column-actions">' . __('Actions', 'rrze-shorturl') . '</th>';
         $table .= '</tr></thead><tbody>';
 
