@@ -234,14 +234,17 @@ function create_custom_tables()
             [
                 'hostname' => 'blogs.fau.de',
                 'prefix' => 7,
+                'regex' => 'http://blogs.fau.de/go/$p1/$p2'
             ],
             [
                 'hostname' => 'www.helpdesk.rrze.fau.de',
                 'prefix' => 9,
+                'regex' => 'https://www.helpdesk.rrze.fau.de/otrs/index.pl?Action=AgentZoom&TicketID=$id'
             ],
             [
                 'hostname' => 'fau.zoom-x.de',
                 'prefix' => 2,
+                'regex' => ''
             ],
         ];
 

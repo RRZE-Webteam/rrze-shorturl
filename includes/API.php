@@ -64,6 +64,15 @@ class API {
         //     }
         // ) );
 
+        register_rest_route('short-url/v1', '/services', array(
+            'methods' => 'POST',
+            'callback' => array($this, 'services_callback'),
+            // 2DO: App Password
+            // 'permission_callback' => function () {
+            //     return self::$rights['id'] !== 0;
+            // }
+        ));
+
         // Register REST API query filters
         add_action('rest_api_init', [$this, 'addRestQueryFilters']);
     }
@@ -220,4 +229,15 @@ class API {
             return new WP_Error('callback_error', __('Error processing request.', 'rrze-shorturl'));
         }
     }
+
+    public function get_services_callback($request) {
+        try {
+            $active_short_urls = ShortURL::getServices();
+            
+            return new WP_REST_Response($active_short_urls, 200);
+        } catch (\Exception $e) {
+            return new WP_Error('callback_error', __('Error processing request.', 'rrze-shorturl'));
+        }
+    }
+
 }
