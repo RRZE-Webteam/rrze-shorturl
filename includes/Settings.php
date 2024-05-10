@@ -299,6 +299,7 @@ class Settings
                         // Sanitize input data
                         $new_hostname = sanitize_text_field($_POST['new_hostname']);
                         $new_prefix = sanitize_text_field($_POST['new_prefix']);
+                        $new_regex = sanitize_text_field($_POST['new_regex']);
 
                         // Validate hostname
                         if (!self::isValidHostName($new_hostname)) {
@@ -309,10 +310,11 @@ class Settings
                                 $message = __('You are trying to enter a customer domain. Please use tab "Customer Domains" to do this.', 'rrze-shorturl');
                             } else {
                                 $wpdb->insert(
-                                    "{$wpdb->prefix}shorturl_domains",
+                                    "{$wpdb->prefix}shorturl_services",
                                     array(
                                         'hostname' => $new_hostname,
-                                        'prefix' => $new_prefix
+                                        'prefix' => $new_prefix,
+                                        'regex' => $new_regex
                                     )
                                 );
 
@@ -337,8 +339,8 @@ class Settings
             }
         }
 
-        // Fetch entries from shorturl_domains table (prefix = 1 is reserved for our customer domains)
-        $entries = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_domains WHERE NOT prefix = 1 ORDER BY prefix");
+        // Fetch entries from shorturl_services table (prefix = 1 is reserved for our customer domains)
+        $entries = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_services WHERE NOT prefix = 1 ORDER BY prefix");
 
         ?>
         <div class="wrap">
@@ -360,6 +362,9 @@ class Settings
                                 <?php echo __('Prefix', 'rrze-shorturl'); ?>
                             </th>
                             <th>
+                                <?php echo __('Regex', 'rrze-shorturl'); ?>
+                            </th>
+                            <th>
                                 <?php echo __('Delete', 'rrze-shorturl'); ?>
                             </th>
                         </tr>
@@ -369,7 +374,9 @@ class Settings
                             <tr>
                                 <td><input type="text" name="hostname[]" value="<?php echo esc_attr($entry->hostname); ?>"
                                         readonly /></td>
-                                <td><input type="text" name="prefix[]" value="<?php echo esc_attr($entry->prefix); ?>" readonly />
+                                        <td><input type="text" name="prefix[]" value="<?php echo esc_attr($entry->prefix); ?>" readonly />
+                                </td>
+                                <td><input type="text" name="regex[]" value="<?php echo esc_attr($entry->regex); ?>"  />
                                 </td>
                                 <td><input type="checkbox" name="delete[]" value="<?php echo esc_attr($entry->id); ?>" />
                                 </td>
@@ -381,6 +388,8 @@ class Settings
                             <td><input type="text" name="new_prefix"
                                     value="<?php echo (!empty($new_prefix) ? $new_prefix : ''); ?>" pattern="\d*" />
                             </td>
+                            <td><input type="text" name="new_regex"
+                                    value="<?php echo (!empty($new_regex) ? $new_regex : ''); ?>" /></td>
                             <td></td>
                         </tr>
                     </tbody>

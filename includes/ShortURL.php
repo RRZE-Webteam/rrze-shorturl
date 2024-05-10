@@ -20,7 +20,7 @@ class ShortURL
 
         self::$CONFIG['ShortURLBase'] = (!empty($options['ShortURLBase']) ? $options['ShortURLBase'] : 'https://go.fau.de/');
         self::$CONFIG['maxShortening'] = (!empty($options['maxShortening']) ? $options['maxShortening'] : 60);
-        
+
         self::$CONFIG['AllowedDomains'] = self::getAllowedDomains();
         self::$CONFIG['Services'] = self::getServices();
     }
@@ -78,6 +78,27 @@ class ShortURL
         }
     }
 
+    public static function decryptString($output)
+    {
+        try {
+            $inputString = '';
+
+            for ($i = 0; $i < strlen($output); $i++) {
+                $index = strpos(self::$CONFIG['ShortURLModChars'], $output[$i]);
+
+                $adjustedIndex = ($index + 1) % strlen(self::$CONFIG['ShortURLModChars']);
+
+                $inputString .= $adjustedIndex;
+            }
+
+            return intval($inputString);
+        } catch (\Exception $e) {
+            error_log("Error in decryptString: " . $e->getMessage());
+            return null;
+        }
+    }
+
+
     public static function getLinkfromDB($domain_id, $long_url, $idm_id)
     {
         $idm = '';
@@ -88,7 +109,7 @@ class ShortURL
 
             $result = $wpdb->get_results($wpdb->prepare("SELECT id, short_url FROM $table_name WHERE long_url = %s LIMIT 1", $long_url), ARRAY_A);
 
-            if (empty ($result)) {
+            if (empty($result)) {
                 $long_url = self::$rights['get_allowed'] ? $long_url : self::add_url_components($long_url, array('scheme', 'host', 'path'));
 
                 // Insert into the links table
@@ -146,7 +167,7 @@ class ShortURL
                 // $wpdb->delete($link_tags_table, ['link_id' => $link_id]);
 
                 // Insert new categories
-                if (!empty ($categories)) {
+                if (!empty($categories)) {
                     foreach ($categories as $category_id) {
                         $wpdb->insert(
                             $link_categories_table,
@@ -174,7 +195,8 @@ class ShortURL
     }
 
 
-    public static function getServices(){
+    public static function getServices()
+    {
         global $wpdb;
 
         try {
@@ -226,7 +248,7 @@ class ShortURL
             $domain = wp_parse_url($long_url, PHP_URL_HOST);
 
             // Check if domain is a service
-            if (in_array($domain, self::$CONFIG['AllowedDomains'])){
+            if (in_array($domain, self::$CONFIG['AllowedDomains'])) {
                 $aRet['notice'] = __('You\'ve tried to shorten a service domain. Services will automatically be shortened and redirected.', 'rrze-shorturl');
                 return $aRet;
             }
@@ -285,7 +307,7 @@ class ShortURL
 
     public static function isValidDate($valid_until)
     {
-        if (empty ($valid_until)) {
+        if (empty($valid_until)) {
             return ['error' => false, 'txt' => 'no date given'];
         }
         $parsed_date = date_parse($valid_until);
@@ -323,8 +345,8 @@ class ShortURL
         $new_url = '';
 
         foreach ($components as $component) {
-            if (isset ($parsed_url[$component])) {
-                if ($component == 'scheme'){
+            if (isset($parsed_url[$component])) {
+                if ($component == 'scheme') {
                     $parsed_url[$component] .= '://';
                 }
                 $new_url .= $parsed_url[$component];
@@ -334,9 +356,10 @@ class ShortURL
         return $new_url;
     }
 
-    private static function countShortenings() {
+    private static function countShortenings()
+    {
         global $wpdb;
-    
+
         try {
             $query = $wpdb->prepare("
                 SELECT COUNT(*) AS count_shortenings
@@ -345,11 +368,11 @@ class ShortURL
                 AND created_at >= %s
             ", self::$rights['id'], date('Y-m-d H:i:s', strtotime('-60 minutes')));
             $result = $wpdb->get_row($query);
-    
+
             if ($result === null) {
                 throw new Exception('Database query returned null.');
             }
-    
+
             $count = isset($result->count_shortenings) ? $result->count_shortenings : 0;
             return $count;
         } catch (Exception $e) {
@@ -358,15 +381,16 @@ class ShortURL
         }
     }
 
-    private static function maxShorteningReached(){
+    private static function maxShorteningReached()
+    {
         return self::countShortenings() >= self::$CONFIG['maxShortening'];
     }
-    
+
     public static function shorten($shortenParams)
     {
         try {
             // check if maximum shortenings is reached
-            if (self::maxShorteningReached()){
+            if (self::maxShorteningReached()) {
                 return ['error' => true, 'txt' => sprintf(__('You cannot shorten more than %s links per hour', 'rrze-shorturl'), self::$CONFIG['maxShortening'])];
             }
 
@@ -383,7 +407,7 @@ class ShortURL
             $long_url = self::$rights['get_allowed'] ? $long_url : self::add_url_components($long_url, array('scheme', 'host', 'path'));
 
             $uri = self::$rights['uri_allowed'] ? sanitize_text_field($_POST['uri'] ?? '') : '';
-            $valid_until = isset ($shortenParams['valid_until']) && $shortenParams['valid_until'] !== '' ? $shortenParams['valid_until'] : date('Y-m-d', strtotime('+1 year'));
+            $valid_until = isset($shortenParams['valid_until']) && $shortenParams['valid_until'] !== '' ? $shortenParams['valid_until'] : date('Y-m-d', strtotime('+1 year'));
             $categories = $shortenParams['categories'] ?? [];
             // $tags = $shortenParams['tags'] ?? [];
 
@@ -411,7 +435,7 @@ class ShortURL
             $aLink = self::getLinkfromDB($aDomain['id'], $long_url, self::$rights['id']);
 
             // Create shortURL
-            if (!empty ($uri)) {
+            if (!empty($uri)) {
                 if (!self::isUniqueURI($uri)) {
                     return ['error' => true, 'txt' => $uri . ' ' . __('is already in use. Try another one.', 'rrze-shorturl')];
                 }
@@ -442,7 +466,8 @@ class ShortURL
         }
     }
 
-    public static function getActiveShortURLs() {
+    public static function getActiveShortURLs()
+    {
         global $wpdb;
 
         try {

@@ -25,7 +25,9 @@ try {
 
     if ($rules) {
         // $rules = "<IfModule mod_rewrite.c>\nRewriteEngine On\nRewriteBase /\n" . $rules . "</IfModule>\n";
-        $rules = "RewriteEngine On\nRewriteBase /\n" . $rules;
+
+        // first rule: redirect all paths that start with a number but not 1 to redirect-services.php (1 == customer domain)
+        $rules = "RewriteEngine On\nRewriteBase /\nRewriteRule ^([2-9].*)$ redirect-services.php?code=$1 [L]\n" . $rules;
 
         // Read .htaccess content
         $htaccess_file = '.htaccess';
@@ -43,16 +45,7 @@ try {
         // Generate new rules section
         $new_rules_section = $marker_start . $rules . $marker_end;
 
-        // Check if the WordPress standard comment exists
-        $standard_comment = "# BEGIN WordPress\n";
-        $pos = strpos($htaccess_content, $standard_comment);
-        if ($pos !== false) {
-            // Insert new rules before the standard WordPress comment
-            $htaccess_content = substr_replace($htaccess_content, $new_rules_section, $pos, 0);
-        } else {
-            // Insert new rules at the beginning of the .htaccess file
-            $htaccess_content = $new_rules_section . $htaccess_content;
-        }
+        $htaccess_content = $new_rules_section . $htaccess_content;
 
         // Save .htaccess content
         $result = file_put_contents($htaccess_file, $htaccess_content);
