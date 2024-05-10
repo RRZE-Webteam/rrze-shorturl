@@ -36,18 +36,21 @@ Alle Endpoints sind zugriffsgeschützt.
 - /add-category (POST) trägt eine neue Kategorie mit ggfalls Parent-Kategorie in die Datenbank ein
 - /tags (GET) liefert die Schlagwörter als JSON (seit 1.1.0 deaktiviert)
 - /add-tags (POST) trägt ein neues Schlagwort in die Datenbank ein (seit 1.1.0 deaktiviert)
+- /services (GET) liefert alle Services samt Regex
+- /service-decrypt (POST) decrypted Parameter für einen Service
 
 ## Installation
 - Plugin auf WordPress Instanz 
 - make_htaccess.php auf den Server kopieren, der die Redirects ausführen soll und über Cronjob aufrufen. Wenn make_htaccess.php nicht im Root-Verzeichnis liegt, muss der Pfad zur .htaccess angepasst werden
+- redirect-services.php auf den Server kopieren, der die Redirects ausführen soll
 
 # Bespiel für Cronjob, der die .htaccess alle 5 Minuten aktualisiert
 */5 * * * * php /path/to/make_htaccess.php
 
 Die .htaccess enthält alle Redirects zwischen den Kommentar-Zeilen "# BEGIN ShortURL" und "# END ShortURL".
 Als erstes die Regeln für die Services, dann die User-generierten Redirects für die erlaubten Domains.
-Nach "# END ShortURL" alle vorher bereits existierten Zeilen der .htacess. 
-make_htaccess.php überbügelt eine vorhandene .htaccess nicht.
+Nach "# END ShortURL" alle vorher bereits existierten Zeilen der .htaccess. 
+make_htaccess.php überschreibt die Anweisungen der vorhandene .htaccess nicht.
 
 
 

@@ -77,6 +77,7 @@ function drop_custom_tables()
         $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_tags");
         $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_links");
         $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_domains");
+        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_services");
         $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_idms");
 
         // Delete triggers just to be sure (they should be deleted as they are binded to the dropped tables)
@@ -125,6 +126,7 @@ function create_custom_tables()
             id mediumint(9) NOT NULL AUTO_INCREMENT,
             hostname varchar(255) NOT NULL DEFAULT '' UNIQUE,
             prefix int(1) NOT NULL DEFAULT 1,
+            regex varchar(255) NOT NULL DEFAULT '',
             active BOOLEAN DEFAULT TRUE,
             notice varchar(255) NULL DEFAULT NULL,
             PRIMARY KEY (id)
@@ -232,25 +234,24 @@ function create_custom_tables()
         // Insert Service domains
         $aEntries = [
             [
-                'hostname' => 'blogs.fau.de',
-                'prefix' => 7,
-            ],
-            [
                 'hostname' => 'www.helpdesk.rrze.fau.de',
                 'prefix' => 9,
+                'regex' => 'https://www.helpdesk.rrze.fau.de/otrs/index.pl?Action=AgentZoom&TicketID=$id'
             ],
             [
                 'hostname' => 'fau.zoom-x.de',
                 'prefix' => 2,
+                'regex' => ''
             ],
         ];
 
         foreach ($aEntries as $entry) {
             $wpdb->query(
                 $wpdb->prepare(
-                    "INSERT IGNORE INTO {$wpdb->prefix}shorturl_services (hostname, prefix) VALUES (%s, %d)",
+                    "INSERT IGNORE INTO {$wpdb->prefix}shorturl_services (hostname, prefix, regex) VALUES (%s, %d, %s)",
                     $entry['hostname'],
-                    $entry['prefix']
+                    $entry['prefix'],
+                    $entry['regex']                    
                 )
             );
         }

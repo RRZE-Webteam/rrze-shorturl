@@ -64,6 +64,25 @@ class API {
         //     }
         // ) );
 
+        register_rest_route('short-url/v1', '/services', array(
+            'methods' => 'GET',
+            'callback' => array($this, 'get_services_callback'),
+            // 2DO: App Password
+            // 'permission_callback' => function () {
+            //     return self::$rights['id'] !== 0;
+            // }
+        ));
+
+
+        register_rest_route('short-url/v1', '/service-decrypt', array(
+            'methods' => 'POST',
+            'callback' => array($this, 'get_decrypt_callback'),
+            // 2DO: App Password
+            // 'permission_callback' => function () {
+            //     return self::$rights['id'] !== 0;
+            // }
+        ));
+
         // Register REST API query filters
         add_action('rest_api_init', [$this, 'addRestQueryFilters']);
     }
@@ -220,4 +239,33 @@ class API {
             return new WP_Error('callback_error', __('Error processing request.', 'rrze-shorturl'));
         }
     }
+
+    public function get_services_callback($request) {
+        try {
+            $active_short_urls = ShortURL::getServices();
+            
+            return new WP_REST_Response($active_short_urls, 200);
+        } catch (\Exception $e) {
+            return new WP_Error('callback_error', __('Error processing request.', 'rrze-shorturl'));
+        }
+    }
+
+
+    public function get_decrypt_callback($request) {
+        $parameters = $request->get_json_params();
+    
+        if (empty($parameters['encrypted'])) {
+            return new WP_Error('invalid_name', __('encrypted value is required.', 'rrze-shorturl'), array('status' => 400));
+        }
+    
+        try {
+            $decrypted_string = ShortURL::decryptString($parameters['encrypted']);
+            
+            return new WP_REST_Response($decrypted_string, 200);
+        } catch (\Exception $e) {
+            return new WP_Error('callback_error', __('Error processing request.', 'rrze-shorturl'));
+        }
+    }
+
+
 }
