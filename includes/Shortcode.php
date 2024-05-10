@@ -12,6 +12,8 @@ class Shortcode
         $rightsObj = new Rights();
         self::$rights = $rightsObj->getRights();
 
+        // add_shortcode('shorturl-test', [$this, 'shorturl_test_shortcode']);
+
         add_shortcode('shorturl', [$this, 'shorturl_handler']);
         add_shortcode('shorturl-list', [$this, 'shortcode_list_handler']);
         add_shortcode('shorturl-categories', [$this, 'shortcode_categories_handler']);
@@ -42,6 +44,20 @@ class Shortcode
         add_action('wp_ajax_nopriv_delete_tag', [$this, 'delete_tag_callback']);
         add_action('wp_ajax_delete_tag', [$this, 'delete_tag_callback']);
     }
+
+    // public function shorturl_test_shortcode()
+    // {
+    //     // Pfad zur PHP-Datei innerhalb des Plugin-Ordners
+    //     $file_path = plugin_dir_path(__FILE__) . '../make_htaccess.php';
+
+    //     // Einbinden der PHP-Datei
+    //     if (file_exists($file_path)) {
+    //         require_once $file_path;
+    //         // Hier kannst du Funktionen oder Code aus make_htaccess.php verwenden
+    //     } else {
+    //         return 'Datei nicht gefunden ' . $file_path;
+    //     }
+    // }
 
 
     // public function shortcode_tags_handler(): string

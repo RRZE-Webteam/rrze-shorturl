@@ -423,7 +423,7 @@ class ShortURL
 
             if (empty($aLink['short_url'])) {
                 // Create shortURL
-                $shortURL = self::$CONFIG['ShortURLBase'] . $targetURL;
+                $shortURL = self::$CONFIG['ShortURLBase'] . '/' . $targetURL;
             } else {
                 $shortURL = $aLink['short_url'];
             }
@@ -450,13 +450,7 @@ class ShortURL
             $query = "SELECT long_url, short_url, valid_until FROM {$wpdb->prefix}shorturl_links WHERE active = 1 AND valid_until >= CURDATE() ORDER BY created_at DESC";
             $results = $wpdb->get_results($query, ARRAY_A);
 
-            if ($results) {
-                // Return the results as JSON
-                return json_encode($results);
-            } else {
-                // If no active short URLs found, return an empty JSON array
-                return json_encode(array());
-            }
+            return $results;
         } catch (Exception $e) {
             // Handle any exceptions that occur during the database query
             // You can log the error, display a message, or take other actions
