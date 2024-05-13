@@ -6,6 +6,7 @@ use WP_Error;
 
 class API {
     protected static $rights;
+    protected static $aAllowedIPs;
     
     public function __construct() {
         add_action('rest_api_init', array($this, 'register_rest_endpoints'));
@@ -13,6 +14,12 @@ class API {
         $rightsObj = new Rights();
         self::$rights = $rightsObj->getRights();
 
+        $options = json_decode(get_option('rrze-shorturl'), true);
+
+        self::$aAllowedIPs = [];
+        if (!empty($options['allowed_ip_addresses'])){
+            self::$aAllowedIPs = array_map('trim', explode("\n", $options['allowed_ip_addresses']));
+        }
     }
 
     public function register_rest_endpoints() {
@@ -27,9 +34,7 @@ class API {
         register_rest_route('short-url/v1', '/active-short-urls', array(
             'methods' => 'GET',
             'callback' => array($this, 'get_active_short_urls_callback'),
-            // 'permission_callback' => function () {
-            //     return self::$rights['id'] !== 0;
-            // }
+            'permission_callback' => [$this, 'is_ip_allowed']
         ));
 
         register_rest_route('short-url/v1', '/categories', array(
@@ -51,25 +56,60 @@ class API {
         register_rest_route('short-url/v1', '/services', array(
             'methods' => 'GET',
             'callback' => array($this, 'get_services_callback'),
-            // 2DO: App Password
-            // 'permission_callback' => function () {
-            //     return self::$rights['id'] !== 0;
-            // }
+            'permission_callback' => [$this, 'is_ip_allowed']
         ));
 
 
         register_rest_route('short-url/v1', '/decrypt', array(
             'methods' => 'GET',
             'callback' => array($this, 'get_decrypt_callback'),
-            // 2DO: App Password
-            // 'permission_callback' => function () {
-            //     return self::$rights['id'] !== 0;
-            // }
+            'permission_callback' => [$this, 'is_ip_allowed']
         ));
 
         // Register REST API query filters
         add_action('rest_api_init', [$this, 'addRestQueryFilters']);
     }
+
+    public function is_ip_allowed() {
+        $client_ip = $this->get_client_ip();
+
+        foreach (self::$aAllowedIPs as $allowed_ip) {
+            if ($this->ip_in_range($client_ip, $allowed_ip)) {
+                return true;
+            }
+        }
+    
+        return false;
+    }
+    
+    private function get_client_ip() {
+        $ip = 0;
+
+        if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+            $ip = $_SERVER['HTTP_CLIENT_IP'];
+        } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+        } else {
+            $ip = $_SERVER['REMOTE_ADDR'];
+        }    
+
+        return $ip;
+    }
+    
+    private function ip_in_range($ip, $range) {
+        // if it is a single IP-address
+        if (strpos($range, '/') === false) {
+            return $ip === $range;
+        }
+    
+        list($subnet, $bits) = explode('/', $range);
+        $subnet = ip2long($subnet);
+        $ip = ip2long($ip);
+        $mask = -1 << (32 - $bits);
+    
+        return ($ip & $mask) == ($subnet & $mask);
+    }
+    
 
 
     /**
@@ -237,7 +277,7 @@ class API {
 
     public function get_decrypt_callback($request) {
         $parameters = $request->get_params();
-            
+
         if (empty($parameters['encrypted'])) {
             return new WP_Error('invalid_name', __('encrypted value is required.', 'rrze-shorturl'), array('status' => 400));
         }

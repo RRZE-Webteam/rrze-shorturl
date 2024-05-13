@@ -110,7 +110,7 @@ class Settings
     // Render the options page
     public function render_options_page()
     {
-        $_GET['tab'] = (empty($_GET['tab']) ? 'services' : $_GET['tab']);
+        $_GET['tab'] = (empty($_GET['tab']) ? 'general' : $_GET['tab']);
 
         ?>
         <div class="wrap">
@@ -232,6 +232,12 @@ class Settings
                 $message = 'Error: ' . __('Maximum number of shortenings is not valid.', 'rrze-shorturl');
             }
 
+            if (filter_var($_POST['allowed_ip_addresses'], FILTER_SANITIZE_STRING) !== false) {
+                $aOptions['allowed_ip_addresses'] = $_POST['allowed_ip_addresses'];
+            } else {
+                $message = 'Error: ' . __('Allowed IP Addresses for REST API endpoints is not valid.', 'rrze-shorturl');
+            }
+
             update_option('rrze-shorturl', json_encode($aOptions));
         }
 
@@ -257,6 +263,13 @@ class Settings
                             <td><?php echo __('Maximum shortenings per hour per user', 'rrze-shorturl'); ?></td>
                             <td><input type="number" name="maxShortening" id="maxShortening" min="1"
                                     value="<?php echo $aOptions['maxShortening']; ?>"></td>
+                        </tr>
+                        <tr>
+                            <td><?php echo __('Allowed IP Addresses for REST API endpoints', 'rrze-shorturl'); ?></td>
+                            <td>
+                                <textarea name="allowed_ip_addresses" id="allowed_ip_addresses" rows="4"
+                                    cols="50"><?php echo $aOptions['allowed_ip_addresses']; ?></textarea>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
@@ -374,9 +387,9 @@ class Settings
                             <tr>
                                 <td><input type="text" name="hostname[]" value="<?php echo esc_attr($entry->hostname); ?>"
                                         readonly /></td>
-                                        <td><input type="text" name="prefix[]" value="<?php echo esc_attr($entry->prefix); ?>" readonly />
+                                <td><input type="text" name="prefix[]" value="<?php echo esc_attr($entry->prefix); ?>" readonly />
                                 </td>
-                                <td><input type="text" name="regex[]" value="<?php echo esc_attr($entry->regex); ?>"  />
+                                <td><input type="text" name="regex[]" value="<?php echo esc_attr($entry->regex); ?>" />
                                 </td>
                                 <td><input type="checkbox" name="delete[]" value="<?php echo esc_attr($entry->id); ?>" />
                                 </td>
