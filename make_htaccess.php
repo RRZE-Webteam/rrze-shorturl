@@ -26,7 +26,7 @@ try {
     if ($rules) {
         // $rules = "<IfModule mod_rewrite.c>\nRewriteEngine On\nRewriteBase /\n" . $rules . "</IfModule>\n";
 
-        // first rule: redirect all paths that start with a number but not 1 to redirect-services.php (1 == customer domain)
+        // first rule: redirect all paths that start with a number but not 1 to redirect-services.php (1 == customer domain) 
         $rules = "RewriteEngine On\nRewriteBase /\nRewriteRule ^([2-9].*)$ redirect-services.php?code=$1 [L]\n" . $rules;
 
         // Read .htaccess content
@@ -50,7 +50,7 @@ try {
         // Save .htaccess content
         $result = file_put_contents($htaccess_file, $htaccess_content);
 
-        // echo nl2br($htaccess_content);
+        echo nl2br($htaccess_content);
 
         if ($result === false) {
             throw new Exception("Failed to save .htaccess file.");

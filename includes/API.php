@@ -27,9 +27,9 @@ class API {
         register_rest_route('short-url/v1', '/active-short-urls', array(
             'methods' => 'GET',
             'callback' => array($this, 'get_active_short_urls_callback'),
-            'permission_callback' => function () {
-                return self::$rights['id'] !== 0;
-            }
+            // 'permission_callback' => function () {
+            //     return self::$rights['id'] !== 0;
+            // }
         ));
 
         register_rest_route('short-url/v1', '/categories', array(
