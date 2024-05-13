@@ -45,6 +45,7 @@ class Shortcode
         add_action('wp_ajax_delete_tag', [$this, 'delete_tag_callback']);
     }
 
+
     public function shorturl_test_shortcode()
     {
         // Pfad zur PHP-Datei innerhalb des Plugin-Ordners
@@ -472,14 +473,23 @@ class Shortcode
         // Define the table names
         $links_table = $wpdb->prefix . 'shorturl_links';
         $categories_table = $wpdb->prefix . 'shorturl_links_categories';
-        $tags_table = $wpdb->prefix . 'shorturl_links_tags';
+        // $tags_table = $wpdb->prefix . 'shorturl_links_tags';
 
         // Prepare the SQL query to fetch link data by ID
+        // $query = $wpdb->prepare("
+        //     SELECT l.*, GROUP_CONCAT(DISTINCT lc.category_id) AS category_ids, 
+        //     GROUP_CONCAT(DISTINCT lt.tag_id) AS tag_ids
+        //     FROM $links_table l
+        //     LEFT JOIN $categories_table AS lc ON l.id = lc.link_id
+        //     LEFT JOIN $tags_table AS lt ON l.id = lt.link_id
+        //     WHERE l.id = %d
+        //     GROUP BY l.id
+        // ", $link_id);
+
         $query = $wpdb->prepare("
-            SELECT l.*, GROUP_CONCAT(DISTINCT lc.category_id) AS category_ids, GROUP_CONCAT(DISTINCT lt.tag_id) AS tag_ids
+            SELECT l.*, GROUP_CONCAT(DISTINCT lc.category_id) AS category_ids
             FROM $links_table l
             LEFT JOIN $categories_table AS lc ON l.id = lc.link_id
-            LEFT JOIN $tags_table AS lt ON l.id = lt.link_id
             WHERE l.id = %d
             GROUP BY l.id
         ", $link_id);
@@ -489,8 +499,6 @@ class Shortcode
 
         return $result;
     }
-
-
 
     public function delete_link_callback()
     {
@@ -805,7 +813,7 @@ class Shortcode
         $links_categories_table = $wpdb->prefix . 'shorturl_links_categories';
         // $links_tags_table = $wpdb->prefix . 'shorturl_links_tags';
         $categories_table = $wpdb->prefix . 'shorturl_categories';
-        $tags_table = $wpdb->prefix . 'shorturl_tags';
+        // $tags_table = $wpdb->prefix . 'shorturl_tags';
 
         // Fetch all categories
         $categories = $wpdb->get_results("SELECT id, label FROM $categories_table", ARRAY_A);

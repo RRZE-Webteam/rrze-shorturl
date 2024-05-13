@@ -27,9 +27,9 @@ class API {
         register_rest_route('short-url/v1', '/active-short-urls', array(
             'methods' => 'GET',
             'callback' => array($this, 'get_active_short_urls_callback'),
-            'permission_callback' => function () {
-                return self::$rights['id'] !== 0;
-            }
+            // 'permission_callback' => function () {
+            //     return self::$rights['id'] !== 0;
+            // }
         ));
 
         register_rest_route('short-url/v1', '/categories', array(
@@ -48,22 +48,6 @@ class API {
             }
         ));  
         
-        // register_rest_route('short-url/v1', '/tags', array(
-        //     'methods' => 'GET',
-        //     'callback' => array($this, 'get_tags_callback'),
-        //     'permission_callback' => function () {
-        //         return self::$rights['id'] !== 0;
-        //     }
-        // ));
-
-        // register_rest_route( 'short-url/v1', '/add-tag', array(
-        //     'methods'             => 'POST',
-        //     'callback'            => array($this, 'add_tag_callback'),
-        //     'permission_callback' => function () {
-        //         return self::$rights['id'] !== 0;
-        //     }
-        // ) );
-
         register_rest_route('short-url/v1', '/services', array(
             'methods' => 'GET',
             'callback' => array($this, 'get_services_callback'),
@@ -74,8 +58,8 @@ class API {
         ));
 
 
-        register_rest_route('short-url/v1', '/service-decrypt', array(
-            'methods' => 'POST',
+        register_rest_route('short-url/v1', '/decrypt', array(
+            'methods' => 'GET',
             'callback' => array($this, 'get_decrypt_callback'),
             // 2DO: App Password
             // 'permission_callback' => function () {
@@ -252,15 +236,16 @@ class API {
 
 
     public function get_decrypt_callback($request) {
-        $parameters = $request->get_json_params();
-    
+        $parameters = $request->get_params();
+            
         if (empty($parameters['encrypted'])) {
             return new WP_Error('invalid_name', __('encrypted value is required.', 'rrze-shorturl'), array('status' => 400));
         }
     
         try {
-            $decrypted_string = ShortURL::decryptString($parameters['encrypted']);
-            
+            $myCrypt = new MyCrypt();
+            $decrypted_string = $myCrypt->decrypt($parameters['encrypted']);
+
             return new WP_REST_Response($decrypted_string, 200);
         } catch (\Exception $e) {
             return new WP_Error('callback_error', __('Error processing request.', 'rrze-shorturl'));
