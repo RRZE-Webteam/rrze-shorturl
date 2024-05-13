@@ -12,6 +12,9 @@ class Shortcode
         $rightsObj = new Rights();
         self::$rights = $rightsObj->getRights();
 
+        add_shortcode('shorturl-encrypt', [$this, 'shorturl_test_encrypt']);
+        add_shortcode('shorturl-decrypt', [$this, 'shorturl_test_decrypt']);
+
         add_shortcode('shorturl-test-htaccess', [$this, 'shorturl_test_shortcode']);
 
         add_shortcode('shorturl', [$this, 'shorturl_handler']);
@@ -44,6 +47,18 @@ class Shortcode
         add_action('wp_ajax_nopriv_delete_tag', [$this, 'delete_tag_callback']);
         add_action('wp_ajax_delete_tag', [$this, 'delete_tag_callback']);
     }
+
+
+    public function shorturl_test_encrypt(){
+        $myCrypt = new MyCrypt();
+        return $myCrypt->encrypt(75);
+    }
+
+    public function shorturl_test_decrypt(){
+        $myCrypt = new MyCrypt();
+        return $myCrypt->decrypt("ba");
+    }
+
 
     public function shorturl_test_shortcode()
     {

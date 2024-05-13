@@ -1,6 +1,34 @@
 <?php
 
+// 9wv0h => 1196144
+
+
 $shorturl_domain = "https://go-fau.test.rrze.fau.de"; // Domain on which the plugin rrze-shorturl runs
+function decryptBase37(string $encrypted): int {
+    $ShortURLModChars = "abcdefghijklmnopqrstuvwxyz0123456789-";
+    $len = strlen($ShortURLModChars); // Basis 37
+
+    $decrypted = 0;
+
+    for ($i = 0; $i < strlen($encrypted); $i++) {
+        $char = $encrypted[$i];
+        $index = strpos($ShortURLModChars, $char);
+
+        if ($index === false) {
+            throw new Exception("Invalid character in encrypted string.");
+        }
+
+        // Die Basis-37-Zahl wird in eine Dezimalzahl umgewandelt
+        $decrypted = $decrypted * $len + $index;
+    }
+
+    return $decrypted;
+}
+
+echo "test<br>";
+$encrypted = "ba";
+echo decryptBase37($encrypted); // Ausgabe: 75
+exit;
 
 try {
     $response = file_get_contents($shorturl_domain . "/wp-json/short-url/v1/services");
@@ -18,68 +46,19 @@ try {
     $prefix = (int) $code[0];
     $encrypted = substr($code, 1);
 
-    $ShortURLModChars = "abcdefghijklmnopqrstuvwxyz0123456789-";
-
     foreach ($services as $service) {
         if ($service["prefix"] == $prefix) {
             $service_link = $service["regex"];
 
-            $decrypted = '';
+            $decrypted = decryptBase37($encrypted);
 
-            $len = strlen("abcdefghijklmnopqrstuvwxyz0123456789-");
-
-            for ($i = 0; $i < strlen($encrypted); $i++) {
-                $index = strpos($ShortURLModChars, $encrypted[$i]);
-
-                $adjustedIndex = ($index + 1) % $len;
-
-                $decrypted .= $adjustedIndex;
-            }
+            echo '$decrypted = ' . $decrypted;
+            exit;
 
             $redirect_url = preg_replace('/\$\w+/', $decrypted, $service_link);
 
             header('Location: ' . $redirect_url);
             exit;
-
-
-            // try {
-            //     $data = http_build_query(array('encrypted' => $encrypted));
-
-            //     $options = array(
-            //         'https' => array(
-            //             'method' => 'POST',
-            //             'header' => 'Content-type: application/x-www-form-urlencoded',
-            //             'content' => $data
-            //         )
-            //     );
-
-            //     $context = stream_context_create($options);
-
-            //     $response = file_get_contents($shorturl_domain . "/wp-json/short-url/v1/service-decrypt", false, $context);
-
-
-            //     if ($response === false) {
-            //         $error = error_get_last();
-            //         throw new Exception("Failed to decrypt from the REST API endpoint. Error: " . $error['message']);
-            //     }
-
-            //     $decrypted = json_decode($response, true);
-            //     if ($decrypted === null) {
-            //         throw new Exception("Failed to decode JSON response.");
-            //     }
-
-            //     // we don't know what the var is named, like f.e. $id or $param, ...
-            //     $redirect_url = preg_replace('/\$\w+/', $decrypted, $service_link);
-
-            //     echo $redirect_url;
-
-            //     header('Location: ' . $redirect_url);
-            //     exit;
-            // } catch (Exception $e) {
-            //     echo "Error: " . $e->getMessage();
-            // }
-
-            break;
         }
     }
 
