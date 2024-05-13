@@ -10,7 +10,10 @@ class Rights
 
     public function __construct()
     {
-        if (class_exists('\RRZE\AccessControl\Permissions')) {
+        if (is_user_logged_in()) {
+            $current_user = wp_get_current_user();
+            $this->idm = $current_user->user_nicename;
+        }elseif (class_exists('\RRZE\AccessControl\Permissions')) {
             $permissionsInstance = new Permissions();
             $checkSSOLoggedIn = $permissionsInstance->checkSSOLoggedIn();
             $personAttributes = $permissionsInstance->personAttributes;
