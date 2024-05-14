@@ -803,7 +803,8 @@ class Shortcode
                 'categories' => !empty($_POST['categories']) ? array_map('sanitize_text_field', $_POST['categories']) : []
             ];
 
-            ShortURL::updateLink($aParams['idm_id'], $aParams['link_id'], $aParams['domain_id'], $aParams['shortURL'], $aParams['uri'], $aParams['valid_until'], $aParams['categories'], $aParams['tags']);
+            // ShortURL::updateLink($aParams['idm_id'], $aParams['link_id'], $aParams['domain_id'], $aParams['shortURL'], $aParams['uri'], $aParams['valid_until'], $aParams['categories'], $aParams['tags']);
+            ShortURL::updateLink($aParams['idm_id'], $aParams['link_id'], $aParams['domain_id'], $aParams['shortURL'], $aParams['uri'], $aParams['valid_until'], $aParams['categories']);
 
             $bUpdated = true;
             $message = __('Link updated', 'rrze-shorturl');
@@ -970,7 +971,7 @@ class Shortcode
                         <input type="hidden" name="action" value="update_link">
                         <input type="hidden" name="link_id" value="<?php echo esc_attr($link_id); ?>">
                         <input type="hidden" name="domain_id" value="<?php echo esc_attr($link_data['domain_id']); ?>">
-                        <input type="hidden" name="shortURL" value="<?php echo esc_attr($link_data['shortURL']); ?>">
+                        <input type="hidden" name="shortURL" value="<?php echo esc_attr($link_data['short_url']); ?>">
                         <input type="hidden" name="uri"
                             value="<?php echo !empty($link_data['uri']) ? esc_attr($link_data['uri']) : ''; ?>">
                         <?php echo self::display_shorturl_validity($link_data['valid_until']); ?>

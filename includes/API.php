@@ -34,7 +34,7 @@ class API {
         register_rest_route('short-url/v1', '/active-short-urls', array(
             'methods' => 'GET',
             'callback' => array($this, 'get_active_short_urls_callback'),
-            'permission_callback' => [$this, 'is_ip_allowed']
+            // 'permission_callback' => [$this, 'is_ip_allowed']
         ));
 
         register_rest_route('short-url/v1', '/categories', array(
