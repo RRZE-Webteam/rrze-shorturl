@@ -10,6 +10,7 @@ class Rights
 
     public function __construct()
     {
+        $this->idm = 'system';
         if (is_user_logged_in()) {
             $current_user = wp_get_current_user();
             $this->idm = $current_user->user_nicename;
@@ -19,7 +20,6 @@ class Rights
             $personAttributes = $permissionsInstance->personAttributes;
             $this->idm = $personAttributes['urn:mace:dir:attribute-def:uid'][0];
         } else {
-            $this->idm = 'system';
             error_log('\RRZE\AccessControl\Permissions is not available');
         }
     }
