@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: RRZE ShortURL\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-03-25 11:12+0000\n"
-"PO-Revision-Date: 2024-03-25 12:20+0000\n"
+"PO-Revision-Date: 2024-05-14 15:22+0000\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
 "Language: de_DE\n"
@@ -15,61 +15,75 @@ msgstr ""
 "X-Loco-Version: 2.6.7; wp-6.4.3\n"
 "X-Domain: rrze-shorturl"
 
-#: includes/Shortcode.php:136 includes/Shortcode.php:314
-#: includes/Shortcode.php:816
+#: includes/Shortcode.php:412 includes/Shortcode.php:896
 msgid "Actions"
 msgstr "Aktionen"
 
-#: includes/Shortcode.php:364
+#: includes/Settings.php:445
+msgid "Active"
+msgstr "Aktiv"
+
+#: includes/Shortcode.php:462
 msgid "Add Category"
 msgstr "Kategorie hinzufügen"
 
-#: includes/Shortcode.php:332 includes/Shortcode.php:359
-#: includes/Shortcode.php:624
+#: includes/Shortcode.php:430 includes/Shortcode.php:457
+#: includes/Shortcode.php:719
 msgid "Add New Category"
 msgstr "Neue Kategorie hinzufügen"
 
-#: includes/Shortcode.php:635
+#: includes/Shortcode.php:732
 msgid "Add new category"
 msgstr "Neue Kategorie hinzufügen"
 
-#: includes/Shortcode.php:159 includes/Shortcode.php:169
-msgid "Add New Tag"
-msgstr "Neues Schlagwort hinzufügen"
-
-#: includes/Shortcode.php:173
-msgid "Add Tag"
-msgstr "Schlagwort hinzufügen"
-
-#: includes/Shortcode.php:566
+#: includes/Shortcode.php:675
 msgid "Advanced Settings"
 msgstr "Erweiterte Einstellungen"
 
-#: includes/Shortcode.php:790
+#: includes/Shortcode.php:867
 msgid "All Categories"
 msgstr "Alle Kategorien"
 
-#: includes/Settings.php:473
+#: includes/Settings.php:531
 msgid "Allow GET"
 msgstr "GET erlauben"
 
-#: includes/Settings.php:472
+#: includes/Settings.php:530
 msgid "Allow URI"
 msgstr "URI erlauben"
 
-#: includes/Settings.php:245 includes/Settings.php:255
-#: includes/Settings.php:259 includes/Settings.php:357
-#: includes/Settings.php:361
+#: includes/Settings.php:268
+msgid "Allowed IP Addresses for REST API endpoints"
+msgstr "Erlaubte IP Adressen für REST API Endpunkte"
+
+#: includes/Settings.php:238
+msgid "Allowed IP Addresses for REST API endpoints is not valid."
+msgstr "Erlaubte IP Adressen für REST API Endpunkte ist ungültig"
+
+#: includes/Settings.php:337 includes/Settings.php:347
+#: includes/Settings.php:351
 msgid "An error occurred: "
 msgstr "Ein Fehler ist aufgetreten:"
 
-#: includes/Settings.php:443
+#: includes/Settings.php:498
 msgid "An error occurred: this IdM already exists."
 msgstr "Ein Fehler ist aufgetreten: diese IdM ist bereits vorhanden."
 
-#: includes/Shortcode.php:1011
+#: includes/Shortcode.php:1087
 msgid "Association already exists."
 msgstr "Zuordnung existiert bereits."
+
+#: includes/CustomerDomains.php:45
+msgid "Barrierefreiheitserklärung fehlt."
+msgstr ""
+
+#: includes/Settings.php:258
+msgid "Basis"
+msgstr ""
+
+#: includes/Settings.php:225
+msgid "Basis is not valid."
+msgstr "Basis ist ungültig"
 
 #: build/block.json:1 src/block.json:1
 msgctxt "block description"
@@ -91,120 +105,114 @@ msgctxt "block title"
 msgid "Shorten URL RRZE"
 msgstr "Shorten URL RRZE"
 
-#: includes/Shortcode.php:174 includes/Shortcode.php:275
-#: includes/Shortcode.php:365
+#: includes/Shortcode.php:373 includes/Shortcode.php:463
 msgid "Cancel"
 msgstr "Abbrechen"
 
-#: includes/Shortcode.php:572 includes/Shortcode.php:814
-#: includes/Shortcode.php:898
+#: includes/Shortcode.php:672 includes/Shortcode.php:894
+#: includes/Shortcode.php:978
 msgid "Categories"
 msgstr "Kategorien"
 
-#: includes/Shortcode.php:313
+#: includes/Shortcode.php:411
 msgid "Category"
 msgstr "Kategorie"
 
-#: includes/Shortcode.php:469
+#: includes/Shortcode.php:574
 msgid "Category deleted successfully"
 msgstr "Kategorie erfolgreich gelöscht"
 
-#: includes/Shortcode.php:265 includes/Shortcode.php:361
+#: includes/Shortcode.php:363 includes/Shortcode.php:459
 msgid "Category Label"
 msgstr "Kategorie Label"
 
-#: includes/API.php:101
+#: includes/API.php:205
 msgid "Category label is required."
 msgstr "Kategorie Label ist erforderlich."
 
-#: includes/Shortcode.php:1017
+#: includes/Shortcode.php:1093
 msgid "Category linked to the link successfully."
 msgstr "Kategorie zum Link erfolgreich verknüpft."
 
-#: includes/Shortcode.php:956
+#: includes/Shortcode.php:1032
 msgid "Category name is required."
 msgstr "Kategorie Name ist erforderlich."
 
-#: includes/Shortcode.php:936
+#: includes/Shortcode.php:1012
 msgid "Category updated"
 msgstr "Kategorie aktualisiert"
 
-#: includes/Shortcode.php:551
+#: includes/Shortcode.php:652
 msgid "Copied to clipboard"
 msgstr "In die Zwischenablage kopiert"
 
-#: includes/Shortcode.php:550
+#: includes/Shortcode.php:652
 msgid "Copy to clipboard"
 msgstr "In die Zwischenablage kopieren"
 
-#: includes/Shortcode.php:135
-msgid "Count"
-msgstr "Anzahl"
-
-#: includes/Shortcode.php:558
+#: includes/Shortcode.php:659
 msgid "Create Short URL"
 msgstr "Erstellen von Kurz-URLs"
 
-#: includes/Settings.php:114
+#: includes/Settings.php:126
 msgid "Customers Domains"
 msgstr "Kunden-Domains"
 
-#: includes/Settings.php:286 includes/Settings.php:385
-#: includes/Settings.php:474 includes/Shortcode.php:152
-#: includes/Shortcode.php:325 includes/Shortcode.php:854
+#: includes/CustomerDomains.php:42
+msgid "Datenschutzerklärung fehlt."
+msgstr ""
+
+#: includes/Settings.php:381 includes/Shortcode.php:423
+#: includes/Shortcode.php:934
 msgid "Delete"
 msgstr "Löschen"
 
-#: includes/ShortURL.php:316
+#: includes/ShortURL.php:246
 msgid "Domain is not allowed to use our shortening service."
 msgstr "Domain ist nicht erlaubt für die Nutzung unseres Verkürzungsservices."
 
-#: includes/Shortcode.php:151 includes/Shortcode.php:324
-#: includes/Shortcode.php:854
+#: includes/Shortcode.php:422 includes/Shortcode.php:934
 msgid "Edit"
 msgstr "Bearbeiten"
 
-#: includes/Shortcode.php:887
+#: includes/Shortcode.php:967
 msgid "Edit Link"
 msgstr "Link bearbeiten"
 
-#: includes/Shortcode.php:472
+#: includes/API.php:282
+msgid "encrypted value is required."
+msgstr "encrypted Wert ist notwendig."
+
+#: includes/Shortcode.php:577
 msgid "Error deleting category"
 msgstr "Fehler beim Löschen der Kategorie"
 
-#: includes/Shortcode.php:420
+#: includes/Shortcode.php:525
 msgid "Error deleting link"
 msgstr "Fehler beim Löschen des Links"
 
-#: includes/Shortcode.php:520
-msgid "Error deleting tag"
-msgstr "Fehler beim Löschen des Schlagworts"
-
-#: includes/API.php:149 includes/API.php:159
+#: includes/API.php:253 includes/API.php:263 includes/API.php:273
+#: includes/API.php:291
 msgid "Error processing request."
 msgstr "Fehler bei der Verarbeitung."
 
-#: includes/API.php:128
+#: includes/API.php:232
 msgid "Error retrieving shorturl categories"
 msgstr "Fehler beim Abrufen der ShortURL Kategorien"
 
-#: includes/Shortcode.php:939
+#: includes/Shortcode.php:1015
 msgid "Error: Could not update category"
 msgstr "Fehler: die Kategorie konnte nicht aktualisiert werden"
 
-#: includes/API.php:110
+#: includes/API.php:214
 msgid "Failed to add category to the database."
 msgstr "Fehler beim Hinzufügen der Kategorie in die Datenbank."
 
-#: includes/Shortcode.php:977
+#: includes/Shortcode.php:1053
 msgid "Failed to add category. Please try again."
 msgstr "Fehler beim Hinzufügen der Kategorie. Bitte versuchen Sie es erneut."
 
-#: includes/API.php:62
-msgid "Failed to add tag to the database."
-msgstr "Fehler beim Hinzufügen des Schlagworts in die Datenbank."
-
-#: includes/Shortcode.php:1019
+#: includes/Shortcode.php:1095
 msgid "Failed to link category to the link. Please try again."
 msgstr ""
 "Fehler bei der Verknüpfung der Kategorie zum Link. Bitte versuchen Sie es "
@@ -214,20 +222,21 @@ msgstr ""
 msgid "For more information"
 msgstr "Weitere Informationen"
 
-#: includes/Shortcode.php:578
-msgid "Generate"
-msgstr "Generieren"
+#: includes/Settings.php:122
+#| msgid "Generate"
+msgid "General"
+msgstr "Allgemein"
 
 #: config/config.php:42
 msgid "Here comes the Context Help content."
 msgstr "Hier kommt der Kontext-Hilfe Inhalt."
 
-#: includes/Settings.php:280 includes/Settings.php:382
-#: includes/Settings.php:537 includes/Settings.php:570
+#: includes/Settings.php:372 includes/Settings.php:442
+#: includes/Settings.php:594 includes/Settings.php:632
 msgid "Hostname"
 msgstr "Hostname"
 
-#: includes/Settings.php:228
+#: includes/Settings.php:319
 msgid "Hostname is not valid."
 msgstr "Hostname ist nicht gültig."
 
@@ -239,35 +248,35 @@ msgstr ""
 msgid "https://gitlab.rrze.fau.de/rrze-webteam/rrze-shorturl"
 msgstr ""
 
-#: includes/Settings.php:340
-msgid "Invalid hostname."
-msgstr "Ungültiger Hostname."
+#: includes/CustomerDomains.php:39
+msgid "Impressum fehlt."
+msgstr ""
 
-#: includes/Shortcode.php:999
+#: includes/Shortcode.php:1075
 msgid "Invalid link ID or category ID."
 msgstr "Ungültige Link-ID oder Kategorie-ID."
 
-#: includes/ShortURL.php:359
+#: includes/ShortURL.php:440
 msgid "is already in use. Try another one."
 msgstr "ist bereits in Verwendung. Versuchen Sie einen anderen."
 
-#: includes/ShortURL.php:343
+#: includes/ShortURL.php:430
 msgid "is not a valid URI"
 msgstr "ist kein gültiger URI"
 
-#: includes/ShortURL.php:336
+#: includes/ShortURL.php:423
 msgid "is not a valid URL"
 msgstr "ist keine gültige URL"
 
-#: includes/Settings.php:546 includes/Settings.php:579
+#: includes/Settings.php:605 includes/Settings.php:643
 msgid "Link Count"
 msgstr "Link Anzahl"
 
-#: includes/Shortcode.php:417
+#: includes/Shortcode.php:522
 msgid "Link deleted successfully"
 msgstr "Link erfolgreich gelöscht"
 
-#: includes/Shortcode.php:740
+#: includes/Shortcode.php:809
 msgid "Link updated"
 msgstr "Link aktualisiert"
 
@@ -275,39 +284,51 @@ msgstr "Link aktualisiert"
 msgid "Logfile"
 msgstr "Logfile"
 
-#: includes/Shortcode.php:560 includes/Shortcode.php:810
+#: includes/Shortcode.php:890
 msgid "Long URL"
 msgstr "Langer URL"
 
-#: includes/Shortcode.php:628
+#: includes/Settings.php:232
+msgid "Maximum number of shortenings is not valid."
+msgstr "Maximale Anzahl an Verkürzungen ist ungültig."
+
+#: includes/Settings.php:263
+msgid "Maximum shortenings per hour per user"
+msgstr "Maximale Anzahl an Verkürzungen pro Stunde pro Benutzer"
+
+#: includes/Shortcode.php:876
+msgid "My links only"
+msgstr "Nur meine Links"
+
+#: includes/Shortcode.php:722 includes/Shortcode.php:724
 msgid "New Category Name"
 msgstr "Neuer Kategorie Name"
 
-#: includes/Settings.php:355
-msgid "New customer domain added successfully."
-msgstr "Neue Kunden-Domain erfolgreich hinzugefügt."
-
-#: includes/Settings.php:445
+#: includes/Settings.php:500
 msgid "New IdM has been added."
 msgstr "Neue IdM wurde hinzugefügt."
 
-#: includes/Settings.php:242
+#: includes/Settings.php:334
 msgid "New service added successfully."
 msgstr "Neuer Service erfolgreich hinzugefügt."
 
-#: includes/Shortcode.php:820
+#: includes/Shortcode.php:900
 msgid "No links stored yet"
 msgstr "Bisher keine Links gespeichert"
 
-#: includes/Shortcode.php:203 includes/Shortcode.php:631
+#: includes/Shortcode.php:301 includes/Shortcode.php:728
 msgid "None"
 msgstr "Keine"
+
+#: includes/Settings.php:448
+msgid "Notice"
+msgstr "Notiz"
 
 #: config/config.php:44
 msgid "Overview"
 msgstr "Übersicht"
 
-#: includes/Shortcode.php:201
+#: includes/Shortcode.php:299 includes/Shortcode.php:726
 msgid "Parent Category"
 msgstr "Übergeordnete Kategorie"
 
@@ -315,9 +336,13 @@ msgstr "Übergeordnete Kategorie"
 msgid "Plugin, um URLs zu verkürzen."
 msgstr "Plugin, um URLs zu verkürzen."
 
-#: includes/Settings.php:283
+#: includes/Settings.php:375
 msgid "Prefix"
 msgstr "Prefix"
+
+#: includes/Settings.php:378
+msgid "Regex"
+msgstr ""
 
 #. Name of the plugin
 #: config/config.php:24 config/config.php:25
@@ -336,57 +361,38 @@ msgstr "RRZE Webteam"
 msgid "RRZE Webteam on Github"
 msgstr "RRZE Webteam auf Github"
 
-#: includes/Settings.php:307 includes/Settings.php:404
-#: includes/Settings.php:500 includes/Shortcode.php:101
-#: includes/Shortcode.php:274
+#: includes/Settings.php:277 includes/Settings.php:412
+#: includes/Settings.php:556 includes/Shortcode.php:372
 msgid "Save Changes"
 msgstr "Änderungen speichern"
 
-#: includes/Settings.php:216 includes/Settings.php:329
+#: includes/Settings.php:306
 msgid "Selected entries deleted successfully."
 msgstr "Ausgewählte Einträge erfolgreich gelöscht."
 
-#: includes/Settings.php:434
+#: includes/Settings.php:489
 msgid "Selected IdMs have been deleted."
 msgstr "Ausgewählte IdMs wurden gelöscht."
 
-#: includes/Shortcode.php:1030
+#: includes/Shortcode.php:1106
 msgid "Self-Explanatory URI"
 msgstr "Selbsterklärende URI"
 
-#: includes/Settings.php:112
+#: includes/Settings.php:124
 msgid "Services"
 msgstr "Dienstleistungen"
 
-#: includes/Shortcode.php:811
+#: includes/Shortcode.php:891
 msgid "Short URL"
 msgstr "Kurz-URL"
 
-#: includes/Settings.php:118
+#: includes/Shortcode.php:663
+msgid "Shorten"
+msgstr "Verkürzen"
+
+#: includes/Settings.php:130
 msgid "Statistic"
 msgstr "Statistik"
-
-#: includes/Shortcode.php:134
-msgid "Tag"
-msgstr "Schlagwort"
-
-#: includes/Shortcode.php:518
-msgid "Tag deleted successfully"
-msgstr "Schlagwort erfolgreich gelöscht"
-
-#: includes/Shortcode.php:94 includes/Shortcode.php:171
-msgid "Tag Label"
-msgstr "Schlagwort-Label"
-
-#: includes/API.php:53
-msgid "Tag label is required."
-msgstr "Schlagwort-Label ist notwendig."
-
-#: includes/Shortcode.php:574 includes/Shortcode.php:600
-#: includes/Shortcode.php:699 includes/Shortcode.php:815
-#: includes/Shortcode.php:902
-msgid "Tags"
-msgstr "Schlagwörter"
 
 #: rrze-shorturl.php:71
 #, php-format
@@ -406,23 +412,23 @@ msgstr ""
 "Der Server läuft mit WordPress Version %1$s. Das Plugin benötigt mindestens "
 "WordPress Version %2$s\"."
 
-#: includes/ShortURL.php:377
+#: includes/ShortURL.php:459
 msgid "Unable to update database table"
 msgstr "Konnte die Datenbank nicht aktualisieren"
 
-#: includes/Shortcode.php:906
+#: includes/Shortcode.php:982
 msgid "Update Link"
 msgstr "Link aktualisieren"
 
-#: includes/API.php:142
+#: includes/API.php:246
 msgid "URL parameter is missing."
 msgstr "Parameter URL fehlt."
 
-#: includes/Shortcode.php:813
+#: includes/Shortcode.php:695 includes/Shortcode.php:893
 msgid "Valid until"
 msgstr "Gültig bis"
 
-#: includes/Settings.php:232
+#: includes/Settings.php:323
 msgid ""
 "You are trying to enter a customer domain. Please use tab \"Customer "
 "Domains\" to do this."
@@ -430,6 +436,23 @@ msgstr ""
 "Sie versuchen, eine Kunden-Domain einzugeben. Bitte verwenden Sie die "
 "Registerkarte \"Kunden-Domains\", um das zu tun."
 
-#: includes/Settings.php:210
+#: includes/Settings.php:300
 msgid "You cannot delete the entry used for our customers."
 msgstr "Sie können den Eintrag für unsere Kunden nicht löschen."
+
+#: includes/ShortURL.php:394
+#, php-format
+msgid "You cannot shorten more than %s links per hour"
+msgstr "Sie können nicht mehr als %s Links pro Stunde verkürzen"
+
+#: includes/ShortURL.php:252
+msgid ""
+"You've tried to shorten a service domain. Services will automatically be "
+"shortened and redirected."
+msgstr ""
+"Sie haben versucht, einen Link einer Service Domain zu verkürzen. Service "
+"Links werden automatisch verkürzt und weitergeleitet."
+
+#: includes/Shortcode.php:661
+msgid "Your link"
+msgstr "Ihr Link"
