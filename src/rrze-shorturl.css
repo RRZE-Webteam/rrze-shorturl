@@ -129,3 +129,12 @@
         translate: 0 -22rem;
     }
 }
+
+[aria-invalid="true"] {
+    outline: 2px solid red;
+  }
+  
+  [aria-invalid="true"] ~ .errormessage {
+    visibility: visible;
+  }
+  

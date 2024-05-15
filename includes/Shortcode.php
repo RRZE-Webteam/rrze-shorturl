@@ -655,12 +655,12 @@ class Shortcode
         }
 
         // Generate form
-        $form = '<form id="shorturl-form" method="post">';
+        $form = '<div class="rrze-shorturl"><form id="shorturl-form" method="post">';
         $form .= '<div class="postbox">';
         $form .= '<h2 class="handle">' . __('Create Short URL', 'rrze-shorturl') . '</h2>';
         $form .= '<div class="inside">';
         $form .= '<label for="url">' . __('Your link', 'rrze-shorturl') . ':</label>&nbsp;';
-        $form .= '<input type="text" name="url" id="url" value="' . esc_attr($aParams['url']) . '" placeholder="https://">';
+        $form .= '<input type="text" name="url" id="url" value="' . esc_attr($aParams['url']) . '" placeholder="https://" ' . (!empty($result['error']) ? ' aria-invalid="true" aria-errormessage="shorturl-err" ' : '') . '>';
         $form .= '<input type="submit" id="generate" name="generate" value="' . __('Shorten', 'rrze-shorturl') . '">';
         $form .= '<input type="hidden" name="link_id" value="' . (!empty($result['link_id']) ? $result['link_id'] : '') . '">';
         $form .= '</div>';
@@ -676,14 +676,13 @@ class Shortcode
         $form .= '<button id="btn-show-advanced-settings" type="button" popovertarget="shorturl-advanced-settings">' . __('Advanced Settings', 'rrze-shorturl') . '</button>';
 
         // Display result message
-        $form .= '<div><p>' . $result_message;
+        $form .= '<div class="rrze-shorturl-result"><p' . (!empty($result['error']) ? ' id="shorturl-err" class="shorturl-errormessage" ' : '') . '>' . $result_message;
         $form .= '</p>';
         if (!empty($result) && !$result['error']) {
             $form .= '<input id="shortened_url" name="shortened_url" type="hidden" value="' . $result['txt'] . '">';
-            // $form .= '<div id="qr-container"><canvas id="qr"></canvas><img src="' . plugins_url('../', __FILE__) . 'assets/img/FAU.svg' . '" id="qr-logo"></div>';
             $form .= '<div id="qr-container"><canvas id="qr"></canvas><button type="button" class="btn" id="downloadButton" name="downloadButton"><img class="shorturl-download-img" src="data:image/svg+xml,%3Csvg width=\'512\' height=\'512\' viewBox=\'0 0 512 512\' xmlns=\'http://www.w3.org/2000/svg\' fill=\'%23FFFFFF\'%3E%3Cpath d=\'M376.3 304.3l-71.4 71.4V48c0-8.8-7.2-16-16-16h-48c-8.8 0-16 7.2-16 16v327.6l-71.4-71.4c-6.2-6.2-16.4-6.2-22.6 0l-22.6 22.6c-6.2 6.2-6.2 16.4 0 22.6l128 128c6.2 6.2 16.4 6.2 22.6 0l128-128c6.2-6.2 6.2-16.4 0-22.6l-22.6-22.6c-6.2-6.2-16.4-6.2-22.6 0zM464 448H48c-8.8 0-16 7.2-16 16v32c0 8.8 7.2 16 16 16h416c8.8 0 16-7.2 16-16v-32c0-8.8-7.2-16-16-16z\'/%3E%3C/svg%3E" alt="' . __('Download QR', 'rrze-shorturl') . '"></button></div>';
         }
-        $form .= '</form>';
+        $form .= '</form></div>';
 
         return $form;
     }
