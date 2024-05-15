@@ -37,6 +37,7 @@ try {
         }
     }
 
+    http_response_code(404);
     echo "Unknown service with prefix $prefix";
     exit;
 
