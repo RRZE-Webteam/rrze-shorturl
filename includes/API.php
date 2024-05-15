@@ -56,14 +56,14 @@ class API {
         register_rest_route('short-url/v1', '/services', array(
             'methods' => 'GET',
             'callback' => array($this, 'get_services_callback'),
-            'permission_callback' => [$this, 'is_ip_allowed']
+            // 'permission_callback' => [$this, 'is_ip_allowed']
         ));
 
 
         register_rest_route('short-url/v1', '/decrypt', array(
             'methods' => 'GET',
             'callback' => array($this, 'get_decrypt_callback'),
-            'permission_callback' => [$this, 'is_ip_allowed']
+            // 'permission_callback' => [$this, 'is_ip_allowed']
         ));
 
         // Register REST API query filters
