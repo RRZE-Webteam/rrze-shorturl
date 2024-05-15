@@ -301,6 +301,19 @@ jQuery(document).ready(function ($) {
         return false; // Prevent the default action and propagation        
     });
 
+    // Attach event listener to the "Download QR" image
+    $(document).on('click', '#downloadButton', function (event) {
+        event.preventDefault();
+        var canvas = document.getElementById('qr');
+        var link = document.createElement('a');
+        link.href = canvas.toDataURL('image/png');
+        link.download = 'qr-code.png';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        event.stopPropagation(); // Stop event propagation
+        return false; // Prevent the default action and propagation        
+    });
 
     // Categories
     $('table.shorturl-categories tbody').on('mouseover', 'td.category-label', function () {
