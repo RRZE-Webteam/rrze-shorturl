@@ -5,10 +5,15 @@ class CustomerDomains
 {
     public function __construct()
     {
-        if (!wp_next_scheduled('rrze_shorturl_fetch_and_store_customerdomains')) {
-            wp_schedule_event(time(), 'hourly', 'rrze_shorturl_fetch_and_store_customerdomains');
-        }
         add_action('rrze_shorturl_fetch_and_store_customerdomains', array($this, 'fetch_and_store_customerdomains'));
+
+        if (!wp_next_scheduled('rrze_shorturl_fetch_and_store_customerdomains')) {
+            // job has never run: do it immediately (like on plugin activation)
+            $this->fetch_and_store_customerdomains();
+
+            // let the job run daily as 4 a.m.
+            wp_schedule_event(strtotime('today 4:00'), 'daily', 'rrze_shorturl_fetch_and_store_customerdomains');
+        }
     }
 
     public function fetch_and_store_customerdomains()
@@ -24,31 +29,31 @@ class CustomerDomains
                 $body = wp_remote_retrieve_body($response);
                 $jsonArray = json_decode($body, true);
 
-                $jsonArray = !empty ($jsonArray['data']) ? $jsonArray['data'] : [];
+                $jsonArray = !empty($jsonArray['data']) ? $jsonArray['data'] : [];
 
                 $filteredResponse = array_filter($jsonArray, function ($item) {
                     return $item['httpstatus'] == '200';
                 });
 
-                if (!empty ($filteredResponse)) {
+                if (!empty($filteredResponse)) {
                     foreach ($filteredResponse as $entry) {
 
                         $notice = '';
                         $active = 1;
-                        if (empty ($entry['content']['tos']['Impressum']['href'])) {
+                        if (empty($entry['content']['tos']['Impressum']['href'])) {
                             $notice = __('Impressum fehlt.', 'rrze-shorturl');
                             $active = 0;
-                        }elseif (empty ($entry['content']['tos']['Datenschutz']['href'])) {
+                        } elseif (empty($entry['content']['tos']['Datenschutz']['href'])) {
                             $notice = __('Datenschutzerklärung fehlt.', 'rrze-shorturl');
                             $active = 0;
-                        }elseif (empty ($entry['content']['tos']['Barrierefreiheit']['href'])) {
+                        } elseif (empty($entry['content']['tos']['Barrierefreiheit']['href'])) {
                             $notice = __('Barrierefreiheitserklärung fehlt.', 'rrze-shorturl');
                             $active = 0;
                         }
-    
-                        $url = !empty ($entry['wmp']['url']) ? $entry['wmp']['url'] : '';
 
-                        if (!empty ($url)) {
+                        $url = !empty($entry['wmp']['url']) ? $entry['wmp']['url'] : '';
+
+                        if (!empty($url)) {
                             // get the host
                             $parsed_url = parse_url($url);
                             $host = $parsed_url['host'];
