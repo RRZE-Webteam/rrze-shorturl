@@ -18,7 +18,7 @@ class ShortURL
 
         $options = json_decode(get_option('rrze-shorturl'), true);
 
-        self::$CONFIG['ShortURLBase'] = (!empty($options['ShortURLBase']) ? $options['ShortURLBase'] : 'https://go.fau.de/');
+        self::$CONFIG['ShortURLBase'] = (!empty($options['ShortURLBase']) ? $options['ShortURLBase'] : 'https://go.fau.de');
         self::$CONFIG['maxShortening'] = (!empty($options['maxShortening']) ? $options['maxShortening'] : 60);
 
         self::$CONFIG['AllowedDomains'] = self::getAllowedDomains();
@@ -244,13 +244,28 @@ class ShortURL
     {
         try {
             $aRet = ['prefix' => 0, 'hostname' => '', "notice" => __('Domain is not allowed to use our shortening service.', 'rrze-shorturl')];
-
             $domain = wp_parse_url($long_url, PHP_URL_HOST);
+            $shortURL = '';
 
             // Check if domain is a service
-            if (in_array($domain, self::$CONFIG['AllowedDomains'])) {
-                $aRet['notice'] = __('You\'ve tried to shorten a service domain. Services will automatically be shortened and redirected.', 'rrze-shorturl');
-                return $aRet;
+            foreach (self::$CONFIG['Services'] as $item) {
+                if ($item["hostname"] === $domain) {
+
+                    if (preg_match('/(\d+)(?!.*\d)/', $long_url, $matches)) {
+                        $id = $matches[1];
+    
+                        $myCrypt = new MyCrypt();
+                        $encrypted = $myCrypt->encrypt($id);
+
+                        $shortURL = self::$CONFIG['ShortURLBase'] . '/' . $item["prefix"] . $encrypted;
+            
+                    }    
+
+                    $aRet['notice'] = __('You\'ve tried to shorten a service domain. Services will automatically be shortened and redirected.', 'rrze-shorturl');
+                    $aRet['notice'] .= ($shortURL ? '<br>' . __('Short URL', 'rrze-shorturl') . ': ' . $shortURL : '');
+
+                    return $aRet;
+                }
             }
 
             // Check if the extracted domain belongs to one of our allowed domains

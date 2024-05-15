@@ -177,7 +177,7 @@ class Settings
         }
 
         // Check if the hostname matches the allowed pattern
-        if (!preg_match('/^([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])$/', $hostname)) {
+        if (!preg_match('/^([a-zA-Z0-9]+(-[a-zA-Z0-9]+)*\.)+[a-zA-Z]{2,}$/', $hostname)) {
             return false;
         }
 
