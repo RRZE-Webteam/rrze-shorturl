@@ -336,20 +336,27 @@ class ShortURL
 
         // Check if $valid_until is in the past
         if ($valid_until_date < $current_date) {
-            return ['error' => true, 'txt' => 'Validity date cannot be in the past.'];
+            return ['error' => true, 'txt' => __('Validity date cannot be in the past.', 'rrze-shorturl')];
         }
 
-        // Calculate one year from now
-        $one_year_from_now = clone $current_date;
-        $one_year_from_now->add(new \DateInterval('P1Y'));
+        // Calculate maxDate (default => 1 year from now; long_life_links_allowed => 5 years from now)
+        $maxDate = clone $current_date;
 
-        // Check if $valid_until is more than one year in the future
-        if ($valid_until_date > $one_year_from_now) {
-            return ['error' => true, 'txt' => 'Validity cannot be more than one year in the future.'];
+        if (self::$rights['longlifelinks_allowed']){
+            $maxDate->add(new \DateInterval('P5Y'));
+            $msg = __('five years', 'rrze-shorturl');
+        }else{
+            $maxDate->add(new \DateInterval('P1Y'));
+            $msg = __('one year', 'rrze-shorturl');
+        }
+
+        // Check if $valid_until is more than $maxDate
+        if ($valid_until_date > $maxDate) {
+            return ['error' => true, 'txt' => sprintf(__('Validity cannot be more than %s in the future.', 'rrze-shorturl'), $msg)];
         }
 
         // If the date is valid and within the allowed range
-        return ['error' => false, 'txt' => 'Date is valid.'];
+        return ['error' => false, 'txt' => __('Date is valid.', 'rrze-shorturl')];
     }
 
 

@@ -30,16 +30,18 @@ class Rights
         $aRet = [
             'id' => 0,
             'uri_allowed' => false,
-            'get_allowed' => false
+            'get_allowed' => false,
+            'longlifelinks_allowed' => false
         ];
 
         try {
-            $result = $wpdb->get_row($wpdb->prepare("SELECT id, allow_uri, allow_get FROM {$wpdb->prefix}shorturl_idms WHERE idm = %s", $this->idm), ARRAY_A);
+            $result = $wpdb->get_row($wpdb->prepare("SELECT id, allow_uri, allow_get, allow_longlifelinks FROM {$wpdb->prefix}shorturl_idms WHERE idm = %s", $this->idm), ARRAY_A);
 
             if ($result) {
                 $aRet['id'] = $result['id'];
                 $aRet['uri_allowed'] = (bool) $result['allow_uri'];
                 $aRet['get_allowed'] = (bool) $result['allow_get'];
+                $aRet['longlifelinks_allowed'] = (bool) $result['allow_longlifelinks'];                
             } else {
                 try {
                     // add the IdM
