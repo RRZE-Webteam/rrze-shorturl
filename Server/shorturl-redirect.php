@@ -24,12 +24,16 @@ class ShortURLRedirect
     private string $shorturl_domain;
     private string $htaccess_file;
     private string $services_file;
+    private string $baseChars;
+    private string $base;
 
     public function __construct(string $shorturl_domain, string $htaccess_file, string $services_file)
     {
         $this->shorturl_domain = $shorturl_domain;
         $this->htaccess_file = $htaccess_file;
         $this->services_file = $services_file;
+        $this->baseChars = '-abcdefghijklmnopqrstuvwxyz0123456789';
+        $this->base = strlen($this->baseChars);
     }
 
     public function handleRequest(): void
@@ -142,12 +146,11 @@ class ShortURLRedirect
             throw new InvalidArgumentException("Invalid code: $code");
         }
     
-        $base37Chars = '-' . self::$baseChars;
         $result = 0;
         $len = strlen($code) - 1;
     
         for ($t = 0; $t <= $len; $t++) {
-            $result = $result + strpos($base37Chars, substr($code, $t, 1)) * pow(self::$base, $len - $t);
+            $result = $result + strpos($this->baseChars, substr($code, $t, 1)) * pow($this->base, $len - $t);
         }
     
         return $result;
