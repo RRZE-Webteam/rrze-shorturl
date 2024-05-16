@@ -78,7 +78,7 @@ shorturl-redirect.php:
 - Sonst: ist Prefix Customer-Link? Hol long_link via REST-API, 303 Redirect wenn gefunden, dann .htaccess Update, sonst 404 "Unbekannter Link" 
 - Sonst: 404 "Unbekannter Link"
 
-# .htaccess
+## .htaccess
 Die .htaccess enthält alle Redirects zwischen den Kommentar-Zeilen "# BEGIN ShortURL" und "# END ShortURL".
 Als erstes die Regel (Redirect zu shorturl-redirect.php) für die Services, dann die User-generierten Redirects für die erlaubten Domains. Am Schluss Redirect zu shorturl-redirect.php
 Nach "# END ShortURL" alle vorher bereits existierten Zeilen der .htaccess. 
