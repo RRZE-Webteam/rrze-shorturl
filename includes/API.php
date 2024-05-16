@@ -249,7 +249,7 @@ class API {
             $parameters = $request->get_json_params();
 
             if (!isset($parameters['url'])) {
-                throw new WP_Error('missing_url_parameter', __('URL parameter is missing.', 'rrze-shorturl'));
+                return new WP_REST_Response(array('error' => 'missing_url_parameter', 'message' => __('url parameter is missing.', 'rrze-shorturl')), 400);
             }
 
             $shortened_url = ShortURL::shorten($parameters);
@@ -272,17 +272,17 @@ class API {
 
     public function get_longurl_callback($request) {
         try {
-            $parameters = $request->get_json_params();
-
-            if (!isset($parameters['shortURL'])) {
-                throw new WP_Error('missing_url_parameter', __('shortURL parameter is missing.', 'rrze-shorturl'));
+            $code = $request->get_param('code');
+    
+            if (empty($code)) {
+                return new WP_REST_Response(array('error' => 'missing_url_parameter', 'message' => __('code parameter is missing.', 'rrze-shorturl')), 400);
             }
-
-            $long_url = ShortURL::getLongURL($parameters['shortURL']);
+    
+            $long_url = ShortURL::getLongURL($code);
             
             return new WP_REST_Response($long_url, 200);
         } catch (\Exception $e) {
-            return new WP_Error('callback_error', __('Error processing request.', 'rrze-shorturl'));
+            return new WP_REST_Response(array('error' => 'callback_error', 'message' => __('Error processing request.', 'rrze-shorturl')), 500);
         }
     }
 

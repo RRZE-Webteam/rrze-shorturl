@@ -518,8 +518,11 @@ class ShortURL
     {
         global $wpdb;
 
+        $short_url = self::$CONFIG['ShortURLBase'] . '/' . $short_url;
+
         try {
-            $result = $wpdb->get_results($wpdb->prepare("SELECT long_url FROM {$wpdb->prefix}shorturl_links WHERE short_url = %s LIMIT 1", $short_url), ARRAY_A);
+            $result = $wpdb->get_var($wpdb->prepare("SELECT long_url FROM {$wpdb->prefix}shorturl_links WHERE short_url = %s LIMIT 1", $short_url));
+            
             return $result;
         } catch (Exception $e) {
             error_log("Error fetching long_url by short_url: " . $e->getMessage());

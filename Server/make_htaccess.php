@@ -9,7 +9,7 @@ $htaccess_file = '.htaccess';
 try {
     $rules = "RewriteEngine On\n";
     $rules .= "RewriteBase /\n";
-    $rules .= "RewriteRule ^([2-9][0-9]*)(.*)$ shorturl-redirect.php?prefix=$1&code=$2 [L]";
+    $rules .= "RewriteRule ^([0-9]+)(.*)$ shorturl-redirect.php?prefix=$1&code=$2 [L]\n";
 
     // Read .htaccess content
     $htaccess_content = file_get_contents($htaccess_file);

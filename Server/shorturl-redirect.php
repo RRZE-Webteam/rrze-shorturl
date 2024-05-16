@@ -44,9 +44,10 @@ class ShortURLRedirect
         if ($prefix == 0) {
             $this->send404Response("Unknown service with prefix $prefix");
         }elseif (empty($code)) {
-            $this->send404Response("Unknown link");
+            $this->send404Response("Unknown link. No code given.");
         } elseif ($prefix == 1) {
-            $this->handleCustomerLink($code);
+            $short_url = $prefix . $code;
+            $this->handleCustomerLink($short_url);
         } else {
             $this->handleServiceLink($code, $prefix);
         }
@@ -61,15 +62,20 @@ class ShortURLRedirect
 
     private function handleCustomerLink(string $code): void
     {
+
         try {
-            $response = file_get_contents($this->shorturl_domain . "/wp-json/short-url/v1/get-longurl?shortURL=" . $code);
+            $response = file_get_contents($this->shorturl_domain . "/wp-json/short-url/v1/get-longurl?code=" . $code);
             if ($response === false) {
-                throw new Exception("Failed to fetch short URLs from the REST API endpoint.");
+                throw new Exception("Failed to fetch from the REST API endpoint get-longurl.");
             }
 
-            if (!empty($response)) {
-                header('Location: ' . $response, true, 303);
+            $long_url = json_decode($response, true);
+
+            if (!empty($long_url)) {
+                header('Location: ' . $long_url, true, 303);
                 $this->updateHtaccess();
+            }else{
+                $this->send404Response("Unknown link");
             }
         } catch (Exception $e) {
             echo "Error: " . $e->getMessage();
@@ -102,7 +108,7 @@ class ShortURLRedirect
             if (file_exists($this->services_file)) {
                 $response = file_get_contents($this->services_file);
                 if ($response === false) {
-                    throw new Exception("Failed to fetch short URLs from the REST API endpoint.");
+                    throw new Exception("Failed to get contents of $this->services_file.");
                 }
                 $_SESSION['rrze-shorturl-services'] = $response;
                 $aServices = json_decode($response, true);
@@ -114,7 +120,7 @@ class ShortURLRedirect
                     // Fetch update from REST-API, save it in SESSION and $service_file and return RegEx
                     $response = file_get_contents($this->shorturl_domain . "/wp-json/short-url/v1/services");
                     if ($response === false) {
-                        throw new Exception("Failed to fetch short URLs from the REST API endpoint.");
+                        throw new Exception("Failed to fetch from the REST API endpoint /services.");
                     }
                     $_SESSION['rrze-shorturl-services'] = $response;
                     $aServices = json_decode($response, true);
@@ -162,7 +168,7 @@ class ShortURLRedirect
             try {
                 $response = file_get_contents($this->shorturl_domain . "/wp-json/short-url/v1/active-shorturls");
                 if ($response === false) {
-                    throw new Exception("Failed to fetch short URLs from the REST API endpoint.");
+                    throw new Exception("Failed to fetch from the REST API endpoint /active-shorturls.");
                 }
         
                 $short_urls = json_decode($response, true);
@@ -172,14 +178,14 @@ class ShortURLRedirect
         
                 // Generate RewriteRules
                 foreach ($short_urls as $url) {
-                    $short_url = trim(parse_url(esc_url_raw($url['short_url']), PHP_URL_PATH), '/');
-                    $long_url = esc_url_raw($url['long_url']);
-        
-        
+
+                    $short_url_path = trim(parse_url($url['short_url'], PHP_URL_PATH), '/');
+                    $long_url = $url['long_url'];
+
                     // $expires = ($url['valid_until']) ? date('D, d M Y H:i:s', strtotime($url['valid_until'])) . ' GMT' : ''; # spaces lead to an error
                     // $rules .= "RewriteRule ^$short_url$ $long_url [R=303,L,E=set_expires:1]\n";
                     // $rules .= "Header set Expires $expires env=set_expires\n";
-                    $ret .= "RewriteRule ^$short_url$ $long_url [R=303,L]\n";
+                    $ret .= "RewriteRule ^$short_url_path$ $long_url [R=303,L]\n";
                 }
             } catch (Exception $e) {
                 echo "Error: " . $e->getMessage();
@@ -198,7 +204,7 @@ class ShortURLRedirect
             $rules = "RewriteEngine On\n";
             $rules .= "RewriteBase /\n";
             // first rule: redirect all paths that start with a number but not 1 to redirect-services.php (1 == customer domain) 
-            $rules .= "RewriteRule ^([2-9][0-9]*)(.*)$ redirect-services.php?prefix=$1&code=$2 [L]";
+            $rules .= "RewriteRule ^([2-9][0-9]*)(.*)$ redirect-services.php?prefix=$1&code=$2 [L]\n";
             // list of customer rules
             $rules .= $new_rules;
             // last two rules: redirect redirect-services.php to find out if new service or new customer rule or unknown prefix
