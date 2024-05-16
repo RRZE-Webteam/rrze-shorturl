@@ -31,9 +31,15 @@ class API {
             }
         ));
 
-        register_rest_route('short-url/v1', '/active-short-urls', array(
+        register_rest_route('short-url/v1', '/get-longurl', array(
             'methods' => 'GET',
-            'callback' => array($this, 'get_active_short_urls_callback'),
+            'callback' => array($this, 'get_longurl_callback'),
+            // 'permission_callback' => [$this, 'is_ip_allowed']
+        ));
+
+        register_rest_route('short-url/v1', '/active-shorturls', array(
+            'methods' => 'GET',
+            'callback' => array($this, 'get_active_shorturls_callback'),
             // 'permission_callback' => [$this, 'is_ip_allowed']
         ));
 
@@ -254,7 +260,7 @@ class API {
         }
     }
 
-    public function get_active_short_urls_callback($request) {
+    public function get_active_shorturls_callback($request) {
         try {
             $active_short_urls = ShortURL::getActiveShortURLs();
             
@@ -263,6 +269,23 @@ class API {
             return new WP_Error('callback_error', __('Error processing request.', 'rrze-shorturl'));
         }
     }
+
+    public function get_longurl_callback($request) {
+        try {
+            $parameters = $request->get_json_params();
+
+            if (!isset($parameters['shortURL'])) {
+                throw new WP_Error('missing_url_parameter', __('shortURL parameter is missing.', 'rrze-shorturl'));
+            }
+
+            $long_url = ShortURL::getLongURL($parameters['shortURL']);
+            
+            return new WP_REST_Response($long_url, 200);
+        } catch (\Exception $e) {
+            return new WP_Error('callback_error', __('Error processing request.', 'rrze-shorturl'));
+        }
+    }
+
 
     public function get_services_callback($request) {
         try {

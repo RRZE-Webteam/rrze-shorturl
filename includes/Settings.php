@@ -314,34 +314,49 @@ class Settings
                         if (!self::isValidHostName($new_hostname)) {
                             $message = __('Hostname is not valid.', 'rrze-shorturl');
                         } else {
-                            if (empty($new_prefix)) {
+                            if (empty($new_prefix) || $new_prefix == '1') {
                                 // this is a customer domain
                                 $message = __('You are trying to enter a customer domain. Please use tab "Customer Domains" to do this.', 'rrze-shorturl');
                             } else {
-                                $wpdb->insert(
-                                    "{$wpdb->prefix}shorturl_services",
-                                    array(
-                                        'hostname' => $new_hostname,
-                                        'prefix' => $new_prefix,
-                                        'regex' => $new_regex
+                                // Check if the prefix is 0
+                                if ($new_prefix == '0') {
+                                    $message = __('Prefix not allowed.', 'rrze-shorturl');
+                                } else {
+                                    // Check if the prefix already exists in the database
+                                    $existing_prefix = $wpdb->get_var($wpdb->prepare(
+                                        "SELECT COUNT(*) FROM {$wpdb->prefix}shorturl_services WHERE prefix = %s",
+                                        $new_prefix
                                     )
-                                );
+                                    );
 
-                                $message = __('New service added successfully.', 'rrze-shorturl');
+                                    if ($existing_prefix > 0) {
+                                        $message = __('Prefix not allowed.', 'rrze-shorturl');
+                                    } else {
+                                        $wpdb->insert(
+                                            "{$wpdb->prefix}shorturl_services",
+                                            array(
+                                                'hostname' => $new_hostname,
+                                                'prefix' => $new_prefix,
+                                                'regex' => $new_regex
+                                            )
+                                        );
 
-                                if ($wpdb->last_error) {
-                                    $message = __('An error occurred: ', 'rrze-shorturl') . $wpdb->last_error;
-                                    throw new \Exception($wpdb->last_error);
+                                        $message = __('New service added successfully.', 'rrze-shorturl');
+
+                                        if ($wpdb->last_error) {
+                                            $message = __('An error occurred: ', 'rrze-shorturl') . $wpdb->last_error;
+                                            throw new \Exception($wpdb->last_error);
+                                        }
+                                    }
                                 }
-
-
                             }
                             $new_hostname = '';
-                            $new_prefix = 0;
+                            $new_prefix = '';
                         }
                     } catch (\Exception $e) {
                         $message = __('An error occurred: ', 'rrze-shorturl') . $e->getMessage();
                     }
+
                 }
             } catch (\Exception $e) {
                 $message = __('An error occurred: ', 'rrze-shorturl') . $e->getMessage();
@@ -475,7 +490,7 @@ class Settings
 
                 $idm = sanitize_text_field($_POST['idm']);
 
-                if (!empty($idm)) { 
+                if (!empty($idm)) {
                     // Add new entry
                     $insert_result = $wpdb->insert(
                         $wpdb->prefix . 'shorturl_idms',
@@ -531,7 +546,8 @@ class Settings
                                     <td><?php echo $idm["idm"]; ?></td>
                                     <td><input type="checkbox" class="allow-uri-checkbox" data-id="<?php echo $idm["id"]; ?>" <?php echo $idm["allow_uri"] ? 'checked' : ''; ?>></td>
                                     <td><input type="checkbox" class="allow-get-checkbox" data-id="<?php echo $idm["id"]; ?>" <?php echo $idm["allow_get"] ? 'checked' : ''; ?>></td>
-                                    <td><input type="checkbox" class="allow-longlifelinks-checkbox" data-id="<?php echo $idm["id"]; ?>" <?php echo $idm["allow_longlifelinks"] ? 'checked' : ''; ?>></td>
+                                    <td><input type="checkbox" class="allow-longlifelinks-checkbox" data-id="<?php echo $idm["id"]; ?>"
+                                            <?php echo $idm["allow_longlifelinks"] ? 'checked' : ''; ?>></td>
                                 </tr>
                                 <?php
                             }
