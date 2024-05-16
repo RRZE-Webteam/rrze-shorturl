@@ -63,6 +63,8 @@ Alle Endpoints sind zugriffsgeschützt.
 - Auf Redirect-Server: make_htaccess.php ein Mal aufrufen. Wenn make_htaccess.php nicht im Root-Verzeichnis liegt, muss der Pfad zur .htaccess angepasst werden
 
 ## Ablauf 
+Zwischen Generierung des ShortURLs und Aufruf gibt es seit 1.3.0 keine Wartezeit mehr und es ist kein Cron-Job mehr nötig.
+
 ShortURL ruft Redirect-Server auf
 Format der ShortURL: "Protokoll://Redirect-Server/Path"
 
@@ -76,6 +78,12 @@ shorturl-redirect.php:
 - Sonst: ist Prefix Customer-Link? Hol long_link via REST-API, 303 Redirect wenn gefunden, dann .htaccess Update, sonst 404 "Unbekannter Link" 
 - Sonst: 404 "Unbekannter Link"
 
+# .htaccess
+Die .htaccess enthält alle Redirects zwischen den Kommentar-Zeilen "# BEGIN ShortURL" und "# END ShortURL".
+Als erstes die Regel (Redirect zu shorturl-redirect.php) für die Services, dann die User-generierten Redirects für die erlaubten Domains. Am Schluss Redirect zu shorturl-redirect.php
+Nach "# END ShortURL" alle vorher bereits existierten Zeilen der .htaccess. 
+make_htaccess.php überschreibt die Anweisungen der vorhandene .htaccess nicht.
+
 
 ## Performance
 Mit der Zeit wird die .htaccess viele Zeilen für die Redirect Rules enthalten.
@@ -83,13 +91,6 @@ Es sollte keine Auswirkung auf die Performance haben, da auch .htaccess sehr vie
 Services werden stets in shorturl-redirect.php berechnet. Dazu wird die RegEx aus der SESSION gelesen, dann notfalls im JSON-File, dann erst über die REST-API und die Entkodierung findet im Skript statt. Nur wenn Link nicht aufgeschlüsselt werden kann, wird die REST-API nach Updates abgefragt. Dabei so performant wie möglich: lightweight nur zum aktuellen Link. Redirect vor allen weiteren Anweisungen (wie weiteren REST-API-Aufruf, SESSION und JSON-File speichern, ggfalls .htaccess neu generieren).
 
 
-# Bespiel für Cronjob, der die .htaccess alle 5 Minuten aktualisiert
-*/5 * * * * php /path/to/make_htaccess.php
-
-Die .htaccess enthält alle Redirects zwischen den Kommentar-Zeilen "# BEGIN ShortURL" und "# END ShortURL".
-Als erstes die Regeln für die Services, dann die User-generierten Redirects für die erlaubten Domains.
-Nach "# END ShortURL" alle vorher bereits existierten Zeilen der .htaccess. 
-make_htaccess.php überschreibt die Anweisungen der vorhandene .htaccess nicht.
 
 
 
