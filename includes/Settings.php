@@ -177,7 +177,7 @@ class Settings
         }
 
         // Check if the hostname matches the allowed pattern
-        if (!preg_match('/^([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])$/', $hostname)) {
+        if (!preg_match('/^([a-zA-Z0-9]+(-[a-zA-Z0-9]+)*\.)+[a-zA-Z]{2,}$/', $hostname)) {
             return false;
         }
 
@@ -296,12 +296,8 @@ class Settings
                 if (!empty($_POST['delete'])) {
 
                     foreach ($_POST['delete'] as $id => $delete_id) {
-                        if ($_POST['prefix'][$id] == '1') {
-                            $message = __('You cannot delete the entry used for our customers.', 'rrze-shorturl');
-                        } else {
-                            $wpdb->delete("{$wpdb->prefix}shorturl_domains", array('id' => $delete_id), array('%d'));
-                            $bDel = true;
-                        }
+                        $wpdb->delete("{$wpdb->prefix}shorturl_services", array('id' => $delete_id), array('%d'));
+                        $bDel = true;
                     }
                     $message = (empty($message) ? '' : $message . '<br \>') . ($bDel ? __('Selected entries deleted successfully.', 'rrze-shorturl') : '');
                 }
@@ -474,24 +470,17 @@ class Settings
 
         try {
             // Check if form is submitted
+            // Note: checkbox updates are handlex in AJAX (see update_idm_callback())
             if (isset($_POST['submit_idm'])) {
+
                 $idm = sanitize_text_field($_POST['idm']);
 
-                // Delete rows if delete checkbox is checked
-                if (!empty($_POST['delete'])) {
-                    foreach ($_POST['delete'] as $delete_id) {
-                        $wpdb->delete(
-                            $wpdb->prefix . 'shorturl_idms',
-                            array('id' => $delete_id),
-                            array('%d')
-                        );
-                    }
-                    $message = __('Selected IdMs have been deleted.', 'rrze-shorturl');
-                } elseif (!empty($idm)) { // Add new entry
+                if (!empty($idm)) { 
+                    // Add new entry
                     $insert_result = $wpdb->insert(
                         $wpdb->prefix . 'shorturl_idms',
-                        array('idm' => $idm, 'created_by' => 'Admin', 'allow_uri' => 0, 'allow_get' => 0),
-                        array('%s', '%s', '%d', '%d')
+                        array('idm' => $idm, 'created_by' => 'Admin', 'allow_uri' => 0, 'allow_get' => 0, 'allow_longlifelinks' => 0),
+                        array('%s', '%s', '%d', '%d', '%d')
                     );
 
                     if ($insert_result === false) {
@@ -499,7 +488,6 @@ class Settings
                     } else {
                         $message = __('New IdM has been added.', 'rrze-shorturl');
                     }
-
                 }
             }
 
@@ -529,6 +517,7 @@ class Settings
                             </th>
                             <th scope="col"><?php echo __('Allow URI', 'rrze-shorturl'); ?></th>
                             <th scope="col"><?php echo __('Allow GET', 'rrze-shorturl'); ?></th>
+                            <th scope="col"><?php echo __('Allow long-life links', 'rrze-shorturl'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -542,13 +531,14 @@ class Settings
                                     <td><?php echo $idm["idm"]; ?></td>
                                     <td><input type="checkbox" class="allow-uri-checkbox" data-id="<?php echo $idm["id"]; ?>" <?php echo $idm["allow_uri"] ? 'checked' : ''; ?>></td>
                                     <td><input type="checkbox" class="allow-get-checkbox" data-id="<?php echo $idm["id"]; ?>" <?php echo $idm["allow_get"] ? 'checked' : ''; ?>></td>
+                                    <td><input type="checkbox" class="allow-longlifelinks-checkbox" data-id="<?php echo $idm["id"]; ?>" <?php echo $idm["allow_longlifelinks"] ? 'checked' : ''; ?>></td>
                                 </tr>
                                 <?php
                             }
                         }
                         ?>
                         <tr>
-                            <td colspan="3"><input type="text" name="idm" id="idm" value=""></td>
+                            <td colspan="4"><input type="text" name="idm" id="idm" value=""></td>
                         </tr>
                     </tbody>
                 </table>

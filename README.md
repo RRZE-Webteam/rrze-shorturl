@@ -15,6 +15,9 @@ Die Verwaltung der Kategorien
 [shorturl-tags] (seit 1.1.0 deaktiviert)
 Die Verwaltung der Schlagwörter
 
+[shorturl-services]
+Gibt eine Tabelle mit den Services aus.
+
 ## Block
 RRZE ShortURL um im Blockeditor Links zu verkürzen
 
@@ -24,6 +27,10 @@ In den Einstellungen kann Folgendes verwaltet werden:
 - Customer Domains: die zulässigen Domains
 - IdM: neue IdM werden automatisch erstellt. Hier kann bestimmt werden, welche erweiterten Einstellungen gestattet sind
 - Statistik
+
+## Defaults:
+- neue IdMs haben keine erweiterten Rechte
+- Gültigkeit der Links: 1 Jahr. In den Einstellungen (wp-admin/options-general.php?page=rrze-shorturl&tab=idm) kann diese auf 5 Jahre eingestellt werden
 
 ## Cronjob
 - rrze_shorturl_fetch_and_store_customerdomains für die Ermittlung der Customer Domains
