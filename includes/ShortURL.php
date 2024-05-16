@@ -509,11 +509,23 @@ class ShortURL
 
             return $results;
         } catch (Exception $e) {
-            // Handle any exceptions that occur during the database query
-            // You can log the error, display a message, or take other actions
             error_log("Error fetching active short URLs: " . $e->getMessage());
             return json_encode(array('error' => 'An error occurred while fetching short URLs.'));
         }
     }
+
+    public static function getLongURL($short_url)
+    {
+        global $wpdb;
+
+        try {
+            $result = $wpdb->get_results($wpdb->prepare("SELECT long_url FROM {$wpdb->prefix}shorturl_links WHERE short_url = %s LIMIT 1", $short_url), ARRAY_A);
+            return $result;
+        } catch (Exception $e) {
+            error_log("Error fetching long_url by short_url: " . $e->getMessage());
+            return json_encode(array('error' => 'An error occurred while fetching short URLs.'));
+        }
+    }
+
 }
 
