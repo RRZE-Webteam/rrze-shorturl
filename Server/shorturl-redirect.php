@@ -207,9 +207,8 @@ class ShortURLRedirect
             $rules .= "RewriteRule ^([2-9][0-9]*)(.*)$ redirect-services.php?prefix=$1&code=$2 [L]\n";
             // list of customer rules
             $rules .= $new_rules;
-            // last two rules: redirect redirect-services.php to find out if new service or new customer rule or unknown prefix
+            // last rule: redirect redirect-services.php to find out if new customer rule or unknown link
             $rules .= "RewriteRule ^1(.+)$ redirect-services.php?prefix=1&code=$1 [L]\n";
-            $rules .= "RewriteRule ^([^0-9].+)$ redirect-services.php?prefix=0&code=$1 [L]\n";
     
             // Read .htaccess content
             $htaccess_content = file_get_contents($this->htaccess_file);

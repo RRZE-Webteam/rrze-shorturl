@@ -1,3 +1,8 @@
+# BEGIN ShortURL
+RewriteEngine On
+RewriteBase /
+RewriteRule ^([2-9][0-9]*)(.*)$ shorturl-redirect.php?prefix=$1&code=$2 [L]
+# END ShortURL
 # WORDPRESS BEGIN
 RewriteEngine On
 RewriteBase /

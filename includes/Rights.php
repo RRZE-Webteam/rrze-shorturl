@@ -14,11 +14,11 @@ class Rights
         if (is_user_logged_in()) {
             $current_user = wp_get_current_user();
             $this->idm = $current_user->user_nicename;
-        }elseif (class_exists('\RRZE\AccessControl\Permissions')) {
+        } elseif (class_exists('\RRZE\AccessControl\Permissions')) {
             $permissionsInstance = new Permissions();
             $checkSSOLoggedIn = $permissionsInstance->checkSSOLoggedIn();
             $personAttributes = $permissionsInstance->personAttributes;
-            $this->idm = $personAttributes['urn:mace:dir:attribute-def:uid'][0];
+            $this->idm = (!empty($personAttributes['urn:mace:dir:attribute-def:uid'][0]) ? $personAttributes['urn:mace:dir:attribute-def:uid'][0] : null);
         } else {
             error_log('\RRZE\AccessControl\Permissions is not available');
         }
@@ -41,20 +41,22 @@ class Rights
                 $aRet['id'] = $result['id'];
                 $aRet['uri_allowed'] = (bool) $result['allow_uri'];
                 $aRet['get_allowed'] = (bool) $result['allow_get'];
-                $aRet['longlifelinks_allowed'] = (bool) $result['allow_longlifelinks'];                
+                $aRet['longlifelinks_allowed'] = (bool) $result['allow_longlifelinks'];
             } else {
-                try {
-                    // add the IdM
-                    $wpdb->insert(
-                        $wpdb->prefix . 'shorturl_idms',
-                        array(
-                            'idm' => $this->idm,
-                        )
-                    );
-                    $aRet['id'] = $wpdb->insert_id;
-                } catch (\Exception $e) {
-                    error_log('Error adding idm: ' . $e->getMessage());
-                    return $aRet;
+                if (!empty($this->idm)) {
+                    try {
+                        // add the IdM
+                        $wpdb->insert(
+                            $wpdb->prefix . 'shorturl_idms',
+                            array(
+                                'idm' => $this->idm,
+                            )
+                        );
+                        $aRet['id'] = $wpdb->insert_id;
+                    } catch (\Exception $e) {
+                        error_log('Error adding idm: ' . $e->getMessage());
+                        return $aRet;
+                    }
                 }
             }
             return $aRet;
