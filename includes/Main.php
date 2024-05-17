@@ -6,6 +6,7 @@ defined('ABSPATH') || exit;
 
 use RRZE\ShortURL\Rights;
 use RRZE\ShortURL\CustomerDomains;
+use RRZE\ShortURL\CleanupDB;
 use RRZE\ShortURL\MyCrypt;
 use RRZE\ShortURL\API;
 use RRZE\ShortURL\ShortURL;
@@ -50,6 +51,7 @@ class Main
 
         $settings = new Settings();
         $domains = new CustomerDomains();
+        $cleanup = new CleanupDB();
         $myCrypt = new MyCrypt();
         $shortURL = new ShortURL();
         $api = new API();
