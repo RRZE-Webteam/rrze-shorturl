@@ -40,6 +40,7 @@ class ShortURLRedirect
     {
         $code = (!empty($_GET["code"]) ? htmlspecialchars($_GET["code"]) : '');
         $prefix = (!empty($_GET["prefix"]) ? (int) htmlspecialchars($_GET["prefix"]) : 0);
+        $preview = (!empty($_GET["preview"]) ? (int) htmlspecialchars($_GET["preview"]) : 0);
 
         if ($prefix == 0) {
             $this->send404Response("Unknown service with prefix $prefix");
@@ -47,9 +48,9 @@ class ShortURLRedirect
             $this->send404Response("Unknown link. No code given.");
         } elseif ($prefix == 1) {
             $short_url = $prefix . $code;
-            $this->handleCustomerLink($short_url);
+            $this->handleCustomerLink($short_url, $preview);
         } else {
-            $this->handleServiceLink($code, $prefix);
+            $this->handleServiceLink($code, $prefix, $preview);
         }
     }
 
@@ -60,7 +61,7 @@ class ShortURLRedirect
         exit;
     }
 
-    private function handleCustomerLink(string $code): void
+    private function handleCustomerLink(string $code, int $preview): void
     {
 
         try {
@@ -72,8 +73,13 @@ class ShortURLRedirect
             $long_url = json_decode($response, true);
 
             if (!empty($long_url)) {
-                header('Location: ' . $long_url, true, 303);
-                $this->updateHtaccess();
+                if ($preview){
+                    $short_url = $this->shorturl_domain . '/' . $code;
+                    $this->showPreview($short_url, $long_url);
+                }else{
+                    header('Location: ' . $long_url, true, 303);
+                    $this->updateHtaccess();    
+                }
             } else {
                 $this->send404Response("Unknown link");
             }
@@ -82,15 +88,40 @@ class ShortURLRedirect
         }
     }
 
-    private function handleServiceLink(string $code, int $prefix): void
+    private function handleServiceLink(string $code, int $prefix, int $preview): void
     {
         $service_link = $this->getServiceRegEx($prefix);
         $decrypted = $this->getDecrypted($code);
-        $redirect_url = preg_replace('/\$\w+/', $decrypted, $service_link);
-        header('Location: ' . $redirect_url, true, 303);
-        exit;
+        $long_url = preg_replace('/\$\w+/', $decrypted, $service_link);
+        if ($preview){
+            $short_url = $this->shorturl_domain . '/' . $prefix . $code;
+            $this->showPreview($short_url, $long_url);
+        }else{
+            header('Location: ' . $long_url, true, 303);
+            exit;    
+        }
     }
 
+    private function showPreview(string $short_url, string $long_url): void
+    {
+        echo '<!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Short-URL Preview</title>
+        </head>
+        <body>
+        <br><br><br>
+            <center>
+                <a href="' . htmlspecialchars($short_url, ENT_QUOTES, 'UTF-8') . '">' . htmlspecialchars($short_url, ENT_QUOTES, 'UTF-8') . '</a>
+                <br><br>redirects to / wird weitergeleitet zu<br><br>
+                <a href="' . htmlspecialchars($long_url, ENT_QUOTES, 'UTF-8') . '">' . htmlspecialchars($long_url, ENT_QUOTES, 'UTF-8') . '</a>
+            </center>
+        </body>
+        </html>';
+    }
+    
 
     private function getRegexFromServiceArray(int &$prefix, array &$aServices): string
     {
@@ -227,7 +258,9 @@ class ShortURLRedirect
         if (!empty($new_rules)) {
             $rules = "RewriteEngine On\n";
             $rules .= "RewriteBase /\n";
-            // first rule: redirect all paths that start with a number but not 1 to shorturl-redirect.php (1 == customer domain) 
+            // first rule: redirect all paths that start with a number and end with "+" to shorturl-redirect.php with preview = 1
+            $rules .= "RewriteRule ^([0-9]+)(.*)\+$ shorturl-redirect.php?prefix=$1&code=$2&preview=1 [L]\n";
+            // second rule: redirect all paths that start with a number but not 1 to shorturl-redirect.php (1 == customer domain) 
             $rules .= "RewriteRule ^([2-9][0-9]*)(.*)$ shorturl-redirect.php?prefix=$1&code=$2 [L]\n";
             // list of customer rules
             $rules .= $new_rules;

@@ -1,7 +1,8 @@
 # ShortURL BEGIN
-# 2024-05-17 11:12:34 
+# 2024-05-17 11:57:50 
 RewriteEngine On
 RewriteBase /
+RewriteRule ^([0-9]+)(.*)\+$ shorturl-redirect.php?prefix=$1&code=$2&preview=1 [L]
 RewriteRule ^([2-9][0-9]*)(.*)$ shorturl-redirect.php?prefix=$1&code=$2 [L]
 RewriteRule ^1a$ https://www.academy.fau.de/test [R=303,L]
 RewriteRule ^1(.+)$ shorturl-redirect.php?prefix=1&code=$1 [L]
