@@ -280,7 +280,7 @@ class Shortcode
     {
         global $wpdb;
 
-        $categories = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_categories");
+        $categories = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_categories WHERE idm_id = " . self::$rights['id']);
 
         // Build the hierarchical structure for each category
         $categories_with_hierarchy = array();
@@ -324,6 +324,7 @@ class Shortcode
                 array(
                     'label' => $category_label,
                     'parent_id' => $parent_category,
+                    'idm_id' => self::$rights['id']
                 ),
                 array('id' => $category_id),
                 array('%s', '%d'),
@@ -343,7 +344,8 @@ class Shortcode
                     "{$wpdb->prefix}shorturl_categories",
                     array(
                         'label' => $category_label,
-                        'parent_id' => $parent_category
+                        'parent_id' => $parent_category,
+                        'idm_id' => self::$rights['id']
                     )
                 );
             }
@@ -391,7 +393,7 @@ class Shortcode
         global $wpdb;
 
         // Get all categories from the shorturl_categories table
-        $categories = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_categories");
+        $categories = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_categories WHERE idm_id = " . self::$rights['id']);
 
         // Build the hierarchical structure for each category
         $categories_with_hierarchy = array();
@@ -648,8 +650,15 @@ class Shortcode
             // Check if URL is provided
             if (!empty($aParams['url'])) {
                 $result = ShortURL::shorten($aParams);
-                $result_message = ($result['error'] ? 'Error: ' : __('Short URL', 'rrze-shorturl')) . ': ' . $result['txt'];
-                $result_message .= (!$result['error'] ? '&nbsp;&nbsp;<button type="button" class="btn" id="copyButton" name="copyButton" data-shortened-url="' . $result['txt'] . '"><img class="shorturl-copy-img" src="data:image/svg+xml,%3Csvg height=\'1024\' width=\'896\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M128 768h256v64H128v-64z m320-384H128v64h320v-64z m128 192V448L384 640l192 192V704h320V576H576z m-288-64H128v64h160v-64zM128 704h160v-64H128v64z m576 64h64v128c-1 18-7 33-19 45s-27 18-45 19H64c-35 0-64-29-64-64V192c0-35 29-64 64-64h192C256 57 313 0 384 0s128 57 128 128h192c35 0 64 29 64 64v320h-64V320H64v576h640V768zM128 256h512c0-35-29-64-64-64h-64c-35 0-64-29-64-64s-29-64-64-64-64 29-64 64-29 64-64 64h-64c-35 0-64 29-64 64z\' fill=\'%23FFFFFF\' /%3E%3C/svg%3E" alt="' . __('Copy to clipboard', 'rrze-shorturl') . '"></button>&nbsp;&nbsp;<span id="shorturl-tooltip" class="shorturl-tooltip">' . __('Copied to clipboard', 'rrze-shorturl') . '</span>' : '');
+
+                if ($result['error']){
+                    $result_message = 'Error: ' . $result['txt'];
+                }else{
+                    $result_message = '<span class="shorturl-shortened-msg">' . __('Short URL', 'rrze-shorturl') . ': ' . $result['txt'] . '</span>';
+                    $result_message .= '&nbsp;&nbsp;<button type="button" class="btn" id="copyButton" name="copyButton" data-shortened-url="' . $result['txt'] . '"><img class="shorturl-copy-img" src="data:image/svg+xml,%3Csvg height=\'1024\' width=\'896\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M128 768h256v64H128v-64z m320-384H128v64h320v-64z m128 192V448L384 640l192 192V704h320V576H576z m-288-64H128v64h160v-64zM128 704h160v-64H128v64z m576 64h64v128c-1 18-7 33-19 45s-27 18-45 19H64c-35 0-64-29-64-64V192c0-35 29-64 64-64h192C256 57 313 0 384 0s128 57 128 128h192c35 0 64 29 64 64v320h-64V320H64v576h640V768zM128 256h512c0-35-29-64-64-64h-64c-35 0-64-29-64-64s-29-64-64-64-64 29-64 64-29 64-64 64h-64c-35 0-64 29-64 64z\' fill=\'%23FFFFFF\' /%3E%3C/svg%3E" alt="' . __('Copy to clipboard', 'rrze-shorturl') . '"></button>&nbsp;&nbsp;<span id="shorturl-tooltip" class="shorturl-tooltip">' . __('Copied to clipboard', 'rrze-shorturl') . '</span>';
+                    $result_message .= '<br><span class="shorturl-validuntil">' . __('Valid until', 'rrze-shorturl') . ': ' . $result['valid_until_formatted'] . '</span>';
+                }
+
                 $aParams['url'] = $result['long_url']; // we might have added the scheme
             }
         }
@@ -706,7 +715,7 @@ class Shortcode
         global $wpdb;
 
         // Retrieve categories from the shorturl_categories table
-        $categories = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_categories");
+        $categories = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_categories WHERE idm_id = " . self::$rights['id']);
 
         // Build hierarchical category structure
         $hierarchicalCategories = self::build_category_hierarchy($categories);
@@ -818,7 +827,7 @@ class Shortcode
         // $tags_table = $wpdb->prefix . 'shorturl_tags';
 
         // Fetch all categories
-        $categories = $wpdb->get_results("SELECT id, label FROM $categories_table", ARRAY_A);
+        $categories = $wpdb->get_results("SELECT id, label FROM $categories_table WHERE idm_id = " . self::$rights['id'], ARRAY_A);
 
         // Determine the column to sort by and sort order
         $orderby = !empty($_GET['orderby']) ? $_GET['orderby'] : 'id';
@@ -1039,14 +1048,20 @@ class Shortcode
         $table_name = $wpdb->prefix . 'shorturl_categories';
 
         // Check if category already exists
-        $existing_category = $wpdb->get_row($wpdb->prepare("SELECT id FROM $table_name WHERE label = %s", $category_name));
+        $existing_category = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT id FROM $table_name WHERE label = %s AND idm_id = %d",
+                $category_name,
+                self::$rights['id']
+            )
+        );        
 
         if ($existing_category) {
             // Category already exists, return its ID
             wp_send_json_success(['category_id' => $existing_category->id, 'category_list_html' => self::generate_category_list_html()]);
         } else {
             // Insert new category
-            $inserted = $wpdb->insert($table_name, ['label' => $category_name, 'parent_id' => $parent_category]);
+            $inserted = $wpdb->insert($table_name, ['label' => $category_name, 'parent_id' => $parent_category, 'idm_id' => self::$rights['id']]);
 
             if ($inserted) {
                 $category_id = $wpdb->insert_id;

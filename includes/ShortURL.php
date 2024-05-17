@@ -25,7 +25,7 @@ class ShortURL
         self::$CONFIG['Services'] = self::getServices();
     }
 
-    public static function isValidUrl($url)
+    public static function isValidUrl(string $url): bool
     {
         try {
             if (filter_var($url, FILTER_VALIDATE_URL) === false) {
@@ -35,7 +35,7 @@ class ShortURL
             return true;
         } catch (\Exception $e) {
             error_log("Error in isValidUrl: " . $e->getMessage());
-            return null;
+            return false;
         }
     }
 
@@ -78,26 +78,6 @@ class ShortURL
         }
     }
 
-    public static function decryptString($output)
-    {
-        try {
-            $inputString = '';
-
-            for ($i = 0; $i < strlen($output); $i++) {
-                $index = strpos(self::$CONFIG['ShortURLModChars'], $output[$i]);
-
-                $adjustedIndex = ($index + 1) % strlen(self::$CONFIG['ShortURLModChars']);
-
-                $inputString .= $adjustedIndex;
-            }
-
-            return intval($inputString);
-        } catch (\Exception $e) {
-            error_log("Error in decryptString: " . $e->getMessage());
-            return null;
-        }
-    }
-
 
     public static function getLinkfromDB($domain_id, $long_url, $idm_id)
     {
@@ -107,7 +87,7 @@ class ShortURL
             global $wpdb;
             $table_name = $wpdb->prefix . 'shorturl_links';
 
-            $result = $wpdb->get_results($wpdb->prepare("SELECT id, short_url FROM $table_name WHERE long_url = %s LIMIT 1", $long_url), ARRAY_A);
+            $result = $wpdb->get_results($wpdb->prepare("SELECT id, short_url, valid_until FROM $table_name WHERE long_url = %s LIMIT 1", $long_url), ARRAY_A);
 
             if (empty($result)) {
                 $long_url = self::$rights['get_allowed'] ? self::add_url_components($long_url, array('scheme', 'host', 'path', 'query', 'fragment')) : self::add_url_components($long_url, array('scheme', 'host', 'path', 'fragment'));
@@ -125,7 +105,7 @@ class ShortURL
 
                 return array('id' => $link_id, 'short_url' => '');
             } else {
-                return array('id' => $result[0]['id'], 'short_url' => $result[0]['short_url']);
+                return array('id' => $result[0]['id'], 'short_url' => $result[0]['short_url'], 'valid_until' => $result[0]['valid_until']);
             }
         } catch (\Exception $e) {
             error_log("Error in getLinkfromDB: " . $e->getMessage());
@@ -418,6 +398,37 @@ class ShortURL
         return self::countShortenings() >= self::$CONFIG['maxShortening'];
     }
 
+    private static function isShortURL($url){
+        return (strpos($url, self::$CONFIG['ShortURLBase']) === 0);
+    }
+
+    private static function getLongURLToService($code){
+        preg_match('/^(\d+)(.*)/', $code, $matches);
+        
+        if (empty($matches[1]) || empty($matches[2])){
+            // there is no prefix 
+            return '';
+        }else{
+            $prefix = $matches[1];
+            $encrypted = $matches[2];
+    
+            foreach (self::$CONFIG['Services'] as $service) {
+                if ($service['prefix'] === $prefix) {
+                    if (!empty($service['regex'])) {
+
+                        $myCrypt = new MyCrypt();
+                        $decrypted = $myCrypt->decrypt($encrypted);
+    
+                        return preg_replace('/\$\w+/', $decrypted, $service['regex']);
+                    }
+                }
+            }
+        }
+    
+        // couldn't find the service or regex to found service is empty
+        return '';
+    }
+    
     public static function shorten($shortenParams)
     {
         try {
@@ -427,6 +438,23 @@ class ShortURL
             }
 
             $long_url = $shortenParams['url'] ?? null;
+
+            // Check if this is the shortened URL
+            if (self::isShortURL($long_url)){
+                $code = basename($long_url, "+"); // "+" => perhaps someone tries to shorten a preview link
+                $true_long_url = ShortURL::getLongURL($code);
+
+                if (!$true_long_url){
+                    // is it a service url?
+                    $true_long_url = self::getLongURLToService($code);
+                }
+
+                if ($true_long_url){
+                    return ['error' => true, 'txt' => __('You cannot shorten a link to our shortening service. This is the long URL:') . " $true_long_url", 'long_url' => $long_url];
+                }else{
+                    return ['error' => true, 'txt' => __('You cannot shorten a link to our shortening service. The link you\'ve provided is unknown.'), 'long_url' => $long_url];
+                }
+            }
 
             // Check if 'get_allowed' is false and remove GET parameters if necessary
             $long_url = self::$rights['get_allowed'] ? self::add_url_components($long_url, array('scheme', 'host', 'path', 'query', 'fragment')) : self::add_url_components($long_url, array('scheme', 'host', 'path', 'fragment'));
@@ -491,7 +519,9 @@ class ShortURL
                 return ['error' => true, 'txt' => __('Unable to update database table', 'rrze-shorturl'), 'long_url' => $long_url];
             }
 
-            return ['error' => false, 'txt' => $shortURL, 'link_id' => $aLink['id'], 'long_url' => $long_url];
+            $valid_until_formatted = date_format(date_create($valid_until), 'd.m.Y');
+
+            return ['error' => false, 'txt' => $shortURL, 'link_id' => $aLink['id'], 'long_url' => $long_url, 'valid_until_formatted' => $valid_until_formatted];
         } catch (\Exception $e) {
             error_log("Error in shorten: " . $e->getMessage());
             return null;
@@ -518,8 +548,11 @@ class ShortURL
     {
         global $wpdb;
 
+        $short_url = self::$CONFIG['ShortURLBase'] . '/' . $short_url;
+
         try {
-            $result = $wpdb->get_results($wpdb->prepare("SELECT long_url FROM {$wpdb->prefix}shorturl_links WHERE short_url = %s LIMIT 1", $short_url), ARRAY_A);
+            $result = $wpdb->get_var($wpdb->prepare("SELECT long_url FROM {$wpdb->prefix}shorturl_links WHERE short_url = %s LIMIT 1", $short_url));
+            
             return $result;
         } catch (Exception $e) {
             error_log("Error fetching long_url by short_url: " . $e->getMessage());

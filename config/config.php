@@ -155,7 +155,7 @@ function create_custom_tables()
         $sql = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}shorturl_categories (
             id mediumint(9) NOT NULL AUTO_INCREMENT,
             idm_id mediumint(9) NOT NULL DEFAULT 1,
-            label varchar(255) NOT NULL UNIQUE,
+            label varchar(255) NOT NULL,
             parent_id mediumint(9),
             PRIMARY KEY (id),
             CONSTRAINT fk_parent_id FOREIGN KEY (parent_id) REFERENCES {$wpdb->prefix}shorturl_categories(id),

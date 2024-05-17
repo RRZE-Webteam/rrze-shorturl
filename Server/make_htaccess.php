@@ -9,7 +9,7 @@ $htaccess_file = '.htaccess';
 try {
     $rules = "RewriteEngine On\n";
     $rules .= "RewriteBase /\n";
-    $rules .= "RewriteRule ^([2-9][0-9]*)(.*)$ shorturl-redirect.php?prefix=$1&code=$2 [L]";
+    $rules .= "RewriteRule ^([0-9]+)(.*)$ shorturl-redirect.php?prefix=$1&code=$2 [L]\n";
 
     // Read .htaccess content
     $htaccess_content = file_get_contents($htaccess_file);
@@ -18,13 +18,14 @@ try {
     }
 
     // Delete existing rules between markers
-    $marker_start = "# BEGIN ShortURL\n";
-    $marker_end = "# END ShortURL\n";
+    $marker_start = "# ShortURL BEGIN\n";
+    $marker_end = "# ShortURL END\n";
+    $timestamp = '# ' . date('Y-m-d H:i:s') . " \n";
     $pattern = '/' . preg_quote($marker_start, '/') . '.*?' . preg_quote($marker_end, '/') . '/s';
     $htaccess_content = preg_replace($pattern, '', $htaccess_content);
 
     // Generate new rules section
-    $new_rules_section = $marker_start . $rules . $marker_end;
+    $new_rules_section = $marker_start . $timestamp . $rules . $marker_end;
 
     $htaccess_content = $new_rules_section . $htaccess_content;
 
