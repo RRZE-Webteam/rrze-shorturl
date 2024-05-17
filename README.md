@@ -79,9 +79,9 @@ shorturl-redirect.php:
 - Sonst: 404 "Unbekannter Link"
 
 ## .htaccess
-Die .htaccess enthält alle Redirects zwischen den Kommentar-Zeilen "# BEGIN ShortURL" und "# END ShortURL".
+Die .htaccess enthält alle Redirects zwischen den Kommentar-Zeilen "# ShortURL BEGIN" und "# ShortURL END".
 Als erstes die Regel (Redirect zu shorturl-redirect.php) für die Services, dann die User-generierten Redirects für die erlaubten Domains. Am Schluss Redirect zu shorturl-redirect.php
-Nach "# END ShortURL" alle vorher bereits existierten Zeilen der .htaccess. 
+Nach "# ShortURL END" alle vorher bereits existierten Zeilen der .htaccess. 
 make_htaccess.php überschreibt die Anweisungen der vorhandene .htaccess nicht.
 
 
