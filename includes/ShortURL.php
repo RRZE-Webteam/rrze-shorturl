@@ -25,7 +25,7 @@ class ShortURL
         self::$CONFIG['Services'] = self::getServices();
     }
 
-    public static function isValidUrl($url)
+    public static function isValidUrl(string $url): bool
     {
         try {
             if (filter_var($url, FILTER_VALIDATE_URL) === false) {
@@ -35,7 +35,7 @@ class ShortURL
             return true;
         } catch (\Exception $e) {
             error_log("Error in isValidUrl: " . $e->getMessage());
-            return null;
+            return false;
         }
     }
 
@@ -74,26 +74,6 @@ class ShortURL
             return self::$CONFIG['ShortURLModChars'][$adjustedInput - 1];
         } catch (\Exception $e) {
             error_log("Error in cryptSingleDigit: " . $e->getMessage());
-            return null;
-        }
-    }
-
-    public static function decryptString($output)
-    {
-        try {
-            $inputString = '';
-
-            for ($i = 0; $i < strlen($output); $i++) {
-                $index = strpos(self::$CONFIG['ShortURLModChars'], $output[$i]);
-
-                $adjustedIndex = ($index + 1) % strlen(self::$CONFIG['ShortURLModChars']);
-
-                $inputString .= $adjustedIndex;
-            }
-
-            return intval($inputString);
-        } catch (\Exception $e) {
-            error_log("Error in decryptString: " . $e->getMessage());
             return null;
         }
     }
@@ -418,6 +398,37 @@ class ShortURL
         return self::countShortenings() >= self::$CONFIG['maxShortening'];
     }
 
+    private static function isShortURL($url){
+        return (strpos($url, self::$CONFIG['ShortURLBase']) === 0);
+    }
+
+    private static function getLongURLToService($code){
+        preg_match('/^(\d+)(.*)/', $code, $matches);
+        
+        if (empty($matches[1]) || empty($matches[2])){
+            // there is no prefix 
+            return '';
+        }else{
+            $prefix = $matches[1];
+            $encrypted = $matches[2];
+    
+            foreach (self::$CONFIG['Services'] as $service) {
+                if ($service['prefix'] === $prefix) {
+                    if (!empty($service['regex'])) {
+
+                        $myCrypt = new MyCrypt();
+                        $decrypted = $myCrypt->decrypt($encrypted);
+    
+                        return preg_replace('/\$\w+/', $decrypted, $service['regex']);
+                    }
+                }
+            }
+        }
+    
+        // couldn't find the service or regex to found service is empty
+        return '';
+    }
+    
     public static function shorten($shortenParams)
     {
         try {
@@ -427,6 +438,23 @@ class ShortURL
             }
 
             $long_url = $shortenParams['url'] ?? null;
+
+            // Check if this is the shortened URL
+            if (self::isShortURL($long_url)){
+                $code = basename($long_url, "+"); // "+" => perhaps someone tries to shorten a preview link
+                $true_long_url = ShortURL::getLongURL($code);
+
+                if (!$true_long_url){
+                    // is it a service url?
+                    $true_long_url = self::getLongURLToService($code);
+                }
+
+                if ($true_long_url){
+                    return ['error' => true, 'txt' => __('You cannot shorten a link to our shortening service. This is the long URL:') . " $true_long_url", 'long_url' => $long_url];
+                }else{
+                    return ['error' => true, 'txt' => __('You cannot shorten a link to our shortening service. The link you\'ve provided is unknown.'), 'long_url' => $long_url];
+                }
+            }
 
             // Check if 'get_allowed' is false and remove GET parameters if necessary
             $long_url = self::$rights['get_allowed'] ? self::add_url_components($long_url, array('scheme', 'host', 'path', 'query', 'fragment')) : self::add_url_components($long_url, array('scheme', 'host', 'path', 'fragment'));
