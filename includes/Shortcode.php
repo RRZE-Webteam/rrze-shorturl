@@ -280,7 +280,7 @@ class Shortcode
     {
         global $wpdb;
 
-        $categories = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_categories");
+        $categories = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_categories WHERE idm_id = " . self::$rights['id']);
 
         // Build the hierarchical structure for each category
         $categories_with_hierarchy = array();
@@ -324,6 +324,7 @@ class Shortcode
                 array(
                     'label' => $category_label,
                     'parent_id' => $parent_category,
+                    'idm_id' => self::$rights['id']
                 ),
                 array('id' => $category_id),
                 array('%s', '%d'),
@@ -343,7 +344,8 @@ class Shortcode
                     "{$wpdb->prefix}shorturl_categories",
                     array(
                         'label' => $category_label,
-                        'parent_id' => $parent_category
+                        'parent_id' => $parent_category,
+                        'idm_id' => self::$rights['id']
                     )
                 );
             }
@@ -391,7 +393,7 @@ class Shortcode
         global $wpdb;
 
         // Get all categories from the shorturl_categories table
-        $categories = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_categories");
+        $categories = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_categories WHERE idm_id = " . self::$rights['id']);
 
         // Build the hierarchical structure for each category
         $categories_with_hierarchy = array();
@@ -713,7 +715,7 @@ class Shortcode
         global $wpdb;
 
         // Retrieve categories from the shorturl_categories table
-        $categories = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_categories");
+        $categories = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_categories WHERE idm_id = " . self::$rights['id']);
 
         // Build hierarchical category structure
         $hierarchicalCategories = self::build_category_hierarchy($categories);
@@ -825,7 +827,7 @@ class Shortcode
         // $tags_table = $wpdb->prefix . 'shorturl_tags';
 
         // Fetch all categories
-        $categories = $wpdb->get_results("SELECT id, label FROM $categories_table", ARRAY_A);
+        $categories = $wpdb->get_results("SELECT id, label FROM $categories_table WHERE idm_id = " . self::$rights['id'], ARRAY_A);
 
         // Determine the column to sort by and sort order
         $orderby = !empty($_GET['orderby']) ? $_GET['orderby'] : 'id';
@@ -1046,14 +1048,20 @@ class Shortcode
         $table_name = $wpdb->prefix . 'shorturl_categories';
 
         // Check if category already exists
-        $existing_category = $wpdb->get_row($wpdb->prepare("SELECT id FROM $table_name WHERE label = %s", $category_name));
+        $existing_category = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT id FROM $table_name WHERE label = %s AND idm_id = %d",
+                $category_name,
+                self::$rights['id']
+            )
+        );        
 
         if ($existing_category) {
             // Category already exists, return its ID
             wp_send_json_success(['category_id' => $existing_category->id, 'category_list_html' => self::generate_category_list_html()]);
         } else {
             // Insert new category
-            $inserted = $wpdb->insert($table_name, ['label' => $category_name, 'parent_id' => $parent_category]);
+            $inserted = $wpdb->insert($table_name, ['label' => $category_name, 'parent_id' => $parent_category, 'idm_id' => self::$rights['id']]);
 
             if ($inserted) {
                 $category_id = $wpdb->insert_id;
