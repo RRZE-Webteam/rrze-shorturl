@@ -301,7 +301,7 @@ class ShortURLRedirect
 }
 
 // SETTINGS
-$shorturl_domain = "https://go-fau.test.rrze.fau.de";
+$shorturl_domain = "https://www.shorturl.rrze.fau.de";
 $htaccess_file = '.htaccess';
 $services_file = 'rrze-shorturl-services.json';
 
