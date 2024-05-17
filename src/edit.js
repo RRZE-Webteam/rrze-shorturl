@@ -58,7 +58,7 @@ const Edit = ({ attributes, setAttributes }) => {
         };
 
         // Fetch categories from shorturl_categories table
-        fetch('/wp-json/short-url/v1/categories')
+        fetch('/wp-json/wp/shorturl/v2/categories')
             .then(response => response.json())
             .then(data => {
                 if (Array.isArray(data)) {
@@ -78,7 +78,7 @@ const Edit = ({ attributes, setAttributes }) => {
             });
 
         // Fetch tags from shorturl_tags table
-        // fetch('/wp-json/short-url/v1/tags')
+        // fetch('/wp-json/wp/shorturl/v2/tags')
         //     .then(response => response.json())
         //     .then(data => {
         //         console.log('ShortURL Tags Data:', data);
@@ -101,7 +101,7 @@ const Edit = ({ attributes, setAttributes }) => {
         if (!newCategoryLabel) return;
 
         // Make a POST request to add the new category
-        fetch('/wp-json/short-url/v1/add-category', {
+        fetch('/wp-json/wp/shorturl/v2/add-category', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -142,7 +142,7 @@ const Edit = ({ attributes, setAttributes }) => {
 
         //     if (newTags.length > 0) {
         //         Promise.all(newTags.map(newTag => {
-        //             return fetch('/wp-json/short-url/v1/add-tag', {
+        //             return fetch('/wp-json/wp/shorturl/v2/add-tag', {
         //                 method: 'POST',
         //                 headers: {
         //                     'Content-Type': 'application/json',
@@ -176,7 +176,7 @@ const Edit = ({ attributes, setAttributes }) => {
             // , tags: tags
         };
 
-        fetch('/wp-json/short-url/v1/shorten', {
+        fetch('/wp-json/wp/shorturl/v2/shorten', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
