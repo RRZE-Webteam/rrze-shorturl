@@ -65,7 +65,7 @@ class ShortURLRedirect
     {
 
         try {
-            $response = file_get_contents($this->shorturl_domain . "/wp-json/short-url/v1/get-longurl?code=" . $code);
+            $response = file_get_contents($this->shorturl_domain . "/wp-json/wp/shorturl/v2/get-longurl?code=" . $code);
             if ($response === false) {
                 throw new Exception("Failed to fetch from the REST API endpoint get-longurl.");
             }
@@ -168,7 +168,7 @@ class ShortURLRedirect
 
             // Fetch update from REST-API, save it in SESSION and $service_file and return RegEx
             try {
-                $response = file_get_contents($this->shorturl_domain . "/wp-json/short-url/v1/services");
+                $response = file_get_contents($this->shorturl_domain . "/wp-json/wp/shorturl/v2/services");
 
                 if ($response === false) {
                     throw new Exception("Failed to fetch from the REST API endpoint /services.");
@@ -221,7 +221,7 @@ class ShortURLRedirect
     {
         $ret = '';
         try {
-            $response = file_get_contents($this->shorturl_domain . "/wp-json/short-url/v1/active-shorturls");
+            $response = file_get_contents($this->shorturl_domain . "/wp-json/wp/shorturl/v2/active-shorturls");
             if ($response === false) {
                 throw new Exception("Failed to fetch from the REST API endpoint /active-shorturls.");
             }

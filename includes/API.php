@@ -23,7 +23,7 @@ class API {
     }
 
     public function register_rest_endpoints() {
-        register_rest_route('short-url/v1', '/shorten', array(
+        register_rest_route('wp/shorturl/v2', '/shorten', array(
             'methods' => 'POST',
             'callback' => array($this, 'shorten_url_callback'),
             'permission_callback' => function () {
@@ -31,19 +31,19 @@ class API {
             }
         ));
 
-        register_rest_route('short-url/v1', '/get-longurl', array(
+        register_rest_route('wp/shorturl/v2', '/get-longurl', array(
             'methods' => 'GET',
             'callback' => array($this, 'get_longurl_callback'),
             // 'permission_callback' => [$this, 'is_ip_allowed']
         ));
 
-        register_rest_route('short-url/v1', '/active-shorturls', array(
+        register_rest_route('wp/shorturl/v2', '/active-shorturls', array(
             'methods' => 'GET',
             'callback' => array($this, 'get_active_shorturls_callback'),
             // 'permission_callback' => [$this, 'is_ip_allowed']
         ));
 
-        register_rest_route('short-url/v1', '/categories', array(
+        register_rest_route('wp/shorturl/v2', '/categories', array(
             'methods' => 'GET',
             'callback' => array($this, 'get_categories_callback'),
             'permission_callback' => function () {
@@ -51,7 +51,7 @@ class API {
             }
         ));
 
-        register_rest_route('short-url/v1', '/add-category', array(
+        register_rest_route('wp/shorturl/v2', '/add-category', array(
             'methods' => 'POST',
             'callback' => array($this, 'add_category_callback'),
             'permission_callback' => function () {
@@ -59,14 +59,14 @@ class API {
             }
         ));  
         
-        register_rest_route('short-url/v1', '/services', array(
+        register_rest_route('wp/shorturl/v2', '/services', array(
             'methods' => 'GET',
             'callback' => array($this, 'get_services_callback'),
             // 'permission_callback' => [$this, 'is_ip_allowed']
         ));
 
 
-        register_rest_route('short-url/v1', '/decrypt', array(
+        register_rest_route('wp/shorturl/v2', '/decrypt', array(
             'methods' => 'GET',
             'callback' => array($this, 'get_decrypt_callback'),
             // 'permission_callback' => [$this, 'is_ip_allowed']

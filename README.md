@@ -36,7 +36,7 @@ In den Einstellungen kann Folgendes verwaltet werden:
 - rrze_shorturl_fetch_and_store_customerdomains für die Ermittlung der Customer Domains (täglich um 4:00 a.m.)
 - rrze_shorturl_cleanup_database um die IdM zu löschen, die keine Links generiert haben (monatlich)
 
-## REST-API Endpoints (DOMAIN/wp-json/short-url/v1)
+## REST-API Endpoints (DOMAIN/wp/shorturl/v2)
 - /active-shorturls (GET) liefert die Paare "long_url" und "short_url" als JSON
 - /shorten (POST) empfängt die Parameter und liefert das Paar 'error'(true/false) und 'txt' (short_url oder error-message) als JSON
 - /get-longurl (GET) liefert zum Parameter "shortURL" den "long_url" als JSON
