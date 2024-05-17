@@ -264,8 +264,7 @@ jQuery(document).ready(function ($) {
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(shortenedUrl)
                     .then(() => {
-                        console.log('URL copied!');
-                        showTooltip('URL copied!');
+                        showTooltip(__('URL copied!', 'rrze-shorturl'));
                     })
                     .catch(err => {
                         console.error('Copy failed:', err);

@@ -107,7 +107,7 @@ class ShortURL
             global $wpdb;
             $table_name = $wpdb->prefix . 'shorturl_links';
 
-            $result = $wpdb->get_results($wpdb->prepare("SELECT id, short_url FROM $table_name WHERE long_url = %s LIMIT 1", $long_url), ARRAY_A);
+            $result = $wpdb->get_results($wpdb->prepare("SELECT id, short_url, valid_until FROM $table_name WHERE long_url = %s LIMIT 1", $long_url), ARRAY_A);
 
             if (empty($result)) {
                 $long_url = self::$rights['get_allowed'] ? self::add_url_components($long_url, array('scheme', 'host', 'path', 'query', 'fragment')) : self::add_url_components($long_url, array('scheme', 'host', 'path', 'fragment'));
@@ -125,7 +125,7 @@ class ShortURL
 
                 return array('id' => $link_id, 'short_url' => '');
             } else {
-                return array('id' => $result[0]['id'], 'short_url' => $result[0]['short_url']);
+                return array('id' => $result[0]['id'], 'short_url' => $result[0]['short_url'], 'valid_until' => $result[0]['valid_until']);
             }
         } catch (\Exception $e) {
             error_log("Error in getLinkfromDB: " . $e->getMessage());
@@ -491,7 +491,9 @@ class ShortURL
                 return ['error' => true, 'txt' => __('Unable to update database table', 'rrze-shorturl'), 'long_url' => $long_url];
             }
 
-            return ['error' => false, 'txt' => $shortURL, 'link_id' => $aLink['id'], 'long_url' => $long_url];
+            $valid_until_formatted = date_format(date_create($valid_until), 'd.m.Y');
+
+            return ['error' => false, 'txt' => $shortURL, 'link_id' => $aLink['id'], 'long_url' => $long_url, 'valid_until_formatted' => $valid_until_formatted];
         } catch (\Exception $e) {
             error_log("Error in shorten: " . $e->getMessage());
             return null;
