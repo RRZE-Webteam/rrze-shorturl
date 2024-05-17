@@ -10,7 +10,7 @@ Erweiterte Einstellungen werden auf Klick sichtbar.
 Zeigt in einer Tabelle die URLs an. Es kann nach Kategorien und Schlagwörtern gefiltert werden. 
 
 [shorturl-categories]
-Die Verwaltung der Kategorien
+Die Verwaltung der Kategorien. Kategorien sind IdM-zugehörig. D.h. es können nur Kategorien zur eigenen IdM editiert, gelöscht, angelegt und zugeordnet werden.
 
 [shorturl-tags] (seit 1.1.0 deaktiviert)
 Die Verwaltung der Schlagwörter
