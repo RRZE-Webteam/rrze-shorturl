@@ -78,6 +78,12 @@ shorturl-redirect.php:
 - Sonst: ist Prefix Customer-Link? Hol long_link via REST-API, 303 Redirect wenn gefunden, dann .htaccess Update, sonst 404 "Unbekannter Link" 
 - Sonst: 404 "Unbekannter Link"
 
+
+## Preview
+
+Endet der ShortURL mit einem Plus-Zeichen, wird eine simple HTML-Seite ausgegeben mit "$short_url redirects to / verweist auf $long_url".
+Das funktioniert mit Service-URLs und Customer Links.
+
 ## .htaccess
 Die .htaccess enthält alle Redirects zwischen den Kommentar-Zeilen "# ShortURL BEGIN" und "# ShortURL END".
 Als erstes die Regel (Redirect zu shorturl-redirect.php) für die Services, dann die User-generierten Redirects für die erlaubten Domains. Am Schluss Redirect zu shorturl-redirect.php
