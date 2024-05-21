@@ -270,6 +270,9 @@ class API {
     }
 
     public function get_active_shorturls_callback($request) {
+
+        error_log('das ist die vom go.fau.de ' . $_SERVER['REMOTE_ADDR']);
+
         try {
             $active_short_urls = ShortURL::getActiveShortURLs();
             

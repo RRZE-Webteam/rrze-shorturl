@@ -17,6 +17,12 @@
 // then => 303 Redirect 
 // then save new .htaccess 
 
+// SETTINGS
+$shorturl_domain = "https://www.shorturl.rrze.fau.de";
+$htaccess_file = '.htaccess';
+$services_file = 'rrze-shorturl-services.json';
+
+
 
 
 class ShortURLRedirect
@@ -29,6 +35,7 @@ class ShortURLRedirect
 
     public function __construct(string $shorturl_domain, string $htaccess_file, string $services_file)
     {
+        unset($_SESSION['rrze-shorturl-services']);
         $this->shorturl_domain = $shorturl_domain;
         $this->htaccess_file = $htaccess_file;
         $this->services_file = $services_file;
@@ -46,7 +53,7 @@ class ShortURLRedirect
             $this->send404Response("Unknown service with prefix $prefix");
         } elseif (empty($code)) {
             $this->send404Response("Unknown link. No code given.");
-        } elseif ($prefix == 1) {
+        } elseif ($prefix == 1) { 
             $short_url = $prefix . $code;
             $this->handleCustomerLink($short_url, $preview);
         } else {
@@ -65,7 +72,7 @@ class ShortURLRedirect
     {
 
         try {
-            $response = file_get_contents($this->shorturl_domain . "/wp-json/wp/v2/shorturl/get-longurl?code=" . $code);
+            $response = $this->fetchUrl($this->shorturl_domain . "/wp-json/wp/v2/shorturl/get-longurl?code=" . $code);
             if ($response === false) {
                 throw new Exception("Failed to fetch from the REST API endpoint get-longurl.");
             }
@@ -122,6 +129,19 @@ class ShortURLRedirect
         </html>';
     }
     
+    private function fetchUrl(string $url): string
+    {
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $response = curl_exec($ch);
+
+        if ($response === false) {
+            throw new Exception("cURL Error: " . curl_error($ch));
+        }
+        curl_close($ch);
+
+        return $response;
+    }
 
     private function getRegexFromServiceArray(int &$prefix, array &$aServices): string
     {
@@ -130,6 +150,7 @@ class ShortURLRedirect
                 return $service['regex'];
             }
         }
+
         return '';
     }
 
@@ -141,6 +162,11 @@ class ShortURLRedirect
             // Check if $_SESSION exists and return RegEx
             if (isset($_SESSION['rrze-shorturl-services'])) {
                 $aServices = json_decode($_SESSION['rrze-shorturl-services'], true);
+
+                if (!is_array($aServices)){
+                    throw new Exception('$aServices must be an array');
+                }
+
                 $regEx = $this->getRegexFromServiceArray($prefix, $aServices);
 
                 if (!empty($regEx)) {
@@ -153,11 +179,15 @@ class ShortURLRedirect
                 $response = file_get_contents($this->services_file);
 
                 if ($response === false) {
-                    throw new Exception("Failed to get contents of $this->services_file.");
+                    // we ignore that the file doesn't exist. It will be created later => file_put_contents()
                 }
 
                 $_SESSION['rrze-shorturl-services'] = $response;
                 $aServices = json_decode($response, true);
+
+                if (!is_array($aServices)){
+                    throw new Exception('$aServices must be an array');
+                }
                 
                 $regEx = $this->getRegexFromServiceArray($prefix, $aServices);
 
@@ -168,14 +198,15 @@ class ShortURLRedirect
 
             // Fetch update from REST-API, save it in SESSION and $service_file and return RegEx
             try {
-                $response = file_get_contents($this->shorturl_domain . "/wp-json/wp/v2/shorturl/services");
-
-                if ($response === false) {
-                    throw new Exception("Failed to fetch from the REST API endpoint /services.");
-                }
+                $response = $this->fetchUrl($this->shorturl_domain . "/wp-json/wp/v2/shorturl/services");
 
                 $_SESSION['rrze-shorturl-services'] = $response;
                 $aServices = json_decode($response, true);
+
+                if (!is_array($aServices)){
+                    throw new Exception('$aServices must be an array');
+                }
+
                 $result = file_put_contents($this->services_file, $response);
 
                 if ($result === false) {
@@ -197,7 +228,7 @@ class ShortURLRedirect
 
         // unknown Service => send 404
         http_response_code(404);
-        echo "Unknown service with prefix $prefix";
+        echo " getServiceRegEx() Unknown service with prefix $prefix";
         exit;
     }
 
@@ -206,29 +237,34 @@ class ShortURLRedirect
         if (!preg_match('/^[-a-z0-9]+$/i', $code)) {
             throw new InvalidArgumentException("Invalid code: $code");
         }
-
-        $result = 0;
+    
+        $result = '0';
         $len = strlen($code) - 1;
-
+    
         for ($t = 0; $t <= $len; $t++) {
-            $result = $result + strpos($this->baseChars, substr($code, $t, 1)) * pow($this->base, $len - $t);
+            $char = substr($code, $t, 1);
+            $pos = strpos($this->baseChars, $char);
+            $power = bcpow($this->base, $len - $t);
+            $value = bcmul($pos, $power);
+            $result = bcadd($result, $value);
         }
-
-        return $result;
+    
+        return (int)$result;
     }
-
+    
     private function get_rules()
     {
         $ret = '';
         try {
-            $response = file_get_contents($this->shorturl_domain . "/wp-json/wp/v2/shorturl/active-shorturls");
-            if ($response === false) {
-                throw new Exception("Failed to fetch from the REST API endpoint /active-shorturls.");
-            }
+            $response = $this->fetchUrl($this->shorturl_domain . "/wp-json/wp/v2/shorturl/active-shorturls");
 
             $short_urls = json_decode($response, true);
             if ($short_urls === null) {
                 throw new Exception("Failed to decode JSON response.");
+            }
+
+            if (!is_array($short_urls)){
+                throw new Exception("active-shorturls didn't send an array");
             }
 
             // Generate RewriteRules
@@ -268,7 +304,7 @@ class ShortURLRedirect
             $rules .= "RewriteRule ^1(.+)$ shorturl-redirect.php?prefix=1&code=$1 [L]\n";
 
             // Read .htaccess content
-            $htaccess_content = file_get_contents($this->htaccess_file);
+            $htaccess_content = $this->fetchUrl($this->htaccess_file);
             if ($htaccess_content === false) {
                 throw new Exception("Failed to read .htaccess file.");
             }
@@ -299,11 +335,6 @@ class ShortURLRedirect
         }
     }
 }
-
-// SETTINGS
-$shorturl_domain = "https://www.shorturl.rrze.fau.de";
-$htaccess_file = '.htaccess';
-$services_file = 'rrze-shorturl-services.json';
 
 // Instantiate and execute the class
 $shortURLRedirect = new ShortURLRedirect($shorturl_domain, $htaccess_file, $services_file);
