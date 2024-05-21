@@ -11,6 +11,14 @@ try {
     $rules .= "RewriteBase /\n";
     $rules .= "RewriteRule ^([0-9]+)(.*)$ shorturl-redirect.php?prefix=$1&code=$2 [L]\n";
 
+    // Check if .htaccess file exists
+    if (!file_exists($htaccess_file)) {
+        // Create an empty .htaccess file
+        if (file_put_contents($htaccess_file, '') === false) {
+            throw new Exception("Failed to create .htaccess file.");
+        }
+    }
+
     // Read .htaccess content
     $htaccess_content = file_get_contents($htaccess_file);
     if ($htaccess_content === false) {

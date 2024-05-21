@@ -84,8 +84,8 @@ class ShortURLRedirect
                     $short_url = $this->shorturl_domain . '/' . $code;
                     $this->showPreview($short_url, $long_url);
                 }else{
-                    header('Location: ' . $long_url, true, 303);
                     $this->updateHtaccess();    
+                    header('Location: ' . $long_url, true, 303);
                 }
             } else {
                 $this->send404Response("Unknown link");
@@ -291,7 +291,7 @@ class ShortURLRedirect
     {
         error_log("we are about to write the .htaccess");
 
-        
+
         $new_rules = $this->get_rules();
 
         if (!empty($new_rules)) {
@@ -307,11 +307,11 @@ class ShortURLRedirect
             $rules .= "RewriteRule ^1(.+)$ shorturl-redirect.php?prefix=1&code=$1 [L]\n";
 
             // Read .htaccess content
-            $htaccess_content = $this->fetchUrl($this->htaccess_file);
+            $htaccess_content = file_get_contents($this->htaccess_file);
             if ($htaccess_content === false) {
                 throw new Exception("Failed to read .htaccess file.");
             }
-
+        
             // Delete existing rules between markers
             $marker_start = "# ShortURL BEGIN\n";
             $marker_end = "# ShortURL END\n";
