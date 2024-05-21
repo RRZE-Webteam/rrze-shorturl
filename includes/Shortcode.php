@@ -637,7 +637,7 @@ class Shortcode
         $idm = '';
 
         $aParams = [
-            'url' => sanitize_text_field($_POST['url']),
+            'url' => !empty($_POST['url']) ? sanitize_text_field($_POST['url']) : '',
             'uri' => self::$rights['uri_allowed'] ? sanitize_text_field($_POST['uri'] ?? '') : '',
             'valid_until' => sanitize_text_field($_POST['valid_until'] ?? ''),
             'categories' => !empty($_POST['categories']) ? array_map('sanitize_text_field', $_POST['categories']) : [],
