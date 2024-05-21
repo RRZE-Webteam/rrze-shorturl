@@ -213,6 +213,8 @@ class API {
     
 
     public function add_category_callback($request) {
+        $test = $this->get_client_ip();
+        error_log('das ist die vom go.fau.de ' . $test);
 
         $parameters = $request->get_json_params();
     
@@ -238,6 +240,8 @@ class API {
 
     
     public function get_categories_callback() {
+        $test = $this->get_client_ip();
+        error_log('das ist die vom go.fau.de ' . $test);
         global $wpdb;
     
         try {
@@ -254,6 +258,8 @@ class API {
     }
     
     public function shorten_url_callback($request) {
+        $test = $this->get_client_ip();
+        error_log('das ist die vom go.fau.de ' . $test);
         try {
             $parameters = $request->get_json_params();
 
@@ -271,7 +277,8 @@ class API {
 
     public function get_active_shorturls_callback($request) {
 
-        error_log('das ist die vom go.fau.de ' . $_SERVER['REMOTE_ADDR']);
+        $test = $this->get_client_ip();
+        error_log('das ist die vom go.fau.de ' . $test);
 
         try {
             $active_short_urls = ShortURL::getActiveShortURLs();
@@ -283,6 +290,8 @@ class API {
     }
 
     public function get_longurl_callback($request) {
+        $test = $this->get_client_ip();
+        error_log('das ist die vom go.fau.de ' . $test);
         try {
             $code = $request->get_param('code');
     
@@ -300,6 +309,8 @@ class API {
 
 
     public function get_services_callback($request) {
+        $test = $this->get_client_ip();
+        error_log('das ist die vom go.fau.de ' . $test);
         try {
             $active_short_urls = ShortURL::getServices();
             
@@ -311,6 +322,8 @@ class API {
 
 
     public function get_decrypt_callback($request) {
+        $test = $this->get_client_ip();
+        error_log('das ist die vom go.fau.de ' . $test);
         $parameters = $request->get_params();
 
         if (empty($parameters['encrypted'])) {
