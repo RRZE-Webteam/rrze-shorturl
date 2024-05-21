@@ -31,15 +31,6 @@ class API {
             }
         ));
 
-
-        register_rest_route('wp/v2/shorturl/', '/get-longurl', array(
-            'methods' => 'GET',
-            'callback' => array($this, 'get_longurl_callback'),
-            // 'permission_callback' => [$this, 'is_ip_allowed']
-        ));
-
-        
-
         register_rest_route('wp/v2/shorturl/', '/get-longurl', array(
             'methods' => 'GET',
             'callback' => array($this, 'get_longurl_callback'),
