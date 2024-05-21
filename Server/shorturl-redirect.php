@@ -289,6 +289,9 @@ class ShortURLRedirect
 
     private function updateHtaccess(): void
     {
+        error_log("we are about to write the .htaccess");
+
+        
         $new_rules = $this->get_rules();
 
         if (!empty($new_rules)) {
