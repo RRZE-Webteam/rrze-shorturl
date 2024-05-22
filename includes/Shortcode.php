@@ -630,7 +630,7 @@ class Shortcode
 
         $result_message = ''; // Initialize result message
         // Check if form is submitted
-        if ($_SERVER["REQUEST_METHOD"] == "POST") {
+        if ($_SERVER["REQUEST_METHOD"] == "POST" || !empty($_GET['url'])) {
             // Check if URL is provided
             if (!empty($aParams['url'])) {
                 $result = ShortURL::shorten($aParams);
