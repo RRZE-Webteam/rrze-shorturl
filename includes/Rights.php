@@ -28,7 +28,7 @@ class Rights
     {
         global $wpdb;
         $aRet = [
-            'id' => 0,
+            'id' => 1,
             'uri_allowed' => false,
             'get_allowed' => false,
             'longlifelinks_allowed' => false
