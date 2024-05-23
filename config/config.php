@@ -213,11 +213,6 @@ function create_custom_tables()
         // Insert Service domains
         $aEntries = [
             [
-                'hostname' => 'www.helpdesk.rrze.fau.de',
-                'prefix' => 9,
-                'regex' => 'https://www.helpdesk.rrze.fau.de/otrs/index.pl?Action=AgentZoom&TicketID=$id'
-            ],
-            [
                 'hostname' => 'fau.zoom-x.de',
                 'prefix' => 2,
                 'regex' => ''
@@ -226,6 +221,16 @@ function create_custom_tables()
                 'hostname' => 'www.fau.tv',
                 'prefix' => 3,
                 'regex' => 'https://www.fau.tv/clip/id/$nummer'
+            ],
+            [
+                'hostname' => 'www.faq.rrze.fau.de',
+                'prefix' => 8,
+                'regex' => 'https://www.helpdesk.rrze.fau.de/otrs/public.pl?Action=PublicFAQ&ItemID=$id'
+            ],
+            [
+                'hostname' => 'www.helpdesk.rrze.fau.de',
+                'prefix' => 9,
+                'regex' => 'https://www.helpdesk.rrze.fau.de/otrs/index.pl?Action=AgentZoom&TicketID=$id'
             ],
         ];
 
