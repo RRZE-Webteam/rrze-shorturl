@@ -652,7 +652,7 @@ class Shortcode
         $form .= '<div class="postbox">';
         $form .= '<h2 class="handle">' . __('Create Short URL', 'rrze-shorturl') . '</h2>';
         $form .= '<div class="inside">';
-        $form .= '<label for="url">' . __('Your link', 'rrze-shorturl') . ':</label>&nbsp;';
+        $form .= '<label for="url">' . __('Your link', 'rrze-shorturl') . ':</label>';
         $form .= '<input type="text" name="url" id="url" value="' . esc_attr($aParams['url']) . '" placeholder="https://" ' . (!empty($result['error']) ? ' aria-invalid="true" aria-errormessage="shorturl-err" ' : '') . '>';
         $form .= '<input type="submit" id="generate" name="generate" value="' . __('Shorten', 'rrze-shorturl') . '">';
         $form .= '<input type="hidden" name="link_id" value="' . (!empty($result['link_id']) ? $result['link_id'] : '') . '">';
