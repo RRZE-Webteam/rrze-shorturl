@@ -72,7 +72,7 @@
 }
 
 .shorturl-error-msg {
-    color: 'red';
+    color: red;
 }
 
 .shorturl-copy-img,
@@ -89,6 +89,7 @@
     padding: 5px;
     border-radius: 6px;
     display: none;
+    margin-top: 10px;
 }
 
 .shorturl-tooltip::after {
@@ -102,53 +103,21 @@
     border-color: transparent black transparent transparent;
 }
 
-[popover] {
-    font-weight: 400;
-    padding: 1rem 1.5rem;
-    border-radius: 0.5rem;
-    line-height: 1.4;
-    top: 2rem;
-    margin: 0 auto;
-    border: 1px solid #000;
-}
-
-/*   IS-OPEN STATE   */
-[popover]:popover-open {
-    translate: 0 0;
-}
-
-/*   EXIT STATE   */
-[popover] {
-    transition: translate 0.7s ease-out, display 0.7s ease-out allow-discrete;
-    translate: 0 -22rem;
-}
-
-/*  BEFORE-OPEN STATE   */
-@starting-style {
-    [popover]:popover-open {
-        translate: 0 -22rem;
-    }
-}
-
-[aria-invalid="true"] {
-    outline: 2px solid var(--color-Negative, #a71c18);
-}
-  
-[aria-invalid="true"] ~ .errormessage {
-    visibility: visible;
-}
-
 .rrze-shorturl {
     width: 60ch;
     max-width: 100%;
     margin: 0 auto;
     form#shorturl-form {
         display: block;
+        position: relative;
         padding: var(--width-gutter-half, 15px);
         border: 1px solid var(--color-ContentBorders, #dfe6ec);
         box-shadow: 0 3px 12px 0 #ebebeb;
         label {
             display: block;
+        }
+        .label {
+            font-weight: bold;
         }
         input#url {
             display: block;
@@ -156,19 +125,55 @@
             margin-bottom: 0;
         }
         input[type=submit] {
-            margin-top: .5em;
+            margin-top: 1em;
+            margin-bottom: 3px;
         }
-        button#btn-show-advanced-settings {
-            background: transparent;
-            color: var(--color-content-links, #222);
-            text-decoration: underline;
-            padding: 0;
+        [aria-invalid="true"] {
+            outline: 2px solid var(--color-Negative, #a71c18);
+        }
+        [aria-invalid="true"] ~ .errormessage {
+            visibility: visible;
+        }
+        button {
             cursor: pointer;
         }
-        .rrze-shorturl-result {}
+        button#btn-show-advanced-settings {
+            border: 1px solid var(--color-ContentBorders, #dfe6ec);
+            border-radius: var(--border-radius-buttons, 3px);
+            box-shadow: none;
+            background: #fff;
+            color: var(--color-Text, #222);
+            cursor: pointer;
+            @media (min-width: 320px) {
+                position: absolute;
+                right: 15px;
+                top: 8.5em;
+            }
+            &:hover, &:focus, &:active {
+                background: var(--color-ghostbutton-hover-bg, #04316a);
+                color: var(--color-ghostbutton-hover-text, #fff);
+            }
+        }
+        .rrze-shorturl-result {
+            margin-top: 1em;
+            button.btn {
+                margin-left: 1em;
+                background: #0000;
+                border: 1px solid var(--color-ContentBorders, #dfe6ec);
+                border-radius: var(--border-radius-buttons, 3px);
+                box-shadow: none;
+                color: var(--color-Text, #222);
+                display: inline-block;
+                font-size: .938rem;
+                font-weight: 400;
+                padding: 10px 18px;
+                &:hover, &:focus, &:active {
+                    background: var(--color-StandardHellgrau, #e9edf2);
+                }
+            }
+        }
         .shorturl-errormessage {
             padding: 10px;
-            margin-bottom: 20px;
             border: 1px solid #ebccd1;
             font-weight: normal;
             overflow: hidden;
@@ -178,6 +183,31 @@
         button img {
             box-shadow: none;
         }
+    }
+    [popover] {
+        padding: var(--width-gutter-half, 15px);
+        border: 1px solid var(--color-ContentBorders, #dfe6ec);
+        box-shadow: 0 3px 12px 0 #000000aa;
+        width: min(95%, 400px);
+        &::backdrop {
+            background-color: var(--color-overlay-dark, #00000026);
+            backdrop-filter: blur(3px);
+        }
+        -webkit-animation: fade-in .3s linear 1;
+        -moz-animation: fade-in .3s linear 1;
+        -ms-animation: fade-in .3s linear 1;
+    }
+    @-webkit-keyframes fade-in {
+        from   { opacity: 0; }
+        to { opacity: 1; }
+    }
+    @-moz-keyframes fade-in {
+        from   { opacity: 0; }
+        to { opacity: 1; }
+    }
+    @-ms-keyframes fade-in {
+        from   { opacity: 0; }
+        to { opacity: 1; }
     }
 }
 
