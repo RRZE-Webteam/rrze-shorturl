@@ -921,8 +921,8 @@ class Shortcode
 
             // Output table row
             $table .= '<tr>';
-            $table .= '<td class="column-long-url">' . $row['long_url'] . '</td>';
-            $table .= '<td class="column-short-url">' . $row['short_url'] . '</td>';
+            $table .= '<td class="column-long-url"><a href="' . $row['long_url'] . '">' . $row['long_url'] . '</a></td>';
+            $table .= '<td class="column-short-url"><a href="' . $row['short_url'] . '+">' . $row['short_url'] . '</a></td>';
             $table .= '<td class="column-uri">' . $row['uri'] . '</td>';
             $table .= '<td class="column-valid-until">' . $row['valid_until'] . '</td>';
             $table .= '<td class="column-categories">' . $category_names_str . '</td>';
