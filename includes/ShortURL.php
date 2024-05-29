@@ -224,10 +224,10 @@ class ShortURL
     {
         try {
             $aRet = [
-                'id' => 0, 
-                'prefix' => 0, 
-                'hostname' => '', 
-                'notice' => __('Domain is not allowed to use our shortening service.', 'rrze-shorturl'), 
+                'id' => 0,
+                'prefix' => 0,
+                'hostname' => '',
+                'notice' => __('Domain is not allowed to use our shortening service.', 'rrze-shorturl'),
                 'message_type' => 'error'
             ];
 
@@ -238,7 +238,7 @@ class ShortURL
                 $aRet['message_type'] = 'error';
                 return $aRet;
             }
-            
+
             $shortURL = '';
 
             // Check if domain is a service
@@ -247,13 +247,13 @@ class ShortURL
 
                     if (preg_match('/(\d+)(?!.*\d)/', $long_url, $matches)) {
                         $id = $matches[1];
-    
+
                         $myCrypt = new MyCrypt();
                         $encrypted = $myCrypt->encrypt($id);
 
                         $shortURL = self::$CONFIG['ShortURLBase'] . '/' . $item["prefix"] . $encrypted;
-            
-                    }    
+
+                    }
 
                     $aRet['notice'] = __('You\'ve tried to shorten a service domain. Services will automatically be shortened and redirected.', 'rrze-shorturl');
                     $aRet['notice'] .= ($shortURL ? '<br>' . __('Short URL', 'rrze-shorturl') . ': ' . $shortURL : '');
@@ -267,9 +267,9 @@ class ShortURL
             foreach (self::$CONFIG['AllowedDomains'] as $aEntry) {
                 if ($domain === $aEntry['hostname']) {
                     $aRet = [
-                        'id' => $aEntry['id'], 
-                        'prefix' => ($aEntry['active'] ? $aEntry['prefix'] : 0), 
-                        'hostname' => $aEntry['hostname'], 
+                        'id' => $aEntry['id'],
+                        'prefix' => ($aEntry['active'] ? $aEntry['prefix'] : 0),
+                        'hostname' => $aEntry['hostname'],
                         'notice' => $aEntry['notice'],
                         'message_type' => 'standard'
                     ];
@@ -343,10 +343,10 @@ class ShortURL
         // Calculate maxDate (default => 1 year from now; long_life_links_allowed => 5 years from now)
         $maxDate = clone $current_date;
 
-        if (self::$rights['longlifelinks_allowed']){
+        if (self::$rights['longlifelinks_allowed']) {
             $maxDate->add(new \DateInterval('P5Y'));
             $msg = __('five years', 'rrze-shorturl');
-        }else{
+        } else {
             $maxDate->add(new \DateInterval('P1Y'));
             $msg = __('one year', 'rrze-shorturl');
         }
@@ -369,7 +369,7 @@ class ShortURL
 
         if (!isset($parsed_url['scheme'])) {
             $parsed_url['scheme'] = 'https';
-        }        
+        }
 
         foreach ($components as $component) {
             if (isset($parsed_url[$component])) {
@@ -419,73 +419,80 @@ class ShortURL
         return self::countShortenings() >= self::$CONFIG['maxShortening'];
     }
 
-    private static function isShortURL($url){
+    private static function isShortURL($url)
+    {
         return (strpos($url, self::$CONFIG['ShortURLBase']) === 0);
     }
 
-    private static function getLongURLToService($code){
+    private static function getLongURLToService($code)
+    {
         preg_match('/^(\d+)(.*)/', $code, $matches);
-        
-        if (empty($matches[1]) || empty($matches[2])){
+
+        if (empty($matches[1]) || empty($matches[2])) {
             // there is no prefix 
             return '';
-        }else{
+        } else {
             $prefix = $matches[1];
             $encrypted = $matches[2];
-    
+
             foreach (self::$CONFIG['Services'] as $service) {
                 if ($service['prefix'] === $prefix) {
                     if (!empty($service['regex'])) {
 
                         $myCrypt = new MyCrypt();
                         $decrypted = $myCrypt->decrypt($encrypted);
-    
+
                         return preg_replace('/\$\w+/', $decrypted, $service['regex']);
                     }
                 }
             }
         }
-    
+
         // couldn't find the service or regex to found service is empty
         return '';
     }
-    
+
     public static function shorten($shortenParams)
     {
         try {
             // check if maximum shortenings is reached
             if (self::maxShorteningReached()) {
                 return [
-                    'error' => true, 
-                    'message_type' => 'notice', 
-                    'txt' => sprintf(__('You cannot shorten more than %s links per hour', 'rrze-shorturl'), 
-                    self::$CONFIG['maxShortening'])
+                    'error' => true,
+                    'message_type' => 'notice',
+                    'txt' => sprintf(
+                        __('You cannot shorten more than %s links per hour', 'rrze-shorturl'),
+                        self::$CONFIG['maxShortening']
+                    )
                 ];
             }
 
             $long_url = $shortenParams['url'] ?? null;
+            $uri = self::$rights['uri_allowed'] ? sanitize_text_field($_POST['uri'] ?? '') : '';
 
             // Check if this is the shortened URL
-            if (self::isShortURL($long_url)){
+            if (self::isShortURL($long_url)) {
                 $code = basename($long_url, "+"); // "+" => perhaps someone tries to shorten a preview link
                 $true_long_url = ShortURL::getLongURL($code);
 
-                if (!$true_long_url){
+                if (!$true_long_url) {
                     // is it a service url?
                     $true_long_url = self::getLongURLToService($code);
                 }
 
-                if ($true_long_url){
+                if ($true_long_url) {
                     return [
-                        'error' => true, 
-                        'message_type' => 'notice', 
-                        'txt' => __('You cannot shorten a link to our shortening service. This is the long URL:') . " $true_long_url", 'long_url' => $long_url
+                        'error' => true,
+                        'message_type' => 'notice',
+                        'txt' => __('You cannot shorten a link to our shortening service. This is the long URL:') . " $true_long_url",
+                        'long_url' => $long_url
                     ];
-                }else{
+                } else {
                     return [
-                        'error' => true, 
-                        'message_type' => 'error', 
-                        'txt' => __('You cannot shorten a link to our shortening service. The link you\'ve provided is unknown.'), 'long_url' => $long_url
+                        'error' => true,
+                        'message_type' => 'error',
+                        'txt' => __('You cannot shorten a link to our shortening service. The link you\'ve provided is unknown.'),
+                        'long_url' => $long_url
                     ];
                 }
             }
@@ -496,16 +503,40 @@ class ShortURL
             // Is it an allowed domain?
             $aDomain = self::checkDomain($long_url);
 
-            if ($aDomain['prefix'] == 0) {
+            // Validate the URI
+            $isValidURI = false;
+            if (self::$rights['uri_allowed']) {
+                $isValidURI = self::isValidURI($uri);
+
+                if ($isValidURI !== true) {
+                    return [
+                        'error' => true,
+                        'message_type' => 'error',
+                        'txt' => $long_url . __('is not a valid URI', 'rrze-shorturl'),
+                        'long_url' => $long_url
+                    ];
+                }
+
+                if (!self::isUniqueURI($uri)) {
+                    return [
+                        'error' => true,
+                        'message_type' => 'error',
+                        'txt' => $uri . ' ' . __('is already in use. Try another one.', 'rrze-shorturl'),
+                        'long_url' => $long_url
+                    ];
+                }
+            }
+
+            if ($aDomain['prefix'] == 0 && !$isValidURI) {
+                // since 1.4.10 we offer Custom URI for Services, too. Before: only for Custom Links
                 return [
                     'error' => true,
                     'message_type' => $aDomain['message_type'],
-                    'txt' => $aDomain['notice'], 
+                    'txt' => $aDomain['notice'],
                     'long_url' => $long_url
                 ];
             }
 
-            $uri = self::$rights['uri_allowed'] ? sanitize_text_field($_POST['uri'] ?? '') : '';
             $valid_until = isset($shortenParams['valid_until']) && $shortenParams['valid_until'] !== '' ? $shortenParams['valid_until'] : date('Y-m-d', strtotime('+1 year'));
             $categories = $shortenParams['categories'] ?? [];
             // $tags = $shortenParams['tags'] ?? [];
@@ -514,9 +545,9 @@ class ShortURL
             $isValid = self::isValidDate($valid_until);
             if ($isValid['error'] !== false) {
                 return [
-                    'error' => true, 
+                    'error' => true,
                     'message_type' => 'error',
-                    'txt' => $isValid['txt'], 
+                    'txt' => $isValid['txt'],
                     'long_url' => $long_url
                 ];
             }
@@ -525,24 +556,11 @@ class ShortURL
             $isValid = self::isValidUrl($long_url);
             if ($isValid !== true) {
                 return [
-                    'error' => true, 
+                    'error' => true,
                     'message_type' => 'error',
-                    'txt' => $long_url . __('is not a valid URL', 'rrze-shorturl'), 
+                    'txt' => $long_url . __('is not a valid URL', 'rrze-shorturl'),
                     'long_url' => $long_url
                 ];
-            }
-
-            // Validate the URI
-            if (self::$rights['uri_allowed']) {
-                $isValid = self::isValidURI($uri);
-                if ($isValid !== true) {
-                    return [
-                        'error' => true, 
-                        'message_type' => 'error',
-                        'txt' => $long_url . __('is not a valid URI', 'rrze-shorturl'), 
-                        'long_url' => $long_url
-                    ];
-                }
             }
 
             // Fetch or insert on new
@@ -550,14 +568,6 @@ class ShortURL
 
             // Create shortURL
             if (!empty($uri)) {
-                if (!self::isUniqueURI($uri)) {
-                    return [
-                        'error' => true, 
-                        'message_type' => 'error',
-                        'txt' => $uri . ' ' . __('is already in use. Try another one.', 'rrze-shorturl'),
-                        'long_url' => $long_url
-                    ];
-                }
                 $targetURL = $uri;
             } else {
                 // Create shortURL
@@ -576,20 +586,21 @@ class ShortURL
 
             if ($bUpdated === false) {
                 return [
-                    'error' => true, 
+                    'error' => true,
                     'message_type' => 'error',
-                    'txt' => __('Unable to update database table', 'rrze-shorturl'), 
-                    'long_url' => $long_url];
+                    'txt' => __('Unable to update database table', 'rrze-shorturl'),
+                    'long_url' => $long_url
+                ];
             }
 
             $valid_until_formatted = date_format(date_create($valid_until), 'd.m.Y');
 
             return [
-                'error' => false, 
+                'error' => false,
                 'message_type' => 'standard',
-                'txt' => $shortURL, 
-                'link_id' => $aLink['id'], 
-                'long_url' => $long_url, 
+                'txt' => $shortURL,
+                'link_id' => $aLink['id'],
+                'long_url' => $long_url,
                 'valid_until_formatted' => $valid_until_formatted
             ];
         } catch (\Exception $e) {
@@ -622,7 +633,7 @@ class ShortURL
 
         try {
             $result = $wpdb->get_var($wpdb->prepare("SELECT long_url FROM {$wpdb->prefix}shorturl_links WHERE short_url = %s LIMIT 1", $short_url));
-            
+
             return $result;
         } catch (Exception $e) {
             error_log("Error fetching long_url by short_url: " . $e->getMessage());
