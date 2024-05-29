@@ -71,8 +71,11 @@
     background-color: white;
 }
 
-.shorturl-error-msg {
+.shorturl-msg-error {
     color: red;
+}
+.shorturl-msg-notice {
+    color: orange;
 }
 
 .shorturl-copy-img,
