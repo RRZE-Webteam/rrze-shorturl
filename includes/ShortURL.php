@@ -232,6 +232,13 @@ class ShortURL
             ];
 
             $domain = wp_parse_url($long_url, PHP_URL_HOST);
+
+            if (!$domain) {
+                $aRet['error'] = __('The provided URL is not a valid domain.', 'rrze-shorturl');
+                $aRet['message_type'] = 'error';
+                return $aRet;
+            }
+            
             $shortURL = '';
 
             // Check if domain is a service
@@ -448,7 +455,12 @@ class ShortURL
         try {
             // check if maximum shortenings is reached
             if (self::maxShorteningReached()) {
-                return ['error' => true, 'txt' => sprintf(__('You cannot shorten more than %s links per hour', 'rrze-shorturl'), self::$CONFIG['maxShortening'])];
+                return [
+                    'error' => true, 
+                    'message_type' => 'notice', 
+                    'txt' => sprintf(__('You cannot shorten more than %s links per hour', 'rrze-shorturl'), 
+                    self::$CONFIG['maxShortening'])
+                ];
             }
 
             $long_url = $shortenParams['url'] ?? null;
