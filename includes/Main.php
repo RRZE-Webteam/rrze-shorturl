@@ -90,8 +90,8 @@ class Main
         wp_enqueue_script('select2', plugins_url('assets/js/select2.min.js', plugin_basename($this->pluginFile)), array('jquery'), null, true);
         wp_enqueue_style('select2', plugins_url('assets/css/select2.min.css', plugin_basename($this->pluginFile)));
 
-        // wp_enqueue_style('rrze-shorturl-css', plugins_url('assets/css/rrze-shorturl.min.css', plugin_basename($this->pluginFile)));
-        wp_enqueue_style('rrze-shorturl-css', plugins_url('src/rrze-shorturl.css', plugin_basename($this->pluginFile)));
+        wp_enqueue_style('rrze-shorturl-css', plugins_url('assets/css/rrze-shorturl.css', plugin_basename($this->pluginFile)));
+        //wp_enqueue_style('rrze-shorturl-css', plugins_url('src/rrze-shorturl.css', plugin_basename($this->pluginFile)));
     }
 
 

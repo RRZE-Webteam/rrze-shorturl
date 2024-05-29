@@ -636,7 +636,7 @@ class Shortcode
                 $result = ShortURL::shorten($aParams);
 
                 if ($result['error']){
-                    $result_message = 'Error: ' . $result['txt'];
+                    $result_message = $result['txt'];
                 }else{
                     $result_message = '<span class="shorturl-shortened-msg">' . __('Short URL', 'rrze-shorturl') . ': <code>' . $result['txt'] . '</code></span>';
                     $result_message .= '&nbsp;&nbsp;<button type="button" class="btn" id="copyButton" name="copyButton" data-shortened-url="' . $result['txt'] . '"><img class="shorturl-copy-img" src="data:image/svg+xml,%3Csvg height=\'1024\' width=\'896\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M128 768h256v64H128v-64z m320-384H128v64h320v-64z m128 192V448L384 640l192 192V704h320V576H576z m-288-64H128v64h160v-64zM128 704h160v-64H128v64z m576 64h64v128c-1 18-7 33-19 45s-27 18-45 19H64c-35 0-64-29-64-64V192c0-35 29-64 64-64h192C256 57 313 0 384 0s128 57 128 128h192c35 0 64 29 64 64v320h-64V320H64v576h640V768zM128 256h512c0-35-29-64-64-64h-64c-35 0-64-29-64-64s-29-64-64-64-64 29-64 64-29 64-64 64h-64c-35 0-64 29-64 64z\' fill=\'%23FFFFFF\' /%3E%3C/svg%3E" alt="' . __('Copy to clipboard', 'rrze-shorturl') . '"></button>&nbsp;&nbsp;<span id="shorturl-tooltip" class="shorturl-tooltip">' . __('Copied to clipboard', 'rrze-shorturl') . '</span>';
@@ -669,8 +669,9 @@ class Shortcode
         $form .= '<button id="btn-show-advanced-settings" type="button" popovertarget="shorturl-advanced-settings">' . __('Advanced Settings', 'rrze-shorturl') . '</button>';
 
         // Display result message
-        $form .= '<div class="rrze-shorturl-result"><p' . (!empty($result['error']) ? ' id="shorturl-err" class="shorturl-errormessage" ' : '') . '>' . $result_message;
-        $form .= '</p>';
+        // notice or error msg
+        $form .= '<div class="rrze-shorturl-result"><p' . (!empty($result['error']) ? ' id="shorturl-err" class="shorturl-msg-' . $result['message_type'] . '"' : '') . '>' . $result_message . '</p>';
+
         if (!empty($result) && !$result['error']) {
             $form .= '<input id="shortened_url" name="shortened_url" type="hidden" value="' . $result['txt'] . '">';
             $form .= '<div id="qr-container"><canvas id="qr"></canvas><button type="button" class="btn" id="downloadButton" name="downloadButton"><img class="shorturl-download-img" src="data:image/svg+xml,%3Csvg width=\'512\' height=\'512\' viewBox=\'0 0 512 512\' xmlns=\'http://www.w3.org/2000/svg\' fill=\'%23FFFFFF\'%3E%3Cpath d=\'M376.3 304.3l-71.4 71.4V48c0-8.8-7.2-16-16-16h-48c-8.8 0-16 7.2-16 16v327.6l-71.4-71.4c-6.2-6.2-16.4-6.2-22.6 0l-22.6 22.6c-6.2 6.2-6.2 16.4 0 22.6l128 128c6.2 6.2 16.4 6.2 22.6 0l128-128c6.2-6.2 6.2-16.4 0-22.6l-22.6-22.6c-6.2-6.2-16.4-6.2-22.6 0zM464 448H48c-8.8 0-16 7.2-16 16v32c0 8.8 7.2 16 16 16h416c8.8 0 16-7.2 16-16v-32c0-8.8-7.2-16-16-16z\'/%3E%3C/svg%3E" alt="' . __('Download QR', 'rrze-shorturl') . '"></button></div>';
@@ -920,8 +921,8 @@ class Shortcode
 
             // Output table row
             $table .= '<tr>';
-            $table .= '<td class="column-long-url">' . $row['long_url'] . '</td>';
-            $table .= '<td class="column-short-url">' . $row['short_url'] . '</td>';
+            $table .= '<td class="column-long-url"><a href="' . $row['long_url'] . '">' . $row['long_url'] . '</a></td>';
+            $table .= '<td class="column-short-url"><a href="' . $row['short_url'] . '+">' . $row['short_url'] . '</a></td>';
             $table .= '<td class="column-uri">' . $row['uri'] . '</td>';
             $table .= '<td class="column-valid-until">' . $row['valid_until'] . '</td>';
             $table .= '<td class="column-categories">' . $category_names_str . '</td>';

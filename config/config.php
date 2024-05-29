@@ -215,7 +215,7 @@ function create_custom_tables()
             [
                 'hostname' => 'fau.zoom-x.de',
                 'prefix' => 2,
-                'regex' => ''
+                'regex' => 'https://fau.zoom-x.de/j/$nr'
             ],
             [
                 'hostname' => 'www.fau.tv',
