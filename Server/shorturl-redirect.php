@@ -77,15 +77,15 @@ class ShortURLRedirect
                 throw new Exception("Failed to fetch from the REST API endpoint get-longurl.");
             }
 
-            $long_url = json_decode($response, true);
+            $JSONresponse = json_decode($response, true);
 
-            if (!empty($long_url)) {
+            if (!empty($JSONresponse['long_url'])) {
                 if ($preview){
                     $short_url = $this->shorturl_domain . '/' . $code;
-                    $this->showPreview($short_url, $long_url);
+                    $this->showPreview($short_url, $JSONresponse['long_url']);
                 }else{
                     $this->updateHtaccess();    
-                    header('Location: ' . $long_url, true, 303);
+                    header('Location: ' . $JSONresponse['long_url'], true, 303);
                 }
             } else {
                 $this->send404Response("Unknown link");
