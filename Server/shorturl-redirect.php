@@ -45,16 +45,24 @@ class ShortURLRedirect
 
     public function handleRequest(): void
     {
-        $code = (!empty($_GET["code"]) ? htmlspecialchars($_GET["code"]) : '');
+        // Log all server and incoming parameters
+        error_log('Incoming SERVER parameters: ' . print_r($_SERVER, true));
+        error_log('Incoming GET parameters: ' . print_r($_GET, true));
+
+        // Sanitize and retrieve parameters
+        $code = (!empty($_GET["shorturlcode"]) ? htmlspecialchars($_GET["shorturlcode"]) : '');
         $prefix = (!empty($_GET["prefix"]) ? (int) htmlspecialchars($_GET["prefix"]) : 0);
         $preview = (!empty($_GET["preview"]) ? (int) htmlspecialchars($_GET["preview"]) : 0);
 
-        if ($prefix == 0) {
-            $this->send404Response("Unknown service with prefix $prefix");
-        } elseif (empty($code)) {
+        // Log the extracted parameters
+        error_log("Extracted parameters - code: $code, prefix: $prefix, preview: $preview");
+
+        if (empty($code)) {
             $this->send404Response("Unknown link. No code given.");
-        } elseif ($prefix == 1) { 
-            $short_url = $prefix . $code;
+        } elseif ($prefix < 2) {
+            $short_url = ($prefix == 1 ? $prefix . $code : $code);
+            error_log('handleRequest() $short_url = ' . $short_url);
+
             $this->handleCustomerLink($short_url, $preview);
         } else {
             $this->handleServiceLink($code, $prefix, $preview);
@@ -72,20 +80,37 @@ class ShortURLRedirect
     {
 
         try {
-            $response = $this->fetchUrl($this->shorturl_domain . "/wp-json/wp/v2/shorturl/get-longurl?code=" . $code);
+            $url = $this->shorturl_domain . "/wp-json/wp/v2/shorturl/get-longurl?code=" . $code;
+            $response = $this->fetchUrl($url);
+
+            error_log('handleCustomerLink() $url = ' . $url);
+
             if ($response === false) {
                 throw new Exception("Failed to fetch from the REST API endpoint get-longurl.");
             }
 
             $JSONresponse = json_decode($response, true);
 
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new Exception("JSON decoding error: " . json_last_error_msg());
+            }
+
+            // Log the API response for debugging
+            error_log(print_r($JSONresponse, true));
+
             if (!empty($JSONresponse['long_url'])) {
-                if ($preview){
+                $longUrl = $JSONresponse['long_url'];
+
+                // Log the long URL for debugging
+                error_log("Long URL: " . $longUrl);
+
+                if ($preview) {
                     $short_url = $this->shorturl_domain . '/' . $code;
-                    $this->showPreview($short_url, $JSONresponse['long_url']);
-                }else{
-                    $this->updateHtaccess();    
-                    header('Location: ' . $JSONresponse['long_url'], true, 303);
+                    $this->showPreview($short_url, $longUrl);
+                } else {
+                    $this->updateHtaccess();
+                    header('Location: ' . $longUrl, true, 303);
+                    exit;
                 }
             } else {
                 $this->send404Response("Unknown link");
@@ -100,12 +125,12 @@ class ShortURLRedirect
         $service_link = $this->getServiceRegEx($prefix);
         $decrypted = $this->getDecrypted($code);
         $long_url = preg_replace('/\$\w+/', $decrypted, $service_link);
-        if ($preview){
+        if ($preview) {
             $short_url = $this->shorturl_domain . '/' . $prefix . $code;
             $this->showPreview($short_url, $long_url);
-        }else{
+        } else {
             header('Location: ' . $long_url, true, 303);
-            exit;    
+            exit;
         }
     }
 
@@ -128,7 +153,7 @@ class ShortURLRedirect
         </body>
         </html>';
     }
-    
+
     private function fetchUrl(string $url): string
     {
         $ch = curl_init($url);
@@ -145,8 +170,8 @@ class ShortURLRedirect
 
     private function getRegexFromServiceArray(int &$prefix, array &$aServices): string
     {
-        foreach ($aServices as $service){
-            if ($service['prefix'] == $prefix){
+        foreach ($aServices as $service) {
+            if ($service['prefix'] == $prefix) {
                 return $service['regex'];
             }
         }
@@ -163,7 +188,7 @@ class ShortURLRedirect
             if (isset($_SESSION['rrze-shorturl-services'])) {
                 $aServices = json_decode($_SESSION['rrze-shorturl-services'], true);
 
-                if (!is_array($aServices)){
+                if (!is_array($aServices)) {
                     throw new Exception('$aServices must be an array');
                 }
 
@@ -185,10 +210,10 @@ class ShortURLRedirect
                 $_SESSION['rrze-shorturl-services'] = $response;
                 $aServices = json_decode($response, true);
 
-                if (!is_array($aServices)){
+                if (!is_array($aServices)) {
                     throw new Exception('$aServices must be an array');
                 }
-                
+
                 $regEx = $this->getRegexFromServiceArray($prefix, $aServices);
 
                 if (!empty($regEx)) {
@@ -203,7 +228,7 @@ class ShortURLRedirect
                 $_SESSION['rrze-shorturl-services'] = $response;
                 $aServices = json_decode($response, true);
 
-                if (!is_array($aServices)){
+                if (!is_array($aServices)) {
                     throw new Exception('$aServices must be an array');
                 }
 
@@ -237,10 +262,10 @@ class ShortURLRedirect
         if (!preg_match('/^[-a-z0-9]+$/i', $code)) {
             throw new InvalidArgumentException("Invalid code: $code");
         }
-    
+
         $result = '0';
         $len = strlen($code) - 1;
-    
+
         for ($t = 0; $t <= $len; $t++) {
             $char = substr($code, $t, 1);
             $pos = strpos($this->baseChars, $char);
@@ -248,10 +273,10 @@ class ShortURLRedirect
             $value = bcmul($pos, $power);
             $result = bcadd($result, $value);
         }
-    
-        return (int)$result;
+
+        return (int) $result;
     }
-    
+
     private function get_rules()
     {
         $ret = '';
@@ -263,7 +288,7 @@ class ShortURLRedirect
                 throw new Exception("Failed to decode JSON response.");
             }
 
-            if (!is_array($short_urls)){
+            if (!is_array($short_urls)) {
                 throw new Exception("active-shorturls didn't send an array");
             }
 
@@ -286,33 +311,41 @@ class ShortURLRedirect
 
     }
 
-
     private function updateHtaccess(): void
     {
         error_log("we are about to write the .htaccess");
-
 
         $new_rules = $this->get_rules();
 
         if (!empty($new_rules)) {
             $rules = "RewriteEngine On\n";
             $rules .= "RewriteBase /\n";
-            // first rule: redirect all paths that start with a number and end with "+" to shorturl-redirect.php with preview = 1
-            $rules .= "RewriteRule ^([0-9]+)(.*)\+$ shorturl-redirect.php?prefix=$1&code=$2&preview=1 [L]\n";
-            // second rule: redirect all paths that start with a number but not 1 to shorturl-redirect.php (1 == customer domain) 
-            $rules .= "RewriteRule ^([2-9][0-9]*)(.*)$ shorturl-redirect.php?prefix=$1&code=$2 [L]\n";
-            // list of customer rules
+            // Debugging rules
+            $rules .= "RewriteCond %{REQUEST_URI} .\n";
+            $rules .= "RewriteRule ^ - [E=DEBUG_LOG:%{REQUEST_URI}]\n";
+            $rules .= "RewriteCond %{QUERY_STRING} .\n";
+            $rules .= "RewriteRule ^ - [E=DEBUG_LOG:%{QUERY_STRING}]\n";
+            // First rule: redirect all paths that start with a number and end with "+" to shorturl-redirect.php with preview = 1
+            $rules .= "RewriteRule ^([0-9]+)(.*)\\+$ shorturl-redirect.php?prefix=\$1&shorturlcode=\$2&preview=1 [L]\n";
+            // Second rule: redirect all paths that start with a number but not 1 to shorturl-redirect.php (1 == customer domain)
+            $rules .= "RewriteRule ^([2-9][0-9]*)(.*)$ shorturl-redirect.php?prefix=\$1&shorturlcode=\$2 [L]\n";
+            // List of customer rules
             $rules .= $new_rules;
-            // last two rule: redirect shorturl-redirect.php to find out if new customer rule or unknown link
-            $rules .= "RewriteRule ^1(.+)$ shorturl-redirect.php?prefix=1&code=$1 [L]\n";
-            $rules .= "RewriteRule ^(.+)$ shorturl-redirect.php?prefix=1&code=$1 [L]\n";
+            // Next-to-last rule: redirect shorturl-redirect.php to find out if new customer rule (not custom URI)
+            $rules .= "RewriteRule ^1(.+)$ shorturl-redirect.php?prefix=1&shorturlcode=\$1 [L]\n";
+            // Last rule: redirect shorturl-redirect.php to find out if new customer rule with custom URI or unknown link
+            // Check if $1 is not equal to "shorturl-redirect.php"
+            $rules .= "RewriteCond %{REQUEST_URI} !^/shorturl-redirect\.php$\n";
+            $rules .= "RewriteCond %{THE_REQUEST} !shorturl-redirect\.php [NC]\n";
+            // Redirect to shorturl-redirect.php with prefix=0 and code=$1
+            $rules .= "RewriteRule ^(.+)$ shorturl-redirect.php?prefix=0&shorturlcode=\$1 [L]\n";
 
             // Read .htaccess content
             $htaccess_content = file_get_contents($this->htaccess_file);
             if ($htaccess_content === false) {
                 throw new Exception("Failed to read .htaccess file.");
             }
-        
+
             // Delete existing rules between markers
             $marker_start = "# ShortURL BEGIN\n";
             $marker_end = "# ShortURL END\n";
@@ -338,6 +371,7 @@ class ShortURLRedirect
             }
         }
     }
+
 }
 
 // Instantiate and execute the class
