@@ -9,7 +9,13 @@ $htaccess_file = '.htaccess';
 try {
     $rules = "RewriteEngine On\n";
     $rules .= "RewriteBase /\n";
-    $rules .= "RewriteRule ^([0-9]+)(.*)$ shorturl-redirect.php?prefix=$1&code=$2 [L]\n";
+    // first rule: redirect all paths that start with a number and end with "+" to shorturl-redirect.php with preview = 1
+    $rules .= "RewriteRule ^([0-9]+)(.*)\+$ shorturl-redirect.php?prefix=$1&code=$2&preview=1 [L]\n";
+    // second rule: redirect all paths that start with a number but not 1 to shorturl-redirect.php (1 == customer domain) 
+    $rules .= "RewriteRule ^([2-9][0-9]*)(.*)$ shorturl-redirect.php?prefix=$1&code=$2 [L]\n";
+    // last two rule: redirect shorturl-redirect.php to find out if new customer rule or unknown link
+    $rules .= "RewriteRule ^1(.+)$ shorturl-redirect.php?prefix=1&code=$1 [L]\n";
+    $rules .= "RewriteRule ^(.+)$ shorturl-redirect.php?prefix=1&code=$1 [L]\n";
 
     // Check if .htaccess file exists
     if (!file_exists($htaccess_file)) {

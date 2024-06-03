@@ -11,6 +11,7 @@ class API
 
     public function __construct()
     {
+        flush_rewrite_rules();
         add_action('rest_api_init', array($this, 'register_rest_endpoints'));
 
         $rightsObj = new Rights();
@@ -304,7 +305,7 @@ class API
 
             $long_url = ShortURL::getLongURL($code);
 
-            return new WP_REST_Response($long_url, 200);
+            return new WP_REST_Response(['long_url' => $long_url], 200);
         } catch (\Exception $e) {
             return new WP_REST_Response(array('error' => 'callback_error', 'message' => __('Error processing request.', 'rrze-shorturl')), 500);
         }
