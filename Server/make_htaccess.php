@@ -10,8 +10,8 @@ try {
     $rules .= "RewriteRule ^ - [E=DEBUG_LOG:%{REQUEST_URI}]\n";
     $rules .= "RewriteCond %{QUERY_STRING} .\n";
     $rules .= "RewriteRule ^ - [E=DEBUG_LOG:%{QUERY_STRING}]\n";
-    // First rule: redirect all paths that start with a number and end with "+" to shorturl-redirect.php with preview = 1
-    $rules .= "RewriteRule ^([0-9]+)(.*)\\+$ shorturl-redirect.php?prefix=\$1&code=\$2&preview=1 [L]\n";
+    // First rule: redirect all paths that start with a number or not (not = a customer URI) and end with "+" to shorturl-redirect.php with preview = 1
+    $rules .= "RewriteRule ^([0-9]*)?(.*)\\+$ shorturl-redirect.php?prefix=\$1&code=\$2&preview=1 [L]\n";
     // Second rule: redirect all paths that start with a number but not 1 to shorturl-redirect.php (1 == customer domain)
     $rules .= "RewriteRule ^([2-9][0-9]*)(.*)$ shorturl-redirect.php?prefix=\$1&code=\$2 [L]\n";
     // Next-to-last rule: redirect shorturl-redirect.php to find out if new customer rule (not custom URI)
