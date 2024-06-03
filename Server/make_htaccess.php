@@ -1,21 +1,27 @@
 <?php
 
-# Run make_htaccess.php one time
-# It generates one rule: redirect all URL with path starting with a number to shorturl-redirect.php
-# shorturl-redirect.php handles all redirects and updates .htaccess if needed
-
 $htaccess_file = '.htaccess';
 
 try {
     $rules = "RewriteEngine On\n";
     $rules .= "RewriteBase /\n";
-    // first rule: redirect all paths that start with a number and end with "+" to shorturl-redirect.php with preview = 1
-    $rules .= "RewriteRule ^([0-9]+)(.*)\+$ shorturl-redirect.php?prefix=$1&code=$2&preview=1 [L]\n";
-    // second rule: redirect all paths that start with a number but not 1 to shorturl-redirect.php (1 == customer domain) 
-    $rules .= "RewriteRule ^([2-9][0-9]*)(.*)$ shorturl-redirect.php?prefix=$1&code=$2 [L]\n";
-    // last two rule: redirect shorturl-redirect.php to find out if new customer rule or unknown link
-    $rules .= "RewriteRule ^1(.+)$ shorturl-redirect.php?prefix=1&code=$1 [L]\n";
-    $rules .= "RewriteRule ^(.+)$ shorturl-redirect.php?prefix=1&code=$1 [L]\n";
+    // Debugging rules
+    $rules .= "RewriteCond %{REQUEST_URI} .\n";
+    $rules .= "RewriteRule ^ - [E=DEBUG_LOG:%{REQUEST_URI}]\n";
+    $rules .= "RewriteCond %{QUERY_STRING} .\n";
+    $rules .= "RewriteRule ^ - [E=DEBUG_LOG:%{QUERY_STRING}]\n";
+    // First rule: redirect all paths that start with a number and end with "+" to shorturl-redirect.php with preview = 1
+    $rules .= "RewriteRule ^([0-9]+)(.*)\\+$ shorturl-redirect.php?prefix=\$1&code=\$2&preview=1 [L]\n";
+    // Second rule: redirect all paths that start with a number but not 1 to shorturl-redirect.php (1 == customer domain)
+    $rules .= "RewriteRule ^([2-9][0-9]*)(.*)$ shorturl-redirect.php?prefix=\$1&code=\$2 [L]\n";
+    // Next-to-last rule: redirect shorturl-redirect.php to find out if new customer rule (not custom URI)
+    $rules .= "RewriteRule ^1(.+)$ shorturl-redirect.php?prefix=1&code=\$1 [L]\n";
+    // Last rule: redirect shorturl-redirect.php to find out if new customer rule with custom URI or unknown link
+    // Check if $1 is not equal to "shorturl-redirect.php"
+    $rules .= "RewriteCond %{REQUEST_URI} !^/shorturl-redirect\.php$\n";
+    $rules .= "RewriteCond %{THE_REQUEST} !shorturl-redirect\.php [NC]\n";
+    // Redirect to shorturl-redirect.php with prefix=0 and code=$1
+    $rules .= "RewriteRule ^(.+)$ shorturl-redirect.php?prefix=0&code=\$1 [L]\n";
 
     // Check if .htaccess file exists
     if (!file_exists($htaccess_file)) {
