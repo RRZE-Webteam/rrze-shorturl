@@ -884,7 +884,7 @@ class Shortcode
         // Table header
         $table .= '<thead><tr>';
         $table .= '<th scope="col" class="manage-column column-long-url"><a href="?orderby=long_url&order=' . ($orderby == 'long_url' && $order == 'ASC' ? 'DESC' : 'ASC') . '">' . __('Long URL', 'rrze-shorturl') . '</a></th>';
-        $table .= '<th scope="col" class="manage-column column-short-url"><a href="?orderby=short_url&order=' . ($orderby == 'short_url' && $order == 'ASC' ? 'DESC' : 'ASC') . '">' . __('Short URL', 'rrze-shorturl') . '</a></th>';
+        $table .= '<th scope="col" class="manage-column column-short-url"><a href="?orderby=short_url&order=' . ($orderby == 'short_url' && $order == 'ASC' ? 'DESC' : 'ASC') . '">' . __('Short URL', 'rrze-shorturl') . ' (' . __('Preview', 'rrze-shorturl') . ')</a></th>';
         $table .= '<th scope="col" class="manage-column column-uri">URI</th>';
         $table .= '<th scope="col" class="manage-column column-valid-until"><a href="?orderby=valid_until&order=' . ($orderby == 'valid_until' && $order == 'ASC' ? 'DESC' : 'ASC') . '">' . __('Valid until', 'rrze-shorturl') . '</a></th>';
         $table .= '<th scope="col" class="manage-column column-categories">' . __('Categories', 'rrze-shorturl') . '</th>';
