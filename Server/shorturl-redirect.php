@@ -19,6 +19,7 @@
 
 // SETTINGS
 $shorturl_domain = "https://www.shorturl.rrze.fau.de";
+$redirect_domain = "https://go.fau.de";
 $htaccess_file = '.htaccess';
 $services_file = 'rrze-shorturl-services.json';
 
@@ -28,15 +29,17 @@ $services_file = 'rrze-shorturl-services.json';
 class ShortURLRedirect
 {
     private string $shorturl_domain;
+    private string $redirect_domain;
     private string $htaccess_file;
     private string $services_file;
     private string $baseChars;
     private string $base;
 
-    public function __construct(string $shorturl_domain, string $htaccess_file, string $services_file)
+    public function __construct(string $shorturl_domain, string $redirect_domain, string $htaccess_file, string $services_file)
     {
         unset($_SESSION['rrze-shorturl-services']);
         $this->shorturl_domain = $shorturl_domain;
+        $this->redirect_domain = $redirect_domain;
         $this->htaccess_file = $htaccess_file;
         $this->services_file = $services_file;
         $this->baseChars = '-abcdefghijklmnopqrstuvwxyz0123456789';
@@ -105,7 +108,7 @@ class ShortURLRedirect
                 error_log("Long URL: " . $longUrl);
 
                 if ($preview) {
-                    $short_url = $this->shorturl_domain . '/' . $code;
+                    $short_url = $this->redirect_domain . '/' . $code;
                     $this->showPreview($short_url, $longUrl);
                 } else {
                     $this->updateHtaccess();
@@ -126,7 +129,7 @@ class ShortURLRedirect
         $decrypted = $this->getDecrypted($code);
         $long_url = preg_replace('/\$\w+/', $decrypted, $service_link);
         if ($preview) {
-            $short_url = $this->shorturl_domain . '/' . $prefix . $code;
+            $short_url = $this->redirect_domain . '/' . $prefix . $code;
             $this->showPreview($short_url, $long_url);
         } else {
             header('Location: ' . $long_url, true, 303);
@@ -325,8 +328,8 @@ class ShortURLRedirect
             $rules .= "RewriteRule ^ - [E=DEBUG_LOG:%{REQUEST_URI}]\n";
             $rules .= "RewriteCond %{QUERY_STRING} .\n";
             $rules .= "RewriteRule ^ - [E=DEBUG_LOG:%{QUERY_STRING}]\n";
-            // First rule: redirect all paths that start with a number and end with "+" to shorturl-redirect.php with preview = 1
-            $rules .= "RewriteRule ^([0-9]+)(.*)\\+$ shorturl-redirect.php?prefix=\$1&code=\$2&preview=1 [L]\n";
+            // First rule: redirect all paths that start with a number or not (not = a customer URI) and end with "+" to shorturl-redirect.php with preview = 1
+            $rules .= "RewriteRule ^([0-9]*)?(.*)\\+$ shorturl-redirect.php?prefix=\$1&code=\$2&preview=1 [L]\n";
             // Second rule: redirect all paths that start with a number but not 1 to shorturl-redirect.php (1 == customer domain)
             $rules .= "RewriteRule ^([2-9][0-9]*)(.*)$ shorturl-redirect.php?prefix=\$1&code=\$2 [L]\n";
             // List of customer rules
@@ -375,7 +378,7 @@ class ShortURLRedirect
 }
 
 // Instantiate and execute the class
-$shortURLRedirect = new ShortURLRedirect($shorturl_domain, $htaccess_file, $services_file);
+$shortURLRedirect = new ShortURLRedirect($shorturl_domain, $redirect_domain, $htaccess_file, $services_file);
 $shortURLRedirect->handleRequest();
 exit;
 
