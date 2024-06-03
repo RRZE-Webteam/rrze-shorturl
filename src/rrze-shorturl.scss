@@ -192,6 +192,7 @@
         border: 1px solid var(--color-ContentBorders, #dfe6ec);
         box-shadow: 0 3px 12px 0 #000000aa;
         width: min(95%, 400px);
+        max-height: 95vh;
         &::backdrop {
             background-color: var(--color-overlay-dark, #00000026);
             backdrop-filter: blur(3px);
