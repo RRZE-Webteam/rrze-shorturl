@@ -71,13 +71,6 @@
     background-color: white;
 }
 
-.shorturl-msg-error {
-    color: red;
-}
-.shorturl-msg-notice {
-    color: orange;
-}
-
 .shorturl-copy-img,
 .shorturl-download-img {
     width: 20px;
@@ -175,13 +168,23 @@
                 }
             }
         }
-        .shorturl-errormessage {
+        .shorturl-msg-error,
+        .shorturl-msg-notice {
             padding: 10px;
-            border: 1px solid #ebccd1;
+            border-width: 1px;
+            border-style: solid;
             font-weight: normal;
             overflow: hidden;
+        }
+        .shorturl-msg-error {
+            border-color: #ebccd1;
             color: #78302f;
             background-color: #f2dede;
+        }
+        .shorturl-msg-notice {
+            color: #66512c;
+            background-color: #fcf8e3;
+            border-color: #faebcc;
         }
         button img {
             box-shadow: none;
