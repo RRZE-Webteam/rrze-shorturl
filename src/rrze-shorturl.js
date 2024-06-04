@@ -31,27 +31,29 @@ jQuery(document).ready(function ($) {
     $('#customer-domains-form, #services-form').on('submit', handleFormSubmission);
 
     // Toggle Advanced Settings
-    // $('#show-advanced-settings').addClass('shorturl-link-disabled');
+     $('#show-advanced-settings').addClass('shorturl-link-disabled');
 
-    // $('#url').on('input', function() {
-    //     var url = $(this).val();
-    //     if (url.trim() !== '') {
-    //         $('#show-advanced-settings').attr('href', '#').removeClass('shorturl-link-disabled');
-    //     } else {
-    //         $('#show-advanced-settings').removeAttr('href').addClass('shorturl-link-disabled');
-    //     }
-    // });
+    $('#url').on('input', function() {
+        var url = $(this).val();
+        if (url.trim() !== '') {
+            $('#show-advanced-settings').attr('href', '#').removeClass('shorturl-link-disabled');
+        } else {
+            $('#show-advanced-settings').removeAttr('href').addClass('shorturl-link-disabled');
+        }
+    });
 
-    // $('#show-advanced-settings').on('click', function (e) {
-    //     e.preventDefault();
-    //     $('#shorturl-advanced-settings').slideToggle();
-    //     $('.shorturl-arrow').toggleClass('up');
-    //     if ($('.shorturl-arrow').hasClass('up')) {
-    //         $('.shorturl-arrow').html('&#9650;');
-    //     } else {
-    //         $('.shorturl-arrow').html('&#9660;');
-    //     }        
-    // });
+    $('#btn-show-advanced-settings').on('click', function (e) {
+        e.preventDefault();
+        $('#shorturl-advanced-settings').slideToggle();
+        if ($(this).hasClass('active')) {
+            $('span.arrow-up').removeClass('arrow-up').addClass('arrow-down');
+            $(this).attr('aria-expanded', 'false');
+        } else {
+            $('span.arrow-down').removeClass('arrow-down').addClass('arrow-up');
+            $(this).attr('aria-expanded', 'true');
+        }
+        $(this).toggleClass('active');
+    });
 
     // Show advanced settings is a button inside a form. We need to prevent his default actions
     // $('button[popovertarget]').on('click', function(event) {
