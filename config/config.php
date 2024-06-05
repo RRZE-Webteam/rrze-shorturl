@@ -213,8 +213,8 @@ function create_custom_tables()
             'allow_get' => true,
             'allow_longlifelinks' => true
         ]);
-        
-        $entries = [
+
+        $aEntries = [
             'unrz59',
             'ej64ojyw',
             'zo95zofo',
@@ -225,28 +225,38 @@ function create_custom_tables()
             'zi45hupi',
             'ug46aqez'
         ];
-        
+
         // Add 'fau.de' to each entry and combine with clear IdMs
-        $entries_with_fau_de = array_merge(
-            $entries,
-            array_map(function($entry) {
+        $aEntries = array_merge(
+            $aEntries,
+            array_map(function ($entry) {
                 return $entry . 'fau.de';
-            }, $entries)
+            }, $aEntries)
         );
 
         // Merge each entry with VIP array to set allow values
-        foreach ($entries_with_fau_de as $entry) {
+        foreach ($aEntries as $entry) {
             $entry_data = array_merge(array('idm' => $entry), VIP);
-        
+
             $idm = $entry_data['idm'];
             $allow_uri = $entry_data['allow_uri'];
             $allow_get = $entry_data['allow_get'];
             $allow_longlifelinks = $entry_data['allow_longlifelinks'];
             $created_by = 'system';
-        
-            $wpdb->query($wpdb->prepare("INSERT IGNORE INTO {$wpdb->prefix}shorturl_idms (idm, allow_uri, allow_get, allow_longlifelinks, created_by) VALUES (%s, %d, %d, %d, %s)", $idm, $allow_uri, $allow_get, $allow_longlifelinks, $created_by));
+
+            // Prepare the SQL query string
+            $sql_query = $wpdb->prepare("INSERT IGNORE INTO {$wpdb->prefix}shorturl_idms (idm, allow_uri, allow_get, allow_longlifelinks, created_by) VALUES (%s, %d, %d, %d, %s)", $idm, $allow_uri, $allow_get, $allow_longlifelinks, $created_by);
+
+            // Log the SQL query string
+            error_log("SQL Query: " . $sql_query);
+
+            // Execute the SQL query
+            $wpdb->query($sql_query);
+
+            // Log the result of the insert operation
+            error_log("Insert result for entry '$idm': Error: " . $wpdb->last_error . ", Rows affected: " . $wpdb->rows_affected);
         }
-        
+
         // Insert Service domains
         $aEntries = [
             [
@@ -277,7 +287,7 @@ function create_custom_tables()
                     "INSERT IGNORE INTO {$wpdb->prefix}shorturl_services (hostname, prefix, regex) VALUES (%s, %d, %s)",
                     $entry['hostname'],
                     $entry['prefix'],
-                    $entry['regex']                    
+                    $entry['regex']
                 )
             );
         }
