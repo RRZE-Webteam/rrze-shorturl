@@ -56,15 +56,23 @@ jQuery(document).ready(function ($) {
         
         // Toggle the arrow-up and arrow-down classes based on the button's state
         if ($(this).hasClass('active')) {
+            console.log('active class');
             $('span.arrow-up').removeClass('arrow-up').addClass('arrow-down');
             $(this).attr('aria-expanded', 'false');
+            console.log('aria-expanded false');
         } else {
+            console.log('active not class');
             $('span.arrow-down').removeClass('arrow-down').addClass('arrow-up');
+            console.log('class removed');
+
             $(this).attr('aria-expanded', 'true');
+            console.log('aria-expanded true');
         }
         
         // Toggle the active class on the button
         $(this).toggleClass('active');
+        console.log('class toggled to active');
+        console.log('Button class active:', $(this).hasClass('active'));
     });
     
     
