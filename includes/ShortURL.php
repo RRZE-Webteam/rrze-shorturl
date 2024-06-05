@@ -286,6 +286,10 @@ class ShortURL
 
     public static function isUniqueURI($uri)
     {
+        if (empty($uri)){
+            return true;
+        }
+        
         global $wpdb;
 
         // Check if the slug is used by posts or pages 
