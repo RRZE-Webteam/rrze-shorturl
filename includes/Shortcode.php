@@ -658,7 +658,8 @@ class Shortcode
         $form .= '<input type="hidden" name="link_id" value="' . (!empty($result['link_id']) ? $result['link_id'] : '') . '">';
         $form .= '</div>';
         $form .= '</div>';
-        $form .= '<div id="shorturl-advanced-settings" class="shorturl-advanced-settings" popover>';
+        $form .= '<button id="btn-show-advanced-settings" type="button" aria-haspopup="true" aria-controls="shorturl-advanced-settings" aria-expanded="false">' . __('Advanced Settings', 'rrze-shorturl') . '<span class="arrow-down"></span></button>';
+        $form .= '<div id="shorturl-advanced-settings" class="shorturl-advanced-settings">';
         if (self::$rights['uri_allowed']) {
             $form .= self::display_shorturl_uri($aParams['uri']);
         }
@@ -666,7 +667,6 @@ class Shortcode
         $form .= '<h6 class="handle">' . __('Categories', 'rrze-shorturl') . '</h6>';
         $form .= self::display_shorturl_category($aParams['categories']);
         $form .= '</div>';
-        $form .= '<button id="btn-show-advanced-settings" type="button" popovertarget="shorturl-advanced-settings">' . __('Advanced Settings', 'rrze-shorturl') . '</button>';
 
         // Display result message
         // notice or error msg

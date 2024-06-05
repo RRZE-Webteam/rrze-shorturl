@@ -71,13 +71,6 @@
     background-color: white;
 }
 
-.shorturl-msg-error {
-    color: red;
-}
-.shorturl-msg-notice {
-    color: orange;
-}
-
 .shorturl-copy-img,
 .shorturl-download-img {
     width: 20px;
@@ -118,6 +111,10 @@
         box-shadow: 0 3px 12px 0 #ebebeb;
         label {
             display: block;
+            &[for="valid_until"] {
+                float: left;
+                margin-right: 1em;
+            }
         }
         .label {
             font-weight: bold;
@@ -152,9 +149,46 @@
                 right: 15px;
                 top: 8.5em;
             }
-            &:hover, &:focus, &:active {
+            &:hover, &:focus, &.active:hover {
                 background: var(--color-ghostbutton-hover-bg, #04316a);
                 color: var(--color-ghostbutton-hover-text, #fff);
+                .arrow-down,
+                .arrow-up {
+                    background-color: var(--color-ghostbutton-hover-text, #fff);
+                }
+            }
+            &.active {
+                background: var(--color-StandardHellgrau, #e9edf2);
+                color: var(--color-Text, #222);
+                .arrow-down,
+                .arrow-up {
+                    background-color: var(--color-Text, #222);
+                }
+            }
+            .arrow-down,
+            .arrow-up {
+                background-color: var(--color-Text, #222);
+                content: " ";
+                display: inline-block;
+                height: 1em;
+                -webkit-mask-image: url("data:image/svg+xml;charset=utf-8,%3Csvg aria-hidden='true' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m14.83 11.29-4.24-4.24a1 1 0 0 0-1.42 0 1 1 0 0 0 0 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1 1 0 0 0 0-1.42Z'/%3E%3C/svg%3E");
+                mask-image: url("data:image/svg+xml;charset=utf-8,%3Csvg aria-hidden='true' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m14.83 11.29-4.24-4.24a1 1 0 0 0-1.42 0 1 1 0 0 0 0 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1 1 0 0 0 0-1.42Z'/%3E%3C/svg%3E");
+                -webkit-mask-position: center;
+                mask-position: center;
+                -webkit-mask-repeat: no-repeat;
+                mask-repeat: no-repeat;
+                -webkit-mask-size: 1.7em;
+                mask-size: 1.7em;
+                width: 1em;
+                vertical-align: middle;
+                margin-left: .3em;
+                transition: transform .2s linear;
+            }
+            .arrow-up {
+                transform: rotate(270deg);
+            }
+            .arrow-down {
+                transform: rotate(90deg);
             }
         }
         .rrze-shorturl-result {
@@ -175,19 +209,37 @@
                 }
             }
         }
-        .shorturl-errormessage {
+        .shorturl-msg-error,
+        .shorturl-msg-notice {
             padding: 10px;
-            border: 1px solid #ebccd1;
+            border-width: 1px;
+            border-style: solid;
             font-weight: normal;
             overflow: hidden;
+        }
+        .shorturl-msg-error {
+            border-color: #ebccd1;
             color: #78302f;
             background-color: #f2dede;
+        }
+        .shorturl-msg-notice {
+            color: #66512c;
+            background-color: #fcf8e3;
+            border-color: #faebcc;
         }
         button img {
             box-shadow: none;
         }
     }
-    [popover] {
+    .shorturl-advanced-settings {
+        border: 2px solid var(--color-ContentBorders, #dfe6ec);
+        //box-shadow: 0 3px 12px 0 #ebebeb;
+        padding: var(--width-gutter-half, 15px);
+        display: none;
+        position: relative;
+        top: -2px;
+    }
+    /*[popover] {
         padding: var(--width-gutter-half, 15px);
         border: 1px solid var(--color-ContentBorders, #dfe6ec);
         box-shadow: 0 3px 12px 0 #000000aa;
@@ -212,7 +264,7 @@
     @-ms-keyframes fade-in {
         from   { opacity: 0; }
         to { opacity: 1; }
-    }
+    }*/
 }
 
   

@@ -71,16 +71,16 @@ function drop_custom_tables()
 
     try {
         // Drop shorturl table if they exist
-        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_links_categories");
-        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_categories");
-        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_links");
-        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_domains");
-        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_services");
+        // $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_links_categories");
+        // $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_categories");
+        // $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_links");
+        // $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_domains");
+        // $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_services");
         $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_idms");
 
         // Delete triggers just to be sure (they should be deleted as they are binded to the dropped tables)
-        $wpdb->query("DROP TRIGGER IF EXISTS validate_url");
-        $wpdb->query("DROP TRIGGER IF EXISTS validate_hostname");
+        // $wpdb->query("DROP TRIGGER IF EXISTS validate_url");
+        // $wpdb->query("DROP TRIGGER IF EXISTS validate_hostname");
     } catch (\Exception $e) {
         // Handle the exception
         error_log("Error in drop_custom_tables: " . $e->getMessage());
@@ -207,8 +207,55 @@ function create_custom_tables()
         $wpdb->query($trigger_sql);
 
         // Insert Default Data
-        // idm "system"
-        $wpdb->query($wpdb->prepare("INSERT IGNORE INTO {$wpdb->prefix}shorturl_idms (idm, created_by) VALUES (%s, %s)", 'system', 'system'));
+        // Insert Webteam and other known VIPs
+        define('VIP', [
+            'allow_uri' => true,
+            'allow_get' => true,
+            'allow_longlifelinks' => true
+        ]);
+
+        $aEntries = [
+            'unrz59',
+            'ej64ojyw',
+            'zo95zofo',
+            'unrz244',
+            'unrz228',
+            'unrz41',
+            'ca27xybo',
+            'zi45hupi',
+            'ug46aqez'
+        ];
+
+        // Add 'fau.de' to each entry and combine with clear IdMs
+        $aEntries = array_merge(
+            $aEntries,
+            array_map(function ($entry) {
+                return $entry . 'fau.de';
+            }, $aEntries)
+        );
+
+        // Merge each entry with VIP array to set allow values
+        foreach ($aEntries as $entry) {
+            $entry_data = array_merge(array('idm' => $entry), VIP);
+
+            $idm = $entry_data['idm'];
+            $allow_uri = $entry_data['allow_uri'];
+            $allow_get = $entry_data['allow_get'];
+            $allow_longlifelinks = $entry_data['allow_longlifelinks'];
+            $created_by = 'system';
+
+            // Prepare the SQL query string
+            $sql_query = $wpdb->prepare("INSERT IGNORE INTO {$wpdb->prefix}shorturl_idms (idm, allow_uri, allow_get, allow_longlifelinks, created_by) VALUES (%s, %d, %d, %d, %s)", $idm, $allow_uri, $allow_get, $allow_longlifelinks, $created_by);
+
+            // Log the SQL query string
+            error_log("SQL Query: " . $sql_query);
+
+            // Execute the SQL query
+            $wpdb->query($sql_query);
+
+            // Log the result of the insert operation
+            error_log("Insert result for entry '$idm': Error: " . $wpdb->last_error . ", Rows affected: " . $wpdb->rows_affected);
+        }
 
         // Insert Service domains
         $aEntries = [
@@ -240,7 +287,7 @@ function create_custom_tables()
                     "INSERT IGNORE INTO {$wpdb->prefix}shorturl_services (hostname, prefix, regex) VALUES (%s, %d, %s)",
                     $entry['hostname'],
                     $entry['prefix'],
-                    $entry['regex']                    
+                    $entry['regex']
                 )
             );
         }
