@@ -207,9 +207,46 @@ function create_custom_tables()
         $wpdb->query($trigger_sql);
 
         // Insert Default Data
-        // idm "system"
-        $wpdb->query($wpdb->prepare("INSERT IGNORE INTO {$wpdb->prefix}shorturl_idms (idm, created_by) VALUES (%s, %s)", 'system', 'system'));
+        // Insert Webteam and other known VIPs
+        define('VIP', [
+            'allow_uri' => true,
+            'allow_get' => true,
+            'allow_longlifelinks' => true
+        ]);
+        
+        $entries = [
+            'unrz59',
+            'ej64ojyw',
+            'zo95zofo',
+            'unrz244',
+            'unrz228',
+            'unrz41',
+            'ca27xybo',
+            'zi45hupi',
+            'ug46aqez'
+        ];
+        
+        // Add 'fau.de' to each entry and combine with clear IdMs
+        $entries_with_fau_de = array_merge(
+            $entries,
+            array_map(function($entry) {
+                return $entry . 'fau.de';
+            }, $entries)
+        );
 
+        // Merge each entry with VIP array to set allow values
+        foreach ($entries_with_fau_de as $entry) {
+            $entry_data = array_merge(array('idm' => $entry), VIP);
+        
+            $idm = $entry_data['idm'];
+            $allow_uri = $entry_data['allow_uri'];
+            $allow_get = $entry_data['allow_get'];
+            $allow_longlifelinks = $entry_data['allow_longlifelinks'];
+            $created_by = 'system';
+        
+            $wpdb->query($wpdb->prepare("INSERT IGNORE INTO {$wpdb->prefix}shorturl_idms (idm, allow_uri, allow_get, allow_longlifelinks, created_by) VALUES (%s, %d, %d, %d, %s)", $idm, $allow_uri, $allow_get, $allow_longlifelinks, $created_by));
+        }
+        
         // Insert Service domains
         $aEntries = [
             [
