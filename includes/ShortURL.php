@@ -224,6 +224,7 @@ class ShortURL
     {
         try {
             $aRet = [
+                'is_valid' => false,
                 'id' => 0,
                 'prefix' => 0,
                 'hostname' => '',
@@ -255,6 +256,7 @@ class ShortURL
 
                     }
 
+                    $aRet['is_valid'] = false;
                     $aRet['notice'] = __('You\'ve tried to shorten a service domain. Services will automatically be shortened and redirected.', 'rrze-shorturl');
                     $aRet['notice'] .= ($shortURL ? '<br>' . __('Short URL', 'rrze-shorturl') . ': ' . $shortURL : '');
                     $aRet['message_type'] = 'notice';
@@ -267,6 +269,7 @@ class ShortURL
             foreach (self::$CONFIG['AllowedDomains'] as $aEntry) {
                 if ($domain === $aEntry['hostname']) {
                     $aRet = [
+                        'is_valid' => true,
                         'id' => $aEntry['id'],
                         'prefix' => ($aEntry['active'] ? $aEntry['prefix'] : 0),
                         'hostname' => $aEntry['hostname'],
@@ -289,7 +292,7 @@ class ShortURL
         if (empty($uri)){
             return true;
         }
-        
+
         global $wpdb;
 
         // Check if the slug is used by posts or pages 
@@ -506,6 +509,15 @@ class ShortURL
 
             // Is it an allowed domain?
             $aDomain = self::checkDomain($long_url);
+
+            if (!$aDomain['is_valid']){
+                return [
+                    'error' => true,
+                    'message_type' => $aDomain['message_type'],
+                    'txt' => $aDomain['notice'],
+                    'long_url' => $long_url
+                ];
+            }
 
             // Validate the URI
             $isValidURI = false;
