@@ -44,7 +44,17 @@ jQuery(document).ready(function ($) {
 
     $('#btn-show-advanced-settings').on('click', function (e) {
         e.preventDefault();
+        
+        // Log a message to indicate that the event handler is triggered
+        console.log('Button clicked');
+        
+        // Toggle the visibility of the advanced settings
         $('#shorturl-advanced-settings').slideToggle();
+        
+        // Log the current state of the button
+        console.log('Button class:', $(this).hasClass('active'));
+        
+        // Toggle the arrow-up and arrow-down classes based on the button's state
         if ($(this).hasClass('active')) {
             $('span.arrow-up').removeClass('arrow-up').addClass('arrow-down');
             $(this).attr('aria-expanded', 'false');
@@ -52,9 +62,12 @@ jQuery(document).ready(function ($) {
             $('span.arrow-down').removeClass('arrow-down').addClass('arrow-up');
             $(this).attr('aria-expanded', 'true');
         }
+        
+        // Toggle the active class on the button
         $(this).toggleClass('active');
     });
-
+    
+    
     // Show advanced settings is a button inside a form. We need to prevent his default actions
     // $('button[popovertarget]').on('click', function(event) {
     //     event.preventDefault();
