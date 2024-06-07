@@ -304,7 +304,7 @@ class ShortURLRedirect
                 // $expires = ($url['valid_until']) ? date('D, d M Y H:i:s', strtotime($url['valid_until'])) . ' GMT' : ''; # spaces lead to an error
                 // $rules .= "RewriteRule ^$short_url$ $long_url [R=303,L,E=set_expires:1]\n";
                 // $rules .= "Header set Expires $expires env=set_expires\n";
-                $ret .= "RewriteRule ^$short_url_path$ $long_url [R=303,L]\n";
+                $ret .= "RewriteRule ^$short_url_path$ $long_url [R=303,L,NE]\n";
             }
         } catch (Exception $e) {
             echo "Error: " . $e->getMessage();
