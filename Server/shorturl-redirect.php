@@ -367,7 +367,7 @@ class ShortURLRedirect
                 throw new Exception("Error writing file: $this->htaccess_file");
             }
 
-            echo nl2br($htaccess_content);
+            // echo nl2br($htaccess_content);
 
             if ($result === false) {
                 throw new Exception("Failed to save .htaccess file.");
