@@ -17,7 +17,6 @@
 		"webpack-cli": "^5.1.4"
 	},
 	"dependencies": {
-		"bootstrap-tokenfield": "^0.12.1",
 		"clipboard": "latest",
 		"use-clipboard-copy": "latest",
 		"webpack-dev-middleware": "latest",
