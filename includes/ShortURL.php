@@ -278,7 +278,7 @@ class ShortURL
                     }
 
                     $aRet = [
-                        'is_valid' => true,
+                        'is_valid' => $aEntry['active'],
                         'id' => $aEntry['id'],
                         'prefix' => ($aEntry['active'] ? $aEntry['prefix'] : 0),
                         'hostname' => $aEntry['hostname'],
