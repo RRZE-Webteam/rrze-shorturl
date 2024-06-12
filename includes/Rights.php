@@ -3,6 +3,7 @@
 namespace RRZE\ShortURL;
 
 use \RRZE\AccessControl\Permissions;
+use RRZE\ShortURL\CustomException;
 
 class Rights
 {
@@ -53,14 +54,14 @@ class Rights
                             )
                         );
                         $aRet['id'] = $wpdb->insert_id;
-                    } catch (\Exception $e) {
+                    } catch (CustomException $e) {
                         error_log('Error adding idm: ' . $e->getMessage());
                         return $aRet;
                     }
                 }
             }
             return $aRet;
-        } catch (\Exception $e) {
+        } catch (CustomException $e) {
             error_log('Error fetching rights: ' . $e->getMessage());
             return $aRet;
         }

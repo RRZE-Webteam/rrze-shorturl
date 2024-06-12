@@ -2,6 +2,8 @@
 
 namespace RRZE\ShortURL;
 
+use RRZE\ShortURL\CustomException;
+
 class Settings
 {
     public function __construct()
@@ -362,7 +364,7 @@ class Settings
 
                                         if ($wpdb->last_error) {
                                             $message = __('An error occurred: ', 'rrze-shorturl') . $wpdb->last_error;
-                                            throw new \Exception($wpdb->last_error);
+                                            throw new CustomException($wpdb->last_error);
                                         }
                                     }
                                 }
@@ -370,12 +372,12 @@ class Settings
                             $new_hostname = '';
                             $new_prefix = '';
                         }
-                    } catch (\Exception $e) {
+                    } catch (CustomException $e) {
                         $message = __('An error occurred: ', 'rrze-shorturl') . $e->getMessage();
                     }
 
                 }
-            } catch (\Exception $e) {
+            } catch (CustomException $e) {
                 $message = __('An error occurred: ', 'rrze-shorturl') . $e->getMessage();
             }
         }
@@ -543,16 +545,16 @@ class Settings
 
                             if ($wpdb->last_error) {
                                 $message = __('An error occurred: ', 'rrze-shorturl') . $wpdb->last_error;
-                                throw new \Exception($wpdb->last_error);
+                                throw new CustomException($wpdb->last_error);
                             }
                             $new_hostname = '';
                         }
-                    } catch (\Exception $e) {
+                    } catch (CustomException $e) {
                         $message = __('An error occurred: ', 'rrze-shorturl') . $e->getMessage();
                     }
 
                 }
-            } catch (\Exception $e) {
+            } catch (CustomException $e) {
                 $message = __('An error occurred: ', 'rrze-shorturl') . $e->getMessage();
             }
         }
@@ -694,7 +696,7 @@ class Settings
                 </button>
             </form>
             <?php
-        } catch (\Exception $e) {
+        } catch (CustomException $e) {
             echo '<div class="error notice"><p>' . $e->getMessage() . '</p></div>';
             error_log("Error in render_idm_section: " . $e->getMessage());
         }

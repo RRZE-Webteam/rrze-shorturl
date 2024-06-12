@@ -1,6 +1,8 @@
 <?php
 namespace RRZE\ShortURL;
 
+use RRZE\ShortURL\CustomException;
+
 class CustomerDomains
 {
     public function __construct()
@@ -77,7 +79,7 @@ class CustomerDomains
                                             $webmaster_name = !empty($jsonArray['webmaster']['name']) ? $jsonArray['webmaster']['name'] : 'Name not found';
                                             $webmaster_email = !empty($jsonArray['webmaster']['email']) ? $jsonArray['webmaster']['email'] : 'eMail not found';
                                         }
-                                    } catch (\Exception $e) {
+                                    } catch (CustomException $e) {
                                         error_log('An error occurred: ' . $e->getMessage());
                                     }
                                 }
@@ -106,7 +108,7 @@ class CustomerDomains
                 } else {
                     error_log('fetch_and_store_customerdomains() API returns ' . wp_remote_retrieve_response_code($response));
                 }
-            } catch (\Exception $e) {
+            } catch (CustomException $e) {
                 error_log('An error occurred: ' . $e->getMessage());
             }
         }

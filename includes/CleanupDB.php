@@ -1,6 +1,8 @@
 <?php
 namespace RRZE\ShortURL;
 
+use RRZE\ShortURL\CustomException;
+
 class CleanupDB
 {
     public function __construct()
@@ -40,7 +42,7 @@ class CleanupDB
             $idms_ids = array_column($result, 'unused_id');
             $idms_ids_str = implode(',', $idms_ids);
             $wpdb->query("DELETE FROM {$wpdb->prefix}shorturl_idms WHERE id IN ({$idms_ids_str})");
-        } catch (\Exception $e) {
+        } catch (CustomException $e) {
             error_log('An error occurred: ' . $e->getMessage());
         }
     }
