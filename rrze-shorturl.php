@@ -4,7 +4,7 @@
 Plugin Name:     RRZE ShortURL
 Plugin URI:      https://gitlab.rrze.fau.de/rrze-webteam/rrze-shorturl
 Description:     Plugin, um URLs zu verkürzen. 
-Version:         1.5.15
+Version:         1.7.0
 Requires at least: 6.4
 Requires PHP:      8.2
 Author:          RRZE Webteam
@@ -119,6 +119,31 @@ function rrze_shorturl_init()
     register_block_type(__DIR__ . '/build', ['render_callback' => [Settings::class, 'render_url_form']]);
 }
 
+function update_table(){
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'shorturl_domains';
+    
+    // Check if 'webmaster_name' column exists
+    $webmaster_name_exists = $wpdb->get_results("SHOW COLUMNS FROM `$table_name` LIKE 'webmaster_name'");
+    
+    // Check if 'webmaster_email' column exists
+    $webmaster_email_exists = $wpdb->get_results("SHOW COLUMNS FROM `$table_name` LIKE 'webmaster_email'");
+    
+    // Add 'webmaster_name' column if it does not exist
+    if (empty($webmaster_name_exists)) {
+        $wpdb->query("ALTER TABLE `$table_name` ADD `webmaster_name` varchar(255) NULL DEFAULT NULL");
+    }
+    
+    // Add 'webmaster_email' column if it does not exist
+    if (empty($webmaster_email_exists)) {
+        $wpdb->query("ALTER TABLE `$table_name` ADD `webmaster_email` varchar(255) NULL DEFAULT NULL");
+    }
+    
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+    dbDelta($sql);
+    
+}
+
 /**
  * Wird durchgeführt, nachdem das WP-Grundsystem hochgefahren
  * und alle Plugins eingebunden wurden.
@@ -138,6 +163,8 @@ function loaded()
             printf('<div class="notice notice-error"><p>%1$s: %2$s</p></div>', esc_html($plugin_name), esc_html($error));
         });
     } else {
+
+        update_table();
         // Hauptklasse (Main) wird instanziiert.
         $main = new Main(__FILE__);
         $main->onLoaded();

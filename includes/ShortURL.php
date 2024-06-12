@@ -267,13 +267,22 @@ class ShortURL
 
             // Check if the extracted domain belongs to one of our allowed domains
             foreach (self::$CONFIG['AllowedDomains'] as $aEntry) {
+
+
                 if ($domain === $aEntry['hostname']) {
+                    $notice = $aEntry['notice'];
+
+                    if (!$aEntry['active']) {
+                        $notice = __('Auf die Webseite kann derzeit kein ShortURL erstellt werden, da', 'rrze-shorturl') . ' ' . $aEntry['notice'] . ' ' . __('fehlt', 'rrze-shorturl') . '. ';
+                        $notice .= __('Um diesen Fehler beheben zu lassen, können Sie sich an die/den technischen AnsprechpartnerIn der betreffenden Website wenden', 'rrze-shorturl') . ': <a href="mailto:' . $aEntry['webmaster_email'] . '">' . $aEntry['webmaster_name'] . ' &lt;' . $aEntry['webmaster_email'] . '&gt;</a>';
+                    }
+
                     $aRet = [
                         'is_valid' => true,
                         'id' => $aEntry['id'],
                         'prefix' => ($aEntry['active'] ? $aEntry['prefix'] : 0),
                         'hostname' => $aEntry['hostname'],
-                        'notice' => $aEntry['notice'],
+                        'notice' => $notice,
                         'message_type' => 'standard'
                     ];
                     break;
@@ -289,7 +298,7 @@ class ShortURL
 
     public static function isUniqueURI($uri)
     {
-        if (empty($uri)){
+        if (empty($uri)) {
             return true;
         }
 
@@ -510,7 +519,7 @@ class ShortURL
             // Is it an allowed domain?
             $aDomain = self::checkDomain($long_url);
 
-            if (!$aDomain['is_valid']){
+            if (!$aDomain['is_valid']) {
                 return [
                     'error' => true,
                     'message_type' => $aDomain['message_type'],

@@ -84,6 +84,16 @@ class Settings
 
         register_setting('rrze_shorturl_customer_domains', 'rrze_shorturl_customer_domains');
 
+        // External Domains tab settings
+        add_settings_section(
+            'rrze_shorturl_external_domains_section',
+            '&nbsp;',
+            [$this, 'render_external_domains_section'],
+            'rrze_shorturl_external_domains'
+        );
+
+        register_setting('rrze_shorturl_external_domains', 'rrze_shorturl_external_domains');
+
         // IdM tab settings
         add_settings_section(
             'rrze_shorturl_idm_section',
@@ -124,6 +134,8 @@ class Settings
                     class="nav-tab <?php echo isset($_GET['tab']) && $_GET['tab'] === 'services' ? 'nav-tab-active' : ''; ?>"><?php echo __('Services', 'rrze-shorturl'); ?></a>
                 <a href="?page=rrze-shorturl&tab=customer-domains"
                     class="nav-tab <?php echo isset($_GET['tab']) && $_GET['tab'] === 'customer-domains' ? 'nav-tab-active' : ''; ?>"><?php echo __('Customers Domains', 'rrze-shorturl'); ?></a>
+                <a href="?page=rrze-shorturl&tab=external-domains"
+                    class="nav-tab <?php echo isset($_GET['tab']) && $_GET['tab'] === 'external-domains' ? 'nav-tab-active' : ''; ?>"><?php echo __('External Domains', 'rrze-shorturl'); ?></a>
                 <a href="?page=rrze-shorturl&tab=idm"
                     class="nav-tab <?php echo isset($_GET['tab']) && $_GET['tab'] === 'idm' ? 'nav-tab-active' : ''; ?>">IdM</a>
                 <a href="?page=rrze-shorturl&tab=statistic"
@@ -145,6 +157,10 @@ class Settings
                     case 'customer-domains':
                         settings_fields('rrze_shorturl_customer_domains');
                         do_settings_sections('rrze_shorturl_customer_domains');
+                        break;
+                    case 'external-domains':
+                        settings_fields('rrze_shorturl_external_domains');
+                        do_settings_sections('rrze_shorturl_external_domains');
                         break;
                     case 'idm':
                         settings_fields('rrze_shorturl_idm');
@@ -323,10 +339,11 @@ class Settings
                                     $message = __('Prefix not allowed.', 'rrze-shorturl');
                                 } else {
                                     // Check if the prefix already exists in the database
-                                    $existing_prefix = $wpdb->get_var($wpdb->prepare(
-                                        "SELECT COUNT(*) FROM {$wpdb->prefix}shorturl_services WHERE prefix = %s",
-                                        $new_prefix
-                                    )
+                                    $existing_prefix = $wpdb->get_var(
+                                        $wpdb->prepare(
+                                            "SELECT COUNT(*) FROM {$wpdb->prefix}shorturl_services WHERE prefix = %s",
+                                            $new_prefix
+                                        )
                                     );
 
                                     if ($existing_prefix > 0) {
@@ -470,6 +487,112 @@ class Settings
                         <?php endforeach; ?>
                     </tbody>
                 </table>
+            </form>
+        </div>
+        <?php
+    }
+
+
+    // Render the External Domains tab section
+    public function render_external_domains_section()
+    {
+        global $wpdb;
+        $message = '';
+        $bDel = false;
+
+        // Check if form is submitted
+        if (isset($_POST['submit'])) {
+            try {
+                // Delete selected entries
+                if (!empty($_POST['delete'])) {
+
+                    foreach ($_POST['delete'] as $id => $delete_id) {
+                        $wpdb->delete("{$wpdb->prefix}shorturl_domains", array('id' => $delete_id), array('%d'));
+                        $bDel = true;
+                    }
+                    $message = (empty($message) ? '' : $message . '<br \>') . ($bDel ? __('Selected entries deleted successfully.', 'rrze-shorturl') : '');
+                }
+
+                // Add new entry
+                if (!empty($_POST['new_hostname'])) {
+                    try {
+                        // Sanitize input data
+                        $new_hostname = sanitize_text_field($_POST['new_hostname']);
+
+                        // Validate hostname
+                        if (!self::isValidHostName($new_hostname)) {
+                            $message = __('Hostname is not valid.', 'rrze-shorturl');
+                        } else {
+                            $wpdb->insert(
+                                "{$wpdb->prefix}shorturl_domains",
+                                array(
+                                    'hostname' => $new_hostname,
+                                    'prefix' => 7
+                                )
+                            );
+
+                            $message = __('New external domain added successfully.', 'rrze-shorturl');
+
+                            if ($wpdb->last_error) {
+                                $message = __('An error occurred: ', 'rrze-shorturl') . $wpdb->last_error;
+                                throw new \Exception($wpdb->last_error);
+                            }
+                            $new_hostname = '';
+                        }
+                    } catch (\Exception $e) {
+                        $message = __('An error occurred: ', 'rrze-shorturl') . $e->getMessage();
+                    }
+
+                }
+            } catch (\Exception $e) {
+                $message = __('An error occurred: ', 'rrze-shorturl') . $e->getMessage();
+            }
+        }
+
+        // Fetch entries from shorturl_services table (prefix = 1 is reserved for our customer domains)
+        $entries = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_domains WHERE prefix = 7 ORDER BY hostname");
+
+        ?>
+        <div class="wrap">
+            <?php if (!empty($message)): ?>
+                <div class="<?php echo strpos($message, 'error') !== false ? 'error' : 'updated'; ?>">
+                    <p>
+                        <?php echo $message; ?>
+                    </p>
+                </div>
+            <?php endif; ?>
+            <form method="post" action="" id="external-domains-form">
+                <table class="shorturl-wp-list-table widefat fixed striped">
+                    <thead>
+                        <tr>
+                            <th>
+                                <?php echo __('Hostname', 'rrze-shorturl'); ?>
+                            </th>
+                            <th>
+                                <?php echo __('Delete', 'rrze-shorturl'); ?>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($entries as $entry): ?>
+                            <tr>
+                                <td><input type="text" name="hostname[]" value="<?php echo esc_attr($entry->hostname); ?>"
+                                        readonly /></td>
+                                <td><input type="checkbox" name="delete[]" value="<?php echo esc_attr($entry->id); ?>" />
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                        <tr>
+                            <td><input type="text" name="new_hostname"
+                                    value="<?php echo (!empty($new_hostname) ? $new_hostname : ''); ?>" /></td>
+                            <td></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <button type="submit" name="submit" class="button button-primary">
+                    <?php echo __('Save Changes', 'rrze-shorturl'); ?>
+                </button>
             </form>
         </div>
         <?php
