@@ -81,7 +81,7 @@ function drop_custom_tables()
         // Delete triggers just to be sure (they should be deleted as they are binded to the dropped tables)
         $wpdb->query("DROP TRIGGER IF EXISTS validate_url");
         $wpdb->query("DROP TRIGGER IF EXISTS validate_hostname");
-    } catch (\Exception $e) {
+    } catch (CustomException $e) {
         // Handle the exception
         error_log("Error in drop_custom_tables: " . $e->getMessage());
     }
@@ -293,7 +293,7 @@ function create_custom_tables()
                 )
             );
         }
-    } catch (\Exception $e) {
+    } catch (CustomException $e) {
         // Handle the exception
         error_log("Error in create_custom_tables: " . $e->getMessage());
     }

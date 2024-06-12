@@ -2,6 +2,8 @@
 
 namespace RRZE\ShortURL;
 
+use RRZE\ShortURL\CustomException;
+
 class ShortURL
 {
 
@@ -33,7 +35,7 @@ class ShortURL
             }
 
             return true;
-        } catch (\Exception $e) {
+        } catch (CustomException $e) {
             error_log("Error in isValidUrl: " . $e->getMessage());
             return false;
         }
@@ -57,7 +59,7 @@ class ShortURL
             }
 
             return $cryptedString;
-        } catch (\Exception $e) {
+        } catch (CustomException $e) {
             error_log("Error in cryptNumber: " . $e->getMessage());
             return null;
         }
@@ -72,7 +74,7 @@ class ShortURL
 
             // Map the adjusted input to the corresponding character in the character set
             return self::$CONFIG['ShortURLModChars'][$adjustedInput - 1];
-        } catch (\Exception $e) {
+        } catch (CustomException $e) {
             error_log("Error in cryptSingleDigit: " . $e->getMessage());
             return null;
         }
@@ -107,7 +109,7 @@ class ShortURL
             } else {
                 return array('id' => $result[0]['id'], 'short_url' => $result[0]['short_url'], 'valid_until' => $result[0]['valid_until']);
             }
-        } catch (\Exception $e) {
+        } catch (CustomException $e) {
             error_log("Error in getLinkfromDB: " . $e->getMessage());
             return null;
         }
@@ -191,7 +193,7 @@ class ShortURL
             }
 
             return $aDomains;
-        } catch (\Exception $e) {
+        } catch (CustomException $e) {
             error_log("Error in getServices: " . $e->getMessage());
             return null;
         }
@@ -214,7 +216,7 @@ class ShortURL
             }
 
             return $aDomains;
-        } catch (\Exception $e) {
+        } catch (CustomException $e) {
             error_log("Error in getAllowedDomains: " . $e->getMessage());
             return null;
         }
@@ -290,7 +292,7 @@ class ShortURL
             }
 
             return $aRet;
-        } catch (\Exception $e) {
+        } catch (CustomException $e) {
             error_log("Error in checkDomain: " . $e->getMessage());
             return null;
         }
@@ -628,7 +630,7 @@ class ShortURL
                 'long_url' => $long_url,
                 'valid_until_formatted' => $valid_until_formatted
             ];
-        } catch (\Exception $e) {
+        } catch (CustomException $e) {
             error_log("Error in shorten: " . $e->getMessage());
             return null;
         }

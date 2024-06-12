@@ -3,6 +3,7 @@ namespace RRZE\ShortURL;
 
 use WP_REST_Response;
 use WP_Error;
+use RRZE\ShortURL\CustomException;
 
 class API
 {
@@ -278,7 +279,7 @@ class API
             $shortened_url = ShortURL::shorten($parameters);
 
             return new WP_REST_Response($shortened_url, 200);
-        } catch (\Exception $e) {
+        } catch (CustomException $e) {
             return new WP_Error('callback_error', __('Error processing request.', 'rrze-shorturl'));
         }
     }
@@ -289,7 +290,7 @@ class API
             $active_short_urls = ShortURL::getActiveShortURLs();
 
             return new WP_REST_Response($active_short_urls, 200);
-        } catch (\Exception $e) {
+        } catch (CustomException $e) {
             return new WP_Error('callback_error', __('Error processing request.', 'rrze-shorturl'));
         }
     }
@@ -306,7 +307,7 @@ class API
             $long_url = ShortURL::getLongURL($code);
 
             return new WP_REST_Response(['long_url' => $long_url], 200);
-        } catch (\Exception $e) {
+        } catch (CustomException $e) {
             return new WP_REST_Response(array('error' => 'callback_error', 'message' => __('Error processing request.', 'rrze-shorturl')), 500);
         }
     }
@@ -318,7 +319,7 @@ class API
             $active_short_urls = ShortURL::getServices();
 
             return new WP_REST_Response($active_short_urls, 200);
-        } catch (\Exception $e) {
+        } catch (CustomException $e) {
             return new WP_Error('callback_error', __('Error processing request.', 'rrze-shorturl'));
         }
     }
@@ -337,7 +338,7 @@ class API
             $decrypted_string = $myCrypt->decrypt($parameters['encrypted']);
 
             return new WP_REST_Response($decrypted_string, 200);
-        } catch (\Exception $e) {
+        } catch (CustomException $e) {
             return new WP_Error('callback_error', __('Error processing request.', 'rrze-shorturl'));
         }
     }
@@ -355,7 +356,7 @@ class API
             $encrypted_string = $myCrypt->encrypt($parameters['decrypted']);
 
             return new WP_REST_Response($encrypted_string, 200);
-        } catch (\Exception $e) {
+        } catch (CustomException $e) {
             return new WP_Error('callback_error', __('Error processing request.', 'rrze-shorturl'));
         }
     }
