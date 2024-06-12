@@ -20,90 +20,95 @@ class CustomerDomains
     {
         global $wpdb;
 
-        try {
-            $api_url = 'https://statistiken.rrze.fau.de/webauftritte/domains//analyse/domain-analyse-18.json';
+        $aAPI_url = [
+            'https://statistiken.rrze.fau.de/webauftritte/domains//analyse/domain-analyse-18.json',
+            'https://statistiken.rrze.fau.de/webauftritte/domains/analyse/domain-analyse-1.json',
+        ];
 
-            $response = wp_remote_get($api_url);
+        foreach ($aAPI_url as $api_url) {
+            try {
+                $response = wp_remote_get($api_url);
 
-            if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200) {
-                $body = wp_remote_retrieve_body($response);
-                $jsonArray = json_decode($body, true);
+                if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200) {
+                    $body = wp_remote_retrieve_body($response);
+                    $jsonArray = json_decode($body, true);
 
-                $jsonArray = !empty($jsonArray['data']) ? $jsonArray['data'] : [];
+                    $jsonArray = !empty($jsonArray['data']) ? $jsonArray['data'] : [];
 
-                $filteredResponse = array_filter($jsonArray, function ($item) {
-                    return $item['httpstatus'] == '200';
-                });
+                    $filteredResponse = array_filter($jsonArray, function ($item) {
+                        return $item['httpstatus'] == '200';
+                    });
 
-                if (!empty($filteredResponse)) {
-                    foreach ($filteredResponse as $entry) {
+                    if (!empty($filteredResponse)) {
+                        foreach ($filteredResponse as $entry) {
 
-                        $notice = '';
-                        $webmaster_name = '';
-                        $webmaster_email = '';
-                        $active = 1;
-                        if (empty($entry['content']['tos']['Impressum']['href'])) {
-                            $notice = __('das Impressum', 'rrze-shorturl');
-                            $active = 0;
-                        } elseif (empty($entry['content']['tos']['Datenschutz']['href'])) {
-                            $notice = __('die Datenschutzerklärung', 'rrze-shorturl');
-                            $active = 0;
-                        } elseif (empty($entry['content']['tos']['Barrierefreiheit']['href'])) {
-                            $notice = __('die Barrierefreiheitserklärung', 'rrze-shorturl');
-                            $active = 0;
-                        }
+                            $notice = '';
+                            $webmaster_name = '';
+                            $webmaster_email = '';
+                            $active = 1;
+                            if (empty($entry['content']['tos']['Impressum']['href'])) {
+                                $notice = __('das Impressum', 'rrze-shorturl');
+                                $active = 0;
+                            } elseif (empty($entry['content']['tos']['Datenschutz']['href'])) {
+                                $notice = __('die Datenschutzerklärung', 'rrze-shorturl');
+                                $active = 0;
+                            } elseif (empty($entry['content']['tos']['Barrierefreiheit']['href'])) {
+                                $notice = __('die Barrierefreiheitserklärung', 'rrze-shorturl');
+                                $active = 0;
+                            }
 
-                        $url = !empty($entry['wmp']['url']) ? $entry['wmp']['url'] : '';
+                            $url = !empty($entry['wmp']['url']) ? $entry['wmp']['url'] : '';
 
-                        if (!empty($url)) {
-                            // get the host
-                            $parsed_url = parse_url($url);
-                            $host = $parsed_url['host'];
+                            if (!empty($url)) {
+                                // get the host
+                                $parsed_url = parse_url($url);
+                                $host = $parsed_url['host'];
 
-                            if (!$active) {
-                                // get webmaster
-                                try {
-                                    $api_url = 'https://www.wmp.rrze.fau.de/suche/impressum/' . $host . '/format/json';
-    
-                                    $response = wp_remote_get($api_url);
-    
-                                    if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200) {
-                                        $body = wp_remote_retrieve_body($response);
-                                        $jsonArray = json_decode($body, true);
-                                        $webmaster_name = !empty($jsonArray['webmaster']['name']) ? $jsonArray['webmaster']['name'] : 'Name not found';
-                                        $webmaster_email = !empty($jsonArray['webmaster']['email']) ? $jsonArray['webmaster']['email'] : 'eMail not found';
+                                if (!$active) {
+                                    // get webmaster
+                                    try {
+                                        $api_url = 'https://www.wmp.rrze.fau.de/suche/impressum/' . $host . '/format/json';
+
+                                        $response = wp_remote_get($api_url);
+
+                                        if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200) {
+                                            $body = wp_remote_retrieve_body($response);
+                                            $jsonArray = json_decode($body, true);
+                                            $webmaster_name = !empty($jsonArray['webmaster']['name']) ? $jsonArray['webmaster']['name'] : 'Name not found';
+                                            $webmaster_email = !empty($jsonArray['webmaster']['email']) ? $jsonArray['webmaster']['email'] : 'eMail not found';
+                                        }
+                                    } catch (\Exception $e) {
+                                        error_log('An error occurred: ' . $e->getMessage());
                                     }
-                                } catch (\Exception $e) {
-                                    error_log('An error occurred: ' . $e->getMessage());
                                 }
-                            }    
 
-                            $wpdb->query(
-                                $wpdb->prepare(
-                                    "INSERT INTO {$wpdb->prefix}shorturl_domains (hostname, notice, webmaster_name, webmaster_email, active, prefix)
+                                $wpdb->query(
+                                    $wpdb->prepare(
+                                        "INSERT INTO {$wpdb->prefix}shorturl_domains (hostname, notice, webmaster_name, webmaster_email, active, prefix)
                                         VALUES (%s, %s,  %s,  %s, %d, 1)
                                     ON DUPLICATE KEY UPDATE
                                         notice = VALUES(notice),
                                         webmaster_name = VALUES(webmaster_name),
                                         webmaster_email = VALUES(webmaster_email),
                                         active = VALUES(active)",
-                                    $host,
-                                    $notice,
-                                    $webmaster_name,
-                                    $webmaster_email,
-                                    $active
-                                )
-                            );
+                                        $host,
+                                        $notice,
+                                        $webmaster_name,
+                                        $webmaster_email,
+                                        $active
+                                    )
+                                );
+                            }
                         }
+                    } else {
+                        error_log('fetch_and_store_customerdomains() $data is empty');
                     }
                 } else {
-                    error_log('fetch_and_store_customerdomains() $data is empty');
+                    error_log('fetch_and_store_customerdomains() API returns ' . wp_remote_retrieve_response_code($response));
                 }
-            } else {
-                error_log('fetch_and_store_customerdomains() API returns ' . wp_remote_retrieve_response_code($response));
+            } catch (\Exception $e) {
+                error_log('An error occurred: ' . $e->getMessage());
             }
-        } catch (\Exception $e) {
-            error_log('An error occurred: ' . $e->getMessage());
         }
     }
 }
