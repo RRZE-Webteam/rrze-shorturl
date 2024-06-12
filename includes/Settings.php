@@ -475,6 +475,12 @@ class Settings
                             <th>
                                 <?php echo __('Notice', 'rrze-shorturl'); ?>
                             </th>
+                            <th>
+                                <?php echo __('Webmaster Name', 'rrze-shorturl'); ?>
+                            </th>
+                            <th>
+                                <?php echo __('Webmaster eMail', 'rrze-shorturl'); ?>
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -483,6 +489,8 @@ class Settings
                                 <td><?php echo esc_attr($entry->hostname); ?></td>
                                 <td><?php echo $entry->active == 1 ? '&#10004;' : '&#10008;'; ?></td>
                                 <td><?php echo esc_attr($entry->notice); ?></td>
+                                <td><?php echo esc_attr($entry->webmaster_name); ?></td>
+                                <td><?php echo esc_attr($entry->webmaster_email); ?></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
