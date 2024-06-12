@@ -71,16 +71,16 @@ function drop_custom_tables()
 
     try {
         // Drop shorturl table if they exist
-        // $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_links_categories");
-        // $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_categories");
-        // $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_links");
-        // $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_domains");
-        // $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_services");
+        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_links_categories");
+        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_categories");
+        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_links");
+        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_domains");
+        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_services");
         $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_idms");
 
         // Delete triggers just to be sure (they should be deleted as they are binded to the dropped tables)
-        // $wpdb->query("DROP TRIGGER IF EXISTS validate_url");
-        // $wpdb->query("DROP TRIGGER IF EXISTS validate_hostname");
+        $wpdb->query("DROP TRIGGER IF EXISTS validate_url");
+        $wpdb->query("DROP TRIGGER IF EXISTS validate_hostname");
     } catch (\Exception $e) {
         // Handle the exception
         error_log("Error in drop_custom_tables: " . $e->getMessage());
@@ -116,6 +116,8 @@ function create_custom_tables()
             prefix int(1) NOT NULL DEFAULT 1,
             active BOOLEAN DEFAULT TRUE,
             notice varchar(255) NULL DEFAULT NULL,
+            webmaster_name varchar(255) NULL DEFAULT NULL,
+            webmaster_email varchar(255) NULL DEFAULT NULL,
             PRIMARY KEY (id)
         ) $charset_collate";
         dbDelta($sql);
