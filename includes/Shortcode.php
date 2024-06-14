@@ -818,8 +818,8 @@ class Shortcode
         $orderby = !empty($_GET['orderby']) ? $_GET['orderby'] : 'id';
         $order = !empty($_GET['order']) ? $_GET['order'] : 'ASC';
 
-        $own_links = !empty($_GET['own_links']) ? $_GET['own_links'] : 1;
-
+        $own_links = (int)!empty($_GET['own_links']);
+        
         // Prepare SQL query to fetch post IDs from wp_postmeta and their associated category names
         $query = "SELECT l.id AS link_id, 
                  l.idm_id,

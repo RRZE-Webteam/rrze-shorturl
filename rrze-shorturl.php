@@ -4,7 +4,7 @@
 Plugin Name:     RRZE ShortURL
 Plugin URI:      https://gitlab.rrze.fau.de/rrze-webteam/rrze-shorturl
 Description:     Plugin, um URLs zu verkürzen. 
-Version:         1.7.4
+Version:         1.7.5
 Requires at least: 6.4
 Requires PHP:      8.2
 Author:          RRZE Webteam
@@ -120,6 +120,69 @@ function rrze_shorturl_init()
 }
 
 
+function insertWebteam(){
+    try {
+
+    global $wpdb;
+
+        // Insert Default Data
+        // Insert Webteam and other known VIPs
+        define('VIP', [
+            'allow_uri' => true,
+            'allow_get' => true,
+            'allow_longlifelinks' => true
+        ]);
+
+        $aEntries = [
+            'qe28nesi',
+            'unrz59',
+            'ej64ojyw',
+            'zo95zofo',
+            'unrz244',
+            'unrz228',
+            'unrz41',
+            'ca27xybo',
+            'zi45hupi',
+            'ug46aqez'
+        ];
+
+        // Add 'fau.de' to each entry and combine with clear IdMs
+        $aEntries = array_merge(
+            $aEntries,
+            array_map(function ($entry) {
+                return $entry . 'fau.de';
+            }, $aEntries)
+        );
+
+        // Merge each entry with VIP array to set allow values
+        foreach ($aEntries as $entry) {
+            $entry_data = array_merge(array('idm' => $entry), VIP);
+
+            $idm = $entry_data['idm'];
+            $allow_uri = $entry_data['allow_uri'];
+            $allow_get = $entry_data['allow_get'];
+            $allow_longlifelinks = $entry_data['allow_longlifelinks'];
+            $created_by = 'system';
+
+            // Prepare the SQL query string
+            $sql_query = $wpdb->prepare("INSERT IGNORE INTO {$wpdb->prefix}shorturl_idms (idm, allow_uri, allow_get, allow_longlifelinks, created_by) VALUES (%s, %d, %d, %d, %s)", $idm, $allow_uri, $allow_get, $allow_longlifelinks, $created_by);
+
+            // Log the SQL query string
+            error_log("SQL Query: " . $sql_query);
+
+            // Execute the SQL query
+            $wpdb->query($sql_query);
+
+            // Log the result of the insert operation
+            error_log("Insert result for entry '$idm': Error: " . $wpdb->last_error . ", Rows affected: " . $wpdb->rows_affected);
+        }
+    } catch (Exception $e) {
+        // Handle the exception
+        error_log("Error in drop_custom_tables: " . $e->getMessage());
+    }
+
+}
+
 /**
  * Wird durchgeführt, nachdem das WP-Grundsystem hochgefahren
  * und alle Plugins eingebunden wurden.
@@ -142,6 +205,8 @@ function loaded()
         // Hauptklasse (Main) wird instanziiert.
         $main = new Main(__FILE__);
         $main->onLoaded();
+
+        insertWebteam();
     }
 
     add_action('init', __NAMESPACE__ . '\rrze_shorturl_init');
