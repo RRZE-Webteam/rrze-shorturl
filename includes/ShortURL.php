@@ -81,15 +81,28 @@ class ShortURL
     }
 
 
-    public static function getLinkfromDB($domain_id, $long_url, $idm_id)
+    public static function getLinkfromDB($domain_id, $long_url, $idm_id, $uri)
     {
-        $idm = '';
-
         try {
             global $wpdb;
             $table_name = $wpdb->prefix . 'shorturl_links';
 
-            $result = $wpdb->get_results($wpdb->prepare("SELECT id, short_url, valid_until FROM $table_name WHERE long_url = %s LIMIT 1", $long_url), ARRAY_A);
+            if (empty($uri)) {
+                $result = $wpdb->get_results($wpdb->prepare("SELECT id, short_url, valid_until FROM $table_name WHERE long_url = %s LIMIT 1", $long_url), ARRAY_A);
+            } else {
+                $result = $wpdb->get_results(
+                    $wpdb->prepare(
+                        "SELECT id, short_url, valid_until 
+                         FROM $table_name 
+                         WHERE long_url = %s AND uri = %s AND idm_id = %s 
+                         LIMIT 1",
+                        $long_url,
+                        $uri,
+                        $idm_id
+                    ),
+                    ARRAY_A
+                );
+            }
 
             if (empty($result)) {
                 $long_url = self::$rights['get_allowed'] ? self::add_url_components($long_url, array('scheme', 'host', 'path', 'query', 'fragment')) : self::add_url_components($long_url, array('scheme', 'host', 'path', 'fragment'));
@@ -591,7 +604,7 @@ class ShortURL
             }
 
             // Fetch or insert on new
-            $aLink = self::getLinkfromDB($aDomain['id'], $long_url, self::$rights['id']);
+            $aLink = self::getLinkfromDB($aDomain['id'], $long_url, self::$rights['id'], $uri);
 
             // Create shortURL
             if (!empty($uri)) {
