@@ -219,7 +219,7 @@ class ShortURL
 
         try {
             $table_name = $wpdb->prefix . 'shorturl_domains';
-            $query = "SELECT * FROM $table_name";
+            $query = "SELECT * FROM $table_name ORDER BY hostname";
 
             $results = $wpdb->get_results($query, ARRAY_A);
 
@@ -243,7 +243,7 @@ class ShortURL
                 'id' => 0,
                 'prefix' => 0,
                 'hostname' => '',
-                'notice' => __('Domain is not allowed to use our shortening service.', 'rrze-shorturl'),
+                'notice' => __('Domain is not allowed to use our shortening service.', 'rrze-shorturl') . ' ' . '<a href="../domain-liste">' . __('Liste an erlaubten Domains', 'rrze-shorturl') . '</a>',
                 'message_type' => 'error'
             ];
 
