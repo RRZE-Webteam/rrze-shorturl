@@ -18,6 +18,9 @@ Die Verwaltung der Schlagwörter
 [shorturl-services]
 Gibt eine Tabelle mit den Services aus.
 
+[shorturl-customer-domains]
+Gibt eine Tabelle mit den aktiven Customer Domains aus.
+
 ## Block
 RRZE ShortURL um im Blockeditor Links zu verkürzen
 

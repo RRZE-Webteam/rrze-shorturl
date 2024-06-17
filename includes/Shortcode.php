@@ -17,6 +17,7 @@ class Shortcode
         add_shortcode('shorturl-categories', [$this, 'shortcode_categories_handler']);
         // add_shortcode('shorturl-tags', [$this, 'shortcode_tags_handler']);
         add_shortcode('shorturl-services', [$this, 'shortcode_services_handler']);
+        add_shortcode('shorturl-customer-domains', [$this, 'shortcode_customer_domains_handler']);
 
         add_action('wp_ajax_nopriv_store_link_category', [$this, 'store_link_category_callback']);
         add_action('wp_ajax_store_link_category', [$this, 'store_link_category_callback']);
@@ -194,6 +195,25 @@ class Shortcode
         $html .= '</tbody></table>';
         return $html;
     }
+
+    public function shortcode_customer_domains_handler(): string
+    {
+        $domains = ShortURL::getAllowedDomains();
+
+        $html = '<table class="shorturl-wp-list-table widefat">';
+        $html .= '<thead><tr><th>' . __('Domains', 'text-domain') . '</th></tr></thead>';
+        $html .= '<tbody>';
+
+        foreach ($domains as $domain) {
+            if ($domain['active']){
+                $html .= '<tr><td>' . esc_html($domain['hostname']) . '</td></tr>';
+            }
+        }
+
+        $html .= '</tbody></table>';
+        return $html;
+    }
+
 
     // private function display_tags_table(): string
     // {
