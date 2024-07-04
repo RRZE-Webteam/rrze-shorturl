@@ -253,12 +253,12 @@ jQuery(document).ready(function ($) {
 
 
     // IdM
-    $(document).on('change', '.allow-uri-checkbox, .allow-get-checkbox, .allow-longlifelinks-checkbox', function () {    
+    $(document).on('change', '.allow-uri-checkbox, .allow-get-checkbox, .allow-utm-checkbox', function () {    
         var id = $(this).data('id');
         var field;
         if ($(this).hasClass('allow-uri-checkbox')) {
             field = 'allow_uri';
-        } else if ($(this).hasClass('allow-longlifelinks-checkbox')) {
+        } else if ($(this).hasClass('allow-utm-checkbox')) {
             field = 'allow_utm';
         } else {
             field = 'allow_get';

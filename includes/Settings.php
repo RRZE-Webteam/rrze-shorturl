@@ -665,7 +665,7 @@ class Settings
                             </th>
                             <th scope="col"><?php echo __('Allow URI', 'rrze-shorturl'); ?></th>
                             <th scope="col"><?php echo __('Allow GET', 'rrze-shorturl'); ?></th>
-                            <th scope="col"><?php echo __('Allow long-life links', 'rrze-shorturl'); ?></th>
+                            <th scope="col"><?php echo __('Allow UTM', 'rrze-shorturl'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -679,7 +679,7 @@ class Settings
                                     <td><?php echo $idm["idm"]; ?></td>
                                     <td><input type="checkbox" class="allow-uri-checkbox" data-id="<?php echo $idm["id"]; ?>" <?php echo $idm["allow_uri"] ? 'checked' : ''; ?>></td>
                                     <td><input type="checkbox" class="allow-get-checkbox" data-id="<?php echo $idm["id"]; ?>" <?php echo $idm["allow_get"] ? 'checked' : ''; ?>></td>
-                                    <td><input type="checkbox" class="allow-longlifelinks-checkbox" data-id="<?php echo $idm["id"]; ?>"
+                                    <td><input type="checkbox" class="allow-utm-checkbox" data-id="<?php echo $idm["id"]; ?>"
                                             <?php echo $idm["allow_utm"] ? 'checked' : ''; ?>></td>
                                 </tr>
                                 <?php
