@@ -37,7 +37,7 @@ In den Einstellungen kann Folgendes verwaltet werden:
 
 ## Cronjobs (WordPress "cronjobs")
 - rrze_shorturl_fetch_and_store_customerdomains für die Ermittlung der Customer Domains (täglich um 4:00 a.m.)
-- rrze_shorturl_cleanup_database um die IdM zu löschen, die keine Links generiert haben (monatlich)
+- rrze_shorturl_cleanup_inactive_idms um die IdM zu löschen, die keine Links generiert haben (monatlich)
 
 ## REST-API Endpoints (DOMAIN/wp/v2/shorturl)
 - /active-shorturls (GET) liefert die Paare "long_url" und "short_url" als JSON
