@@ -372,20 +372,20 @@ class ShortURL
         }
 
         // Calculate maxDate (default => 1 year from now; long_life_links_allowed => 5 years from now)
-        $maxDate = clone $current_date;
+        // $maxDate = clone $current_date;
 
-        if (self::$rights['utm_allowed']) {
-            $maxDate->add(new \DateInterval('P5Y'));
-            $msg = __('five years', 'rrze-shorturl');
-        } else {
-            $maxDate->add(new \DateInterval('P1Y'));
-            $msg = __('one year', 'rrze-shorturl');
-        }
+        // if (self::$rights['allow_longlifelinks']) {
+        //     $maxDate->add(new \DateInterval('P5Y'));
+        //     $msg = __('five years', 'rrze-shorturl');
+        // } else {
+        //     $maxDate->add(new \DateInterval('P1Y'));
+        //     $msg = __('one year', 'rrze-shorturl');
+        // }
 
-        // Check if $valid_until is more than $maxDate
-        if ($valid_until_date > $maxDate) {
-            return ['error' => true, 'txt' => sprintf(__('Validity cannot be more than %s in the future.', 'rrze-shorturl'), $msg)];
-        }
+        // // Check if $valid_until is more than $maxDate
+        // if ($valid_until_date > $maxDate) {
+        //     return ['error' => true, 'txt' => sprintf(__('Validity cannot be more than %s in the future.', 'rrze-shorturl'), $msg)];
+        // }
 
         // If the date is valid and within the allowed range
         return ['error' => false, 'txt' => __('Date is valid.', 'rrze-shorturl')];
