@@ -327,7 +327,7 @@ class ShortURL
         }
 
         // Check if the slug exists in shorturl_links
-        $query = $wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}shorturl_links WHERE uri = %s", $uri);
+        $query = $wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}shorturl_links WHERE active = 1 AND uri = %s", $uri);
 
         if ($wpdb->get_var($query) != 0) {
             return false;
@@ -655,7 +655,7 @@ class ShortURL
 
         try {
             // Perform the database query to fetch active short URLs
-            $query = "SELECT long_url, short_url, valid_until FROM {$wpdb->prefix}shorturl_links WHERE active = 1 AND valid_until >= CURDATE() ORDER BY created_at DESC";
+            $query = "SELECT long_url, short_url, valid_until FROM {$wpdb->prefix}shorturl_links WHERE active = 1 ORDER BY created_at DESC";
             $results = $wpdb->get_results($query, ARRAY_A);
 
             return $results;

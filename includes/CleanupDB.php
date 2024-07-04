@@ -11,7 +11,7 @@ class CleanupDB
 
         // Define the custom "monthly" interval
         add_filter('cron_schedules', function ($schedules) {
-            $schedules['monthly'] = array (
+            $schedules['monthly'] = array(
                 'interval' => 30 * DAY_IN_SECONDS,
                 'display' => __('Monthly')
             );
@@ -58,24 +58,32 @@ class CleanupDB
     public static function cleanInvalidLinks()
     {
         global $wpdb;
-    
+
         try {
+            // Set active = 0 for URLs with valid_until in the past
+            $wpdb->query(
+                "UPDATE {$wpdb->prefix}shorturl_links 
+                    SET active = 0 
+                    WHERE valid_until IS NOT NULL 
+                    AND valid_until < CURDATE()"
+                );
+
             // Fetch active short URLs
             $query = "SELECT id, long_url 
                       FROM {$wpdb->prefix}shorturl_links 
                       WHERE active = 1 
                       ORDER BY created_at DESC";
             $results = $wpdb->get_results($query, ARRAY_A);
-    
+
             foreach ($results as $result) {
                 $response = wp_remote_get($result['long_url']);
-    
+
                 if (is_wp_error($response)) {
                     // Log the error and continue with the next URL
                     error_log("Error fetching URL: " . $result['long_url']);
                     continue;
                 }
-    
+
                 $http_code = wp_remote_retrieve_response_code($response);
                 if ($http_code >= 400 && $http_code < 500) {
                     // Set active = 0 for invalid URLs
@@ -85,11 +93,11 @@ class CleanupDB
                     );
                     $wpdb->query($update_query);
                 }
-            }    
+            }
         } catch (CustomException $e) {
             error_log("Error fetching active short URLs: " . $e->getMessage());
             return json_encode(array('error' => 'An error occurred while fetching short URLs.'));
         }
     }
-    
+
 }
