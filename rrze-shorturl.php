@@ -15,7 +15,7 @@ Domain Path:     /languages
 Text Domain:     rrze-shorturl
  */
 
-namespace RRZE\ShortURL;-
+namespace RRZE\ShortURL;
 
 defined('ABSPATH') || exit;
 

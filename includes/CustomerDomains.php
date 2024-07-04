@@ -25,6 +25,7 @@ class CustomerDomains
         $aAPI_url = [
             'https://statistiken.rrze.fau.de/webauftritte/domains//analyse/domain-analyse-18.json',
             'https://statistiken.rrze.fau.de/webauftritte/domains/analyse/domain-analyse-1.json',
+            'https://statistiken.rrze.fau.de/webauftritte/domains//analyse/domain-analyse-2-3.json',
         ];
 
         foreach ($aAPI_url as $api_url) {
