@@ -374,7 +374,7 @@ class ShortURL
         // Calculate maxDate (default => 1 year from now; long_life_links_allowed => 5 years from now)
         $maxDate = clone $current_date;
 
-        if (self::$rights['longlifelinks_allowed']) {
+        if (self::$rights['utm_allowed']) {
             $maxDate->add(new \DateInterval('P5Y'));
             $msg = __('five years', 'rrze-shorturl');
         } else {

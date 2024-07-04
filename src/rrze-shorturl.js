@@ -259,7 +259,7 @@ jQuery(document).ready(function ($) {
         if ($(this).hasClass('allow-uri-checkbox')) {
             field = 'allow_uri';
         } else if ($(this).hasClass('allow-longlifelinks-checkbox')) {
-            field = 'allow_longlifelinks';
+            field = 'allow_utm';
         } else {
             field = 'allow_get';
         }        

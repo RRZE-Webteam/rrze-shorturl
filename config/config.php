@@ -102,7 +102,7 @@ function create_custom_tables()
             idm VARCHAR(255) UNIQUE NOT NULL,
             allow_uri BOOLEAN DEFAULT FALSE,
             allow_get BOOLEAN DEFAULT FALSE,
-            allow_longlifelinks BOOLEAN DEFAULT FALSE,
+            allow_utm BOOLEAN DEFAULT FALSE,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             created_by VARCHAR(255) NOT NULL,
             PRIMARY KEY (id)

@@ -4,7 +4,7 @@
 Plugin Name:     RRZE ShortURL
 Plugin URI:      https://gitlab.rrze.fau.de/rrze-webteam/rrze-shorturl
 Description:     Plugin, um URLs zu verkürzen. 
-Version:         1.8.1
+Version:         1.8.2
 Requires at least: 6.4
 Requires PHP:      8.2
 Author:          RRZE Webteam
@@ -131,7 +131,7 @@ function insertWebteam(){
         define('VIP', [
             'allow_uri' => true,
             'allow_get' => true,
-            'allow_longlifelinks' => true
+            'allow_utm' => true
         ]);
 
         $aEntries = [
@@ -162,11 +162,11 @@ function insertWebteam(){
             $idm = $entry_data['idm'];
             $allow_uri = $entry_data['allow_uri'];
             $allow_get = $entry_data['allow_get'];
-            $allow_longlifelinks = $entry_data['allow_longlifelinks'];
+            $allow_utm = $entry_data['allow_utm'];
             $created_by = 'system';
 
             // Prepare the SQL query string
-            $sql_query = $wpdb->prepare("INSERT IGNORE INTO {$wpdb->prefix}shorturl_idms (idm, allow_uri, allow_get, allow_longlifelinks, created_by) VALUES (%s, %d, %d, %d, %s)", $idm, $allow_uri, $allow_get, $allow_longlifelinks, $created_by);
+            $sql_query = $wpdb->prepare("INSERT IGNORE INTO {$wpdb->prefix}shorturl_idms (idm, allow_uri, allow_get, allow_utm, created_by) VALUES (%s, %d, %d, %d, %s)", $idm, $allow_uri, $allow_get, $allow_utm, $created_by);
 
             // Log the SQL query string
             error_log("SQL Query: " . $sql_query);
@@ -182,6 +182,26 @@ function insertWebteam(){
         error_log("Error in drop_custom_tables: " . $e->getMessage());
     }
 
+}
+
+function renameField() {
+    global $wpdb;
+
+    $table_name = $wpdb->prefix . 'shorturl_idms';
+
+    // Check if the column 'allow_longlifelinks' exists
+    $column_exists = $wpdb->get_results(
+        $wpdb->prepare(
+            "SHOW COLUMNS FROM `$table_name` LIKE %s",
+            'allow_longlifelinks'
+        )
+    );
+
+    if (!empty($column_exists)) {
+        // Rename the column
+        $sql = "ALTER TABLE `$table_name` CHANGE `allow_longlifelinks` `allow_utm` TINYINT(1) NOT NULL DEFAULT '0'";
+        $wpdb->query($sql);
+    }
 }
 
 /**
@@ -208,6 +228,8 @@ function loaded()
         $main->onLoaded();
 
         // insertWebteam();
+        renameField();
+
     }
 
     add_action('init', __NAMESPACE__ . '\rrze_shorturl_init');
