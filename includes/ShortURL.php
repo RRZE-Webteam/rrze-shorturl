@@ -355,7 +355,7 @@ class ShortURL
     public static function isValidDate($valid_until)
     {
         if (empty($valid_until)) {
-            return ['error' => false, 'txt' => 'no date given'];
+            return ['error' => false, 'txt' => __('Date is valid.', 'rrze-shorturl')];
         }
         $parsed_date = date_parse($valid_until);
 
@@ -577,7 +577,9 @@ class ShortURL
                 ];
             }
 
-            $valid_until = isset($shortenParams['valid_until']) && $shortenParams['valid_until'] !== '' ? $shortenParams['valid_until'] : date('Y-m-d', strtotime('+1 year'));
+
+            $valid_until = (!empty($shortenParams['valid_until']) ? $shortenParams['valid_until'] : NULL);
+
             $categories = $shortenParams['categories'] ?? [];
             // $tags = $shortenParams['tags'] ?? [];
 
@@ -621,7 +623,6 @@ class ShortURL
                 $shortURL = $aLink['short_url'];
             }
 
-            // $bUpdated = self::updateLink(self::$rights['id'], $aLink['id'], $aDomain['id'], $shortURL, $uri, $valid_until, $categories, $tags);
             $bUpdated = self::updateLink(self::$rights['id'], $aLink['id'], $aDomain['id'], $shortURL, $uri, $valid_until, $categories);
 
             if ($bUpdated === false) {
@@ -633,7 +634,7 @@ class ShortURL
                 ];
             }
 
-            $valid_until_formatted = date_format(date_create($valid_until), 'd.m.Y');
+            $valid_until_formatted = (!empty($valid_until) ? date_format(date_create($valid_until), 'd.m.Y') : __('indefinite', 'rrze-shorturl'));
 
             return [
                 'error' => false,
