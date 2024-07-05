@@ -391,9 +391,29 @@ class ShortURL
         return ['error' => false, 'txt' => __('Date is valid.', 'rrze-shorturl')];
     }
 
+    private static function add_or_replace_utm_parameters($url, $utm_parameters) {
+
+        $url_components = parse_url($url);
+
+        $query_parameters = [];
+        if (isset($url_components['query'])) {
+            parse_str($url_components['query'], $query_parameters);
+        }
+
+        // add / exchange utm_parameters
+        foreach ($utm_parameters as $key => $value) {
+            $query_parameters[$key] = $value;
+        }
+
+        $url_components['query'] = http_build_query($query_parameters);
+
+        $components = array_keys($url_components);
+
+        return self::add_url_components($url, $components, $url_components['query']);
+    }
 
 
-    private static function add_url_components($url, $components)
+    private static function add_url_components($url, $components, $query = '')
     {
         $parsed_url = parse_url($url);
         $new_url = '';
@@ -403,12 +423,12 @@ class ShortURL
         }
 
         foreach ($components as $component) {
-            if (isset($parsed_url[$component])) {
+            if (isset($parsed_url[$component]) || ($component == 'query' && $query)) {
                 if ($component == 'scheme') {
                     $parsed_url[$component] .= '://';
                 }
                 if ($component == 'query') {
-                    $parsed_url[$component] = '?' . $parsed_url[$component];
+                    $parsed_url[$component] = '?' . ($query ? $query : $parsed_url[$component] );
                 }
                 if ($component == 'fragment') {
                     $parsed_url[$component] = '#' . $parsed_url[$component];
@@ -529,7 +549,25 @@ class ShortURL
             }
 
             // Check if 'get_allowed' is false and remove GET parameters if necessary
-            $long_url = self::$rights['get_allowed'] ? self::add_url_components($long_url, array('scheme', 'host', 'path', 'query', 'fragment')) : self::add_url_components($long_url, array('scheme', 'host', 'path', 'fragment'));
+            if (self::$rights['get_allowed']) {
+                $aComponents = ['scheme', 'host', 'path', 'query', 'fragment'];
+            } else {
+                $aComponents = ['scheme', 'host', 'path', 'fragment'];
+            }
+
+            $long_url = self::add_url_components($long_url, $aComponents);
+
+            // add / exchange utm_parameters
+            $aUTM = [];
+            if (self::$rights['utm_allowed']) {
+                foreach ($shortenParams as $key => $val) {
+                    if ((strpos($key, 'utm_') === 0) && !empty($val)) {
+                        $aUTM[$key] = $val;
+                    }
+                }
+
+                $long_url = self::add_or_replace_utm_parameters($long_url, $aUTM);
+            }
 
             // Is it an allowed domain?
             $aDomain = self::checkDomain($long_url);
