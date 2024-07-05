@@ -258,7 +258,7 @@ function loaded()
 
         // insertWebteam();
         renameField();
-        // setAllow_UTMtoFalse();
+        setAllow_UTMtoFalse();
         setLinksIndefinite();
 
     }
