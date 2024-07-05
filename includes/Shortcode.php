@@ -644,8 +644,13 @@ class Shortcode
             'url' => (!empty($_POST['url']) ? sanitize_text_field($_POST['url']) : (!empty($_GET['url']) ? sanitize_text_field($_GET['url']) : '')),
             'uri' => self::$rights['uri_allowed'] ? sanitize_text_field($_POST['uri'] ?? '') : '',
             'valid_until' => sanitize_text_field($_POST['valid_until'] ?? ''),
-            'categories' => !empty($_POST['categories']) ? array_map('sanitize_text_field', $_POST['categories']) : [],
+            'categories' => !empty($_POST['categories']) ? array_map('sanitize_text_field', $_POST['categories']) : [],            
             // 'tags' => !empty ($_POST['tags']) ? array_map('sanitize_text_field', $_POST['tags']) : [],
+            'utm_source' => (!empty($_POST['utm_source']) ? sanitize_text_field($_POST['utm_source']) : ''),
+            'utm_medium' => (!empty($_POST['utm_medium']) ? sanitize_text_field($_POST['utm_medium']) : ''),
+            'utm_campaign' => (!empty($_POST['utm_campaign']) ? sanitize_text_field($_POST['utm_campaign']) : ''),
+            'utm_term' => (!empty($_POST['utm_term']) ? sanitize_text_field($_POST['utm_term']) : ''),
+            'utm_content' => (!empty($_POST['utm_content']) ? sanitize_text_field($_POST['utm_content']) : ''),
         ];
 
         $result_message = ''; // Initialize result message
@@ -684,6 +689,9 @@ class Shortcode
             $form .= self::display_shorturl_uri($aParams['uri']);
         }
         $form .= self::display_shorturl_validity($aParams['valid_until']);
+        if (self::$rights['utm_allowed']) {
+            $form .= self::display_shorturl_utm($aParams['utm_source'], $aParams['utm_medium'], $aParams['utm_campaign'], $aParams['utm_term'], $aParams['utm_content']);
+        }
         $form .= '<h6 class="handle">' . __('Categories', 'rrze-shorturl') . '</h6>';
         $form .= self::display_shorturl_category($aParams['categories']);
         $form .= '</div>';
@@ -1128,6 +1136,38 @@ class Shortcode
                 <?php echo __('Self-Explanatory URI', 'rrze-shorturl'); ?>:
             </label>
             <input type="text" id="uri" name="uri" value="<?php echo $val; ?>">
+        </div>
+        <?php
+        return ob_get_clean();
+    }
+
+
+    public static function display_shorturl_utm($utm_source, $utm_medium, $utm_campaign, $utm_term, $utm_content)
+    {
+
+        ob_start();
+        ?>
+        <div>
+        <label for="utm_source">
+                <?php echo __('UTM Source', 'rrze-shorturl'); ?>:
+            </label>
+            <input type="text" id="utm_source" name="utm_source" value="<?php echo $utm_source; ?>">
+            <label for="utm_medium">
+                <?php echo __('UTM Medium', 'rrze-shorturl'); ?>:
+            </label>
+            <input type="text" id="utm_medium" name="utm_medium" value="<?php echo $utm_medium; ?>">
+            <label for="utm_campaign">
+                <?php echo __('UTM Campaign', 'rrze-shorturl'); ?>:
+            </label>
+            <input type="text" id="utm_campaign" name="utm_campaign" value="<?php echo $utm_campaign; ?>">
+            <label for="utm_term">
+                <?php echo __('UTM Term', 'rrze-shorturl'); ?>:
+            </label>
+            <input type="text" id="utm_term" name="utm_term" value="<?php echo $utm_term; ?>">
+            <label for="utm_content">
+                <?php echo __('UTM Content', 'rrze-shorturl'); ?>:
+            </label>
+            <input type="text" id="utm_content" name="utm_content" value="<?php echo $utm_content; ?>">
         </div>
         <?php
         return ob_get_clean();
