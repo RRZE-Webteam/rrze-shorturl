@@ -13,10 +13,11 @@ class ShortURL
         "ShortURLModChars" => "abcdefghijklmnopqrstuvwxyz0123456789-"
     ];
 
-    public function __construct()
+    public function __construct($rights)
     {
-        $rightsObj = new Rights();
-        self::$rights = $rightsObj->getRights();
+        // $rightsObj = new Rights();
+        // self::$rights = $rightsObj->getRights();
+        $this->rights = $rights;
 
         $options = json_decode(get_option('rrze-shorturl'), true);
 

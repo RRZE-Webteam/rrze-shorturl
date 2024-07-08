@@ -7,10 +7,11 @@ class Shortcode
 {
     protected static $rights;
 
-    public function __construct()
+    public function __construct($rights)
     {
-        $rightsObj = new Rights();
-        self::$rights = $rightsObj->getRights();
+        // $rightsObj = new Rights();
+        // self::$rights = $rightsObj->getRights();
+        $this->rights = $rights;
 
         add_shortcode('shorturl', [$this, 'shorturl_handler']);
         add_shortcode('shorturl-list', [$this, 'shortcode_list_handler']);
@@ -637,9 +638,6 @@ class Shortcode
 
     public function shorturl_handler($atts = null): string
     {
-        $idm = '';
-
-
         $aParams = [
             'url' => (!empty($_POST['url']) ? sanitize_text_field($_POST['url']) : (!empty($_GET['url']) ? sanitize_text_field($_GET['url']) : '')),
             'uri' => self::$rights['uri_allowed'] ? sanitize_text_field($_POST['uri'] ?? '') : '',

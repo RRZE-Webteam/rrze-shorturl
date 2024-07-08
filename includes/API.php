@@ -10,13 +10,14 @@ class API
     protected static $rights;
     protected static $aAllowedIPs;
 
-    public function __construct()
+    public function __construct($rights)
     {
         flush_rewrite_rules();
         add_action('rest_api_init', array($this, 'register_rest_endpoints'));
 
-        $rightsObj = new Rights();
-        self::$rights = $rightsObj->getRights();
+        // $rightsObj = new Rights();
+        // self::$rights = $rightsObj->getRights();
+        $this->rights = $rights;
 
         $options = json_decode(get_option('rrze-shorturl'), true);
 
