@@ -956,7 +956,7 @@ class Shortcode
             $table .= '<td class="column-long-url"><a href="' . $row['long_url'] . '">' . $row['long_url'] . '</a></td>';
             $table .= '<td class="column-short-url"><a href="' . $row['short_url'] . '+">' . $row['short_url'] . '</a></td>';
             $table .= '<td class="column-uri">' . $row['uri'] . '</td>';
-            $table .= '<td class="column-valid-until">' . $row['valid_until'] . '</td>';
+            $table .= '<td class="column-valid-until">' . (!empty($row['valid_until']) ? $row['valid_until'] : __('indefinite', 'rrze-shorturl')) . '</td>';
             $table .= '<td class="column-categories">' . $category_names_str . '</td>';
             // $table .= '<td class="column-tags">' . $tag_names_str . '</td>';
             $table .= '<td class="column-actions"><a href="#" class="edit-link" data-link-id="' . $row['link_id'] . '">' . __('Edit', 'rrze-shorturl') . '</a>' . (self::$rights['id'] == $row['idm_id'] ? ' | <a href="#" data-link-id="' . $row['link_id'] . '" class="delete-link">' . __('Delete', 'rrze-shorturl') . '</a>' : '') . '</td>';
