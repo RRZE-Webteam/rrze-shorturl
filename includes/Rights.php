@@ -19,12 +19,7 @@ class Rights
             $permissionsInstance = new Permissions();
             $checkSSOLoggedIn = $permissionsInstance->checkSSOLoggedIn();
             $personAttributes = $permissionsInstance->personAttributes;
-
             $this->idm = (!empty($personAttributes['uid'][0]) ? $personAttributes['uid'][0] : null);
-
-            $tmp = json_encode($personAttributes);
-            echo "<script>console.log('BK DEBUG: in construct " . $tmp . "' );</script>";
-            
         } else {
             error_log('\RRZE\AccessControl\Permissions is not available');
         }
@@ -32,9 +27,6 @@ class Rights
 
     public function getRights(): array
     {
-
-        echo "<script>console.log('BK DEBUG: " . $this->idm . "' );</script>";
-        
         global $wpdb;
         $aRet = [
             'id' => 0,
