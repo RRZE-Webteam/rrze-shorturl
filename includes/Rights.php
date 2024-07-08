@@ -20,17 +20,11 @@ class Rights
             $checkSSOLoggedIn = $permissionsInstance->checkSSOLoggedIn();
             $personAttributes = $permissionsInstance->personAttributes;
 
-
-            // $this->idm = (!empty($personAttributes['urn:mace:dir:attribute-def:uid'][0]) ? $personAttributes['urn:mace:dir:attribute-def:uid'][0] : null);
             $this->idm = (!empty($personAttributes['uid'][0]) ? $personAttributes['uid'][0] : null);
 
             $tmp = json_encode($personAttributes);
             echo "<script>console.log('BK DEBUG: in construct " . $tmp . "' );</script>";
-
             
-            if ($this->idm !== null && str_ends_with($this->idm, 'fau-de')) {
-                $this->idm = substr($this->idm, 0, -6);
-            }
         } else {
             error_log('\RRZE\AccessControl\Permissions is not available');
         }
