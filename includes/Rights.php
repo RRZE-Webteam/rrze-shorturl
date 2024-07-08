@@ -20,6 +20,10 @@ class Rights
             $checkSSOLoggedIn = $permissionsInstance->checkSSOLoggedIn();
             $personAttributes = $permissionsInstance->personAttributes;
             $this->idm = (!empty($personAttributes['urn:mace:dir:attribute-def:uid'][0]) ? $personAttributes['urn:mace:dir:attribute-def:uid'][0] : null);
+            
+            if ($this->idm !== null && str_ends_with($this->idm, 'fau-de')) {
+                $this->idm = substr($this->idm, 0, -6);
+            }
         } else {
             error_log('\RRZE\AccessControl\Permissions is not available');
         }
@@ -30,9 +34,9 @@ class Rights
         global $wpdb;
         $aRet = [
             'id' => 0,
-            'uri_allowed' => false,
-            'get_allowed' => false,
-            'utm_allowed' => false
+            'allow_uri' => false,
+            'allow_get' => false,
+            'allow_utm' => false
         ];
 
         try {
@@ -40,9 +44,9 @@ class Rights
 
             if ($result) {
                 $aRet['id'] = $result['id'];
-                $aRet['uri_allowed'] = (bool) $result['allow_uri'];
-                $aRet['get_allowed'] = (bool) $result['allow_get'];
-                $aRet['utm_allowed'] = (bool) $result['allow_utm'];
+                $aRet['allow_uri'] = (bool) $result['allow_uri'];
+                $aRet['allow_get'] = (bool) $result['allow_get'];
+                $aRet['allow_utm'] = (bool) $result['allow_utm'];
             } else {
                 if (!empty($this->idm)) {
                     try {
