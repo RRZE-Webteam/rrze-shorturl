@@ -13,10 +13,11 @@ class ShortURL
         "ShortURLModChars" => "abcdefghijklmnopqrstuvwxyz0123456789-"
     ];
 
-    public function __construct()
+    public function __construct($rights)
     {
-        $rightsObj = new Rights();
-        self::$rights = $rightsObj->getRights();
+        // $rightsObj = new Rights();
+        // self::$rights = $rightsObj->getRights();
+        self::$rights = $rights;
 
         $options = json_decode(get_option('rrze-shorturl'), true);
 
@@ -143,6 +144,8 @@ class ShortURL
         // $link_tags_table = $wpdb->prefix . 'shorturl_links_tags';
 
         try {
+            $valid_until = ($valid_until ? $valid_until : NULL);
+
             // Store in the database    
             $update_result = $wpdb->update(
                 $table_name,
@@ -243,7 +246,7 @@ class ShortURL
                 'id' => 0,
                 'prefix' => 0,
                 'hostname' => '',
-                'notice' => __('Domain is not allowed to use our shortening service.', 'rrze-shorturl') . ' ' . '<a href="../domain-liste">' . __('Liste an erlaubten Domains', 'rrze-shorturl') . '</a>',
+                'notice' => __('Domain is not allowed to use our shortening service.', 'rrze-shorturl') . ' ' . '<a href="../domain-liste">' . __('List of allowed domains', 'rrze-shorturl') . '</a>',
                 'message_type' => 'error'
             ];
 
@@ -288,8 +291,8 @@ class ShortURL
                     $notice = $aEntry['notice'];
 
                     if (!$aEntry['active']) {
-                        $notice = __('Auf die Webseite kann derzeit kein ShortURL erstellt werden, da', 'rrze-shorturl') . ' ' . $aEntry['notice'] . ' ' . __('fehlt', 'rrze-shorturl') . '. ';
-                        $notice .= __('Um diesen Fehler beheben zu lassen, können Sie sich an die/den technischen AnsprechpartnerIn der betreffenden Website wenden', 'rrze-shorturl') . ': <a href="mailto:' . $aEntry['webmaster_email'] . '">' . $aEntry['webmaster_name'] . ' &lt;' . $aEntry['webmaster_email'] . '&gt;</a>';
+                        $notice = __('A short URL cannot currently be created on the website because', 'rrze-shorturl') . ' ' . $aEntry['notice'] . ' ' . __('is missing', 'rrze-shorturl') . '. ';
+                        $notice .= __('To resolve this issue, please contact the technical support person for the website in question', 'rrze-shorturl') . ': <a href="mailto:' . $aEntry['webmaster_email'] . '">' . $aEntry['webmaster_name'] . ' &lt;' . $aEntry['webmaster_email'] . '&gt;</a>';
                     }
 
                     $aRet = [
@@ -327,7 +330,7 @@ class ShortURL
         }
 
         // Check if the slug exists in shorturl_links
-        $query = $wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}shorturl_links WHERE uri = %s", $uri);
+        $query = $wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}shorturl_links WHERE active = 1 AND uri = %s", $uri);
 
         if ($wpdb->get_var($query) != 0) {
             return false;
@@ -355,7 +358,7 @@ class ShortURL
     public static function isValidDate($valid_until)
     {
         if (empty($valid_until)) {
-            return ['error' => false, 'txt' => 'no date given'];
+            return ['error' => false, 'txt' => __('Date is valid.', 'rrze-shorturl')];
         }
         $parsed_date = date_parse($valid_until);
 
@@ -372,28 +375,48 @@ class ShortURL
         }
 
         // Calculate maxDate (default => 1 year from now; long_life_links_allowed => 5 years from now)
-        $maxDate = clone $current_date;
+        // $maxDate = clone $current_date;
 
-        if (self::$rights['longlifelinks_allowed']) {
-            $maxDate->add(new \DateInterval('P5Y'));
-            $msg = __('five years', 'rrze-shorturl');
-        } else {
-            $maxDate->add(new \DateInterval('P1Y'));
-            $msg = __('one year', 'rrze-shorturl');
-        }
+        // if (self::$rights['allow_longlifelinks']) {
+        //     $maxDate->add(new \DateInterval('P5Y'));
+        //     $msg = __('five years', 'rrze-shorturl');
+        // } else {
+        //     $maxDate->add(new \DateInterval('P1Y'));
+        //     $msg = __('one year', 'rrze-shorturl');
+        // }
 
-        // Check if $valid_until is more than $maxDate
-        if ($valid_until_date > $maxDate) {
-            return ['error' => true, 'txt' => sprintf(__('Validity cannot be more than %s in the future.', 'rrze-shorturl'), $msg)];
-        }
+        // // Check if $valid_until is more than $maxDate
+        // if ($valid_until_date > $maxDate) {
+        //     return ['error' => true, 'txt' => sprintf(__('Validity cannot be more than %s in the future.', 'rrze-shorturl'), $msg)];
+        // }
 
         // If the date is valid and within the allowed range
         return ['error' => false, 'txt' => __('Date is valid.', 'rrze-shorturl')];
     }
 
+    private static function add_or_replace_utm_parameters($url, $utm_parameters) {
+
+        $url_components = parse_url($url);
+
+        $query_parameters = [];
+        if (isset($url_components['query'])) {
+            parse_str($url_components['query'], $query_parameters);
+        }
+
+        // add / exchange utm_parameters
+        foreach ($utm_parameters as $key => $value) {
+            $query_parameters[$key] = $value;
+        }
+
+        $url_components['query'] = http_build_query($query_parameters);
+
+        $components = array_keys($url_components);
+
+        return self::add_url_components($url, $components, $url_components['query']);
+    }
 
 
-    private static function add_url_components($url, $components)
+    private static function add_url_components($url, $components, $query = '')
     {
         $parsed_url = parse_url($url);
         $new_url = '';
@@ -403,12 +426,12 @@ class ShortURL
         }
 
         foreach ($components as $component) {
-            if (isset($parsed_url[$component])) {
+            if (isset($parsed_url[$component]) || ($component == 'query' && $query)) {
                 if ($component == 'scheme') {
                     $parsed_url[$component] .= '://';
                 }
                 if ($component == 'query') {
-                    $parsed_url[$component] = '?' . $parsed_url[$component];
+                    $parsed_url[$component] = '?' . ($query ? $query : $parsed_url[$component] );
                 }
                 if ($component == 'fragment') {
                     $parsed_url[$component] = '#' . $parsed_url[$component];
@@ -529,7 +552,25 @@ class ShortURL
             }
 
             // Check if 'get_allowed' is false and remove GET parameters if necessary
-            $long_url = self::$rights['get_allowed'] ? self::add_url_components($long_url, array('scheme', 'host', 'path', 'query', 'fragment')) : self::add_url_components($long_url, array('scheme', 'host', 'path', 'fragment'));
+            if (self::$rights['get_allowed']) {
+                $aComponents = ['scheme', 'host', 'path', 'query', 'fragment'];
+            } else {
+                $aComponents = ['scheme', 'host', 'path', 'fragment'];
+            }
+
+            $long_url = self::add_url_components($long_url, $aComponents);
+
+            // add / exchange utm_parameters
+            $aUTM = [];
+            if (self::$rights['utm_allowed']) {
+                foreach ($shortenParams as $key => $val) {
+                    if ((strpos($key, 'utm_') === 0) && !empty($val)) {
+                        $aUTM[$key] = $val;
+                    }
+                }
+
+                $long_url = self::add_or_replace_utm_parameters($long_url, $aUTM);
+            }
 
             // Is it an allowed domain?
             $aDomain = self::checkDomain($long_url);
@@ -577,7 +618,9 @@ class ShortURL
                 ];
             }
 
-            $valid_until = isset($shortenParams['valid_until']) && $shortenParams['valid_until'] !== '' ? $shortenParams['valid_until'] : date('Y-m-d', strtotime('+1 year'));
+
+            $valid_until = (!empty($shortenParams['valid_until']) ? $shortenParams['valid_until'] : NULL);
+
             $categories = $shortenParams['categories'] ?? [];
             // $tags = $shortenParams['tags'] ?? [];
 
@@ -621,7 +664,6 @@ class ShortURL
                 $shortURL = $aLink['short_url'];
             }
 
-            // $bUpdated = self::updateLink(self::$rights['id'], $aLink['id'], $aDomain['id'], $shortURL, $uri, $valid_until, $categories, $tags);
             $bUpdated = self::updateLink(self::$rights['id'], $aLink['id'], $aDomain['id'], $shortURL, $uri, $valid_until, $categories);
 
             if ($bUpdated === false) {
@@ -633,7 +675,7 @@ class ShortURL
                 ];
             }
 
-            $valid_until_formatted = date_format(date_create($valid_until), 'd.m.Y');
+            $valid_until_formatted = (!empty($valid_until) ? date_format(date_create($valid_until), 'd.m.Y') : __('indefinite', 'rrze-shorturl'));
 
             return [
                 'error' => false,
@@ -655,7 +697,7 @@ class ShortURL
 
         try {
             // Perform the database query to fetch active short URLs
-            $query = "SELECT long_url, short_url, valid_until FROM {$wpdb->prefix}shorturl_links WHERE active = 1 AND valid_until >= CURDATE() ORDER BY created_at DESC";
+            $query = "SELECT long_url, short_url, valid_until FROM {$wpdb->prefix}shorturl_links WHERE active = 1 ORDER BY created_at DESC";
             $results = $wpdb->get_results($query, ARRAY_A);
 
             return $results;

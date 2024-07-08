@@ -25,6 +25,7 @@ class CustomerDomains
         $aAPI_url = [
             'https://statistiken.rrze.fau.de/webauftritte/domains//analyse/domain-analyse-18.json',
             'https://statistiken.rrze.fau.de/webauftritte/domains/analyse/domain-analyse-1.json',
+            'https://statistiken.rrze.fau.de/webauftritte/domains//analyse/domain-analyse-2-3.json',
         ];
 
         foreach ($aAPI_url as $api_url) {
@@ -49,13 +50,13 @@ class CustomerDomains
                             $webmaster_email = '';
                             $active = 1;
                             if (empty($entry['content']['tos']['Impressum']['href'])) {
-                                $notice = __('das Impressum', 'rrze-shorturl');
+                                $notice = __('the imprint', 'rrze-shorturl');
                                 $active = 0;
                             } elseif (empty($entry['content']['tos']['Datenschutz']['href'])) {
-                                $notice = __('die Datenschutzerklärung', 'rrze-shorturl');
+                                $notice = __('the privacy policy', 'rrze-shorturl');
                                 $active = 0;
                             } elseif (empty($entry['content']['tos']['Barrierefreiheit']['href'])) {
-                                $notice = __('die Barrierefreiheitserklärung', 'rrze-shorturl');
+                                $notice = __('the accessibility statement', 'rrze-shorturl');
                                 $active = 0;
                             }
 

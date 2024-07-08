@@ -32,17 +32,17 @@ class Rights
             'id' => 1,
             'uri_allowed' => false,
             'get_allowed' => false,
-            'longlifelinks_allowed' => false
+            'utm_allowed' => false
         ];
 
         try {
-            $result = $wpdb->get_row($wpdb->prepare("SELECT id, allow_uri, allow_get, allow_longlifelinks FROM {$wpdb->prefix}shorturl_idms WHERE idm = %s", $this->idm), ARRAY_A);
+            $result = $wpdb->get_row($wpdb->prepare("SELECT id, allow_uri, allow_get, allow_utm FROM {$wpdb->prefix}shorturl_idms WHERE idm = %s", $this->idm), ARRAY_A);
 
             if ($result) {
                 $aRet['id'] = $result['id'];
                 $aRet['uri_allowed'] = (bool) $result['allow_uri'];
                 $aRet['get_allowed'] = (bool) $result['allow_get'];
-                $aRet['longlifelinks_allowed'] = (bool) $result['allow_longlifelinks'];
+                $aRet['utm_allowed'] = (bool) $result['allow_utm'];
             } else {
                 if (!empty($this->idm)) {
                     try {
