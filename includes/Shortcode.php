@@ -7,11 +7,10 @@ class Shortcode
 {
     protected static $rights;
 
-    public function __construct($rights)
+    public function __construct()
     {
-        // $rightsObj = new Rights();
-        // self::$rights = $rightsObj->getRights();
-        self::$rights = $rights;
+        $rightsObj = new Rights();
+        self::$rights = $rightsObj->getRights();
 
         add_shortcode('shorturl', [$this, 'shorturl_handler']);
         add_shortcode('shorturl-list', [$this, 'shortcode_list_handler']);
@@ -642,10 +641,8 @@ class Shortcode
 
     public function shorturl_handler($atts = null): string
     {
-
-
         // echo '<pre>';
-        // var_dump($this->rights);
+        // var_dump(self::$rights);
         // exit;
 
         $aParams = [
@@ -736,7 +733,7 @@ class Shortcode
         if (!self::$rights['id']){
             return;
         }
-        
+
         global $wpdb;
 
         // Retrieve categories from the shorturl_categories table

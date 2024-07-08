@@ -29,7 +29,7 @@ class Rights
     {
         global $wpdb;
         $aRet = [
-            'id' => 1,
+            'id' => 0,
             'uri_allowed' => false,
             'get_allowed' => false,
             'utm_allowed' => false
