@@ -251,34 +251,6 @@ function cleanupIdM() {
 }
 
 
-function cleanMyTestdata() {
-    global $wpdb;
-
-    $idms_table = $wpdb->prefix . 'shorturl_idms';
-    $links_table = $wpdb->prefix . 'shorturl_links';
-    $categories_table = $wpdb->prefix . 'shorturl_categories';
-
-    $idm_id = $wpdb->get_col($wpdb->prepare("
-        SELECT id
-        FROM $idms_table
-        WHERE idm = %s
-    ", 'qe28nesifau-de'));
-
-    if (!empty($idm_id)) {
-        $wpdb->query($wpdb->prepare("
-            DELETE FROM $links_table
-            WHERE idm_id = %d 
-        ", $idm_id));
-
-        // Löschen der Einträge in der categories Tabelle, die mit idms verknüpft sind
-        $wpdb->query($wpdb->prepare("
-            DELETE FROM $categories_table
-            WHERE idm_id = %d 
-        ", $idm_id));
-    }
-}
-
-
 /**
  * Wird durchgeführt, nachdem das WP-Grundsystem hochgefahren
  * und alle Plugins eingebunden wurden.
@@ -309,8 +281,6 @@ function loaded()
         // setLinksIndefinite();
         // deleteOldCron();
         // cleanupIdM();
-        cleanMyTestdata();
-
     }
 
     add_action('init', __NAMESPACE__ . '\rrze_shorturl_init');
