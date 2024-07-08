@@ -267,13 +267,13 @@ function cleanMyTestdata() {
     if (!empty($idm_id)) {
         $wpdb->query($wpdb->prepare("
             DELETE FROM $links_table
-            WHERE idm_id = %s 
+            WHERE idm_id = %d 
         ", $idm_id));
 
         // Löschen der Einträge in der categories Tabelle, die mit idms verknüpft sind
         $wpdb->query($wpdb->prepare("
             DELETE FROM $categories_table
-            WHERE idm_id = %s 
+            WHERE idm_id = %d 
         ", $idm_id));
     }
 }
