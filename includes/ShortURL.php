@@ -244,7 +244,7 @@ class ShortURL
                 'id' => 0,
                 'prefix' => 0,
                 'hostname' => '',
-                'notice' => __('Domain is not allowed to use our shortening service.', 'rrze-shorturl') . ' ' . '<a href="../domain-liste">' . __('Liste an erlaubten Domains', 'rrze-shorturl') . '</a>',
+                'notice' => __('Domain is not allowed to use our shortening service.', 'rrze-shorturl') . ' ' . '<a href="../domain-liste">' . __('List of allowed domains', 'rrze-shorturl') . '</a>',
                 'message_type' => 'error'
             ];
 
@@ -289,8 +289,8 @@ class ShortURL
                     $notice = $aEntry['notice'];
 
                     if (!$aEntry['active']) {
-                        $notice = __('Auf die Webseite kann derzeit kein ShortURL erstellt werden, da', 'rrze-shorturl') . ' ' . $aEntry['notice'] . ' ' . __('fehlt', 'rrze-shorturl') . '. ';
-                        $notice .= __('Um diesen Fehler beheben zu lassen, können Sie sich an die/den technischen AnsprechpartnerIn der betreffenden Website wenden', 'rrze-shorturl') . ': <a href="mailto:' . $aEntry['webmaster_email'] . '">' . $aEntry['webmaster_name'] . ' &lt;' . $aEntry['webmaster_email'] . '&gt;</a>';
+                        $notice = __('A short URL cannot currently be created on the website because', 'rrze-shorturl') . ' ' . $aEntry['notice'] . ' ' . __('is missing', 'rrze-shorturl') . '. ';
+                        $notice .= __('To resolve this issue, please contact the technical support person for the website in question', 'rrze-shorturl') . ': <a href="mailto:' . $aEntry['webmaster_email'] . '">' . $aEntry['webmaster_name'] . ' &lt;' . $aEntry['webmaster_email'] . '&gt;</a>';
                     }
 
                     $aRet = [
