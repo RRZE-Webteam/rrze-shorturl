@@ -280,7 +280,7 @@ function loaded()
         // setAllow_UTMtoFalse();
         // setLinksIndefinite();
         // deleteOldCron();
-        cleanupIdM();
+        // cleanupIdM();
     }
 
     add_action('init', __NAMESPACE__ . '\rrze_shorturl_init');
