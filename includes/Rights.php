@@ -21,8 +21,8 @@ class Rights
             $personAttributes = $permissionsInstance->personAttributes;
 
 
-            $this->idm = (!empty($personAttributes['urn:mace:dir:attribute-def:uid'][0]) ? $personAttributes['urn:mace:dir:attribute-def:uid'][0] : null);
-            // $this->idm = (!empty($personAttributes['uid']) ? $personAttributes['uid'] : null);
+            // $this->idm = (!empty($personAttributes['urn:mace:dir:attribute-def:uid'][0]) ? $personAttributes['urn:mace:dir:attribute-def:uid'][0] : null);
+            $this->idm = (!empty($personAttributes['uid'][0]) ? $personAttributes['uid'][0] : null);
 
             $tmp = json_encode($personAttributes);
             echo "<script>console.log('BK DEBUG: in construct " . $tmp . "' );</script>";
