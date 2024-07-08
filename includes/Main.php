@@ -53,11 +53,9 @@ class Main
         $domains = new CustomerDomains();
         $cleanup = new CleanupDB();
         $myCrypt = new MyCrypt();
-        $rightsObj = new Rights();
-        $rights = $rightsObj->getRights();
-        $shortURL = new ShortURL($rights);
-        $api = new API($rights);
-        $shortcode = new Shortcode($rights);
+        $shortURL = new ShortURL();
+        $api = new API();
+        $shortcode = new Shortcode();
     }
 
 

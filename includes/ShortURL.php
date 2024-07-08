@@ -13,11 +13,10 @@ class ShortURL
         "ShortURLModChars" => "abcdefghijklmnopqrstuvwxyz0123456789-"
     ];
 
-    public function __construct($rights)
+    public function __construct()
     {
-        // $rightsObj = new Rights();
-        // self::$rights = $rightsObj->getRights();
-        self::$rights = $rights;
+        $rightsObj = new Rights();
+        self::$rights = $rightsObj->getRights();
 
         $options = json_decode(get_option('rrze-shorturl'), true);
 
@@ -106,7 +105,7 @@ class ShortURL
             }
 
             if (empty($result)) {
-                $long_url = self::$rights['get_allowed'] ? self::add_url_components($long_url, array('scheme', 'host', 'path', 'query', 'fragment')) : self::add_url_components($long_url, array('scheme', 'host', 'path', 'fragment'));
+                $long_url = self::$rights['allow_get'] ? self::add_url_components($long_url, array('scheme', 'host', 'path', 'query', 'fragment')) : self::add_url_components($long_url, array('scheme', 'host', 'path', 'fragment'));
 
                 // Insert into the links table
                 $wpdb->insert(
@@ -522,7 +521,7 @@ class ShortURL
             }
 
             $long_url = $shortenParams['url'] ?? null;
-            $uri = self::$rights['uri_allowed'] ? sanitize_text_field($_POST['uri'] ?? '') : '';
+            $uri = self::$rights['allow_uri'] ? sanitize_text_field($_POST['uri'] ?? '') : '';
 
             // Check if this is the shortened URL
             if (self::isShortURL($long_url)) {
@@ -551,8 +550,8 @@ class ShortURL
                 }
             }
 
-            // Check if 'get_allowed' is false and remove GET parameters if necessary
-            if (self::$rights['get_allowed']) {
+            // Check if 'allow_get' is false and remove GET parameters if necessary
+            if (self::$rights['allow_get']) {
                 $aComponents = ['scheme', 'host', 'path', 'query', 'fragment'];
             } else {
                 $aComponents = ['scheme', 'host', 'path', 'fragment'];
@@ -562,7 +561,7 @@ class ShortURL
 
             // add / exchange utm_parameters
             $aUTM = [];
-            if (self::$rights['utm_allowed']) {
+            if (self::$rights['allow_utm']) {
                 foreach ($shortenParams as $key => $val) {
                     if ((strpos($key, 'utm_') === 0) && !empty($val)) {
                         $aUTM[$key] = $val;
@@ -586,7 +585,7 @@ class ShortURL
 
             // Validate the URI
             $isValidURI = false;
-            if (self::$rights['uri_allowed']) {
+            if (self::$rights['allow_uri']) {
                 $isValidURI = self::isValidURI($uri);
 
                 if ($isValidURI !== true) {

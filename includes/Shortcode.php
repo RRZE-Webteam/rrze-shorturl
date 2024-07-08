@@ -7,11 +7,10 @@ class Shortcode
 {
     protected static $rights;
 
-    public function __construct($rights)
+    public function __construct()
     {
-        // $rightsObj = new Rights();
-        // self::$rights = $rightsObj->getRights();
-        self::$rights = $rights;
+        $rightsObj = new Rights();
+        self::$rights = $rightsObj->getRights();
 
         add_shortcode('shorturl', [$this, 'shorturl_handler']);
         add_shortcode('shorturl-list', [$this, 'shortcode_list_handler']);
@@ -642,15 +641,13 @@ class Shortcode
 
     public function shorturl_handler($atts = null): string
     {
-
-
         // echo '<pre>';
-        // var_dump($this->rights);
+        // var_dump(self::$rights);
         // exit;
 
         $aParams = [
             'url' => (!empty($_POST['url']) ? sanitize_text_field($_POST['url']) : (!empty($_GET['url']) ? sanitize_text_field($_GET['url']) : '')),
-            'uri' => self::$rights['uri_allowed'] ? sanitize_text_field($_POST['uri'] ?? '') : '',
+            'uri' => self::$rights['allow_uri'] ? sanitize_text_field($_POST['uri'] ?? '') : '',
             'valid_until' => sanitize_text_field($_POST['valid_until'] ?? ''),
             'categories' => !empty($_POST['categories']) ? array_map('sanitize_text_field', $_POST['categories']) : [],            
             // 'tags' => !empty ($_POST['tags']) ? array_map('sanitize_text_field', $_POST['tags']) : [],
@@ -693,11 +690,11 @@ class Shortcode
         $form .= '</div>';
         $form .= '<button id="btn-show-advanced-settings" type="button" aria-haspopup="true" aria-controls="shorturl-advanced-settings" aria-expanded="false">' . __('Advanced Settings', 'rrze-shorturl') . '<span class="arrow-down"></span></button>';
         $form .= '<div id="shorturl-advanced-settings" class="shorturl-advanced-settings">';
-        if (self::$rights['uri_allowed']) {
+        if (self::$rights['allow_uri']) {
             $form .= self::display_shorturl_uri($aParams['uri']);
         }
         $form .= self::display_shorturl_validity($aParams['valid_until']);
-        if (self::$rights['utm_allowed']) {
+        if (self::$rights['allow_utm']) {
             $form .= self::display_shorturl_utm($aParams['utm_source'], $aParams['utm_medium'], $aParams['utm_campaign'], $aParams['utm_term'], $aParams['utm_content']);
         }
         $form .= '<h6 class="handle">' . __('Categories', 'rrze-shorturl') . '</h6>';
@@ -736,7 +733,7 @@ class Shortcode
         if (!self::$rights['id']){
             return;
         }
-        
+
         global $wpdb;
 
         // Retrieve categories from the shorturl_categories table
@@ -833,7 +830,7 @@ class Shortcode
                 'link_id' => htmlspecialchars($_POST['link_id'] ?? ''),
                 'domain_id' => htmlspecialchars($_POST['domain_id'] ?? ''),
                 'shortURL' => filter_var($_POST['shortURL'] ?? '', FILTER_VALIDATE_URL),
-                'uri' => self::$rights['uri_allowed'] ? sanitize_text_field($_POST['uri'] ?? '') : '',
+                'uri' => self::$rights['allow_uri'] ? sanitize_text_field($_POST['uri'] ?? '') : '',
                 'valid_until' => sanitize_text_field($_POST['valid_until'] ?? ''),
                 'categories' => !empty($_POST['categories']) ? array_map('sanitize_text_field', $_POST['categories']) : []
             ];
