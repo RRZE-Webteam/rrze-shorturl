@@ -11,7 +11,7 @@ class Rights
 
     public function __construct()
     {
-        $this->idm = 'system';
+        // $this->idm = 'system';
         if (is_user_logged_in()) {
             $current_user = wp_get_current_user();
             $this->idm = $current_user->user_nicename;
@@ -31,6 +31,9 @@ class Rights
 
     public function getRights(): array
     {
+
+        echo "<script>console.log('BK DEBUG: " . $this->idm . "' );</script>";
+        
         global $wpdb;
         $aRet = [
             'id' => 0,
