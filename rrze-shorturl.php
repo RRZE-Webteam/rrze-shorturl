@@ -258,10 +258,9 @@ function loaded()
 
 
         // insertWebteam();
-        // renameField();
-        // setAllow_UTMtoFalse();
-        // setLinksIndefinite();
-
+        renameField();
+        setAllow_UTMtoFalse();
+        setLinksIndefinite();
     }
 
     add_action('init', __NAMESPACE__ . '\rrze_shorturl_init');
