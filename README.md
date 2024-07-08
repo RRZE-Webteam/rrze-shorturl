@@ -33,7 +33,6 @@ In den Einstellungen kann Folgendes verwaltet werden:
 
 ## Defaults:
 - neue IdMs haben keine erweiterten Rechte
-- Gültigkeit der Links: 1 Jahr. In den Einstellungen (wp-admin/options-general.php?page=rrze-shorturl&tab=idm) kann diese für ausgewählte User (IdM) auf 5 Jahre eingestellt werden
 
 ## Cronjobs (WordPress "cronjobs")
 - rrze_shorturl_fetch_and_store_customerdomains für die Ermittlung der Customer Domains (täglich um 4:00 a.m.)
