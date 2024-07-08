@@ -20,9 +20,11 @@ class Rights
             $checkSSOLoggedIn = $permissionsInstance->checkSSOLoggedIn();
             $personAttributes = $permissionsInstance->personAttributes;
 
+
             $this->idm = (!empty($personAttributes['urn:mace:dir:attribute-def:uid'][0]) ? $personAttributes['urn:mace:dir:attribute-def:uid'][0] : null);
 
-            echo "<script>console.log('BK DEBUG: in construct " . $this->idm . "' );</script>";
+            $tmp = json_encode($personAttributes);
+            echo "<script>console.log('BK DEBUG: in construct " . $tmp . "' );</script>";
 
             
             if ($this->idm !== null && str_ends_with($this->idm, 'fau-de')) {
