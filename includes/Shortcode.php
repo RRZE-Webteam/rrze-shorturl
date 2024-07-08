@@ -282,6 +282,10 @@ class Shortcode
 
     public function makeCategoryDropdown($category_id = 0, $parent_id = 0)
     {
+        if (!self::$rights['id']){
+            return '';
+        }
+
         global $wpdb;
 
         $categories = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_categories WHERE idm_id = " . self::$rights['id']);
@@ -729,6 +733,10 @@ class Shortcode
 
     public static function display_shorturl_category($aVal = [])
     {
+        if (!self::$rights['id']){
+            return;
+        }
+        
         global $wpdb;
 
         // Retrieve categories from the shorturl_categories table

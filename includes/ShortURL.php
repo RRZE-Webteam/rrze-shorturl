@@ -144,6 +144,8 @@ class ShortURL
         // $link_tags_table = $wpdb->prefix . 'shorturl_links_tags';
 
         try {
+            $valid_until = ($valid_until ? $valid_until : NULL);
+
             // Store in the database    
             $update_result = $wpdb->update(
                 $table_name,
