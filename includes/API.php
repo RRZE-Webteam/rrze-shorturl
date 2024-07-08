@@ -17,7 +17,7 @@ class API
 
         // $rightsObj = new Rights();
         // self::$rights = $rightsObj->getRights();
-        $this->rights = $rights;
+        self::$rights = $rights;
 
         $options = json_decode(get_option('rrze-shorturl'), true);
 
