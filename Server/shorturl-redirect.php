@@ -58,13 +58,14 @@ class ShortURLRedirect
         $preview = (!empty($_GET["preview"]) ? (int) htmlspecialchars($_GET["preview"]) : 0);
 
         // Log the extracted parameters
-        error_log("Extracted parameters - code: $code, prefix: $prefix, preview: $preview");
+        // error_log("Extracted parameters - code: $code, prefix: $prefix, preview: $preview");
 
         if (empty($code)) {
             $this->send404Response("Unknown link. No code given.");
-        } elseif ($prefix < 2) {
-            $short_url = ($prefix == 1 ? $prefix . $code : $code);
-            error_log('handleRequest() $short_url = ' . $short_url);
+        } elseif ($prefix == 1 || $prefix == 7) {
+            // $short_url = ($prefix == 1 ? $prefix . $code : $code);
+            $short_url = $prefix . $code;
+            // error_log('handleRequest() $short_url = ' . $short_url);
 
             $this->handleCustomerLink($short_url, $preview);
         } else {

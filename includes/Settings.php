@@ -560,7 +560,7 @@ class Settings
         }
 
         // Fetch entries from shorturl_services table (prefix = 1 is reserved for our customer domains)
-        $entries = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_domains WHERE prefix = 7 ORDER BY hostname");
+        $entries = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_domains WHERE prefix = 0 ORDER BY hostname");
 
         ?>
         <div class="wrap">
