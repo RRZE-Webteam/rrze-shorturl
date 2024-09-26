@@ -291,7 +291,7 @@ function loaded()
         });
     } else {
 
-        addField();
+        // addField();
 
         // Hauptklasse (Main) wird instanziiert.
         $main = new Main(__FILE__);
