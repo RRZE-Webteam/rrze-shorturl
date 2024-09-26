@@ -244,6 +244,7 @@ class ShortURL
                 'is_valid' => false,
                 'id' => 0,
                 'prefix' => 0,
+                'external' => 0,
                 'hostname' => '',
                 'notice' => __('Domain is not allowed to use our shortening service.', 'rrze-shorturl') . ' ' . '<a href="../domain-liste">' . __('List of allowed domains', 'rrze-shorturl') . '</a>',
                 'message_type' => 'error'
@@ -298,6 +299,7 @@ class ShortURL
                         'is_valid' => $aEntry['active'],
                         'id' => $aEntry['id'],
                         'prefix' => ($aEntry['active'] ? $aEntry['prefix'] : 0),
+                        'external' => $aEntry['external'],
                         'hostname' => $aEntry['hostname'],
                         'notice' => $notice,
                         'message_type' => 'standard'
@@ -393,7 +395,8 @@ class ShortURL
         return ['error' => false, 'txt' => __('Date is valid.', 'rrze-shorturl')];
     }
 
-    private static function add_or_replace_utm_parameters($url, $utm_parameters) {
+    private static function add_or_replace_utm_parameters($url, $utm_parameters)
+    {
 
         $url_components = parse_url($url);
 
@@ -430,7 +433,7 @@ class ShortURL
                     $parsed_url[$component] .= '://';
                 }
                 if ($component == 'query') {
-                    $parsed_url[$component] = '?' . ($query ? $query : $parsed_url[$component] );
+                    $parsed_url[$component] = '?' . ($query ? $query : $parsed_url[$component]);
                 }
                 if ($component == 'fragment') {
                     $parsed_url[$component] = '#' . $parsed_url[$component];
@@ -550,13 +553,30 @@ class ShortURL
                 }
             }
 
+            // Is it an allowed domain?
+            $aDomain = self::checkDomain($long_url);
+
+            if (!$aDomain['is_valid']) {
+                return [
+                    'error' => true,
+                    'message_type' => $aDomain['message_type'],
+                    'txt' => $aDomain['notice'],
+                    'long_url' => $long_url
+                ];
+            }
+
+            // if external domain we must allow GET
+            if ($aDomain['external']){
+                self::$rights['allow_get'] = true;
+            }
+
             // Check if 'allow_get' is false and remove GET parameters if necessary
             if (self::$rights['allow_get']) {
                 $aComponents = ['scheme', 'host', 'path', 'query', 'fragment'];
             } else {
                 $aComponents = ['scheme', 'host', 'path', 'fragment'];
             }
-
+            
             $long_url = self::add_url_components($long_url, $aComponents);
 
             // add / exchange utm_parameters
@@ -569,18 +589,6 @@ class ShortURL
                 }
 
                 $long_url = self::add_or_replace_utm_parameters($long_url, $aUTM);
-            }
-
-            // Is it an allowed domain?
-            $aDomain = self::checkDomain($long_url);
-
-            if (!$aDomain['is_valid']) {
-                return [
-                    'error' => true,
-                    'message_type' => $aDomain['message_type'],
-                    'txt' => $aDomain['notice'],
-                    'long_url' => $long_url
-                ];
             }
 
             // Validate the URI
@@ -616,7 +624,6 @@ class ShortURL
                     'long_url' => $long_url
                 ];
             }
-
 
             $valid_until = (!empty($shortenParams['valid_until']) ? $shortenParams['valid_until'] : NULL);
 

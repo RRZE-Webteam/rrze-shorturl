@@ -641,10 +641,6 @@ class Shortcode
 
     public function shorturl_handler($atts = null): string
     {
-        // echo '<pre>';
-        // var_dump(self::$rights);
-        // exit;
-
         $aParams = [
             'url' => (!empty($_POST['url']) ? sanitize_text_field($_POST['url']) : (!empty($_GET['url']) ? sanitize_text_field($_GET['url']) : '')),
             'uri' => self::$rights['allow_uri'] ? sanitize_text_field($_POST['uri'] ?? '') : '',

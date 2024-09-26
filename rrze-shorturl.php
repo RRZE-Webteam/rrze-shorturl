@@ -4,7 +4,7 @@
 Plugin Name:     RRZE ShortURL
 Plugin URI:      https://gitlab.rrze.fau.de/rrze-webteam/rrze-shorturl
 Description:     Plugin, um URLs zu verkürzen. 
-Version:         1.8.23
+Version:         1.9.0
 Requires at least: 6.4
 Requires PHP:      8.2
 Author:          RRZE Webteam
@@ -105,6 +105,7 @@ function activation()
  */
 function deactivation()
 {
+
     // clean up the database
     Config\drop_custom_tables();
 
@@ -238,6 +239,25 @@ function renameField() {
 }
 
 
+function addField(){
+    global $wpdb;
+
+    $table_name = $wpdb->prefix . 'shorturl_domains';
+
+    $column_exists = $wpdb->get_results(
+        $wpdb->prepare(
+            "SHOW COLUMNS FROM `$table_name` LIKE %s", 
+            'external'
+        )
+    );
+
+    if (empty($column_exists)) {
+        $wpdb->query(
+            "ALTER TABLE `$table_name` ADD `external` int(1) NOT NULL DEFAULT 0"
+        );
+    }
+}
+
 function cleanupIdM() {
     global $wpdb;
     $table_name = $wpdb->prefix . 'shorturl_idms';
@@ -270,6 +290,9 @@ function loaded()
             printf('<div class="notice notice-error"><p>%1$s: %2$s</p></div>', esc_html($plugin_name), esc_html($error));
         });
     } else {
+
+        // addField();
+
         // Hauptklasse (Main) wird instanziiert.
         $main = new Main(__FILE__);
         $main->onLoaded();
