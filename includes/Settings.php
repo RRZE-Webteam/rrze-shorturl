@@ -453,7 +453,7 @@ class Settings
         global $wpdb;
 
         // Fetch entries from shorturl_domains table where prefix is 1
-        $entries = $wpdb->get_results($wpdb->prepare("SELECT * FROM {$wpdb->prefix}shorturl_domains WHERE prefix = %d AND NOT hostname = 'reserved for our customers' ORDER BY hostname", 1));
+        $entries = $wpdb->get_results($wpdb->prepare("SELECT * FROM {$wpdb->prefix}shorturl_domains WHERE prefix = %d AND external = 0 ORDER BY hostname", 1));
 
         ?>
         <div class="wrap">
@@ -537,7 +537,8 @@ class Settings
                                 "{$wpdb->prefix}shorturl_domains",
                                 array(
                                     'hostname' => $new_hostname,
-                                    'prefix' => 7
+                                    'prefix' => 1,
+                                    'external' => true
                                 )
                             );
 
@@ -560,7 +561,7 @@ class Settings
         }
 
         // Fetch entries from shorturl_services table (prefix = 1 is reserved for our customer domains)
-        $entries = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_domains WHERE prefix = 0 ORDER BY hostname");
+        $entries = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_domains WHERE prefix = 1 AND external = 1 ORDER BY hostname");
 
         ?>
         <div class="wrap">

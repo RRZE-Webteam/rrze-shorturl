@@ -71,17 +71,20 @@ function drop_custom_tables()
 
     try {
         // Drop shorturl table if they exist
-        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_links_categories");
-        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_categories");
-        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_links");
-        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_domains");
-        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_services");
-        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_idms");
-
+        $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_links_categories");
+        $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_links_tags");
+        $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_categories");
+        $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_tags");
+        $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_links");
+        $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_domains");
+        $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_services");
+        $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_idms");
         // Delete triggers just to be sure (they should be deleted as they are binded to the dropped tables)
         $wpdb->query("DROP TRIGGER IF EXISTS validate_url");
         $wpdb->query("DROP TRIGGER IF EXISTS validate_hostname");
     } catch (CustomException $e) {
+
+
         // Handle the exception
         error_log("Error in drop_custom_tables: " . $e->getMessage());
     }
@@ -114,6 +117,7 @@ function create_custom_tables()
             id mediumint(9) NOT NULL AUTO_INCREMENT,
             hostname varchar(255) NOT NULL DEFAULT '' UNIQUE,
             prefix int(1) NOT NULL DEFAULT 1,
+            external int(1) NOT NULL DEFAULT 0,
             active BOOLEAN DEFAULT TRUE,
             notice varchar(255) NULL DEFAULT NULL,
             webmaster_name varchar(255) NULL DEFAULT NULL,
@@ -210,11 +214,6 @@ function create_custom_tables()
 
         // Insert Service domains
         $aEntries = [
-            [
-                'hostname' => 'fau.zoom-x.de',
-                'prefix' => 2,
-                'regex' => 'https://fau.zoom-x.de/j/$nr'
-            ],
             [
                 'hostname' => 'www.fau.tv',
                 'prefix' => 3,
