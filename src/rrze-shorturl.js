@@ -11,6 +11,7 @@ jQuery(document).ready(function ($) {
         element: document.getElementById("qr"),
         value: qrValue,
         size: 200,
+        background: "transparent"
         });    
 
     function handleFormSubmission() {
