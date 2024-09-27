@@ -4,7 +4,6 @@ namespace RRZE\ShortURL;
 
 defined('ABSPATH') || exit;
 
-use RRZE\ShortURL\Rights;
 use RRZE\ShortURL\CustomerDomains;
 use RRZE\ShortURL\CleanupDB;
 use RRZE\ShortURL\MyCrypt;

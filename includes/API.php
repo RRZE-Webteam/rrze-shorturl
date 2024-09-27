@@ -201,54 +201,6 @@ class API
         return $args;
     }
 
-    // public function add_tag_callback($request) {
-
-    //     $parameters = $request->get_json_params();
-
-    //     if (empty($parameters['label'])) {
-    //         return new WP_Error('invalid_name', __('Tag label is required.', 'rrze-shorturl'), array('status' => 400));
-    //     }
-
-    //     global $wpdb;
-    //     $table_name = $wpdb->prefix . 'shorturl_tags';
-
-    //     $inserted = $wpdb->insert($table_name, array('label' => sanitize_text_field($parameters['label'])));
-
-    //     if (!$inserted) {
-    //         return new WP_Error('insert_failed', __('Failed to add tag to the database.', 'rrze-shorturl'), array('status' => 500));
-    //     }
-
-    //     $tag_id = $wpdb->insert_id;
-
-    //     $tags = array('id' => $tag_id, 'label' => $parameters['label']);
-
-    //     return new WP_REST_Response($tags, 200);
-
-    // }
-
-    // Callback function to get tags
-    // function get_tags_callback( $request ) {
-    //     global $wpdb;
-
-    //     // Query tags from the database
-    //     $tags = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}shorturl_tags" );
-
-    //     // Initialize an empty array to store tag data
-    //     $tag_data = array();
-
-    //     // Loop through the tags and extract required data
-    //     foreach ( $tags as $tag ) {
-    //         $tag_data[] = array(
-    //             'id'    => $tag->id,
-    //             'label' => $tag->label,
-    //         );
-    //     }
-
-    //     // Return the tag data as a JSON response
-    //     return new WP_REST_Response($tag_data, 200);
-    // }
-
-
     public function add_category_callback($request)
     {
         $parameters = $request->get_json_params();
@@ -295,24 +247,6 @@ class API
             return new WP_Error('shorturl_categories_error', $e->getMessage(), array('status' => 500));
         }
     }
-
-
-    // public function get_categories_callback()
-    // {
-    //     global $wpdb;
-
-    //     try {
-    //         $categories = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_categories", ARRAY_A);
-
-    //         if (is_wp_error($categories)) {
-    //             throw new Exception(__('Error retrieving shorturl categories', 'rrze-shorturl'));
-    //         }
-
-    //         return new WP_REST_Response($categories, 200);
-    //     } catch (Exception $e) {
-    //         return new WP_Error('shorturl_categories_error', $e->getMessage(), array('status' => 500));
-    //     }
-    // }
 
     public function shorten_url_callback($request)
     {

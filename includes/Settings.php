@@ -899,7 +899,5 @@ class Settings
         </div>
         <?php
     }
-
-
 }
 
