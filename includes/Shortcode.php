@@ -205,7 +205,7 @@ class Shortcode
         $html .= '<tbody>';
 
         foreach ($domains as $domain) {
-            if ($domain['active']){
+            if ($domain['active']) {
                 $html .= '<tr><td>' . esc_html($domain['hostname']) . '</td></tr>';
             }
         }
@@ -281,7 +281,7 @@ class Shortcode
 
     public function makeCategoryDropdown($category_id = 0, $parent_id = 0)
     {
-        if (!self::$rights['id']){
+        if (!self::$rights['id']) {
             return '';
         }
 
@@ -645,7 +645,7 @@ class Shortcode
             'url' => (!empty($_POST['url']) ? sanitize_text_field($_POST['url']) : (!empty($_GET['url']) ? sanitize_text_field($_GET['url']) : '')),
             'uri' => self::$rights['allow_uri'] ? sanitize_text_field($_POST['uri'] ?? '') : '',
             'valid_until' => sanitize_text_field($_POST['valid_until'] ?? ''),
-            'categories' => !empty($_POST['categories']) ? array_map('sanitize_text_field', $_POST['categories']) : [],            
+            'categories' => !empty($_POST['categories']) ? array_map('sanitize_text_field', $_POST['categories']) : [],
             // 'tags' => !empty ($_POST['tags']) ? array_map('sanitize_text_field', $_POST['tags']) : [],
             'utm_source' => (!empty($_POST['utm_source']) ? sanitize_text_field($_POST['utm_source']) : ''),
             'utm_medium' => (!empty($_POST['utm_medium']) ? sanitize_text_field($_POST['utm_medium']) : ''),
@@ -661,9 +661,9 @@ class Shortcode
             if (!empty($aParams['url'])) {
                 $result = ShortURL::shorten($aParams);
 
-                if ($result['error']){
+                if ($result['error']) {
                     $result_message = $result['txt'];
-                }else{
+                } else {
                     $result_message = '<span class="shorturl-shortened-msg"><span class="label">' . __('Short URL', 'rrze-shorturl') . ':</span> <code>' . $result['txt'] . '</code></span>';
                     $result_message .= '<button type="button" class="btn" id="copyButton" name="copyButton" data-shortened-url="' . $result['txt'] . '"><img class="shorturl-copy-img" src="data:image/svg+xml,%3Csvg height=\'1024\' width=\'896\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M128 768h256v64H128v-64z m320-384H128v64h320v-64z m128 192V448L384 640l192 192V704h320V576H576z m-288-64H128v64h160v-64zM128 704h160v-64H128v64z m576 64h64v128c-1 18-7 33-19 45s-27 18-45 19H64c-35 0-64-29-64-64V192c0-35 29-64 64-64h192C256 57 313 0 384 0s128 57 128 128h192c35 0 64 29 64 64v320h-64V320H64v576h640V768zM128 256h512c0-35-29-64-64-64h-64c-35 0-64-29-64-64s-29-64-64-64-64 29-64 64-29 64-64 64h-64c-35 0-64 29-64 64z\' fill=\'%23000000\' /%3E%3C/svg%3E" alt="' . __('Copy to clipboard', 'rrze-shorturl') . '"><span class="screen-reader-text">' . __('Copy to clipboard', 'rrze-shorturl') . '</span></button><span id="shorturl-tooltip" class="shorturl-tooltip">' . __('Copied to clipboard', 'rrze-shorturl') . '</span>';
                     $result_message .= '<br><span class="shorturl-validuntil"><span class="label">' . __('Valid until', 'rrze-shorturl') . ':</span> ' . $result['valid_until_formatted'] . '</span>';
@@ -726,7 +726,7 @@ class Shortcode
 
     public static function display_shorturl_category($aVal = [])
     {
-        if (!self::$rights['id']){
+        if (!self::$rights['id']) {
             return;
         }
 
@@ -851,8 +851,13 @@ class Shortcode
         $orderby = !empty($_GET['orderby']) ? $_GET['orderby'] : 'id';
         $order = !empty($_GET['order']) ? $_GET['order'] : 'ASC';
 
-        $own_links = (int)!empty($_GET['own_links']);
-        
+        // set default $own_links = 1
+        if (empty($_GET)) {
+            $own_links = 1;
+        } else {
+            $own_links = (int) !empty($_GET['own_links']);
+        }
+
         // Prepare SQL query to fetch post IDs from wp_postmeta and their associated category names
         $query = "SELECT l.id AS link_id, 
                  l.idm_id,
@@ -960,7 +965,8 @@ class Shortcode
             $table .= '<td class="column-valid-until">' . (!empty($row['valid_until']) ? $row['valid_until'] : __('indefinite', 'rrze-shorturl')) . '</td>';
             $table .= '<td class="column-categories">' . $category_names_str . '</td>';
             // $table .= '<td class="column-tags">' . $tag_names_str . '</td>';
-            $table .= '<td class="column-actions"><a href="#" class="edit-link" data-link-id="' . $row['link_id'] . '">' . __('Edit', 'rrze-shorturl') . '</a>' . (self::$rights['id'] == $row['idm_id'] ? ' | <a href="#" data-link-id="' . $row['link_id'] . '" class="delete-link">' . __('Delete', 'rrze-shorturl') . '</a>' : '') . '</td>';
+            // $table .= '<td class="column-actions"><a href="#" class="edit-link" data-link-id="' . $row['link_id'] . '">' . __('Edit', 'rrze-shorturl') . '</a>' . (self::$rights['id'] == $row['idm_id'] ? ' | <a href="#" data-link-id="' . $row['link_id'] . '" class="delete-link">' . __('Delete', 'rrze-shorturl') . '</a>' : '') . '</td>';
+            $table .= '<td class="column-actions">' . (self::$rights['id'] == $row['idm_id'] || is_user_logged_in() ? '<a href="#" class="edit-link" data-link-id="' . $row['link_id'] . '">' . __('Edit', 'rrze-shorturl') . '</a> | <a href="#" data-link-id="' . $row['link_id'] . '" class="delete-link">' . __('Delete', 'rrze-shorturl') . '</a>' : '') . '</td>';
             $table .= '</tr>';
         }
         $table .= '</tbody></table>';
@@ -984,36 +990,40 @@ class Shortcode
             if (empty($link_data)) {
                 return '';
             } else {
+                // check if user is allowed to edit
+                if (self::$rights['id'] == $link_data['idm_id'] || is_user_logged_in()) {
+                    $aCategories = !empty($link_data['category_ids']) ? explode(',', $link_data['category_ids']) : [];
+                    $aTags = !empty($link_data['tag_ids']) ? explode(',', $link_data['tag_ids']) : [];
 
-                $aCategories = !empty($link_data['category_ids']) ? explode(',', $link_data['category_ids']) : [];
-                $aTags = !empty($link_data['tag_ids']) ? explode(',', $link_data['tag_ids']) : [];
-
-                // Display the edit form
-                ob_start();
-                ?>
-                <div id="edit-link-form">
-                    <h2>
-                        <?php echo __('Edit Link', 'rrze-shorturl'); ?>
-                    </h2>
-                    <form id="edit-link-form" method="post" action="">
-                        <input type="hidden" name="action" value="update_link">
-                        <input type="hidden" name="link_id" value="<?php echo esc_attr($link_id); ?>">
-                        <input type="hidden" name="domain_id" value="<?php echo esc_attr($link_data['domain_id']); ?>">
-                        <input type="hidden" name="shortURL" value="<?php echo esc_attr($link_data['short_url']); ?>">
-                        <input type="hidden" name="uri"
-                            value="<?php echo !empty($link_data['uri']) ? esc_attr($link_data['uri']) : ''; ?>">
-                        <?php echo self::display_shorturl_validity($link_data['valid_until']); ?>
-                        <h2 class="handle">
-                            <?php echo __('Categories', 'rrze-shorturl'); ?>
+                    // Display the edit form
+                    ob_start();
+                    ?>
+                    <div id="edit-link-form">
+                        <h2>
+                            <?php echo __('Edit Link', 'rrze-shorturl'); ?>
                         </h2>
-                        <?php echo self::display_shorturl_category($aCategories); ?>
-                        <button type="submit">
-                            <?php echo __('Update Link', 'rrze-shorturl'); ?>
-                        </button>
-                    </form>
-                </div>
-                <?php
-                return ob_get_clean();
+                        <form id="edit-link-form" method="post" action="">
+                            <input type="hidden" name="action" value="update_link">
+                            <input type="hidden" name="link_id" value="<?php echo esc_attr($link_id); ?>">
+                            <input type="hidden" name="domain_id" value="<?php echo esc_attr($link_data['domain_id']); ?>">
+                            <input type="hidden" name="shortURL" value="<?php echo esc_attr($link_data['short_url']); ?>">
+                            <input type="hidden" name="uri"
+                                value="<?php echo !empty($link_data['uri']) ? esc_attr($link_data['uri']) : ''; ?>">
+                            <?php echo self::display_shorturl_validity($link_data['valid_until']); ?>
+                            <h2 class="handle">
+                                <?php echo __('Categories', 'rrze-shorturl'); ?>
+                            </h2>
+                            <?php echo self::display_shorturl_category($aCategories); ?>
+                            <button type="submit">
+                                <?php echo __('Update Link', 'rrze-shorturl'); ?>
+                            </button>
+                        </form>
+                    </div>
+                    <?php
+                    return ob_get_clean();
+                } else {
+                    return '';
+                }
             }
         }
     }
@@ -1072,7 +1082,7 @@ class Shortcode
                 $category_name,
                 self::$rights['id']
             )
-        );        
+        );
 
         if ($existing_category) {
             // Category already exists, return its ID
@@ -1153,7 +1163,7 @@ class Shortcode
         ob_start();
         ?>
         <div>
-        <label for="utm_source">
+            <label for="utm_source">
                 <?php echo __('UTM Source', 'rrze-shorturl'); ?>:
             </label>
             <input type="text" id="utm_source" name="utm_source" value="<?php echo $utm_source; ?>">
