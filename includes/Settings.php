@@ -450,10 +450,29 @@ class Settings
     // Render the Customer Domains tab section
     public function render_customer_domains_section()
     {
-        global $wpdb;
+        // Define arguments for WP_Query to fetch 'domain' CPT entries with specific conditions
+        $args = [
+            'post_type' => 'domain',  // Assuming 'domain' is the Custom Post Type
+            'posts_per_page' => -1,        // Fetch all entries
+            'meta_query' => [
+                [
+                    'key' => 'prefix',
+                    'value' => '1',
+                    'compare' => '='
+                ],
+                [
+                    'key' => 'external',
+                    'value' => '0',
+                    'compare' => '='
+                ]
+            ],
+            'orderby' => 'meta_value',  // Order by hostname meta value
+            'meta_key' => 'hostname',    // Sorting field
+            'order' => 'ASC'          // Ascending order
+        ];
 
-        // Fetch entries from shorturl_domains table where prefix is 1
-        $entries = $wpdb->get_results($wpdb->prepare("SELECT * FROM {$wpdb->prefix}shorturl_domains WHERE prefix = %d AND external = 0 ORDER BY hostname", 1));
+        // Execute the query
+        $query = new \WP_Query($args);
 
         ?>
         <div class="wrap">
@@ -468,59 +487,59 @@ class Settings
                 <table class="shorturl-wp-list-table widefat fixed striped">
                     <thead>
                         <tr>
-                            <th>
-                                <?php echo __('Hostname', 'rrze-shorturl'); ?>
-                            </th>
-                            <th>
-                                <?php echo __('Active', 'rrze-shorturl'); ?>
-                            </th>
-                            <th>
-                                <?php echo __('Notice', 'rrze-shorturl'); ?>
-                            </th>
-                            <th>
-                                <?php echo __('Webmaster Name', 'rrze-shorturl'); ?>
-                            </th>
-                            <th>
-                                <?php echo __('Webmaster eMail', 'rrze-shorturl'); ?>
-                            </th>
+                            <th><?php echo __('Hostname', 'rrze-shorturl'); ?></th>
+                            <th><?php echo __('Active', 'rrze-shorturl'); ?></th>
+                            <th><?php echo __('Notice', 'rrze-shorturl'); ?></th>
+                            <th><?php echo __('Webmaster Name', 'rrze-shorturl'); ?></th>
+                            <th><?php echo __('Webmaster eMail', 'rrze-shorturl'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($entries as $entry): ?>
+                        <?php if ($query->have_posts()): ?>
+                            <?php while ($query->have_posts()):
+                                $query->the_post(); ?>
+                                <tr>
+                                    <td><?php echo esc_html(get_post_meta(get_the_ID(), 'hostname', true)); ?></td>
+                                    <td><?php echo get_post_meta(get_the_ID(), 'active', true) == 1 ? '&#10004;' : '&#10008;'; ?></td>
+                                    <td><?php echo esc_html(get_post_meta(get_the_ID(), 'notice', true)); ?></td>
+                                    <td><?php echo esc_html(get_post_meta(get_the_ID(), 'webmaster_name', true)); ?></td>
+                                    <td><?php echo esc_html(get_post_meta(get_the_ID(), 'webmaster_email', true)); ?></td>
+                                </tr>
+                            <?php endwhile; ?>
+                        <?php else: ?>
                             <tr>
-                                <td><?php echo esc_attr($entry->hostname); ?></td>
-                                <td><?php echo $entry->active == 1 ? '&#10004;' : '&#10008;'; ?></td>
-                                <td><?php echo esc_attr($entry->notice); ?></td>
-                                <td><?php echo esc_attr($entry->webmaster_name); ?></td>
-                                <td><?php echo esc_attr($entry->webmaster_email); ?></td>
+                                <td colspan="5"><?php echo __('No customer domains found', 'rrze-shorturl'); ?></td>
                             </tr>
-                        <?php endforeach; ?>
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </form>
         </div>
         <?php
+
+        // Restore original Post Data
+        wp_reset_postdata();
     }
+
+
 
 
     // Render the External Domains tab section
     public function render_external_domains_section()
     {
-        global $wpdb;
         $message = '';
         $bDel = false;
 
-        // Check if form is submitted
+        // Check if the form is submitted
         if (isset($_POST['submit'])) {
             try {
                 // Delete selected entries
                 if (!empty($_POST['delete'])) {
-
                     foreach ($_POST['delete'] as $id => $delete_id) {
-                        $wpdb->delete("{$wpdb->prefix}shorturl_domains", array('id' => $delete_id), array('%d'));
+                        wp_delete_post($delete_id, true); // True for force delete (bypassing the trash)
                         $bDel = true;
                     }
-                    $message = (empty($message) ? '' : $message . '<br \>') . ($bDel ? __('Selected entries deleted successfully.', 'rrze-shorturl') : '');
+                    $message = (empty($message) ? '' : $message . '<br />') . ($bDel ? __('Selected entries deleted successfully.', 'rrze-shorturl') : '');
                 }
 
                 // Add new entry
@@ -533,66 +552,88 @@ class Settings
                         if (!self::isValidHostName($new_hostname)) {
                             $message = __('Hostname is not valid.', 'rrze-shorturl');
                         } else {
-                            $wpdb->insert(
-                                "{$wpdb->prefix}shorturl_domains",
-                                array(
-                                    'hostname' => $new_hostname,
-                                    'prefix' => 1,
-                                    'external' => true
-                                )
-                            );
+                            // Insert new domain as a Custom Post Type
+                            $post_data = [
+                                'post_title' => $new_hostname,
+                                'post_type' => 'domain',
+                                'post_status' => 'publish'
+                            ];
 
-                            $message = __('New external domain added successfully.', 'rrze-shorturl');
+                            $post_id = wp_insert_post($post_data);
 
-                            if ($wpdb->last_error) {
-                                $message = __('An error occurred: ', 'rrze-shorturl') . $wpdb->last_error;
-                                throw new CustomException($wpdb->last_error);
+                            if (!is_wp_error($post_id)) {
+                                // Add meta data for the domain
+                                update_post_meta($post_id, 'prefix', 1);
+                                update_post_meta($post_id, 'external', 1);
+                                $message = __('New external domain added successfully.', 'rrze-shorturl');
+                                $new_hostname = '';
+                            } else {
+                                $message = __('An error occurred: ', 'rrze-shorturl') . $post_id->get_error_message();
+                                throw new CustomException($post_id->get_error_message());
                             }
-                            $new_hostname = '';
                         }
                     } catch (CustomException $e) {
                         $message = __('An error occurred: ', 'rrze-shorturl') . $e->getMessage();
                     }
-
                 }
             } catch (CustomException $e) {
                 $message = __('An error occurred: ', 'rrze-shorturl') . $e->getMessage();
             }
         }
 
-        // Fetch entries from shorturl_services table (prefix = 1 is reserved for our customer domains)
-        $entries = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_domains WHERE prefix = 1 AND external = 1 ORDER BY hostname");
+        // Fetch entries from the 'domain' Custom Post Type where prefix = 1 and external = 1
+        $args = [
+            'post_type' => 'domain',
+            'posts_per_page' => -1, // Fetch all domains
+            'meta_query' => [
+                [
+                    'key' => 'prefix',
+                    'value' => '1',
+                    'compare' => '='
+                ],
+                [
+                    'key' => 'external',
+                    'value' => '1',
+                    'compare' => '='
+                ]
+            ],
+            'orderby' => 'title', // Sort by the hostname (post_title)
+            'order' => 'ASC'
+        ];
+
+        $query = new WP_Query($args);
 
         ?>
         <div class="wrap">
             <?php if (!empty($message)): ?>
                 <div class="<?php echo strpos($message, 'error') !== false ? 'error' : 'updated'; ?>">
-                    <p>
-                        <?php echo $message; ?>
-                    </p>
+                    <p><?php echo $message; ?></p>
                 </div>
             <?php endif; ?>
+
             <form method="post" action="" id="external-domains-form">
                 <table class="shorturl-wp-list-table widefat fixed striped">
                     <thead>
                         <tr>
-                            <th>
-                                <?php echo __('Hostname', 'rrze-shorturl'); ?>
-                            </th>
-                            <th>
-                                <?php echo __('Delete', 'rrze-shorturl'); ?>
-                            </th>
+                            <th><?php echo __('Hostname', 'rrze-shorturl'); ?></th>
+                            <th><?php echo __('Delete', 'rrze-shorturl'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($entries as $entry): ?>
+                        <?php if ($query->have_posts()): ?>
+                            <?php while ($query->have_posts()):
+                                $query->the_post(); ?>
+                                <tr>
+                                    <td><input type="text" name="hostname[]" value="<?php echo esc_attr(get_the_title()); ?>"
+                                            readonly /></td>
+                                    <td><input type="checkbox" name="delete[]" value="<?php echo esc_attr(get_the_ID()); ?>" /></td>
+                                </tr>
+                            <?php endwhile; ?>
+                        <?php else: ?>
                             <tr>
-                                <td><input type="text" name="hostname[]" value="<?php echo esc_attr($entry->hostname); ?>"
-                                        readonly /></td>
-                                <td><input type="checkbox" name="delete[]" value="<?php echo esc_attr($entry->id); ?>" />
-                                </td>
+                                <td colspan="2"><?php echo __('No external domains found', 'rrze-shorturl'); ?></td>
                             </tr>
-                        <?php endforeach; ?>
+                        <?php endif; ?>
                         <tr>
                             <td><input type="text" name="new_hostname"
                                     value="<?php echo (!empty($new_hostname) ? $new_hostname : ''); ?>" /></td>
@@ -607,46 +648,68 @@ class Settings
             </form>
         </div>
         <?php
+
+        // Reset Post Data
+        wp_reset_postdata();
     }
+
 
     public function render_idm_section()
     {
-        global $wpdb;
-
         // Determine the current sorting order and column
         $orderby = isset($_GET['orderby']) ? $_GET['orderby'] : 'idm';
         $order = isset($_GET['order']) && in_array($_GET['order'], ['asc', 'desc']) ? $_GET['order'] : 'asc';
 
         try {
             // Check if form is submitted
-            // Note: checkbox updates are handlex in AJAX (see update_idm_callback())
             if (isset($_POST['submit_idm'])) {
 
                 $idm = sanitize_text_field($_POST['idm']);
 
                 if (!empty($idm)) {
-                    // Add new entry
-                    $insert_result = $wpdb->insert(
-                        $wpdb->prefix . 'shorturl_idms',
-                        array('idm' => $idm, 'created_by' => 'Admin', 'allow_uri' => 0, 'allow_get' => 0, 'allow_utm' => 0),
-                        array('%s', '%s', '%d', '%d', '%d')
-                    );
+                    // Check if the IdM already exists
+                    $existing_idm = get_page_by_title($idm, OBJECT, 'idm');
 
-                    if ($insert_result === false) {
+                    if ($existing_idm) {
                         $message = __('An error occurred: this IdM already exists.', 'rrze-shorturl');
                     } else {
-                        $message = __('New IdM has been added.', 'rrze-shorturl');
+                        // Add new entry as a Custom Post Type
+                        $post_data = [
+                            'post_title' => $idm,
+                            'post_type' => 'idm',
+                            'post_status' => 'publish'
+                        ];
+
+                        $insert_result = wp_insert_post($post_data);
+
+                        if (is_wp_error($insert_result)) {
+                            $message = __('An error occurred while adding the IdM.', 'rrze-shorturl');
+                        } else {
+                            // Add default meta data
+                            update_post_meta($insert_result, 'allow_uri', 0);
+                            update_post_meta($insert_result, 'allow_get', 0);
+                            update_post_meta($insert_result, 'allow_utm', 0);
+                            $message = __('New IdM has been added.', 'rrze-shorturl');
+                        }
                     }
                 }
             }
 
-            // Display form to add/update entries
+            // Prepare the WP_Query to fetch IdM entries sorted by title
+            $args = [
+                'post_type' => 'idm',
+                'posts_per_page' => -1, // Fetch all IdMs
+                'orderby' => $orderby === 'idm' ? 'title' : 'meta_value',
+                'meta_key' => $orderby === 'idm' ? '' : $orderby, // Sort by meta if not 'idm'
+                'order' => $order
+            ];
+
+            $idms_query = new WP_Query($args);
+
             ?>
             <?php if (!empty($message)): ?>
                 <div class="<?php echo strpos($message, 'error') !== false ? 'error' : 'updated'; ?>">
-                    <p>
-                        <?php echo $message; ?>
-                    </p>
+                    <p><?php echo $message; ?></p>
                 </div>
             <?php endif; ?>
             <form method="post">
@@ -658,10 +721,11 @@ class Settings
                                 data-sort="<?php echo $orderby === 'idm' ? $order : 'asc'; ?>">
                                 <a
                                     href="<?php echo admin_url('admin.php?page=rrze-shorturl&tab=idm&orderby=idm&order=' . ($orderby === 'idm' && $order === 'asc' ? 'desc' : 'asc')); ?>">
-                                    <span>IdM</span>
-                                    <span class="sorting-indicators"><span class="sorting-indicator asc"
-                                            aria-hidden="true"></span><span class="sorting-indicator desc"
-                                            aria-hidden="true"></span></span>
+                                    <span><?php echo __('IdM', 'rrze-shorturl'); ?></span>
+                                    <span class="sorting-indicators">
+                                        <span class="sorting-indicator asc" aria-hidden="true"></span>
+                                        <span class="sorting-indicator desc" aria-hidden="true"></span>
+                                    </span>
                                 </a>
                             </th>
                             <th scope="col"><?php echo __('Allow URI', 'rrze-shorturl'); ?></th>
@@ -671,17 +735,18 @@ class Settings
                     </thead>
                     <tbody>
                         <?php
-                        $idms = $wpdb->get_results("SELECT * FROM " . $wpdb->prefix . "shorturl_idms ORDER BY " . $orderby . ' ' . $order, ARRAY_A);
-
-                        if ($idms) {
-                            foreach ($idms as $idm) {
+                        if ($idms_query->have_posts()) {
+                            while ($idms_query->have_posts()) {
+                                $idms_query->the_post();
+                                $allow_uri = get_post_meta(get_the_ID(), 'allow_uri', true);
+                                $allow_get = get_post_meta(get_the_ID(), 'allow_get', true);
+                                $allow_utm = get_post_meta(get_the_ID(), 'allow_utm', true);
                                 ?>
                                 <tr>
-                                    <td><?php echo $idm["idm"]; ?></td>
-                                    <td><input type="checkbox" class="allow-uri-checkbox" data-id="<?php echo $idm["id"]; ?>" <?php echo $idm["allow_uri"] ? 'checked' : ''; ?>></td>
-                                    <td><input type="checkbox" class="allow-get-checkbox" data-id="<?php echo $idm["id"]; ?>" <?php echo $idm["allow_get"] ? 'checked' : ''; ?>></td>
-                                    <td><input type="checkbox" class="allow-utm-checkbox" data-id="<?php echo $idm["id"]; ?>"
-                                            <?php echo $idm["allow_utm"] ? 'checked' : ''; ?>></td>
+                                    <td><?php echo esc_html(get_the_title()); ?></td>
+                                    <td><input type="checkbox" class="allow-uri-checkbox" data-id="<?php echo get_the_ID(); ?>" <?php echo $allow_uri ? 'checked' : ''; ?>></td>
+                                    <td><input type="checkbox" class="allow-get-checkbox" data-id="<?php echo get_the_ID(); ?>" <?php echo $allow_get ? 'checked' : ''; ?>></td>
+                                    <td><input type="checkbox" class="allow-utm-checkbox" data-id="<?php echo get_the_ID(); ?>" <?php echo $allow_utm ? 'checked' : ''; ?>></td>
                                 </tr>
                                 <?php
                             }
@@ -692,11 +757,14 @@ class Settings
                         </tr>
                     </tbody>
                 </table>
-                <button type="submit" name="submit_idm" class="button button-primary">
-                    <?php echo __('Save Changes', 'rrze-shorturl'); ?>
-                </button>
+                <button type="submit" name="submit_idm"
+                    class="button button-primary"><?php echo __('Save Changes', 'rrze-shorturl'); ?></button>
             </form>
             <?php
+
+            // Restore original Post Data
+            wp_reset_postdata();
+
         } catch (CustomException $e) {
             echo '<div class="error notice"><p>' . $e->getMessage() . '</p></div>';
             error_log("Error in render_idm_section: " . $e->getMessage());
@@ -705,20 +773,63 @@ class Settings
 
     public function render_statistic_section()
     {
-        global $wpdb;
-
         // Determine the current sorting order and column
-        $orderby = isset($_GET['orderby']) ? $_GET['orderby'] : 'hostname';
-        $order = isset($_GET['order']) && in_array($_GET['order'], ['asc', 'desc']) ? $_GET['order'] : 'asc';
+        $orderby = isset($_GET['orderby']) ? sanitize_text_field($_GET['orderby']) : 'hostname';
+        $order = isset($_GET['order']) && in_array(sanitize_text_field($_GET['order']), ['asc', 'desc']) ? sanitize_text_field($_GET['order']) : 'asc';
 
-        // Fetch link counts grouped by domain_id and hostname with sorting
-        $link_counts = $wpdb->get_results("
-        SELECT sd.hostname, COUNT(sl.id) AS link_count
-        FROM {$wpdb->prefix}shorturl_links AS sl
-        LEFT JOIN {$wpdb->prefix}shorturl_domains AS sd ON sl.domain_id = sd.id
-        GROUP BY sl.domain_id, sd.hostname
-        ORDER BY $orderby $order
-    ");
+        // Get all domains to count associated links
+        $args = [
+            'post_type' => 'domain',
+            'posts_per_page' => -1, // Fetch all domains
+            'orderby' => 'title', // Sort by hostname (title)
+            'order' => $order
+        ];
+
+        $domain_query = new \WP_Query($args);
+        $link_counts = [];
+
+        if ($domain_query->have_posts()) {
+            while ($domain_query->have_posts()) {
+                $domain_query->the_post();
+                $domain_id = get_the_ID();
+                $hostname = get_the_title();
+
+                // Query to count links associated with the current domain
+                $link_args = [
+                    'post_type' => 'link',
+                    'meta_query' => [
+                        [
+                            'key' => 'domain_id',
+                            'value' => $domain_id,
+                            'compare' => '='
+                        ]
+                    ],
+                    'posts_per_page' => -1, // Count all links
+                    'fields' => 'ids' // Only retrieve post IDs for counting
+                ];
+
+                $link_query = new \WP_Query($link_args);
+                $link_count = $link_query->post_count; // Get the count of associated links
+
+                $link_counts[] = (object) [
+                    'hostname' => $hostname,
+                    'link_count' => $link_count
+                ];
+            }
+        }
+
+        wp_reset_postdata(); // Reset post data after query
+
+        // Sort the results by link count if necessary
+        if ($orderby === 'link_count') {
+            usort($link_counts, function ($a, $b) use ($order) {
+                if ($order === 'asc') {
+                    return $a->link_count <=> $b->link_count;
+                } else {
+                    return $b->link_count <=> $a->link_count;
+                }
+            });
+        }
 
         // Output the statistics table
         ?>
@@ -753,12 +864,8 @@ class Settings
                 <tbody>
                     <?php foreach ($link_counts as $link_count): ?>
                         <tr>
-                            <td class="hostname column-hostname">
-                                <?php echo esc_html($link_count->hostname); ?>
-                            </td>
-                            <td class="count column-count">
-                                <?php echo esc_html($link_count->link_count); ?>
-                            </td>
+                            <td class="hostname column-hostname"><?php echo esc_html($link_count->hostname); ?></td>
+                            <td class="count column-count"><?php echo esc_html($link_count->link_count); ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -792,5 +899,7 @@ class Settings
         </div>
         <?php
     }
+
+
 }
 
