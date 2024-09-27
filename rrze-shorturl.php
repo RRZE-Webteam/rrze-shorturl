@@ -126,149 +126,126 @@ function deleteOldCron(){
     wp_clear_scheduled_hook('rrze_shorturl_cleanup_database');
 }
 
-function insertWebteam(){
-    try {
-
+function migrate_db_to_cpt()
+{
     global $wpdb;
 
-        // Insert Default Data
-        // Insert Webteam and other known VIPs
-        define('VIP', [
-            'allow_uri' => true,
-            'allow_get' => true,
-            'allow_utm' => true
-        ]);
+    // Migrate shorturl_domains to CPT 'domain'
+    $domains = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_domains", ARRAY_A);
 
-        $aEntries = [
-            'qe28nesi',
-            'unrz59',
-            'ej64ojyw',
-            'zo95zofo',
-            'unrz244',
-            'unrz228',
-            'unrz41',
-            'ca27xybo',
-            'zi45hupi',
-            'ug46aqez'
+    foreach ($domains as $domain) {
+        // Check if the domain already exists as a post
+        $existing_domain = get_page_by_title($domain['hostname'], OBJECT, 'domain');
+
+        if (!$existing_domain) {
+            // Insert domain as a CPT post
+            $post_data = [
+                'post_title'  => sanitize_text_field($domain['hostname']),
+                'post_type'   => 'domain',
+                'post_status' => 'publish'
+            ];
+
+            $post_id = wp_insert_post($post_data);
+
+            if (!is_wp_error($post_id)) {
+                // Add meta fields
+                update_post_meta($post_id, 'prefix', intval($domain['prefix']));
+                update_post_meta($post_id, 'external', intval($domain['external']));
+                update_post_meta($post_id, 'active', intval($domain['active']));
+                update_post_meta($post_id, 'notice', sanitize_text_field($domain['notice']));
+                update_post_meta($post_id, 'webmaster_name', sanitize_text_field($domain['webmaster_name']));
+                update_post_meta($post_id, 'webmaster_email', sanitize_email($domain['webmaster_email']));
+            }
+        }
+    }
+
+    // Migrate shorturl_idms to CPT 'idm'
+    $idms = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_idms", ARRAY_A);
+
+    foreach ($idms as $idm) {
+        // Check if the IDM already exists as a post
+        $existing_idm = get_page_by_title($idm['idm'], OBJECT, 'idm');
+
+        if (!$existing_idm) {
+            // Insert IdM as a CPT post
+            $post_data = [
+                'post_title'  => sanitize_text_field($idm['idm']),
+                'post_type'   => 'idm',
+                'post_status' => 'publish'
+            ];
+
+            $post_id = wp_insert_post($post_data);
+
+            if (!is_wp_error($post_id)) {
+                // Add meta fields
+                update_post_meta($post_id, 'allow_uri', intval($idm['allow_uri']));
+                update_post_meta($post_id, 'allow_get', intval($idm['allow_get']));
+                update_post_meta($post_id, 'allow_utm', intval($idm['allow_utm']));
+                update_post_meta($post_id, 'created_by', sanitize_text_field($idm['created_by']));
+            }
+        }
+    }
+
+    // Migrate shorturl_links to CPT 'link'
+    $links = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_links", ARRAY_A);
+
+    foreach ($links as $link) {
+        // Insert link as a CPT post
+        $post_data = [
+            'post_title'  => sanitize_text_field($link['short_url']),
+            'post_type'   => 'link',
+            'post_status' => 'publish'
         ];
 
-        // Add 'fau.de' to each entry and combine with clear IdMs
-        $aEntries = array_merge(
-            $aEntries,
-            array_map(function ($entry) {
-                return $entry . 'fau.de';
-            }, $aEntries)
-        );
+        $post_id = wp_insert_post($post_data);
 
-        // Merge each entry with VIP array to set allow values
-        foreach ($aEntries as $entry) {
-            $entry_data = array_merge(array('idm' => $entry), VIP);
-
-            $idm = $entry_data['idm'];
-            $allow_uri = $entry_data['allow_uri'];
-            $allow_get = $entry_data['allow_get'];
-            $allow_utm = $entry_data['allow_utm'];
-            $created_by = 'system';
-
-            // Prepare the SQL query string
-            $sql_query = $wpdb->prepare("INSERT IGNORE INTO {$wpdb->prefix}shorturl_idms (idm, allow_uri, allow_get, allow_utm, created_by) VALUES (%s, %d, %d, %d, %s)", $idm, $allow_uri, $allow_get, $allow_utm, $created_by);
-
-            // Log the SQL query string
-            error_log("SQL Query: " . $sql_query);
-
-            // Execute the SQL query
-            $wpdb->query($sql_query);
-
-            // Log the result of the insert operation
-            error_log("Insert result for entry '$idm': Error: " . $wpdb->last_error . ", Rows affected: " . $wpdb->rows_affected);
+        if (!is_wp_error($post_id)) {
+            // Add meta fields
+            update_post_meta($post_id, 'domain_id', intval($link['domain_id']));
+            update_post_meta($post_id, 'long_url', esc_url($link['long_url']));
+            update_post_meta($post_id, 'short_url', esc_url($link['short_url']));
+            update_post_meta($post_id, 'uri', sanitize_text_field($link['uri']));
+            update_post_meta($post_id, 'idm_id', intval($link['idm_id']));
+            update_post_meta($post_id, 'created_at', sanitize_text_field($link['created_at']));
+            update_post_meta($post_id, 'updated_at', sanitize_text_field($link['updated_at']));
+            update_post_meta($post_id, 'deleted_at', sanitize_text_field($link['deleted_at']));
+            update_post_meta($post_id, 'valid_until', sanitize_text_field($link['valid_until']));
+            update_post_meta($post_id, 'active', intval($link['active']));
         }
-    } catch (Exception $e) {
-        // Handle the exception
-        error_log("Error in drop_custom_tables: " . $e->getMessage());
     }
 
-}
+    // Add any additional migrations here (e.g. for shorturl_services, etc.)
+    // Example for shorturl_services to CPT 'service'
+    $services = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_services", ARRAY_A);
 
-function setLinksIndefinite() {
-    global $wpdb;
+    foreach ($services as $service) {
+        // Check if the service already exists as a post
+        $existing_service = get_page_by_title($service['hostname'], OBJECT, 'service');
 
-    $table_name = $wpdb->prefix . 'shorturl_links';
+        if (!$existing_service) {
+            // Insert service as a CPT post
+            $post_data = [
+                'post_title'  => sanitize_text_field($service['hostname']),
+                'post_type'   => 'service',
+                'post_status' => 'publish'
+            ];
 
-    // Update the valid_until to NULL where user has not set valid_until
-    $query = "
-        UPDATE $table_name
-        SET valid_until = NULL
-        WHERE valid_until = DATE(DATE_ADD(created_at, INTERVAL 1 YEAR))
-    ";
+            $post_id = wp_insert_post($post_data);
 
-    $wpdb->query($query);
-}
-
-function setAllow_UTMtoFalse() {
-    global $wpdb;
-
-    $table_name = $wpdb->prefix . 'shorturl_idms';
-
-    $query = "
-        UPDATE $table_name
-        SET allow_utm = FALSE
-    ";
-
-    $wpdb->query($query);
-}
-
-
-function renameField() {
-    global $wpdb;
-
-    $table_name = $wpdb->prefix . 'shorturl_idms';
-
-    // Check if the column 'allow_longlifelinks' exists
-    $column_exists = $wpdb->get_results(
-        $wpdb->prepare(
-            "SHOW COLUMNS FROM `$table_name` LIKE %s",
-            'allow_longlifelinks'
-        )
-    );
-
-    if (!empty($column_exists)) {
-        // Rename the column
-        $sql = "ALTER TABLE `$table_name` CHANGE `allow_longlifelinks` `allow_utm` TINYINT(1) NOT NULL DEFAULT '0'";
-        $wpdb->query($sql);
+            if (!is_wp_error($post_id)) {
+                // Add meta fields
+                update_post_meta($post_id, 'prefix', intval($service['prefix']));
+                update_post_meta($post_id, 'regex', sanitize_text_field($service['regex']));
+                update_post_meta($post_id, 'active', intval($service['active']));
+                update_post_meta($post_id, 'notice', sanitize_text_field($service['notice']));
+            }
+        }
     }
+
+    // echo __('Migration completed successfully.', 'rrze-shorturl');
 }
 
 
-function addField(){
-    global $wpdb;
-
-    $table_name = $wpdb->prefix . 'shorturl_domains';
-
-    $column_exists = $wpdb->get_results(
-        $wpdb->prepare(
-            "SHOW COLUMNS FROM `$table_name` LIKE %s", 
-            'external'
-        )
-    );
-
-    if (empty($column_exists)) {
-        $wpdb->query(
-            "ALTER TABLE `$table_name` ADD `external` int(1) NOT NULL DEFAULT 0"
-        );
-    }
-}
-
-function cleanupIdM() {
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'shorturl_idms';
-
-    // Update query to remove "fau-de" from the end of the "idm" field
-    $wpdb->query("
-        UPDATE $table_name
-        SET idm = TRIM(TRAILING 'fau-de' FROM idm)
-        WHERE idm LIKE '%fau-de'
-    ");
-}
 
 
 /**
@@ -290,20 +267,13 @@ function loaded()
             printf('<div class="notice notice-error"><p>%1$s: %2$s</p></div>', esc_html($plugin_name), esc_html($error));
         });
     } else {
-
-        // addField();
-
         // Hauptklasse (Main) wird instanziiert.
         $main = new Main(__FILE__);
         $main->onLoaded();
 
+        migrate_db_to_cpt();
 
-        // insertWebteam();
-        // renameField();
-        // setAllow_UTMtoFalse();
-        // setLinksIndefinite();
-        // deleteOldCron();
-        // cleanupIdM();
+
     }
 
     add_action('init', __NAMESPACE__ . '\rrze_shorturl_init');
