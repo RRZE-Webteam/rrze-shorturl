@@ -28,67 +28,91 @@ class API
 
     public function register_rest_endpoints()
     {
-        register_rest_route('wp/v2/shorturl/', '/shorten', array(
-            'methods' => 'POST',
-            'callback' => array($this, 'shorten_url_callback'),
-            'permission_callback' => function () {
-                return self::$rights['id'] !== 0;
-            }
-        )
+        register_rest_route(
+            'wp/v2/shorturl/',
+            '/shorten',
+            array(
+                'methods' => 'POST',
+                'callback' => array($this, 'shorten_url_callback'),
+                'permission_callback' => function () {
+                    return self::$rights['id'] !== 0;
+                }
+            )
         );
 
-        register_rest_route('wp/v2/shorturl/', '/get-longurl', array(
-            'methods' => 'GET',
-            'callback' => array($this, 'get_longurl_callback'),
-            // 'permission_callback' => [$this, 'is_ip_allowed']
-        )
+        register_rest_route(
+            'wp/v2/shorturl/',
+            '/get-longurl',
+            array(
+                'methods' => 'GET',
+                'callback' => array($this, 'get_longurl_callback'),
+                // 'permission_callback' => [$this, 'is_ip_allowed']
+            )
         );
 
-        register_rest_route('wp/v2/shorturl/', '/active-shorturls', array(
-            'methods' => 'GET',
-            'callback' => array($this, 'get_active_shorturls_callback'),
-            // 'permission_callback' => [$this, 'is_ip_allowed']
-        )
+        register_rest_route(
+            'wp/v2/shorturl/',
+            '/active-shorturls',
+            array(
+                'methods' => 'GET',
+                'callback' => array($this, 'get_active_shorturls_callback'),
+                // 'permission_callback' => [$this, 'is_ip_allowed']
+            )
         );
 
-        register_rest_route('wp/v2/shorturl/', '/categories', array(
-            'methods' => 'GET',
-            'callback' => array($this, 'get_categories_callback'),
-            'permission_callback' => function () {
-                return self::$rights['id'] !== 0;
-            }
-        )
+        register_rest_route(
+            'wp/v2/shorturl/',
+            '/categories',
+            array(
+                'methods' => 'GET',
+                'callback' => array($this, 'get_categories_callback'),
+                'permission_callback' => function () {
+                    return self::$rights['id'] !== 0;
+                }
+            )
         );
 
-        register_rest_route('wp/v2/shorturl/', '/add-category', array(
-            'methods' => 'POST',
-            'callback' => array($this, 'add_category_callback'),
-            'permission_callback' => function () {
-                return self::$rights['id'] !== 0;
-            }
-        )
+        register_rest_route(
+            'wp/v2/shorturl/',
+            '/add-category',
+            array(
+                'methods' => 'POST',
+                'callback' => array($this, 'add_category_callback'),
+                'permission_callback' => function () {
+                    return self::$rights['id'] !== 0;
+                }
+            )
         );
 
-        register_rest_route('wp/v2/shorturl/', '/services', array(
-            'methods' => 'GET',
-            'callback' => array($this, 'get_services_callback'),
-            // 'permission_callback' => [$this, 'is_ip_allowed']
-        )
+        register_rest_route(
+            'wp/v2/shorturl/',
+            '/services',
+            array(
+                'methods' => 'GET',
+                'callback' => array($this, 'get_services_callback'),
+                // 'permission_callback' => [$this, 'is_ip_allowed']
+            )
         );
 
 
-        register_rest_route('wp/v2/shorturl/', '/decrypt', array(
-            'methods' => 'GET',
-            'callback' => array($this, 'get_decrypt_callback'),
-            // 'permission_callback' => [$this, 'is_ip_allowed']
-        )
+        register_rest_route(
+            'wp/v2/shorturl/',
+            '/decrypt',
+            array(
+                'methods' => 'GET',
+                'callback' => array($this, 'get_decrypt_callback'),
+                // 'permission_callback' => [$this, 'is_ip_allowed']
+            )
         );
 
-        register_rest_route('wp/v2/shorturl/', '/encrypt', array(
-            'methods' => 'GET',
-            'callback' => array($this, 'get_encrypt_callback'),
-            // 'permission_callback' => [$this, 'is_ip_allowed']
-        )
+        register_rest_route(
+            'wp/v2/shorturl/',
+            '/encrypt',
+            array(
+                'methods' => 'GET',
+                'callback' => array($this, 'get_encrypt_callback'),
+                // 'permission_callback' => [$this, 'is_ip_allowed']
+            )
         );
 
         // Register REST API query filters
@@ -249,23 +273,46 @@ class API
         return new WP_REST_Response($categories, 200);
     }
 
-
     public function get_categories_callback()
     {
-        global $wpdb;
-
         try {
-            $categories = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_categories", ARRAY_A);
+            // Get all terms from the 'link_category' taxonomy
+            $categories = get_terms([
+                'taxonomy' => 'link_category',
+                'hide_empty' => false             // don't hide terms with no posts
+            ]);
 
+            // Check for errors while retrieving terms
             if (is_wp_error($categories)) {
                 throw new Exception(__('Error retrieving shorturl categories', 'rrze-shorturl'));
             }
 
+            // Return the categories in the REST response
             return new WP_REST_Response($categories, 200);
+
         } catch (Exception $e) {
+            // Return a WP_Error object in case of an error
             return new WP_Error('shorturl_categories_error', $e->getMessage(), array('status' => 500));
         }
     }
+
+
+    // public function get_categories_callback()
+    // {
+    //     global $wpdb;
+
+    //     try {
+    //         $categories = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_categories", ARRAY_A);
+
+    //         if (is_wp_error($categories)) {
+    //             throw new Exception(__('Error retrieving shorturl categories', 'rrze-shorturl'));
+    //         }
+
+    //         return new WP_REST_Response($categories, 200);
+    //     } catch (Exception $e) {
+    //         return new WP_Error('shorturl_categories_error', $e->getMessage(), array('status' => 500));
+    //     }
+    // }
 
     public function shorten_url_callback($request)
     {
