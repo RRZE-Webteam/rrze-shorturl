@@ -72,8 +72,8 @@ function system_requirements()
     } elseif (version_compare($GLOBALS['wp_version'], RRZE_WP_VERSION, '<')) {
         /* Übersetzer: 1: aktuelle WP-Version, 2: erforderliche WP-Version */
         $error = sprintf(__('The server is running WordPress version %1$s. The Plugin requires at least WordPress version %2$s.', 'rrze-shorturl'), $GLOBALS['wp_version'], RRZE_WP_VERSION);
-    // } elseif(!class_exists('\RRZE\AccessControl\Permissions')) {
-    //     $error = __('Plugin RRZE-AC is mandatory.', 'rrze-shorturl');
+        // } elseif(!class_exists('\RRZE\AccessControl\Permissions')) {
+        //     $error = __('Plugin RRZE-AC is mandatory.', 'rrze-shorturl');
     }
     return $error;
 }
@@ -105,10 +105,6 @@ function activation()
  */
 function deactivation()
 {
-
-    // clean up the database
-    Config\drop_custom_tables();
-
     // delete the crons we've added in this plugin
     wp_clear_scheduled_hook('rrze_shorturl_fetch_and_store_customerdomains');
     wp_clear_scheduled_hook('rrze_shorturl_cleanup_inactive_idms');
@@ -122,12 +118,19 @@ function rrze_shorturl_init()
 }
 
 
-function deleteOldCron(){
+function deleteOldCron()
+{
     wp_clear_scheduled_hook('rrze_shorturl_cleanup_database');
 }
 
 function migrate_db_to_cpt()
 {
+
+    // Check if migration has been done already
+    if (get_option('rrze_shorturl_migration_completed')) {
+        return;
+    }
+
     global $wpdb;
 
     // Migrate shorturl_domains to CPT 'domain'
@@ -140,8 +143,8 @@ function migrate_db_to_cpt()
         if (!$existing_domain) {
             // Insert domain as a CPT post
             $post_data = [
-                'post_title'  => sanitize_text_field($domain['hostname']),
-                'post_type'   => 'domain',
+                'post_title' => sanitize_text_field($domain['hostname']),
+                'post_type' => 'shorturl_domain',
                 'post_status' => 'publish'
             ];
 
@@ -169,8 +172,8 @@ function migrate_db_to_cpt()
         if (!$existing_idm) {
             // Insert IdM as a CPT post
             $post_data = [
-                'post_title'  => sanitize_text_field($idm['idm']),
-                'post_type'   => 'idm',
+                'post_title' => sanitize_text_field($idm['idm']),
+                'post_type' => 'shorturl_idm',
                 'post_status' => 'publish'
             ];
 
@@ -192,8 +195,8 @@ function migrate_db_to_cpt()
     foreach ($links as $link) {
         // Insert link as a CPT post
         $post_data = [
-            'post_title'  => sanitize_text_field($link['short_url']),
-            'post_type'   => 'link',
+            'post_title' => sanitize_text_field($link['short_url']),
+            'post_type' => 'shorturl_link',
             'post_status' => 'publish'
         ];
 
@@ -225,8 +228,8 @@ function migrate_db_to_cpt()
         if (!$existing_service) {
             // Insert service as a CPT post
             $post_data = [
-                'post_title'  => sanitize_text_field($service['hostname']),
-                'post_type'   => 'service',
+                'post_title' => sanitize_text_field($service['hostname']),
+                'post_type' => 'shorturl_service',
                 'post_status' => 'publish'
             ];
 
@@ -242,10 +245,8 @@ function migrate_db_to_cpt()
         }
     }
 
-    // echo __('Migration completed successfully.', 'rrze-shorturl');
+    update_option('rrze_shorturl_migration_completed', true);
 }
-
-
 
 
 /**
@@ -272,8 +273,6 @@ function loaded()
         $main->onLoaded();
 
         migrate_db_to_cpt();
-
-
     }
 
     add_action('init', __NAMESPACE__ . '\rrze_shorturl_init');

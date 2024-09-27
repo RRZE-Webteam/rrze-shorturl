@@ -38,7 +38,7 @@ class Rights
         try {
             // Set up WP_Query to search for the IDM Custom Post Type with the provided 'idm'
             $args = [
-                'post_type' => 'idm',  // The Custom Post Type for IDMs
+                'post_type' => 'shorturl_idm',  // The Custom Post Type for IDMs
                 'posts_per_page' => 1,      // We only need one result
                 'meta_query' => [
                     [
@@ -69,7 +69,7 @@ class Rights
                 if (!empty($this->idm)) {
                     $post_data = [
                         'post_title' => $this->idm,  // Using the IDM as the title for the post
-                        'post_type' => 'idm',
+                        'post_type' => 'shorturl_idm',
                         'post_status' => 'publish'
                     ];
 

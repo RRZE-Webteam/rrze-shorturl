@@ -85,7 +85,7 @@ class ShortURL
         try {
             // Build arguments for the query
             $args = [
-                'post_type' => 'link',  // The Custom Post Type for links
+                'post_type' => 'shorturl_link',  // The Custom Post Type for links
                 'meta_query' => [
                     [
                         'key' => 'long_url',
@@ -127,7 +127,7 @@ class ShortURL
                 // Create a new post
                 $post_data = [
                     'post_title' => $long_url, // You can modify this to use a different title
-                    'post_type' => 'link',
+                    'post_type' => 'shorturl_link',
                     'post_status' => 'publish'
                 ];
 
@@ -212,7 +212,7 @@ class ShortURL
         try {
             // Set up arguments for WP_Query to fetch all service posts
             $args = [
-                'post_type' => 'service',  // The Custom Post Type for services
+                'post_type' => 'shorturl_service',  // The Custom Post Type for services
                 'posts_per_page' => -1,         // Retrieve all service posts
                 'post_status' => 'publish'   // Only fetch published services
             ];
@@ -258,7 +258,7 @@ class ShortURL
         try {
             // Set up arguments for WP_Query to fetch all domain posts
             $args = [
-                'post_type' => 'domain',  // The Custom Post Type for domains
+                'post_type' => 'shorturl_domain',  // The Custom Post Type for domains
                 'posts_per_page' => -1,        // Retrieve all domain posts
                 'post_status' => 'publish', // Only fetch published domains
                 'orderby' => 'meta_value', // Order by hostname (stored as meta value)
@@ -400,7 +400,7 @@ class ShortURL
 
         // Check if the URI exists in the 'link' Custom Post Type with 'active' set to true
         $args = [
-            'post_type' => 'link',  // The Custom Post Type for links
+            'post_type' => 'shorturl_link',  // The Custom Post Type for links
             'meta_query' => [
                 [
                     'key' => 'uri',
@@ -524,7 +524,7 @@ class ShortURL
 
             // Set up arguments for WP_Query to count posts in 'link' Custom Post Type
             $args = [
-                'post_type' => 'link',  // The Custom Post Type for shortened links
+                'post_type' => 'shorturl_link',  // The Custom Post Type for shortened links
                 'posts_per_page' => -1,      // No limit on posts returned
                 'meta_query' => [
                     [
@@ -788,7 +788,7 @@ class ShortURL
         try {
             // Set up arguments for WP_Query to fetch active short URLs
             $args = [
-                'post_type' => 'link',  // The Custom Post Type for links
+                'post_type' => 'shorturl_link',  // The Custom Post Type for links
                 'posts_per_page' => -1,      // Retrieve all matching posts
                 'post_status' => 'publish', // Only fetch published links
                 'meta_query' => [
@@ -843,7 +843,7 @@ class ShortURL
         try {
             // Set up arguments for WP_Query to fetch the post with the matching short URL
             $args = [
-                'post_type' => 'link',  // The Custom Post Type for links
+                'post_type' => 'shorturl_link',  // The Custom Post Type for links
                 'posts_per_page' => 1,       // We only need one result
                 'post_status' => 'publish', // Only fetch published links
                 'meta_query' => [

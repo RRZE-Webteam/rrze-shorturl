@@ -452,7 +452,7 @@ class Settings
     {
         // Define arguments for WP_Query to fetch 'domain' CPT entries with specific conditions
         $args = [
-            'post_type' => 'domain',  // Assuming 'domain' is the Custom Post Type
+            'post_type' => 'shorturl_domain',
             'posts_per_page' => -1,        // Fetch all entries
             'meta_query' => [
                 [
@@ -555,7 +555,7 @@ class Settings
                             // Insert new domain as a Custom Post Type
                             $post_data = [
                                 'post_title' => $new_hostname,
-                                'post_type' => 'domain',
+                                'post_type' => 'shorturl_domain',
                                 'post_status' => 'publish'
                             ];
 
@@ -583,7 +583,7 @@ class Settings
 
         // Fetch entries from the 'domain' Custom Post Type where prefix = 1 and external = 1
         $args = [
-            'post_type' => 'domain',
+            'post_type' => 'shorturl_domain',
             'posts_per_page' => -1, // Fetch all domains
             'meta_query' => [
                 [
@@ -676,7 +676,7 @@ class Settings
                         // Add new entry as a Custom Post Type
                         $post_data = [
                             'post_title' => $idm,
-                            'post_type' => 'idm',
+                            'post_type' => 'shorturl_idm',
                             'post_status' => 'publish'
                         ];
 
@@ -697,7 +697,7 @@ class Settings
 
             // Prepare the WP_Query to fetch IdM entries sorted by title
             $args = [
-                'post_type' => 'idm',
+                'post_type' => 'shorturl_idm',
                 'posts_per_page' => -1, // Fetch all IdMs
                 'orderby' => $orderby === 'idm' ? 'title' : 'meta_value',
                 'meta_key' => $orderby === 'idm' ? '' : $orderby, // Sort by meta if not 'idm'
@@ -779,7 +779,7 @@ class Settings
 
         // Get all domains to count associated links
         $args = [
-            'post_type' => 'domain',
+            'post_type' => 'shorturl_domain',
             'posts_per_page' => -1, // Fetch all domains
             'orderby' => 'title', // Sort by hostname (title)
             'order' => $order
@@ -796,7 +796,7 @@ class Settings
 
                 // Query to count links associated with the current domain
                 $link_args = [
-                    'post_type' => 'link',
+                    'post_type' => 'shorturl_link',
                     'meta_query' => [
                         [
                             'key' => 'domain_id',

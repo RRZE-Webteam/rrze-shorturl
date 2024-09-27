@@ -86,7 +86,7 @@ class Shortcode
 
         // Prepare arguments to fetch categories for the current IdM
         $args = [
-            'post_type' => 'category', // Assuming 'category' is the CPT for categories
+            'post_type' => 'shorturl_category',
             'posts_per_page' => -1,         // Fetch all categories
             'meta_query' => [
                 [
@@ -169,7 +169,7 @@ class Shortcode
                 // Insert Category as a new post in the 'category' CPT
                 $post_data = [
                     'post_title' => $category_label,
-                    'post_type' => 'category', // Assuming 'category' is your Custom Post Type
+                    'post_type' => 'shorturl_category',
                     'post_status' => 'publish',
                 ];
 
@@ -192,7 +192,7 @@ class Shortcode
             $category = get_post($category_id);
 
             // If category is found, display edit form
-            if ($category && $category->post_type === 'category') {
+            if ($category && $category->post_type === 'shorturl_category') {
                 $category_label = esc_attr($category->post_title);
                 $parent_id = get_post_meta($category_id, 'parent_id', true) ?: 0;
 
@@ -228,7 +228,7 @@ class Shortcode
     {
         // Fetch all categories for the current IdM using WP_Query
         $args = [
-            'post_type' => 'category', // Assuming 'category' is the Custom Post Type for categories
+            'post_type' => 'shorturl_category', 
             'posts_per_page' => -1,         // Fetch all categories
             'meta_query' => [
                 [
@@ -330,7 +330,7 @@ class Shortcode
     {
         // Fetch the link post using WP_Query
         $link_query = new WP_Query([
-            'post_type' => 'link', // Assuming 'link' is the Custom Post Type
+            'post_type' => 'shorturl_link', 
             'posts_per_page' => 1,
             'p' => $link_id // Fetch by specific post ID
         ]);
@@ -409,7 +409,7 @@ class Shortcode
 
             // Fetch child categories that have the category being deleted as a parent
             $args = [
-                'post_type' => 'category', // Assuming 'category' is the Custom Post Type
+                'post_type' => 'shorturl_category',
                 'posts_per_page' => -1,
                 'meta_query' => [
                     [
@@ -546,7 +546,7 @@ class Shortcode
 
         // Fetch categories for the current IdM using WP_Query
         $args = [
-            'post_type' => 'category', // Assuming 'category' is the Custom Post Type
+            'post_type' => 'shorturl_category', // Assuming 'category' is the Custom Post Type
             'posts_per_page' => -1,         // Fetch all categories
             'meta_query' => [
                 [
@@ -665,7 +665,7 @@ class Shortcode
 
         // Fetch all categories using WP_Query
         $categories_query = new WP_Query([
-            'post_type' => 'category',
+            'post_type' => 'shorturl_category',
             'posts_per_page' => -1,
             'meta_query' => [
                 [
@@ -686,7 +686,7 @@ class Shortcode
 
         // Prepare the arguments for WP_Query to fetch the links
         $args = [
-            'post_type' => 'link',
+            'post_type' => 'shorturl_link',
             'posts_per_page' => -1,
             'orderby' => $orderby,
             'order' => $order,
@@ -907,7 +907,7 @@ class Shortcode
             // Insert new category using wp_insert_post
             $category_data = [
                 'post_title' => $category_name,
-                'post_type' => 'category', // Assuming 'category' is the Custom Post Type
+                'post_type' => 'shorturl_category', // Assuming 'category' is the Custom Post Type
                 'post_status' => 'publish',
             ];
 
@@ -961,7 +961,7 @@ class Shortcode
 
         // Check if the link exists
         $link = get_post($link_id);
-        if (!$link || $link->post_type !== 'link') {
+        if (!$link || $link->post_type !== 'shorturl_link') {
             wp_send_json_error(__('Invalid link.', 'rrze-shorturl'));
         }
 

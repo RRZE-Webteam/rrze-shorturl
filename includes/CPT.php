@@ -20,7 +20,7 @@ class CPT {
     // Register Custom Post Type for IDMs
     public function register_idm_cpt() {
         try {
-            register_post_type('idm', array(
+            register_post_type('shorturl_idm', array(
                 'labels' => array(
                     'name' => __('IDMs'),
                     'singular_name' => __('IDM'),
@@ -37,7 +37,7 @@ class CPT {
     // Register Custom Post Type for Domains
     public function register_domain_cpt() {
         try {
-            register_post_type('domain', array(
+            register_post_type('shorturl_domain', array(
                 'labels' => array(
                     'name' => __('Domains'),
                     'singular_name' => __('Domain'),
@@ -54,7 +54,7 @@ class CPT {
     // Register Custom Post Type for Services
     public function register_service_cpt() {
         try {
-            register_post_type('service', array(
+            register_post_type('shorturl_service', array(
                 'labels' => array(
                     'name' => __('Services'),
                     'singular_name' => __('Service'),
@@ -71,7 +71,7 @@ class CPT {
     // Register Custom Post Type for Links
     public function register_link_cpt() {
         try {
-            register_post_type('link', array(
+            register_post_type('shorturl_link', array(
                 'labels' => array(
                     'name' => __('Links'),
                     'singular_name' => __('Link'),
@@ -90,7 +90,7 @@ class CPT {
         try {
             register_taxonomy(
                 'link_category',
-                'link',
+                'shorturl_link',
                 array(
                     'label' => __('Link Categories'),
                     'rewrite' => array('slug' => 'link_category'),

@@ -36,7 +36,7 @@ class CleanupDB
         try {
             // Set up arguments for WP_Query to fetch all 'idm' posts that have no associated 'link' posts
             $args = [
-                'post_type' => 'idm',    // Custom Post Type for IdMs
+                'post_type' => 'shorturl_idm',    // Custom Post Type for IdMs
                 'posts_per_page' => -1,       // Fetch all IdMs
                 'meta_query' => [
                     [
@@ -62,7 +62,7 @@ class CleanupDB
 
                     // Check if there are any links associated with this IdM
                     $link_query = new \WP_Query([
-                        'post_type' => 'link',
+                        'post_type' => 'shorturl_link',
                         'posts_per_page' => 1,
                         'meta_query' => [
                             [
@@ -103,7 +103,7 @@ class CleanupDB
         try {
             // Query to find links with 'valid_until' date in the past and update them to inactive
             $args = [
-                'post_type' => 'link',  // The Custom Post Type for links
+                'post_type' => 'shorturl_link',  // The Custom Post Type for links
                 'posts_per_page' => -1,      // Get all links
                 'meta_query' => [
                     [
@@ -135,7 +135,7 @@ class CleanupDB
 
             // Now query all active links
             $args = [
-                'post_type' => 'link',
+                'post_type' => 'shorturl_link',
                 'posts_per_page' => -1,  // Get all active links
                 'meta_query' => [
                     [
