@@ -97,7 +97,6 @@ function activation()
     // Ab hier können die Funktionen hinzugefügt werden,
     // die bei der Aktivierung des Plugins aufgerufen werden müssen.
     // Bspw. wp_schedule_event, flush_rewrite_rules, etc.
-    Config\create_custom_tables();
 }
 
 /**
