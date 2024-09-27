@@ -205,7 +205,6 @@ class API
     {
         $parameters = $request->get_json_params();
     
-        // Überprüfen, ob das Label vorhanden ist
         if (empty($parameters['label'])) {
             return new WP_Error('invalid_name', __('Category label is required.', 'rrze-shorturl'), array('status' => 400));
         }
@@ -216,7 +215,7 @@ class API
         // Create a new post data array for the CPT
         $post_data = [
             'post_title'  => $category_label,
-            'post_type'   => 'shorturl_category', // assuming this is your CPT
+            'post_type'   => 'shorturl_category',
             'post_status' => 'publish',
         ];
     

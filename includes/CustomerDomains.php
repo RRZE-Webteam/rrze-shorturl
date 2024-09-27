@@ -103,7 +103,7 @@ class CustomerDomains
                                     // Create a new domain entry as a Custom Post Type
                                     $post_data = [
                                         'post_title' => $host,
-                                        'post_type' => 'shorturl_domain', // Assuming 'domain' is a registered Custom Post Type
+                                        'post_type' => 'shorturl_domain',
                                         'post_status' => 'publish'
                                     ];
 

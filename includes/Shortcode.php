@@ -341,7 +341,6 @@ class Shortcode
         if ($link_query->have_posts()) {
             $link_query->the_post();
 
-            // Get post meta data (assuming these are stored as meta fields)
             $result = [
                 'id' => get_the_ID(),
                 'long_url' => get_post_meta(get_the_ID(), 'long_url', true),
@@ -355,7 +354,6 @@ class Shortcode
                 'active' => get_post_meta(get_the_ID(), 'active', true)
             ];
 
-            // Fetch associated categories (assuming categories are stored in a taxonomy)
             $category_ids = wp_get_post_terms(get_the_ID(), 'link_category', ['fields' => 'ids']);
             $result['category_ids'] = implode(',', $category_ids);
         }
@@ -546,7 +544,7 @@ class Shortcode
 
         // Fetch categories for the current IdM using WP_Query
         $args = [
-            'post_type' => 'shorturl_category', // Assuming 'category' is the Custom Post Type
+            'post_type' => 'shorturl_category',
             'posts_per_page' => -1,         // Fetch all categories
             'meta_query' => [
                 [
@@ -712,7 +710,7 @@ class Shortcode
         if ($filter_category > 0) {
             $args['tax_query'] = [
                 [
-                    'taxonomy' => 'link_category', // Assuming 'link_category' is the taxonomy for categories
+                    'taxonomy' => 'link_category',
                     'field' => 'term_id',
                     'terms' => $filter_category,
                 ]
@@ -907,7 +905,7 @@ class Shortcode
             // Insert new category using wp_insert_post
             $category_data = [
                 'post_title' => $category_name,
-                'post_type' => 'shorturl_category', // Assuming 'category' is the Custom Post Type
+                'post_type' => 'shorturl_category',
                 'post_status' => 'publish',
             ];
 
