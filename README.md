@@ -27,7 +27,8 @@ RRZE ShortURL um im Blockeditor Links zu verkürzen
 ## Verwaltung
 In den Einstellungen kann Folgendes verwaltet werden:
 - Services: vordefinierte Dienste 
-- Customer Domains: die zulässigen Domains
+- Customer Domains: Domains unserer CMS-Kunden
+- External Domains: externe Domains
 - IdM: neue IdM werden automatisch erstellt. Hier kann bestimmt werden, welche erweiterten Einstellungen gestattet sind
 - Statistik
 
