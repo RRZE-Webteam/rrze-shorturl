@@ -50,6 +50,7 @@ class Main
         add_action('admin_enqueue_scripts', [$this, 'enqueueScripts']);
 
         $settings = new Settings();
+        $cpt = new CPT();
         $domains = new CustomerDomains();
         $cleanup = new CleanupDB();
         $myCrypt = new MyCrypt();
