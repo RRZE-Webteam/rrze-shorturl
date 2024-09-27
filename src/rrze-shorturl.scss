@@ -1,3 +1,8 @@
+.column-long-url{
+    word-wrap: break-word;
+    max-width: 200px;
+}
+
 .shorturl-edit-container {
     display: flex;
     /* Use flexbox layout */
