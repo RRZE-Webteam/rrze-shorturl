@@ -245,11 +245,7 @@ class Main
             }
         }
 
-<<<<<<< Updated upstream
         $this->drop_custom_tables();
-=======
-        // $this->drop_custom_tables();
->>>>>>> Stashed changes
     
         update_option('rrze_shorturl_migration_completed', true);
     }
