@@ -97,14 +97,21 @@ class CustomerDomains
                                 }
 
                                 // Insert or update the domain entry in the database
-                                $existing_domain = get_page_by_title($host, OBJECT, 'domain');
+                                $existing_domain_id = get_posts(
+                                    array(
+                                        'post_type'              => 'shorturl_domain',
+                                        'title'                  => $host,
+                                        'post_status'            => 'all',
+                                        'numberposts'            => 1,
+                                        'fields'                 => 'ids')
+                                );
 
-                                if ($existing_domain) {
+                                if ($existing_domain_id) {
                                     // Update existing domain
-                                    update_post_meta($existing_domain->ID, 'notice', $notice);
-                                    update_post_meta($existing_domain->ID, 'webmaster_name', $webmaster_name);
-                                    update_post_meta($existing_domain->ID, 'webmaster_email', $webmaster_email);
-                                    update_post_meta($existing_domain->ID, 'active', $active);
+                                    update_post_meta($existing_domain_id, 'notice', $notice);
+                                    update_post_meta($existing_domain_id, 'webmaster_name', $webmaster_name);
+                                    update_post_meta($existing_domain_id, 'webmaster_email', $webmaster_email);
+                                    update_post_meta($existing_domain_id, 'active', $active);
                                 } else {
                                     // Create a new domain entry as a Custom Post Type
                                     $post_data = [

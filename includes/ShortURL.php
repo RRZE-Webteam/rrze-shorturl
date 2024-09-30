@@ -189,10 +189,10 @@ class ShortURL
 
                 // Update categories (using taxonomies)
                 if (!empty($categories)) {
-                    wp_set_post_terms($link_id, $categories, 'link_category');
+                    wp_set_post_terms($link_id, $categories, 'shorturl_link_category');
                 } else {
                     // Clear categories if none are passed
-                    wp_set_post_terms($link_id, [], 'link_category');
+                    wp_set_post_terms($link_id, [], 'shorturl_link_category');
                 }
             }
 

@@ -92,11 +92,11 @@ class CPT
     {
         try {
             register_taxonomy(
-                'link_category',
+                'shorturl_link_category',
                 'shorturl_link',
                 array(
                     'label' => __('Link Categories'),
-                    'rewrite' => array('slug' => 'link_category'),
+                    'rewrite' => array('slug' => 'shorturl_link_category'),
                     'hierarchical' => true, // Allows parent-child relationships
                 )
             );

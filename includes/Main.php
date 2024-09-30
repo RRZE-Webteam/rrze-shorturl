@@ -136,9 +136,16 @@ class Main
 
         foreach ($domains as $domain) {
             // Check if the domain already exists as a post
-            $existing_domain = get_page_by_title($domain['hostname'], OBJECT, 'domain');
+            $existing_domain_id = get_posts(
+                array(
+                    'post_type'              => 'shorturl_domain',
+                    'title'                  => $domain['hostname'],
+                    'post_status'            => 'all',
+                    'numberposts'            => 1,
+                    'fields'                 => 'ids')
+            );
 
-            if (!$existing_domain) {
+            if (empty($existing_domain_id)) {
                 // Insert domain as a CPT post
                 $post_data = [
                     'post_title' => sanitize_text_field($domain['hostname']),
@@ -165,9 +172,16 @@ class Main
 
         foreach ($idms as $idm) {
             // Check if the IDM already exists as a post
-            $existing_idm = get_page_by_title($idm['idm'], OBJECT, 'idm');
+            $existing_idm_id = get_posts(
+                array(
+                    'post_type'              => 'shorturl_idm',
+                    'title'                  => $idm['idm'],
+                    'post_status'            => 'all',
+                    'numberposts'            => 1,
+                    'fields'                 => 'ids')
+            );
 
-            if (!$existing_idm) {
+            if (empty($existing_idm_id)) {
                 // Insert IdM as a CPT post
                 $post_data = [
                     'post_title' => sanitize_text_field($idm['idm']),
@@ -250,9 +264,16 @@ class Main
         // Insert entries as CPTs
         foreach ($aEntries as $entry) {
             // Check if the post already exists
-            $existing_service = get_page_by_title($entry['hostname'], OBJECT, 'shorturl_service');
+            $existing_service_id = get_posts(
+                array(
+                    'post_type'              => 'shorturl_service',
+                    'title'                  => $entry['hostname'],
+                    'post_status'            => 'all',
+                    'numberposts'            => 1,
+                    'fields'                 => 'ids')
+            );
 
-            if (!$existing_service) {
+            if (empty($existing_service_id)) {
                 // Create a new post with the entry details
                 $post_data = [
                     'post_title' => $entry['hostname'],

@@ -125,7 +125,7 @@ function deactivation()
     }
     
     // delete all entries to our taxonomy
-    $taxonomies = ['link_category'];
+    $taxonomies = ['shorturl_link_category'];
     foreach ($taxonomies as $taxonomy) {
         $terms = get_terms(array(
             'taxonomy' => $taxonomy,

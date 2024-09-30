@@ -673,9 +673,16 @@ class Settings
 
                 if (!empty($idm)) {
                     // Check if the IdM already exists
-                    $existing_idm = get_page_by_title($idm, OBJECT, 'idm');
+                    $existing_idm_id = get_posts(
+                        array(
+                            'post_type'              => 'shorturl_idm',
+                            'title'                  => $idm,
+                            'post_status'            => 'all',
+                            'numberposts'            => 1,
+                            'fields'                 => 'ids')
+                    );
 
-                    if ($existing_idm) {
+                    if (!empty($existing_idm_id)) {
                         $message = __('An error occurred: this IdM already exists.', 'rrze-shorturl');
                     } else {
                         // Add new entry as a Custom Post Type

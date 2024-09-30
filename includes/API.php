@@ -236,9 +236,9 @@ class API
     public function get_categories_callback()
     {
         try {
-            // Get all terms from the 'link_category' taxonomy
+            // Get all terms from the 'shorturl_link_category' taxonomy
             $categories = get_terms([
-                'taxonomy' => 'link_category',
+                'taxonomy' => 'shorturl_link_category',
                 'hide_empty' => false             // don't hide terms with no posts
             ]);
 

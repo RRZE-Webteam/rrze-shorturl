@@ -18,8 +18,8 @@ class Shortcode
         add_shortcode('shorturl-services', [$this, 'shortcode_services_handler']);
         add_shortcode('shorturl-customer-domains', [$this, 'shortcode_customer_domains_handler']);
 
-        add_action('wp_ajax_nopriv_store_link_category', [$this, 'store_link_category_callback']);
-        add_action('wp_ajax_store_link_category', [$this, 'store_link_category_callback']);
+        add_action('wp_ajax_nopriv_store_shorturl_link_category', [$this, 'store_shorturl_link_category_callback']);
+        add_action('wp_ajax_store_shorturl_link_category', [$this, 'store_shorturl_link_category_callback']);
 
         add_action('wp_ajax_nopriv_add_shorturl_category', [$this, 'add_shorturl_category_callback']);
         add_action('wp_ajax_add_shorturl_category', [$this, 'add_shorturl_category_callback']);
@@ -354,7 +354,7 @@ class Shortcode
                 'active' => get_post_meta(get_the_ID(), 'active', true)
             ];
 
-            $category_ids = wp_get_post_terms(get_the_ID(), 'link_category', ['fields' => 'ids']);
+            $category_ids = wp_get_post_terms(get_the_ID(), 'shorturl_link_category', ['fields' => 'ids']);
             $result['category_ids'] = implode(',', $category_ids);
         }
 
@@ -710,7 +710,7 @@ class Shortcode
         if ($filter_category > 0) {
             $args['tax_query'] = [
                 [
-                    'taxonomy' => 'link_category',
+                    'taxonomy' => 'shorturl_link_category',
                     'field' => 'term_id',
                     'terms' => $filter_category,
                 ]
@@ -768,7 +768,7 @@ class Shortcode
                 $valid_until = get_post_meta($link_id, 'valid_until', true);
 
                 // Get the categories
-                $category_names = wp_get_post_terms($link_id, 'link_category', ['fields' => 'names']);
+                $category_names = wp_get_post_terms($link_id, 'shorturl_link_category', ['fields' => 'names']);
                 $category_names_str = implode(', ', $category_names);
 
                 // Output table row
@@ -893,12 +893,20 @@ class Shortcode
         }
 
         // Check if the category already exists
-        $existing_category = get_page_by_title($category_name, OBJECT, 'category');
+        $existing_category_id = get_posts(
+            array(
+                'post_type'              => 'shorturl_category',
+                'title'                  => $category_name,
+                'post_status'            => 'all',
+                'numberposts'            => 1,
+                'fields'                 => 'ids')
+        );
 
-        if ($existing_category) {
+
+        if (!empty($existing_category_id)) {
             // Category already exists, return its ID
             wp_send_json_success([
-                'category_id' => $existing_category->ID,
+                'category_id' => $existing_category_id,
                 'category_list_html' => self::generate_category_list_html()
             ]);
         } else {
@@ -943,7 +951,7 @@ class Shortcode
     }
 
 
-    public function store_link_category_callback()
+    public function store_shorturl_link_category_callback()
     {
         // Verify nonce for security
         check_ajax_referer('store-link-category', '_ajax_nonce');
@@ -964,13 +972,13 @@ class Shortcode
         }
 
         // Check if the category exists
-        $category = get_term($category_id, 'link_category');
+        $category = get_term($category_id, 'shorturl_link_category');
         if (!$category || is_wp_error($category)) {
             wp_send_json_error(__('Invalid category.', 'rrze-shorturl'));
         }
 
         // Get current categories assigned to the link
-        $current_categories = wp_get_post_terms($link_id, 'link_category', ['fields' => 'ids']);
+        $current_categories = wp_get_post_terms($link_id, 'shorturl_link_category', ['fields' => 'ids']);
 
         // Check if the category is already assigned to the link
         if (in_array($category_id, $current_categories)) {
@@ -978,7 +986,7 @@ class Shortcode
         }
 
         // Add the category to the link
-        $result = wp_set_post_terms($link_id, array_merge($current_categories, [$category_id]), 'link_category');
+        $result = wp_set_post_terms($link_id, array_merge($current_categories, [$category_id]), 'shorturl_link_category');
 
         // Check if the category was successfully added
         if (!is_wp_error($result)) {
