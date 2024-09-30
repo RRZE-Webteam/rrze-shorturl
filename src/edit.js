@@ -77,23 +77,6 @@ const Edit = ({ attributes, setAttributes }) => {
                 console.error('Error fetching shorturl_category terms:', error);
             });
 
-        // Fetch tags from shorturl_tags table
-        // fetch('/wp-json/wp/v2/shorturl/tags')
-        //     .then(response => response.json())
-        //     .then(data => {
-        //         console.log('ShortURL Tags Data:', data);
-        //         if (Array.isArray(data)) {
-        //             const tagSuggestions = data.map(tag => ({ id: tag.id, value: tag.label }));
-        //             setTagSuggestions(tagSuggestions);
-        //         } else {
-        //             console.log('No tags found.');
-        //             setTagSuggestions([]);
-        //         }
-        //     })
-        //     .catch(error => {
-        //         console.error('Error fetching shorturl_tags:', error);
-        //     });
-
     }, [shortenedUrl]);
 
     const handleAddCategory = () => {

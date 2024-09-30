@@ -203,8 +203,10 @@ class API
 
     public function add_category_callback($request)
     {
+        // Get parameters from the request
         $parameters = $request->get_json_params();
     
+        // Check if the label is provided
         if (empty($parameters['label'])) {
             return new WP_Error('invalid_name', __('Category label is required.', 'rrze-shorturl'), array('status' => 400));
         }
@@ -212,27 +214,26 @@ class API
         // Sanitize the category label
         $category_label = sanitize_text_field($parameters['label']);
     
-        // Create a new post data array for the CPT
-        $post_data = [
-            'post_title'  => $category_label,
-            'post_type'   => 'shorturl_category',
-            'post_status' => 'publish',
-        ];
-    
-        // Insert the category as a CPT
-        $post_id = wp_insert_post($post_data);
+        // Insert the category into the taxonomy
+        $term = wp_insert_term(
+            $category_label,   // The term name
+            'shorturl_link_category', // The taxonomy name
+            array(
+                'slug' => sanitize_title($category_label) // Optionally set a slug
+            )
+        );
     
         // Check for errors during the insertion
-        if (is_wp_error($post_id)) {
-            return new WP_Error('insert_failed', __('Failed to add category to the database.', 'rrze-shorturl'), array('status' => 500));
+        if (is_wp_error($term)) {
+            return new WP_Error('insert_failed', __('Failed to add category to the taxonomy.', 'rrze-shorturl'), array('status' => 500));
         }
     
         // Prepare the response
-        $categories = array('id' => $post_id, 'label' => $category_label);
+        $categories = array('id' => $term['term_id'], 'label' => $category_label);
     
         return new WP_REST_Response($categories, 200);
     }
-    
+        
     public function get_categories_callback()
     {
         try {
