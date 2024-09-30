@@ -304,6 +304,7 @@ class Settings
     // Render the Services tab section
     public function render_services_section()
     {
+        $error = true;
         $message = '';
         $bDel = false;
     
@@ -317,6 +318,7 @@ class Settings
                         $bDel = true;
                     }
                     $message = (empty($message) ? '' : $message . '<br \>') . ($bDel ? __('Selected entries deleted successfully.', 'rrze-shorturl') : '');
+                    $error = false;
                 }
     
                 // Add new entry
@@ -333,7 +335,7 @@ class Settings
                         } else {
                             if (empty($new_prefix) || $new_prefix == '1') {
                                 // This is a customer domain
-                                $message = __('You are trying to enter a customer domain. Please use tab "Customer Domains" to do this.', 'rrze-shorturl');
+                                $message = __('Prefix 1 is reserved for customer domains. Please use another prefix.', 'rrze-shorturl');
                             } else {
                                 // Check if the prefix is 0
                                 if ($new_prefix == '0') {
@@ -352,7 +354,7 @@ class Settings
                                     ));
     
                                     if ($existing_services->found_posts > 0) {
-                                        $message = __('Prefix not allowed.', 'rrze-shorturl');
+                                        $message = __('Prefix is already in use.', 'rrze-shorturl');
                                     } else {
                                         // Create new post
                                         $new_service_id = wp_insert_post(array(
@@ -369,12 +371,15 @@ class Settings
                                             $message = __('An error occurred: ', 'rrze-shorturl') . $new_service_id->get_error_message();
                                         } else {
                                             $message = __('New service added successfully.', 'rrze-shorturl');
+                                            $error = false;
                                         }
+
+                                        $new_hostname = '';
+                                        $new_prefix = '';
+                                        $new_regex = '';        
                                     }
                                 }
                             }
-                            $new_hostname = '';
-                            $new_prefix = '';
                         }
                     } catch (CustomException $e) {
                         $message = __('An error occurred: ', 'rrze-shorturl') . $e->getMessage();
@@ -404,7 +409,7 @@ class Settings
         ?>
         <div class="wrap">
             <?php if (!empty($message)): ?>
-                <div class="<?php echo strpos($message, 'error') !== false ? 'error' : 'updated'; ?>">
+                <div class="<?php echo ($error ? 'error' : 'updated'); ?>">
                     <p><?php echo $message; ?></p>
                 </div>
             <?php endif; ?>
