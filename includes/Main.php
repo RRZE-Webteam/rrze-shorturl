@@ -39,7 +39,7 @@ class Main
 
     }
 
-    
+
     /**
      * Es wird ausgeführt, sobald die Klasse instanziiert wird.
      */
@@ -89,7 +89,7 @@ class Main
                 'delete_shorturl_tag_nonce' => wp_create_nonce('delete_shorturl_tag_nonce'),
             )
         );
-        
+
         wp_enqueue_script('select2', plugins_url('assets/js/select2.min.js', plugin_basename($this->pluginFile)), array('jquery'), null, true);
         wp_enqueue_style('select2', plugins_url('assets/css/select2.min.css', plugin_basename($this->pluginFile)));
 
@@ -98,48 +98,48 @@ class Main
     }
 
     private function drop_custom_tables()
-{
-    global $wpdb;
+    {
+        global $wpdb;
 
-    try {
-        // Drop shorturl table if they exist
-        $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_links_categories");
-        $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_links_tags");
-        $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_categories");
-        $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_tags");
-        $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_links");
-        $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_domains");
-        $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_services");
-        $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_idms");
-        // Delete triggers just to be sure (they should be deleted as they are binded to the dropped tables)
-        $wpdb->query("DROP TRIGGER IF EXISTS validate_url");
-        $wpdb->query("DROP TRIGGER IF EXISTS validate_hostname");
-    } catch (CustomException $e) {
+        try {
+            // Drop shorturl table if they exist
+            $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_links_categories");
+            $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_links_tags");
+            $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_categories");
+            $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_tags");
+            $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_links");
+            $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_domains");
+            $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_services");
+            $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_idms");
+            // Delete triggers just to be sure (they should be deleted as they are binded to the dropped tables)
+            $wpdb->query("DROP TRIGGER IF EXISTS validate_url");
+            $wpdb->query("DROP TRIGGER IF EXISTS validate_hostname");
+        } catch (CustomException $e) {
 
 
-        // Handle the exception
-        error_log("Error in drop_custom_tables: " . $e->getMessage());
+            // Handle the exception
+            error_log("Error in drop_custom_tables: " . $e->getMessage());
+        }
     }
-}
 
 
     public function migrate_db_to_cpt()
     {
-    
+
         // Check if migration has been done already
         if (get_option('rrze_shorturl_migration_completed')) {
             return;
         }
-    
+
         global $wpdb;
-    
+
         // Migrate shorturl_domains to CPT 'domain'
         $domains = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_domains", ARRAY_A);
-    
+
         foreach ($domains as $domain) {
             // Check if the domain already exists as a post
             $existing_domain = get_page_by_title($domain['hostname'], OBJECT, 'domain');
-    
+
             if (!$existing_domain) {
                 // Insert domain as a CPT post
                 $post_data = [
@@ -147,9 +147,9 @@ class Main
                     'post_type' => 'shorturl_domain',
                     'post_status' => 'publish'
                 ];
-    
+
                 $post_id = wp_insert_post($post_data);
-    
+
                 if (!is_wp_error($post_id)) {
                     // Add meta fields
                     update_post_meta($post_id, 'prefix', intval($domain['prefix']));
@@ -161,14 +161,14 @@ class Main
                 }
             }
         }
-    
+
         // Migrate shorturl_idms to CPT 'idm'
         $idms = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_idms", ARRAY_A);
-    
+
         foreach ($idms as $idm) {
             // Check if the IDM already exists as a post
             $existing_idm = get_page_by_title($idm['idm'], OBJECT, 'idm');
-    
+
             if (!$existing_idm) {
                 // Insert IdM as a CPT post
                 $post_data = [
@@ -176,9 +176,9 @@ class Main
                     'post_type' => 'shorturl_idm',
                     'post_status' => 'publish'
                 ];
-    
+
                 $post_id = wp_insert_post($post_data);
-    
+
                 if (!is_wp_error($post_id)) {
                     // Add meta fields
                     update_post_meta($post_id, 'allow_uri', intval($idm['allow_uri']));
@@ -188,10 +188,10 @@ class Main
                 }
             }
         }
-    
+
         // Migrate shorturl_links to CPT 'link'
         $links = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_links", ARRAY_A);
-    
+
         foreach ($links as $link) {
             // Insert link as a CPT post
             $post_data = [
@@ -199,9 +199,9 @@ class Main
                 'post_type' => 'shorturl_link',
                 'post_status' => 'publish'
             ];
-    
+
             $post_id = wp_insert_post($post_data);
-    
+
             if (!is_wp_error($post_id)) {
                 // Add meta fields
                 update_post_meta($post_id, 'domain_id', intval($link['domain_id']));
@@ -216,37 +216,9 @@ class Main
                 update_post_meta($post_id, 'active', intval($link['active']));
             }
         }
-    
-        // Add any additional migrations here (e.g. for shorturl_services, etc.)
-        // Example for shorturl_services to CPT 'service'
-        $services = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_services", ARRAY_A);
-    
-        foreach ($services as $service) {
-            // Check if the service already exists as a post
-            $existing_service = get_page_by_title($service['hostname'], OBJECT, 'service');
-    
-            if (!$existing_service) {
-                // Insert service as a CPT post
-                $post_data = [
-                    'post_title' => sanitize_text_field($service['hostname']),
-                    'post_type' => 'shorturl_service',
-                    'post_status' => 'publish'
-                ];
-    
-                $post_id = wp_insert_post($post_data);
-    
-                if (!is_wp_error($post_id)) {
-                    // Add meta fields
-                    update_post_meta($post_id, 'prefix', intval($service['prefix']));
-                    update_post_meta($post_id, 'regex', sanitize_text_field($service['regex']));
-                    update_post_meta($post_id, 'active', intval($service['active']));
-                    update_post_meta($post_id, 'notice', sanitize_text_field($service['notice']));
-                }
-            }
-        }
 
         $this->drop_custom_tables();
-    
+
         update_option('rrze_shorturl_migration_completed', true);
     }
 
@@ -257,7 +229,7 @@ class Main
         if (get_option('rrze_shorturl_services_initialized')) {
             return; // Initialization has already been performed, exit function
         }
-    
+
         // Entries to be saved
         $aEntries = [
             [
@@ -276,12 +248,12 @@ class Main
                 'regex' => 'https://www.helpdesk.rrze.fau.de/otrs/index.pl?Action=AgentZoom&TicketID=$id'
             ],
         ];
-    
+
         // Insert entries as CPTs
         foreach ($aEntries as $entry) {
             // Check if the post already exists
             $existing_service = get_page_by_title($entry['hostname'], OBJECT, 'shorturl_service');
-    
+
             if (!$existing_service) {
                 // Create a new post with the entry details
                 $post_data = [
@@ -289,9 +261,9 @@ class Main
                     'post_type' => 'shorturl_service',
                     'post_status' => 'publish'
                 ];
-    
+
                 $post_id = wp_insert_post($post_data);
-    
+
                 if (!is_wp_error($post_id)) {
                     // Add meta data for the newly created service
                     update_post_meta($post_id, 'prefix', $entry['prefix']);
