@@ -248,6 +248,25 @@ function migrate_db_to_cpt()
 }
 
 
+//  // Insert Service domains
+//  $aEntries = [
+//     [
+//         'hostname' => 'www.fau.tv',
+//         'prefix' => 3,
+//         'regex' => 'https://www.fau.tv/clip/id/$nummer'
+//     ],
+//     [
+//         'hostname' => 'www.faq.rrze.fau.de',
+//         'prefix' => 8,
+//         'regex' => 'https://www.helpdesk.rrze.fau.de/otrs/public.pl?Action=PublicFAQ&ItemID=$id'
+//     ],
+//     [
+//         'hostname' => 'www.helpdesk.rrze.fau.de',
+//         'prefix' => 9,
+//         'regex' => 'https://www.helpdesk.rrze.fau.de/otrs/index.pl?Action=AgentZoom&TicketID=$id'
+//     ],
+// ];
+
 /**
  * Wird durchgeführt, nachdem das WP-Grundsystem hochgefahren
  * und alle Plugins eingebunden wurden.
@@ -271,7 +290,7 @@ function loaded()
         $main = new Main(__FILE__);
         $main->onLoaded();
 
-        migrate_db_to_cpt();
+        // migrate_db_to_cpt();
     }
 
     add_action('init', __NAMESPACE__ . '\rrze_shorturl_init');

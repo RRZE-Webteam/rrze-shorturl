@@ -52,6 +52,8 @@ class CustomerDomains
                             $webmaster_name = '';
                             $webmaster_email = '';
                             $active = 1;
+                            $prefix = 1;
+                            $external = 0;
 
                             // Validate the presence of necessary links
                             if (empty($entry['content']['tos']['Impressum']['href'])) {
@@ -115,6 +117,8 @@ class CustomerDomains
                                         update_post_meta($post_id, 'webmaster_name', $webmaster_name);
                                         update_post_meta($post_id, 'webmaster_email', $webmaster_email);
                                         update_post_meta($post_id, 'active', $active);
+                                        update_post_meta($post_id, 'prefix', $prefix);
+                                        update_post_meta($post_id, 'external', $external);
                                     } else {
                                         error_log('Error inserting domain: ' . $host);
                                     }

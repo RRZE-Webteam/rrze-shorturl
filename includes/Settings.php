@@ -453,7 +453,7 @@ class Settings
         // Define arguments for WP_Query to fetch 'domain' CPT entries with specific conditions
         $args = [
             'post_type' => 'shorturl_domain',
-            'posts_per_page' => -1,        // Fetch all entries
+            'posts_per_page' => -1, // Fetch all domains
             'meta_query' => [
                 [
                     'key' => 'prefix',
@@ -466,10 +466,10 @@ class Settings
                     'compare' => '='
                 ]
             ],
-            'orderby' => 'meta_value',  // Order by hostname meta value
-            'meta_key' => 'hostname',    // Sorting field
-            'order' => 'ASC'          // Ascending order
+            'orderby' => 'title', // Sort by the hostname (post_title)
+            'order' => 'ASC'
         ];
+
 
         // Execute the query
         $query = new \WP_Query($args);
@@ -499,7 +499,7 @@ class Settings
                             <?php while ($query->have_posts()):
                                 $query->the_post(); ?>
                                 <tr>
-                                    <td><?php echo esc_html(get_post_meta(get_the_ID(), 'hostname', true)); ?></td>
+                                    <td><?php echo esc_html(get_the_title()); ?></td>
                                     <td><?php echo get_post_meta(get_the_ID(), 'active', true) == 1 ? '&#10004;' : '&#10008;'; ?></td>
                                     <td><?php echo esc_html(get_post_meta(get_the_ID(), 'notice', true)); ?></td>
                                     <td><?php echo esc_html(get_post_meta(get_the_ID(), 'webmaster_name', true)); ?></td>
@@ -601,7 +601,7 @@ class Settings
             'order' => 'ASC'
         ];
 
-        $query = new WP_Query($args);
+        $query = new \WP_Query($args);
 
         ?>
         <div class="wrap">
@@ -704,7 +704,7 @@ class Settings
                 'order' => $order
             ];
 
-            $idms_query = new WP_Query($args);
+            $idms_query = new \WP_Query($args);
 
             ?>
             <?php if (!empty($message)): ?>

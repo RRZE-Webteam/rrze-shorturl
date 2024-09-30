@@ -98,7 +98,7 @@ class Shortcode
         ];
 
         // Fetch categories using WP_Query
-        $categories_query = new WP_Query($args);
+        $categories_query = new \WP_Query($args);
         $categories = [];
 
         // Build the hierarchical structure for each category
@@ -329,7 +329,7 @@ class Shortcode
     private function get_link_data_by_id($link_id)
     {
         // Fetch the link post using WP_Query
-        $link_query = new WP_Query([
+        $link_query = new \WP_Query([
             'post_type' => 'shorturl_link', 
             'posts_per_page' => 1,
             'p' => $link_id // Fetch by specific post ID
@@ -418,7 +418,7 @@ class Shortcode
                 ]
             ];
 
-            $child_categories = new WP_Query($args);
+            $child_categories = new \WP_Query($args);
 
             // Update child categories to inherit the parent_id of the category being deleted
             if ($child_categories->have_posts()) {
@@ -555,7 +555,7 @@ class Shortcode
             ]
         ];
 
-        $categories_query = new WP_Query($args);
+        $categories_query = new \WP_Query($args);
         $categories = $categories_query->posts;
 
         // Build hierarchical category structure
@@ -662,7 +662,7 @@ class Shortcode
         }
 
         // Fetch all categories using WP_Query
-        $categories_query = new WP_Query([
+        $categories_query = new \WP_Query([
             'post_type' => 'shorturl_category',
             'posts_per_page' => -1,
             'meta_query' => [
@@ -718,7 +718,7 @@ class Shortcode
         }
 
         // Fetch the links
-        $links_query = new WP_Query($args);
+        $links_query = new \WP_Query($args);
         $results = $links_query->posts;
 
         // Generate update message
