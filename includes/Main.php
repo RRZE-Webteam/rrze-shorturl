@@ -115,8 +115,6 @@ class Main
             $wpdb->query("DROP TRIGGER IF EXISTS validate_url");
             $wpdb->query("DROP TRIGGER IF EXISTS validate_hostname");
         } catch (CustomException $e) {
-
-
             // Handle the exception
             error_log("Error in drop_custom_tables: " . $e->getMessage());
         }
