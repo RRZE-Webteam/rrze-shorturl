@@ -7,28 +7,31 @@ class CleanupDB
 {
     public function __construct()
     {
-        add_action('rrze_shorturl_cleanup_inactive_idms', array($this, 'cleanInactiveIdMs'));
+        add_action('init', function () {
+            add_action('rrze_shorturl_cleanup_inactive_idms', array($this, 'cleanInactiveIdMs'));
 
-        // Define the custom "monthly" interval
-        add_filter('cron_schedules', function ($schedules) {
-            $schedules['monthly'] = array(
-                'interval' => 30 * DAY_IN_SECONDS,
-                'display' => __('Monthly')
-            );
-            return $schedules;
+            // Define the custom "monthly" interval
+            add_filter('cron_schedules', function ($schedules) {
+                $schedules['monthly'] = array(
+                    'interval' => 30 * DAY_IN_SECONDS,
+                    'display' => __('Monthly')
+                );
+                return $schedules;
+            });
+
+            if (!wp_next_scheduled('rrze_shorturl_cleanup_inactive_idms')) {
+                // let the job run monthly
+                wp_schedule_event(time(), 'monthly', 'rrze_shorturl_cleanup_inactive_idms');
+            }
+
+            add_action('rrze_shorturl_cleanup_invalid_links', array($this, 'cleanInvalidLinks'));
+
+            if (!wp_next_scheduled('rrze_shorturl_cleanup_invalid_links')) {
+                // let the job run daily at 2:00 a.m.
+                wp_schedule_event(strtotime('today 2:00'), 'daily', 'rrze_shorturl_cleanup_invalid_links');
+            }
         });
 
-        if (!wp_next_scheduled('rrze_shorturl_cleanup_inactive_idms')) {
-            // let the job run monthly
-            wp_schedule_event(time(), 'monthly', 'rrze_shorturl_cleanup_inactive_idms');
-        }
-
-        add_action('rrze_shorturl_cleanup_invalid_links', array($this, 'cleanInvalidLinks'));
-
-        if (!wp_next_scheduled('rrze_shorturl_cleanup_invalid_links')) {
-            // let the job run daily at 2:00 a.m.
-            wp_schedule_event(strtotime('today 2:00'), 'daily', 'rrze_shorturl_cleanup_invalid_links');
-        }
     }
 
     public function cleanInactiveIdMs()

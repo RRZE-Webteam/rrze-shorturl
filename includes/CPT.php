@@ -3,29 +3,28 @@ namespace RRZE\ShortURL;
 
 use RRZE\ShortURL\CustomException;
 
-class CPT {
+class CPT
+{
 
-    public function __construct() {
-        try {
-            add_action('init', [$this, 'register_idm_cpt']);
-            add_action('init', [$this, 'register_domain_cpt']);
-            add_action('init', [$this, 'register_service_cpt']);
-            add_action('init', [$this, 'register_link_cpt']);
-            add_action('init', [$this, 'register_link_taxonomy']);
-        } catch (CustomException $e) {
-            error_log("Error in CPT __construct: " . $e->getMessage());
-        }
+    public function __construct()
+    {
+        add_action('init', [$this, 'register_idm_cpt']);
+        add_action('init', [$this, 'register_domain_cpt']);
+        add_action('init', [$this, 'register_service_cpt']);
+        add_action('init', [$this, 'register_link_cpt']);
+        add_action('init', [$this, 'register_link_taxonomy']);
     }
 
     // Register Custom Post Type for IDMs
-    public function register_idm_cpt() {
+    public function register_idm_cpt()
+    {
         try {
             register_post_type('shorturl_idm', array(
                 'labels' => array(
                     'name' => __('IDMs'),
                     'singular_name' => __('IDM'),
                 ),
-                'public' => true,
+                'public' => false,
                 'has_archive' => false,
                 'supports' => array('title', 'editor', 'custom-fields'),
             ));
@@ -35,14 +34,15 @@ class CPT {
     }
 
     // Register Custom Post Type for Domains
-    public function register_domain_cpt() {
+    public function register_domain_cpt()
+    {
         try {
             register_post_type('shorturl_domain', array(
                 'labels' => array(
                     'name' => __('Domains'),
                     'singular_name' => __('Domain'),
                 ),
-                'public' => true,
+                'public' => false,
                 'has_archive' => false,
                 'supports' => array('title', 'custom-fields'),
             ));
@@ -52,14 +52,15 @@ class CPT {
     }
 
     // Register Custom Post Type for Services
-    public function register_service_cpt() {
+    public function register_service_cpt()
+    {
         try {
             register_post_type('shorturl_service', array(
                 'labels' => array(
                     'name' => __('Services'),
                     'singular_name' => __('Service'),
                 ),
-                'public' => true,
+                'public' => false,
                 'has_archive' => false,
                 'supports' => array('title', 'custom-fields'),
             ));
@@ -69,14 +70,15 @@ class CPT {
     }
 
     // Register Custom Post Type for Links
-    public function register_link_cpt() {
+    public function register_link_cpt()
+    {
         try {
             register_post_type('shorturl_link', array(
                 'labels' => array(
                     'name' => __('Links'),
                     'singular_name' => __('Link'),
                 ),
-                'public' => true,
+                'public' => false,
                 'has_archive' => false,
                 'supports' => array('title', 'editor', 'custom-fields'),
             ));
@@ -86,7 +88,8 @@ class CPT {
     }
 
     // Register taxonomy for link categories
-    public function register_link_taxonomy() {
+    public function register_link_taxonomy()
+    {
         try {
             register_taxonomy(
                 'link_category',

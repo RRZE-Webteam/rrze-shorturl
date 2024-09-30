@@ -230,11 +230,12 @@ class Settings
     public function render_general_section()
     {
         $message = '';
-        $aOptions = [];
-        $aOptions['ShortURLBase'] = 'https://go.fau.de';
-        $aOptions['maxShortening'] = 60;
 
         $aOptions = json_decode(get_option('rrze-shorturl'), true);
+        $aOptions = (empty($aOptions) ? [] : $aOptions);
+        $aOptions['ShortURLBase'] = (empty($aOptions['ShortURLBase'])? 'https://go.fau.de' : $aOptions['ShortURLBase']);
+        $aOptions['maxShortening'] = (empty($aOptions['maxShortening'])? 60 : $aOptions['maxShortening']);
+        $aOptions['allowed_ip_addresses'] = (empty($aOptions['allowed_ip_addresses'])? '' : $aOptions['allowed_ip_addresses']);        
 
         if (isset($_POST['submit_general'])) {
             if (filter_var($_POST['ShortURLBase'], FILTER_VALIDATE_URL)) {
@@ -303,23 +304,21 @@ class Settings
     // Render the Services tab section
     public function render_services_section()
     {
-        global $wpdb;
         $message = '';
         $bDel = false;
-
+    
         // Check if form is submitted
         if (isset($_POST['submit'])) {
             try {
                 // Delete selected entries
                 if (!empty($_POST['delete'])) {
-
-                    foreach ($_POST['delete'] as $id => $delete_id) {
-                        $wpdb->delete("{$wpdb->prefix}shorturl_services", array('id' => $delete_id), array('%d'));
+                    foreach ($_POST['delete'] as $delete_id) {
+                        wp_delete_post($delete_id, true);
                         $bDel = true;
                     }
                     $message = (empty($message) ? '' : $message . '<br \>') . ($bDel ? __('Selected entries deleted successfully.', 'rrze-shorturl') : '');
                 }
-
+    
                 // Add new entry
                 if (!empty($_POST['new_hostname'])) {
                     try {
@@ -327,44 +326,49 @@ class Settings
                         $new_hostname = sanitize_text_field($_POST['new_hostname']);
                         $new_prefix = sanitize_text_field($_POST['new_prefix']);
                         $new_regex = sanitize_text_field($_POST['new_regex']);
-
+    
                         // Validate hostname
                         if (!self::isValidHostName($new_hostname)) {
                             $message = __('Hostname is not valid.', 'rrze-shorturl');
                         } else {
                             if (empty($new_prefix) || $new_prefix == '1') {
-                                // this is a customer domain
+                                // This is a customer domain
                                 $message = __('You are trying to enter a customer domain. Please use tab "Customer Domains" to do this.', 'rrze-shorturl');
                             } else {
                                 // Check if the prefix is 0
                                 if ($new_prefix == '0') {
                                     $message = __('Prefix not allowed.', 'rrze-shorturl');
                                 } else {
-                                    // Check if the prefix already exists in the database
-                                    $existing_prefix = $wpdb->get_var(
-                                        $wpdb->prepare(
-                                            "SELECT COUNT(*) FROM {$wpdb->prefix}shorturl_services WHERE prefix = %s",
-                                            $new_prefix
+                                    // Check if the prefix already exists
+                                    $existing_services = new \WP_Query(array(
+                                        'post_type' => 'shorturl_service',
+                                        'meta_query' => array(
+                                            array(
+                                                'key' => 'prefix',
+                                                'value' => $new_prefix,
+                                                'compare' => '='
+                                            )
                                         )
-                                    );
-
-                                    if ($existing_prefix > 0) {
+                                    ));
+    
+                                    if ($existing_services->found_posts > 0) {
                                         $message = __('Prefix not allowed.', 'rrze-shorturl');
                                     } else {
-                                        $wpdb->insert(
-                                            "{$wpdb->prefix}shorturl_services",
-                                            array(
-                                                'hostname' => $new_hostname,
+                                        // Create new post
+                                        $new_service_id = wp_insert_post(array(
+                                            'post_type' => 'shorturl_service',
+                                            'post_title' => $new_hostname,
+                                            'post_status' => 'publish',
+                                            'meta_input' => array(
                                                 'prefix' => $new_prefix,
                                                 'regex' => $new_regex
                                             )
-                                        );
-
-                                        $message = __('New service added successfully.', 'rrze-shorturl');
-
-                                        if ($wpdb->last_error) {
-                                            $message = __('An error occurred: ', 'rrze-shorturl') . $wpdb->last_error;
-                                            throw new CustomException($wpdb->last_error);
+                                        ));
+    
+                                        if (is_wp_error($new_service_id)) {
+                                            $message = __('An error occurred: ', 'rrze-shorturl') . $new_service_id->get_error_message();
+                                        } else {
+                                            $message = __('New service added successfully.', 'rrze-shorturl');
                                         }
                                     }
                                 }
@@ -375,69 +379,65 @@ class Settings
                     } catch (CustomException $e) {
                         $message = __('An error occurred: ', 'rrze-shorturl') . $e->getMessage();
                     }
-
                 }
             } catch (CustomException $e) {
                 $message = __('An error occurred: ', 'rrze-shorturl') . $e->getMessage();
             }
         }
-
-        // Fetch entries from shorturl_services table (prefix = 1 is reserved for our customer domains)
-        $entries = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_services WHERE NOT prefix = 1 ORDER BY prefix");
-
+    
+        // Fetch entries from shorturl_services (prefix = 1 is reserved for customer domains)
+        $args = array(
+            'post_type' => 'shorturl_service',
+            'meta_query' => array(
+                array(
+                    'key' => 'prefix',
+                    'value' => '1',
+                    'compare' => '!='
+                )
+            ),
+            'orderby' => 'meta_value',
+            'meta_key' => 'prefix',
+            'order' => 'ASC'
+        );
+    
+        $entries = new \WP_Query($args);
         ?>
         <div class="wrap">
             <?php if (!empty($message)): ?>
                 <div class="<?php echo strpos($message, 'error') !== false ? 'error' : 'updated'; ?>">
-                    <p>
-                        <?php echo $message; ?>
-                    </p>
+                    <p><?php echo $message; ?></p>
                 </div>
             <?php endif; ?>
             <form method="post" action="" id="services-form">
                 <table class="shorturl-wp-list-table widefat fixed striped">
                     <thead>
                         <tr>
-                            <th>
-                                <?php echo __('Hostname', 'rrze-shorturl'); ?>
-                            </th>
-                            <th>
-                                <?php echo __('Prefix', 'rrze-shorturl'); ?>
-                            </th>
-                            <th>
-                                <?php echo __('Regex', 'rrze-shorturl'); ?>
-                            </th>
-                            <th>
-                                <?php echo __('Delete', 'rrze-shorturl'); ?>
-                            </th>
+                            <th><?php echo __('Hostname', 'rrze-shorturl'); ?></th>
+                            <th><?php echo __('Prefix', 'rrze-shorturl'); ?></th>
+                            <th><?php echo __('Regex', 'rrze-shorturl'); ?></th>
+                            <th><?php echo __('Delete', 'rrze-shorturl'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($entries as $entry): ?>
-                            <tr>
-                                <td><input type="text" name="hostname[]" value="<?php echo esc_attr($entry->hostname); ?>"
-                                        readonly /></td>
-                                <td><input type="text" name="prefix[]" value="<?php echo esc_attr($entry->prefix); ?>" readonly />
-                                </td>
-                                <td><input type="text" name="regex[]" value="<?php echo esc_attr($entry->regex); ?>" />
-                                </td>
-                                <td><input type="checkbox" name="delete[]" value="<?php echo esc_attr($entry->id); ?>" />
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
+                        <?php if ($entries->have_posts()): ?>
+                            <?php while ($entries->have_posts()): $entries->the_post(); ?>
+                                <tr>
+                                    <td><input type="text" name="hostname[]" value="<?php echo esc_attr(get_the_title()); ?>" readonly /></td>
+                                    <td><input type="text" name="prefix[]" value="<?php echo esc_attr(get_post_meta(get_the_ID(), 'prefix', true)); ?>" readonly /></td>
+                                    <td><input type="text" name="regex[]" value="<?php echo esc_attr(get_post_meta(get_the_ID(), 'regex', true)); ?>" /></td>
+                                    <td><input type="checkbox" name="delete[]" value="<?php echo esc_attr(get_the_ID()); ?>" /></td>
+                                </tr>
+                            <?php endwhile; wp_reset_postdata(); ?>
+                        <?php endif; ?>
                         <tr>
-                            <td><input type="text" name="new_hostname"
-                                    value="<?php echo (!empty($new_hostname) ? $new_hostname : ''); ?>" /></td>
-                            <td><input type="text" name="new_prefix"
-                                    value="<?php echo (!empty($new_prefix) ? $new_prefix : ''); ?>" pattern="\d*" />
-                            </td>
-                            <td><input type="text" name="new_regex"
-                                    value="<?php echo (!empty($new_regex) ? $new_regex : ''); ?>" /></td>
+                            <td><input type="text" name="new_hostname" value="<?php echo (!empty($new_hostname) ? esc_attr($new_hostname) : ''); ?>" /></td>
+                            <td><input type="text" name="new_prefix" value="<?php echo (!empty($new_prefix) ? esc_attr($new_prefix) : ''); ?>" pattern="\d*" /></td>
+                            <td><input type="text" name="new_regex" value="<?php echo (!empty($new_regex) ? esc_attr($new_regex) : ''); ?>" /></td>
                             <td></td>
                         </tr>
                     </tbody>
                 </table>
-
+    
                 <button type="submit" name="submit" class="button button-primary">
                     <?php echo __('Save Changes', 'rrze-shorturl'); ?>
                 </button>
@@ -445,7 +445,7 @@ class Settings
         </div>
         <?php
     }
-
+    
 
     // Render the Customer Domains tab section
     public function render_customer_domains_section()
