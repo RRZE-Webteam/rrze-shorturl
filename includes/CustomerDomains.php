@@ -27,12 +27,9 @@ class CustomerDomains
         // List of API URLs to fetch data from
         $aAPI_url = [
             'https://statistiken.rrze.fau.de/webauftritte/domains//analyse/domain-analyse-18.json',
-            // 'https://statistiken.rrze.fau.de/webauftritte/domains/analyse/domain-analyse-1.json',
-            // 'https://statistiken.rrze.fau.de/webauftritte/domains//analyse/domain-analyse-2-3.json',
+            'https://statistiken.rrze.fau.de/webauftritte/domains/analyse/domain-analyse-1.json',
+            'https://statistiken.rrze.fau.de/webauftritte/domains//analyse/domain-analyse-2-3.json',
         ];
-
-        // TEST
-        $iCnt = 0;
 
         foreach ($aAPI_url as $api_url) {
             try {
@@ -55,12 +52,6 @@ class CustomerDomains
                     // If there are valid entries, process each one
                     if (!empty($filteredResponse)) {
                         foreach ($filteredResponse as $entry) {
-
-                            // TEST
-                            if ($iCnt >= 10) {
-                                break 2; // Beendet sowohl die innere als auch die äußere Schleife
-                            }
-
                             $notice = '';
                             $webmaster_name = '';
                             $webmaster_email = '';
@@ -137,9 +128,6 @@ class CustomerDomains
                                     }
                                 }
                             }
-
-                            // TEST
-                            $iCnt++;
                         }
                     } else {
                         error_log('fetch_and_store_customerdomains() $data is empty');

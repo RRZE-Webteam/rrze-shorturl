@@ -53,7 +53,7 @@ class Main
 
         $cpt = new CPT();
         $settings = new Settings();
-        // $domains = new CustomerDomains();
+        $domains = new CustomerDomains();
         $cleanup = new CleanupDB();
         $myCrypt = new MyCrypt();
         $shortURL = new ShortURL();
