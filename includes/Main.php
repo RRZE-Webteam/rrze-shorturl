@@ -56,7 +56,7 @@ class Main
         $domains = new CustomerDomains();
         $cleanup = new CleanupDB();
         $myCrypt = new MyCrypt();
-        // $shortURL = new ShortURL();
+        $shortURL = new ShortURL();
         // $api = new API();
         // $shortcode = new Shortcode();
     }

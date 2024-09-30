@@ -208,49 +208,35 @@ class ShortURL
 
     public static function getServices()
     {
-        try {
-            // Set up arguments for WP_Query to fetch all service posts
-            $args = [
-                'post_type' => 'shorturl_service',  // The Custom Post Type for services
-                'posts_per_page' => -1,         // Retrieve all service posts
-                'post_status' => 'publish'   // Only fetch published services
+        // Set up arguments for get_posts to fetch all service posts
+        $args = [
+            'post_type' => 'shorturl_service',  // The Custom Post Type for services
+            'numberposts' => -1,                // Retrieve all service posts
+            'post_status' => 'publish'          // Only fetch published services
+        ];
+    
+        // Fetch the posts
+        $posts = get_posts($args);
+    
+        // Initialize an empty array to store service data
+        $aServices = [];
+    
+        // Loop through the results and store the relevant data
+        foreach ($posts as $post) {
+            // Collect post meta data (like hostname, prefix, and regex)
+            $aServices[] = [
+                'id' => $post->ID,
+                'hostname' => $post->post_title, // Use the post title as hostname
+                'prefix' => get_post_meta($post->ID, 'prefix', true),
+                'regex' => get_post_meta($post->ID, 'regex', true),
+                'active' => get_post_meta($post->ID, 'active', true),
+                'notice' => get_post_meta($post->ID, 'notice', true)
             ];
-
-            // Execute the query
-            $query = new \WP_Query($args);
-
-            // Initialize an empty array to store service data
-            $aServices = [];
-
-            // Loop through the results and store the relevant data
-            if ($query->have_posts()) {
-                while ($query->have_posts()) {
-                    $query->the_post();
-
-                    // Collect post meta data (like hostname, prefix, and regex)
-                    $aServices[] = [
-                        'id' => get_the_ID(),
-                        'hostname' => get_post_meta(get_the_ID(), 'hostname', true),
-                        'prefix' => get_post_meta(get_the_ID(), 'prefix', true),
-                        'regex' => get_post_meta(get_the_ID(), 'regex', true),
-                        'active' => get_post_meta(get_the_ID(), 'active', true),
-                        'notice' => get_post_meta(get_the_ID(), 'notice', true)
-                    ];
-                }
-            }
-
-            // Restore original Post Data
-            wp_reset_postdata();
-
-            return $aServices;
-        } catch (CustomException $e) {
-            // Log error if a CustomException is caught
-            error_log("Error in getServices: " . $e->getMessage());
-            return null;
         }
+    
+        return $aServices;
     }
-
-
+    
 
     public static function getAllowedDomains()
     {
