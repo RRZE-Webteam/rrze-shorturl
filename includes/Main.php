@@ -98,30 +98,30 @@ class Main
     }
 
     private function drop_custom_tables()
-    {
-        global $wpdb;
-    
-        try {
-            // Drop shorturl table if they exist
-            $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_links_categories");
-            $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_links_tags");
-            $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_categories");
-            $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_tags");
-            $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_links");
-            $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_domains");
-            $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_services");
-            $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_idms");
-            // Delete triggers just to be sure (they should be deleted as they are binded to the dropped tables)
-            $wpdb->query("DROP TRIGGER IF EXISTS validate_url");
-            $wpdb->query("DROP TRIGGER IF EXISTS validate_hostname");
-        } catch (CustomException $e) {
-    
-    
-            // Handle the exception
-            error_log("Error in drop_custom_tables: " . $e->getMessage());
-        }
+{
+    global $wpdb;
+
+    try {
+        // Drop shorturl table if they exist
+        $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_links_categories");
+        $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_links_tags");
+        $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_categories");
+        $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_tags");
+        $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_links");
+        $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_domains");
+        $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_services");
+        $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_idms");
+        // Delete triggers just to be sure (they should be deleted as they are binded to the dropped tables)
+        $wpdb->query("DROP TRIGGER IF EXISTS validate_url");
+        $wpdb->query("DROP TRIGGER IF EXISTS validate_hostname");
+    } catch (CustomException $e) {
+
+
+        // Handle the exception
+        error_log("Error in drop_custom_tables: " . $e->getMessage());
     }
-    
+}
+
 
     public function migrate_db_to_cpt()
     {
@@ -245,7 +245,11 @@ class Main
             }
         }
 
+<<<<<<< Updated upstream
         $this->drop_custom_tables();
+=======
+        // $this->drop_custom_tables();
+>>>>>>> Stashed changes
     
         update_option('rrze_shorturl_migration_completed', true);
     }
@@ -301,7 +305,7 @@ class Main
                 }
             }
         }
-    
+
         // Set an option to indicate that initialization has been completed
         add_option('rrze_shorturl_services_initialized', true);
     }
