@@ -129,13 +129,6 @@ function deactivation()
     delete_option('rrze_shorturl_services_initialized');
 }
 
-
-function rrze_shorturl_init()
-{
-    register_block_type(__DIR__ . '/build', ['render_callback' => [Settings::class, 'render_url_form']]);
-}
-
-
 /**
  * Wird durchgeführt, nachdem das WP-Grundsystem hochgefahren
  * und alle Plugins eingebunden wurden.
@@ -159,7 +152,4 @@ function loaded()
         $main = new Main(__FILE__);
         $main->onLoaded();
     }
-
-    add_action('init', __NAMESPACE__ . '\rrze_shorturl_init');
-
 }
