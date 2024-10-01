@@ -12,7 +12,7 @@ class CPT
         add_action('init', [$this, 'register_domain_cpt']);
         add_action('init', [$this, 'register_service_cpt']);
         add_action('init', [$this, 'register_link_cpt']);
-        add_action('init', [$this, 'register_link_taxonomy']);
+        add_action('init', [$this, 'register_category_cpt']);
     }
 
     // Register Custom Post Type for IDMs
@@ -87,21 +87,41 @@ class CPT
         }
     }
 
-    // Register taxonomy for link categories
-    public function register_link_taxonomy()
+    // Register Custom Post Type for Categories
+    public function register_category_cpt()
     {
         try {
-            register_taxonomy(
-                'shorturl_link_category',
-                'shorturl_link',
-                array(
-                    'label' => __('Link Categories'),
-                    'rewrite' => array('slug' => 'shorturl_link_category'),
-                    'hierarchical' => true, // Allows parent-child relationships
-                )
+            $labels = array(
+                'name'               => __('Short URL Categories'),
+                'singular_name'      => __('Short URL Category'),
+                'menu_name'          => __('Short URL Categories'),
+                'name_admin_bar'     => __('Short URL Category'),
+                'add_new'            => __('Add New Category'),
+                'add_new_item'       => __('Add New Short URL Category'),
+                'edit_item'          => __('Edit Short URL Category'),
+                'new_item'           => __('New Short URL Category'),
+                'view_item'          => __('View Short URL Category'),
+                'search_items'       => __('Search Short URL Categories'),
+                'not_found'          => __('No categories found'),
+                'not_found_in_trash' => __('No categories found in Trash'),
+            );
+    
+            $args = array(
+                'label'               => __('Short URL Category'),
+                'description'         => __('Categories for organizing short URLs'),
+                'labels'              => $labels,
+                'public'              => true,
+                'hierarchical'        => true, // Makes this CPT hierarchical
+                'show_ui'             => true,
+                'show_in_menu'        => true,
+                'menu_position'       => 20,
+                'supports'            => array('title', 'editor', 'page-attributes'),
+                'has_archive'         => true,
+                'rewrite'             => array('slug' => 'shorturl_category'),
+                'show_in_rest'        => true,
             );
         } catch (CustomException $e) {
-            error_log("Error in register_link_taxonomy: " . $e->getMessage());
+            error_log("Error in register_shorturl_category_cpt: " . $e->getMessage());
         }
     }
-}
+    }
