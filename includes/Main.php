@@ -131,10 +131,47 @@ class Main
 
         global $wpdb;
 
+        // Migrate shorturl_idms to CPT 'idm'
+        $idm_ids = ['post_id' => 0];
+        $idms = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_idms", ARRAY_A);
+
+        foreach ($idms as $nr => $idm) {
+            // Check if the IDM already exists as a post
+            $existing_idm_id = get_posts(
+                array(
+                    'post_type'              => 'shorturl_idm',
+                    'title'                  => $idm['idm'],
+                    'post_status'            => 'all',
+                    'numberposts'            => 1,
+                    'fields'                 => 'ids')
+            );
+
+            if (empty($existing_idm_id)) {
+                // Insert IdM as a CPT post
+                $post_data = [
+                    'post_title' => sanitize_text_field($idm['idm']),
+                    'post_type' => 'shorturl_idm',
+                    'post_status' => 'publish'
+                ];
+
+                $post_id = wp_insert_post($post_data);
+
+                if (!is_wp_error($post_id)) {
+                    // Add meta fields
+                    update_post_meta($post_id, 'allow_uri', intval($idm['allow_uri']));
+                    update_post_meta($post_id, 'allow_get', intval($idm['allow_get']));
+                    update_post_meta($post_id, 'allow_utm', intval($idm['allow_utm']));
+                    update_post_meta($post_id, 'created_by', sanitize_text_field($idm['created_by']));
+                    $idm_ids[$nr]['post_id'] = $post_id;
+                }
+            }
+        }
+
         // Migrate shorturl_domains to CPT 'domain'
+        $domain_ids = ['post_id' => 0];
         $domains = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_domains", ARRAY_A);
 
-        foreach ($domains as $domain) {
+        foreach ($domains as $nr => $domain) {
             // Check if the domain already exists as a post
             $existing_domain_id = get_posts(
                 array(
@@ -163,43 +200,11 @@ class Main
                     update_post_meta($post_id, 'notice', sanitize_text_field($domain['notice']));
                     update_post_meta($post_id, 'webmaster_name', sanitize_text_field($domain['webmaster_name']));
                     update_post_meta($post_id, 'webmaster_email', sanitize_email($domain['webmaster_email']));
+                    $domain_ids[$nr]['post_id'] = $post_id;
                 }
             }
         }
 
-        // Migrate shorturl_idms to CPT 'idm'
-        $idms = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_idms", ARRAY_A);
-
-        foreach ($idms as $idm) {
-            // Check if the IDM already exists as a post
-            $existing_idm_id = get_posts(
-                array(
-                    'post_type'              => 'shorturl_idm',
-                    'title'                  => $idm['idm'],
-                    'post_status'            => 'all',
-                    'numberposts'            => 1,
-                    'fields'                 => 'ids')
-            );
-
-            if (empty($existing_idm_id)) {
-                // Insert IdM as a CPT post
-                $post_data = [
-                    'post_title' => sanitize_text_field($idm['idm']),
-                    'post_type' => 'shorturl_idm',
-                    'post_status' => 'publish'
-                ];
-
-                $post_id = wp_insert_post($post_data);
-
-                if (!is_wp_error($post_id)) {
-                    // Add meta fields
-                    update_post_meta($post_id, 'allow_uri', intval($idm['allow_uri']));
-                    update_post_meta($post_id, 'allow_get', intval($idm['allow_get']));
-                    update_post_meta($post_id, 'allow_utm', intval($idm['allow_utm']));
-                    update_post_meta($post_id, 'created_by', sanitize_text_field($idm['created_by']));
-                }
-            }
-        }
 
         // Migrate shorturl_links to CPT 'link'
         $links = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_links", ARRAY_A);
@@ -216,16 +221,23 @@ class Main
 
             if (!is_wp_error($post_id)) {
                 // Add meta fields
-                update_post_meta($post_id, 'domain_id', intval($link['domain_id']));
+                update_post_meta($post_id, 'domain_id', $domain_ids[$link['domain_id']]['post_id']);
                 update_post_meta($post_id, 'long_url', esc_url($link['long_url']));
                 update_post_meta($post_id, 'short_url', esc_url($link['short_url']));
                 update_post_meta($post_id, 'uri', sanitize_text_field($link['uri']));
-                update_post_meta($post_id, 'idm_id', intval($link['idm_id']));
+                update_post_meta($post_id, 'idm_id', $idm_ids[$link['idm_id']]['post_id']);
                 update_post_meta($post_id, 'created_at', sanitize_text_field($link['created_at']));
                 update_post_meta($post_id, 'updated_at', sanitize_text_field($link['updated_at']));
                 update_post_meta($post_id, 'deleted_at', sanitize_text_field($link['deleted_at']));
                 update_post_meta($post_id, 'valid_until', sanitize_text_field($link['valid_until']));
                 update_post_meta($post_id, 'active', intval($link['active']));
+
+                // // add categories
+
+                // $categories = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_links", ARRAY_A);
+
+                // wp_set_post_terms($link_id, $categories, 'shorturl_link_category');
+
             }
         }
 
