@@ -110,7 +110,7 @@ function deactivation()
 
 
     // delete all entries of all CPT
-    $custom_post_types = ['shorturl_idm', 'shorturl_domain', 'shorturl_service', 'shorturl_link'];
+    $custom_post_types = ['shorturl_idm', 'shorturl_domain', 'shorturl_service', 'shorturl_link', 'shorturl_category'];
     foreach ($custom_post_types as $cpt) {
         $post_ids = get_posts(array(
             'post_type' => $cpt,
@@ -123,20 +123,7 @@ function deactivation()
             wp_delete_post($post_id, true);
         }    
     }
-    
-    // delete all entries to our taxonomy
-    $taxonomies = ['shorturl_link_category'];
-    foreach ($taxonomies as $taxonomy) {
-        $terms = get_terms(array(
-            'taxonomy' => $taxonomy,
-            'hide_empty' => false
-        ));
-    
-        foreach ($terms as $term) {
-            wp_delete_term($term->term_id, $taxonomy);
-        }
-    }
-    
+        
     // delete our options
     delete_option('rrze_shorturl_option');
     delete_option('rrze_shorturl_services_initialized');

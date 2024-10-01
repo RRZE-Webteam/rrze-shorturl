@@ -120,6 +120,8 @@ class CPT
                 'rewrite'             => array('slug' => 'shorturl_category'),
                 'show_in_rest'        => true,
             );
+
+            register_post_type('shorturl_category', $args);
         } catch (CustomException $e) {
             error_log("Error in register_shorturl_category_cpt: " . $e->getMessage());
         }

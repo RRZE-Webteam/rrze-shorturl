@@ -74,18 +74,6 @@ class API
 
         register_rest_route(
             'wp/v2/shorturl/',
-            '/add-category',
-            array(
-                'methods' => 'POST',
-                'callback' => array($this, 'add_category_callback'),
-                'permission_callback' => function () {
-                    return self::$rights['id'] !== 0;
-                }
-            )
-        );
-
-        register_rest_route(
-            'wp/v2/shorturl/',
             '/services',
             array(
                 'methods' => 'GET',
@@ -200,63 +188,42 @@ class API
         }
         return $args;
     }
-
-    public function add_category_callback($request)
-    {
-        // Get parameters from the request
-        $parameters = $request->get_json_params();
-    
-        // Check if the label is provided
-        if (empty($parameters['label'])) {
-            return new WP_Error('invalid_name', __('Category label is required.', 'rrze-shorturl'), array('status' => 400));
-        }
-    
-        // Sanitize the category label
-        $category_label = sanitize_text_field($parameters['label']);
-    
-        // Insert the category into the taxonomy
-        $term = wp_insert_term(
-            $category_label,   // The term name
-            'shorturl_link_category', // The taxonomy name
-            array(
-                'slug' => sanitize_title($category_label) // Optionally set a slug
-            )
-        );
-    
-        // Check for errors during the insertion
-        if (is_wp_error($term)) {
-            return new WP_Error('insert_failed', __('Failed to add category to the taxonomy.', 'rrze-shorturl'), array('status' => 500));
-        }
-    
-        // Prepare the response
-        $categories = array('id' => $term['term_id'], 'label' => $category_label);
-    
-        return new WP_REST_Response($categories, 200);
-    }
-        
+            
     public function get_categories_callback()
     {
         try {
-            // Get all terms from the 'shorturl_link_category' taxonomy
-            $categories = get_terms([
-                'taxonomy' => 'shorturl_link_category',
-                'hide_empty' => false             // don't hide terms with no posts
-            ]);
-
-            // Check for errors while retrieving terms
-            if (is_wp_error($categories)) {
-                throw new Exception(__('Error retrieving shorturl categories', 'rrze-shorturl'));
+            // Get all posts from the 'shorturl_category' CPT
+            $categories = get_posts(array(
+                'post_type'      => 'shorturl_category',
+                'posts_per_page' => -1, // Get all categories
+                'post_status'    => 'publish',
+                'orderby'        => 'title',
+                'order'          => 'ASC',
+            ));
+    
+            // Check for errors while retrieving posts
+            if (empty($categories)) {
+                throw new Exception(__('No short URL categories found', 'rrze-shorturl'));
             }
-
+    
+            // Prepare the response with simplified data
+            $category_data = array();
+            foreach ($categories as $category) {
+                $category_data[] = array(
+                    'id'    => $category->ID,
+                    'label' => $category->post_title,
+                );
+            }
+    
             // Return the categories in the REST response
-            return new WP_REST_Response($categories, 200);
-
+            return new WP_REST_Response($category_data, 200);
+    
         } catch (Exception $e) {
             // Return a WP_Error object in case of an error
             return new WP_Error('shorturl_categories_error', $e->getMessage(), array('status' => 500));
         }
     }
-
+    
     public function shorten_url_callback($request)
     {
         try {
