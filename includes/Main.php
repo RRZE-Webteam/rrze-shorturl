@@ -81,7 +81,6 @@ class Main
                 'ajax_url' => admin_url('admin-ajax.php'),
                 'update_category_label_nonce' => wp_create_nonce('update_category_label_nonce'),
                 'add_shorturl_category_nonce' => wp_create_nonce('add_shorturl_category_nonce'),
-                'add_shorturl_tag_nonce' => wp_create_nonce('add_shorturl_tag_nonce'),
                 'delete_shorturl_link_nonce' => wp_create_nonce('delete_shorturl_link_nonce'),
                 'update_shorturl_idm_nonce' => wp_create_nonce('update_shorturl_idm_nonce'),
                 'update_shorturl_category_nonce' => wp_create_nonce('update_shorturl_category_nonce'),
@@ -139,11 +138,12 @@ class Main
             // Check if the IDM already exists as a post
             $existing_idm_id = get_posts(
                 array(
-                    'post_type'              => 'shorturl_idm',
-                    'title'                  => $idm['idm'],
-                    'post_status'            => 'all',
-                    'numberposts'            => 1,
-                    'fields'                 => 'ids')
+                    'post_type' => 'shorturl_idm',
+                    'title' => $idm['idm'],
+                    'post_status' => 'all',
+                    'numberposts' => 1,
+                    'fields' => 'ids'
+                )
             );
 
             if (empty($existing_idm_id)) {
@@ -175,11 +175,12 @@ class Main
             // Check if the domain already exists as a post
             $existing_domain_id = get_posts(
                 array(
-                    'post_type'              => 'shorturl_domain',
-                    'title'                  => $domain['hostname'],
-                    'post_status'            => 'all',
-                    'numberposts'            => 1,
-                    'fields'                 => 'ids')
+                    'post_type' => 'shorturl_domain',
+                    'title' => $domain['hostname'],
+                    'post_status' => 'all',
+                    'numberposts' => 1,
+                    'fields' => 'ids'
+                )
             );
 
             if (empty($existing_domain_id)) {
@@ -202,6 +203,47 @@ class Main
                     update_post_meta($post_id, 'webmaster_email', sanitize_email($domain['webmaster_email']));
                     $domain_ids[$nr]['post_id'] = $post_id;
                 }
+            }
+        }
+
+
+        // Migrate shorturl_categories to CPT 'shorturl_category'
+        $category_ids = [];
+        $categories = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_categories", ARRAY_A);
+
+        foreach ($categories as $nr => $category) {
+            // Check if the category already exists as a post
+            $existing_category_id = get_posts(
+                array(
+                    'post_type' => 'shorturl_category',
+                    'title' => $category['label'],
+                    'post_status' => 'all',
+                    'numberposts' => 1,
+                    'fields' => 'ids'
+                )
+            );
+
+            if (empty($existing_category_id)) {
+                // Insert category as a CPT post
+                $post_data = [
+                    'post_title' => sanitize_text_field($category['label']),
+                    'post_type' => 'shorturl_category',
+                    'post_status' => 'publish',
+                    'post_parent' => !empty($category['parent_id']) ? intval($category_ids[$category['parent_id']]['post_id']) : 0 // Set parent category if applicable
+                ];
+
+                $post_id = wp_insert_post($post_data);
+
+                if (!is_wp_error($post_id)) {
+                    // Add meta fields
+                    update_post_meta($post_id, 'idm_id', intval($category['idm_id']));
+
+                    // Track the new post ID for reference (especially for parent-child relationships)
+                    $category_ids[$category['id']]['post_id'] = $post_id;
+                }
+            } else {
+                // If category already exists, store its ID for future reference
+                $category_ids[$category['id']]['post_id'] = $existing_category_id[0];
             }
         }
 
@@ -232,16 +274,28 @@ class Main
                 update_post_meta($post_id, 'valid_until', sanitize_text_field($link['valid_until']));
                 update_post_meta($post_id, 'active', intval($link['active']));
 
-                // // add categories
+                // Fetch the categories linked to this link from the `shorturl_links_categories` table
+                $link_categories = $wpdb->get_results($wpdb->prepare(
+                    "SELECT category_id FROM {$wpdb->prefix}shorturl_links_categories WHERE link_id = %d",
+                    $link['id']
+                ), ARRAY_A);
 
-                // $categories = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_links", ARRAY_A);
+                // Collect all category post IDs
+                $category_post_ids = [];
+                foreach ($link_categories as $link_category) {
+                    if (isset($category_ids[$link_category['category_id']])) {
+                        $category_post_ids[] = $category_ids[$link_category['category_id']]['post_id'];
+                    }
+                }
 
-                // wp_set_post_terms($link_id, $categories, 'shorturl_link_category');
-
+                // Save all category post IDs as an array in the post meta
+                if (!empty($category_post_ids)) {
+                    update_post_meta($post_id, 'category_id', $category_post_ids);
+                }
             }
         }
 
-        $this->drop_custom_tables();
+        // $this->drop_custom_tables();
 
         update_option('rrze_shorturl_migration_completed', true);
     }
@@ -278,11 +332,12 @@ class Main
             // Check if the post already exists
             $existing_service_id = get_posts(
                 array(
-                    'post_type'              => 'shorturl_service',
-                    'title'                  => $entry['hostname'],
-                    'post_status'            => 'all',
-                    'numberposts'            => 1,
-                    'fields'                 => 'ids')
+                    'post_type' => 'shorturl_service',
+                    'title' => $entry['hostname'],
+                    'post_status' => 'all',
+                    'numberposts' => 1,
+                    'fields' => 'ids'
+                )
             );
 
             if (empty($existing_service_id)) {

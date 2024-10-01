@@ -713,7 +713,7 @@ class Shortcode
         $filter_category = !empty($_GET['filter_category']) ? (int) $_GET['filter_category'] : 0;
         if ($filter_category > 0) {
             $args['meta_query'][] = [
-                'key'     => '_category_id',
+                'key'     => 'category_id',
                 'value'   => $filter_category,
                 'compare' => '='
             ];
@@ -770,7 +770,7 @@ class Shortcode
                 $valid_until = get_post_meta($link_id, 'valid_until', true);
     
                 // Get the categories from the meta field
-                $category_ids = get_post_meta($link_id, '_category_id', false);
+                $category_ids = get_post_meta($link_id, 'category_id', false);
                 $category_names = [];
                 foreach ($category_ids as $category_id) {
                     $category_post = get_post($category_id);
