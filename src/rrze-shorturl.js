@@ -2,7 +2,7 @@
 
 
 jQuery(document).ready(function ($) {
-    
+
     // Make some fancy QR
     var inputField = document.getElementById("shortened_url");
     var qrValue = inputField ? inputField.value : "https://www.fau.de";
@@ -13,7 +13,7 @@ jQuery(document).ready(function ($) {
         size: 200,
         background: "transparent",
         backgroundAlpha: 0
-        });    
+    });
 
     function handleFormSubmission() {
         // If the delete action is triggered
@@ -33,9 +33,9 @@ jQuery(document).ready(function ($) {
     $('#customer-domains-form, #services-form').on('submit', handleFormSubmission);
 
     // Toggle Advanced Settings
-     $('#show-advanced-settings').addClass('shorturl-link-disabled');
+    $('#show-advanced-settings').addClass('shorturl-link-disabled');
 
-    $('#url').on('input', function() {
+    $('#url').on('input', function () {
         var url = $(this).val();
         if (url.trim() !== '') {
             $('#show-advanced-settings').attr('href', '#').removeClass('shorturl-link-disabled');
@@ -46,16 +46,16 @@ jQuery(document).ready(function ($) {
 
     $('#btn-show-advanced-settings').on('click', function (e) {
         e.preventDefault();
-        
+
         // Log a message to indicate that the event handler is triggered
         console.log('Button clicked');
-        
+
         // Toggle the visibility of the advanced settings
         $('#shorturl-advanced-settings').slideToggle();
-        
+
         // Log the current state of the button
         console.log('Button class:', $(this).hasClass('active'));
-        
+
         // Toggle the arrow-up and arrow-down classes based on the button's state
         if ($(this).hasClass('active')) {
             console.log('active class');
@@ -70,23 +70,12 @@ jQuery(document).ready(function ($) {
             $(this).attr('aria-expanded', 'true');
             console.log('aria-expanded true');
         }
-        
+
         // Toggle the active class on the button
         $(this).toggleClass('active');
         console.log('class toggled to active');
         console.log('Button class active:', $(this).hasClass('active'));
     });
-    
-    
-    // Show advanced settings is a button inside a form. We need to prevent his default actions
-    // $('button[popovertarget]').on('click', function(event) {
-    //     event.preventDefault();
-    //   });
-
-    // Event listener for changes in the advanced settings
-    // $('.shorturl-advanced-settings input[type="text"], .shorturl-advanced-settings input[type="date"], .shorturl-advanced-settings select').on('change', function () {
-    //     $("#generate").prop('value', 'Update');
-    // });
 
 
     $(document).on("mouseover", ".shorturl-category-row", function () {
@@ -96,7 +85,6 @@ jQuery(document).ready(function ($) {
     $(document).on("mouseleave", ".shorturl-category-row", function () {
         $(this).find(".shorturl-edit-category, .shorturl-delete-category").addClass("hidden");
     });
-
 
     $(document).on("click", ".shorturl-edit-category", function (e) {
         e.preventDefault();
@@ -140,39 +128,39 @@ jQuery(document).ready(function ($) {
         e.preventDefault();
         $('#new-shorturl-category').slideToggle();
     });
-    
-    $(document).on('click', '#add-shorturl-category-btn', function (e) {
-        e.preventDefault();
-        var categoryName = $('input[name=new_shorturl_category]').val();
-        if (categoryName) {
-            $.ajax({
-                url: rrze_shorturl_ajax_object.ajax_url,
-                type: 'POST',
-                data: {
-                    action: 'add_shorturl_category',
-                    idm_id: idm_id,
-                    categoryName: categoryName,
-                    parentCategory: $('select[name=parent_category]').val(),
-                    _ajax_nonce: rrze_shorturl_ajax_object.add_shorturl_category_nonce
-                },
-                success: function (response) {
-                    if (response.success) {
-                        // Replace the existing category list with the updated HTML
-                        $('#shorturl-category-metabox').html(response.data.category_list_html);
-                        // Check the checkbox for the newly added category
-                        var newCategoryId = response.data.category_id;
-                        $('input[name="shorturl_categories[]"][value="' + newCategoryId + '"]').prop('checked', true);
-                    } else {
-                        // alert(__('Failed to add category. Please try again.', 'rrze-shorturl'));
-                        alert('Failed to add category. Please try again.');
-                    }
-                }
-            });
-        } else {
-            // alert(__('Please enter a category name.', 'rrze-shorturl'));
-            alert('Please enter a category name.');
-        }
-    });
+
+    // $(document).on('click', '#add-shorturl-category-btn', function (e) {
+    //     e.preventDefault();
+    //     var categoryName = $('input[name=new_shorturl_category]').val();
+    //     if (categoryName) {
+    //         $.ajax({
+    //             url: rrze_shorturl_ajax_object.ajax_url,
+    //             type: 'POST',
+    //             data: {
+    //                 action: 'add_shorturl_category',
+    //                 idm_id: idm_id,
+    //                 categoryName: categoryName,
+    //                 parentCategory: $('select[name=parent_category]').val(),
+    //                 _ajax_nonce: rrze_shorturl_ajax_object.add_shorturl_category_nonce
+    //             },
+    //             success: function (response) {
+    //                 if (response.success) {
+    //                     // Replace the existing category list with the updated HTML
+    //                     $('#shorturl-category-metabox').html(response.data.category_list_html);
+    //                     // Check the checkbox for the newly added category
+    //                     var newCategoryId = response.data.category_id;
+    //                     $('input[name="shorturl_categories[]"][value="' + newCategoryId + '"]').prop('checked', true);
+    //                 } else {
+    //                     // alert(__('Failed to add category. Please try again.', 'rrze-shorturl'));
+    //                     alert('Failed to add category. Please try again.');
+    //                 }
+    //             }
+    //         });
+    //     } else {
+    //         // alert(__('Please enter a category name.', 'rrze-shorturl'));
+    //         alert('Please enter a category name.');
+    //     }
+    // });
 
 
 
@@ -186,7 +174,6 @@ jQuery(document).ready(function ($) {
 
         window.location.href = newUrl;
     });
-
 
     // Delete link
     $(document).on('click', '.delete-link', function (e) {
@@ -202,6 +189,10 @@ jQuery(document).ready(function ($) {
                     _ajax_nonce: rrze_shorturl_ajax_object.delete_shorturl_link_nonce
                 },
                 success: function (response) {
+                    // Remove the hash from the URL
+                    if (window.location.hash) {
+                        history.replaceState(null, null, window.location.href.split('#')[0]);
+                    }
                     location.reload();
                 },
                 error: function (xhr, status, error) {
@@ -213,7 +204,7 @@ jQuery(document).ready(function ($) {
 
 
     // IdM
-    $(document).on('change', '.allow-uri-checkbox, .allow-get-checkbox, .allow-utm-checkbox', function () {    
+    $(document).on('change', '.allow-uri-checkbox, .allow-get-checkbox, .allow-utm-checkbox', function () {
         var id = $(this).data('id');
         var field;
         if ($(this).hasClass('allow-uri-checkbox')) {
@@ -222,7 +213,7 @@ jQuery(document).ready(function ($) {
             field = 'allow_utm';
         } else {
             field = 'allow_get';
-        }        
+        }
         var value = $(this).prop('checked') ? 'true' : 'false';
 
         $.ajax({
@@ -277,7 +268,7 @@ jQuery(document).ready(function ($) {
     function showTooltip(message) {
         const shorturl_tooltip = document.getElementById('shorturl-tooltip');
         shorturl_tooltip.textContent = message;
-        shorturl_tooltip.style.display = 'inline-block';    
+        shorturl_tooltip.style.display = 'inline-block';
         setTimeout(() => {
             shorturl_tooltip.style.display = 'none';
         }, 2000); // Hide the shorturl-tooltip after 2 seconds
@@ -388,7 +379,7 @@ jQuery(document).ready(function ($) {
     });
 
     // Edit Category
-    $(document).on('click', '.edit-category-button', function () {    
+    $(document).on('click', '.edit-category-button', function () {
         var categoryId = $(this).data("category-id");
         $(".edit-category-form[data-category-id=" + categoryId + "]").toggle();
         $(".shorturl-wp-list-table").hide();

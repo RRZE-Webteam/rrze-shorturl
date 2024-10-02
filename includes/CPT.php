@@ -24,7 +24,7 @@ class CPT
                     'name' => __('IDMs'),
                     'singular_name' => __('IDM'),
                 ),
-                'public' => false,
+                'public' => true,
                 'has_archive' => false,
                 'supports' => array('title', 'editor', 'custom-fields'),
             ));
@@ -42,7 +42,7 @@ class CPT
                     'name' => __('Domains'),
                     'singular_name' => __('Domain'),
                 ),
-                'public' => false,
+                'public' => true,
                 'has_archive' => false,
                 'supports' => array('title', 'custom-fields'),
             ));
@@ -60,7 +60,7 @@ class CPT
                     'name' => __('Services'),
                     'singular_name' => __('Service'),
                 ),
-                'public' => false,
+                'public' => true,
                 'has_archive' => false,
                 'supports' => array('title', 'custom-fields'),
             ));
@@ -96,14 +96,14 @@ class CPT
                     'name' => __('Short URL Categories'),
                     'singular_name' => __('Short URL Categories'),
                 ),
-                'public' => false,
+                'public' => true,
                 'has_archive' => false,
-                'hierarchical'        => true, // Makes this CPT hierarchical
-                'supports' => array('title', 'editor', 'custom-fields'),
+                'hierarchical' => true, // Makes this CPT hierarchical
+                'supports' => array('title', 'editor', 'custom-fields', 'page-attributes'),
             ));
 
         } catch (CustomException $e) {
             error_log("Error in register_shorturl_category_cpt: " . $e->getMessage());
         }
     }
-    }
+}
