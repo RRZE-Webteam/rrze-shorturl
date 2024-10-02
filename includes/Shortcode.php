@@ -23,9 +23,6 @@ class Shortcode
         add_action('wp_ajax_nopriv_add_shorturl_category', [$this, 'add_shorturl_category_callback']);
         add_action('wp_ajax_add_shorturl_category', [$this, 'add_shorturl_category_callback']);
 
-        add_action('wp_ajax_nopriv_add_shorturl_tag', [$this, 'add_shorturl_tag_callback']);
-        add_action('wp_ajax_add_shorturl_tag', [$this, 'add_shorturl_tag_callback']);
-
         add_action('wp_ajax_nopriv_update_category_label_action', [$this, 'update_category_label']);
         add_action('wp_ajax_update_category_label_action', [$this, 'update_category_label']);
 
@@ -37,9 +34,6 @@ class Shortcode
 
         add_action('wp_ajax_nopriv_delete_category', [$this, 'delete_category_callback']);
         add_action('wp_ajax_delete_category', [$this, 'delete_category_callback']);
-
-        add_action('wp_ajax_nopriv_delete_tag', [$this, 'delete_tag_callback']);
-        add_action('wp_ajax_delete_tag', [$this, 'delete_tag_callback']);
     }
 
 
@@ -77,7 +71,7 @@ class Shortcode
         return $html;
     }
 
-    public function makeCategoryDropdown($category_id = 0, $parent_id = 0)
+    public static function makeCategoryDropdown($category_id = 0, $parent_id = 0)
     {
         if (!self::$rights['id']) {
             return '';
@@ -89,18 +83,18 @@ class Shortcode
         $output = '<label for="parent_category">' . __('Parent Category', 'rrze-shorturl') . ':</label><br>';
         $output .= '<select id="parent_category" name="parent_category">';
         $output .= '<option value="0">' . __('None', 'rrze-shorturl') . '</option>';
-    
+
         foreach ($category_list as $category) {
             $selected = (!empty($parent_id) && ($category->ID == $parent_id)) ? 'SELECTED' : '';
-            $output .= '<option value="' . esc_attr($category->ID) . '" ' . $selected . '>' . esc_html($category->hierarchy . $category->post_title) . '</option>';
+            $output .= '<option value="' . esc_attr($category->ID) . '" ' . $selected . '>' . esc_html($category->hierarchy_nbsp . $category->post_title) . '</option>';
         }
-    
+
         $output .= '</select>';
-    
+
         return $output;
     }
-    
-    
+
+
     public function shortcode_categories_handler(): string
     {
         // Edit Category
@@ -109,24 +103,24 @@ class Shortcode
             $category_label = sanitize_text_field($_POST['category_label']);
             $parent_category = !empty($_POST['parent_category']) ? (int) $_POST['parent_category'] : 0;
             $idm_id = self::$rights['id'];
-    
+
             // Update the category using wp_update_post
             $args = [
-                'ID'          => $category_id,
-                'post_title'  => $category_label,
+                'ID' => $category_id,
+                'post_title' => $category_label,
                 'post_parent' => $parent_category,
             ];
             $result = wp_update_post($args);
-    
+
             if (is_wp_error($result)) {
                 return new WP_Error('update_failed', __('Failed to update the category.', 'rrze-shorturl'), array('status' => 500));
             }
-    
+
             // Update idm_id meta field
             if (!empty($idm_id)) {
                 update_post_meta($category_id, 'idm_id', $idm_id);
             }
-    
+
             // Return to the table after editing
             return $this->display_categories_table();
         } elseif (!empty($_POST['add_category'])) {
@@ -134,101 +128,124 @@ class Shortcode
             $category_label = sanitize_text_field($_POST['category_label']);
             $parent_category = !empty($_POST['parent_category']) ? (int) $_POST['parent_category'] : 0;
             $idm_id = self::$rights['id'];
-    
+
             if (!empty($category_label)) {
                 // Insert Category as a new post in the 'shorturl_category' CPT
                 $args = [
-                    'post_title'   => $category_label,
-                    'post_name'    => sanitize_title($category_label),
-                    'post_type'    => 'shorturl_category',
-                    'post_status'  => 'publish',
-                    'post_parent'  => $parent_category,
+                    'post_title' => $category_label,
+                    'post_name' => sanitize_title($category_label),
+                    'post_type' => 'shorturl_category',
+                    'post_status' => 'publish',
+                    'post_parent' => $parent_category,
                 ];
                 $category_id = wp_insert_post($args);
-    
+
                 if (is_wp_error($category_id)) {
                     return new WP_Error('insert_failed', __('Failed to add category.', 'rrze-shorturl'), array('status' => 500));
                 }
-    
+
                 // Store idm_id as post meta
                 if (!empty($idm_id)) {
                     update_post_meta($category_id, 'idm_id', $idm_id);
                 }
             }
-    
+
             return $this->display_categories_table();
         }
-    
+
         // Check if an edit form should be displayed
         if (!empty($_GET['action']) && $_GET['action'] === 'edit_category' && !empty($_GET['category_id'])) {
+
+
             // Retrieve category details based on category ID using get_post
             $category_id = (int) $_GET['category_id'];
             $category = get_post($category_id);
-    
+
+
+
             // If category is found, display edit form
             if ($category && $category->post_type === 'shorturl_category') {
                 $category_label = esc_attr($category->post_title);
                 $parent_id = $category->post_parent ?: 0;
-    
+
                 // Start building the form
                 $output = '<form method="post">';
                 $output .= '<label for="category_label">' . __('Category Label', 'rrze-shorturl') . ':</label><br>';
                 $output .= '<input type="text" id="category_label" name="category_label" value="' . esc_attr($category_label) . '"><br>';
-    
+
                 // Display parent category dropdown
-                $output .= $this->makeCategoryDropdown($category_id, $parent_id);
-    
+                $output .= self::makeCategoryDropdown($category_id, $parent_id);    
                 $output .= '<input type="hidden" name="category_id" value="' . esc_attr($category_id) . '">';
                 $output .= '<br><input type="submit" name="edit_category" value="' . __('Save Changes', 'rrze-shorturl') . '">';
                 $output .= '&nbsp;<a href="' . esc_url(remove_query_arg('action')) . '" class="button">' . __('Cancel', 'rrze-shorturl') . '</a>';
-    
+
                 $output .= '</form>';
-    
+
                 return $output;
             }
         } elseif (isset($_GET['action']) && $_GET['action'] === 'add_new_category') {
             // Display add category form
             return $this->add_category_form();
         }
-    
+
         // If no editing is happening, display the categories table
         return $this->display_categories_table();
     }
-        
 
-    private static function get_categories_hierarchically(){
+
+    private static function get_categories_hierarchically()
+    {
 
         $ret = [];
 
         // Fetch all categories for the current IdM using get_posts
         $args = [
-            'post_type'      => 'shorturl_category',
+            'post_type' => 'shorturl_category',
             'posts_per_page' => -1,  // Fetch all categories
-            'post_status'    => 'publish',
-            'meta_query'     => [
+            'post_status' => 'publish',
+            'meta_query' => [
                 [
-                    'key'     => 'idm_id',
-                    'value'   => self::$rights['id'],
+                    'key' => 'idm_id',
+                    'value' => self::$rights['id'],
                     'compare' => '='
                 ]
             ],
-            'orderby'        => ['parent' => 'ASC', 'title' => 'ASC'],  // Hierarchisch und alphabetisch sortieren
-            'order'          => 'ASC',
+            'orderby' => ['menu_order' => 'ASC', 'title' => 'ASC'],  // Sortiere nach Reihenfolge und Titel
         ];
-        
+
         // WP_Query statt get_posts verwenden, um die Hierarchie besser zu verarbeiten
         $query = new \WP_Query($args);
         $categories = $query->posts;
-            
-        // Build the hierarchical structure for each category
-        foreach ($categories as $category) {
-            $category->hierarchy = self::build_category_hierarchy_table($category, $categories);
-            $ret[] = $category;
-        }
+
+        $ret = self::build_category_hierarchy($query->posts);
 
         return $ret;
     }
 
+    private static function build_category_hierarchy($categories, $parent_id = 0, $depth = 0)
+    {
+        $result = [];
+    
+        foreach ($categories as $category) {
+            if ($category->post_parent == $parent_id) {
+                $category_data = (object)[
+                    'ID' => $category->ID,
+                    'post_parent' => $category->post_parent,
+                    'post_title' => $category->post_title,
+                    'hierarchy' => str_repeat('-', $depth),
+                    'hierarchy_nbsp' => str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;', $depth),
+                ];
+    
+                $result[] = $category_data;
+    
+                $children = self::build_category_hierarchy($categories, $category->ID, $depth + 1);
+                $result = array_merge($result, $children);
+            }
+        }
+    
+        return $result;
+    }
+            
     // Helper function to display the categories table
     private function display_categories_table()
     {
@@ -242,51 +259,32 @@ class Shortcode
         $output .= '<th scope="col" class="manage-column column-actions">' . __('Actions', 'rrze-shorturl') . '</th>';
         $output .= '</tr></thead>';
         $output .= '<tbody>';
-    
+
         // Loop through each category
         foreach ($categories_with_hierarchy as $category) {
             // Get category ID and label
             $category_id = $category->ID;
             $category_label = $category->post_title;
-    
+
             // Build the table row
             $output .= '<tr>';
-            $output .= '<td class="column-label">' . esc_html($category->hierarchy . $category_label) . '</td>';
+            $output .= '<td class="column-label">' . esc_html($category->hierarchy_nbsp . $category_label) . '</td>';
             $output .= '<td class="column-actions">
                             <a href="?action=edit_category&category_id=' . esc_attr($category_id) . '">' . __('Edit', 'rrze-shorturl') . '</a> | 
                             <a href="" class="delete-category" data-category-id="' . esc_attr($category_id) . '">' . __('Delete', 'rrze-shorturl') . '</a>
                         </td>';
             $output .= '</tr>';
         }
-    
+
         // Add row for actions (add new category)
         $output .= '<tr>';
         $output .= '<td colspan="2" class="column-actions"><a href="?action=add_new_category">' . __('Add New Category', 'rrze-shorturl') . '</a></td>';
         $output .= '</tr>';
-    
+
         $output .= '</tbody></table>';
-    
+
         return $output;
     }
-        
-    private static function build_category_hierarchy_table($category, $categories)
-    {
-        $hierarchy = '';
-        $parent_id = $category->post_parent;
-    
-        while ($parent_id != 0) {
-            foreach ($categories as $cat) {
-                if ($cat->ID == $parent_id) {
-                    $hierarchy = ' - ' . $hierarchy;                    
-                    $parent_id = $cat->post_parent;
-                    break;
-                }
-            }
-        }
-    
-        return $hierarchy;
-    }
-    
 
     private function add_category_form()
     {
@@ -294,7 +292,7 @@ class Shortcode
         $output .= '<form method="post">';
         $output .= '<label for="category_label">' . __('Category Label', 'rrze-shorturl') . ':</label><br>';
         $output .= '<input type="text" id="category_label" name="category_label" value=""><br>';
-        $output .= $this->makeCategoryDropdown();
+        $output .= self::makeCategoryDropdown();
         $output .= '<br><input type="submit" name="add_category" value="' . __('Add Category', 'rrze-shorturl') . '">';
         $output .= '&nbsp;<a href="' . esc_url(remove_query_arg('action')) . '" class="button">' . __('Cancel', 'rrze-shorturl') . '</a>';
         $output .= '</form>';
@@ -306,19 +304,19 @@ class Shortcode
     {
         // Fetch the link post using WP_Query
         $link_query = new \WP_Query([
-            'post_type' => 'shorturl_link', 
+            'post_type' => 'shorturl_link',
             'posts_per_page' => 1,
             'p' => $link_id // Fetch by specific post ID
         ]);
-    
+
         // Initialize result array
         $result = [];
-    
+
         if ($link_query->have_posts()) {
             $link_query->the_post();
 
             $post_id = get_the_ID();
-    
+
             $result = [
                 'id' => $post_id,
                 'long_url' => get_post_meta($post_id, 'long_url', true),
@@ -332,18 +330,18 @@ class Shortcode
                 'valid_until' => get_post_meta($post_id, 'valid_until', true),
                 'active' => get_post_meta($post_id, 'active', true)
             ];
-    
+
             // Fetch associated category IDs (assuming relationships are managed by post meta)
-            $category_ids = get_post_meta($post_id, 'category_id', true);
+            $category_ids = get_post_meta($post_id, 'category_id', false);
             $result['category_ids'] = $category_ids ? implode(',', (array) $category_ids) : '';
         }
-    
+
         // Reset post data after query
         wp_reset_postdata();
-    
+
         return $result;
     }
-    
+
 
     public function delete_link_callback()
     {
@@ -377,42 +375,42 @@ class Shortcode
     {
         // Check if the request is coming from a valid source
         check_ajax_referer('delete_shorturl_category_nonce', '_ajax_nonce');
-    
+
         // Get the category ID from the AJAX request
         $category_id = !empty($_POST['category_id']) ? (int) $_POST['category_id'] : 0;
-    
+
         if ($category_id > 0) {
             // Get the category post to be deleted
             $category = get_post($category_id);
-    
+
             if (!$category || $category->post_type !== 'shorturl_category') {
                 wp_send_json_error(__('Invalid category ID', 'rrze-shorturl'));
             }
-    
+
             $parent_id = $category->post_parent;
-    
+
             // Fetch child categories that have the category being deleted as a parent
             $args = [
-                'post_type'      => 'shorturl_category',
+                'post_type' => 'shorturl_category',
                 'posts_per_page' => -1,
-                'post_status'    => 'publish',
-                'post_parent'    => $category_id,
+                'post_status' => 'publish',
+                'post_parent' => $category_id,
             ];
-    
+
             $child_categories = get_posts($args);
-    
+
             // Update child categories to inherit the parent_id of the category being deleted
             foreach ($child_categories as $child_category) {
                 // Update child categories to inherit the parent category
                 wp_update_post([
-                    'ID'          => $child_category->ID,
+                    'ID' => $child_category->ID,
                     'post_parent' => $parent_id ? $parent_id : 0,
                 ]);
             }
-    
+
             // Delete the category using wp_delete_post
             $result = wp_delete_post($category_id, true);
-    
+
             if ($result) {
                 // Category deleted successfully
                 wp_send_json_success(__('Category deleted successfully', 'rrze-shorturl'));
@@ -424,11 +422,11 @@ class Shortcode
             // Invalid category ID
             wp_send_json_error(__('Invalid category ID', 'rrze-shorturl'));
         }
-    
+
         // Always exit to avoid further execution
         wp_die();
     }
-        
+
 
     public function shorturl_handler($atts = null): string
     {
@@ -484,7 +482,7 @@ class Shortcode
             $form .= self::display_shorturl_utm($aParams['utm_source'], $aParams['utm_medium'], $aParams['utm_campaign'], $aParams['utm_term'], $aParams['utm_content']);
         }
         $form .= '<h6 class="handle">' . __('Categories', 'rrze-shorturl') . '</h6>';
-        $form .= self:: display_shorturl_category($aParams['categories']);
+        $form .= self::display_shorturl_category($aParams['categories']);
         $form .= '</div>';
 
         // Display result message
@@ -519,10 +517,10 @@ class Shortcode
         if (!self::$rights['id']) {
             return;
         }
-    
+
         // Build hierarchical category structure
         $hierarchicalCategories = self::get_categories_hierarchically();
-    
+
         // Output HTML
         ob_start();
         ?>
@@ -533,32 +531,16 @@ class Shortcode
                 </a></p>
             <div id="new-shorturl-category">
                 <label for="new_shorturl_category"><?php echo __('New Category Name', 'rrze-shorturl'); ?>:</label>
-                <input type="text" id="new_shorturl_category" name="new_shorturl_category"
+                <br><input type="text" id="new_shorturl_category" name="new_shorturl_category"
                     placeholder="<?php echo __('New Category Name', 'rrze-shorturl'); ?>">
-                <br>
-                <label for="parent_category"><?php echo __('Parent Category', 'rrze-shorturl'); ?>:</label>
-                <select id="parent_category" name="parent_category">
-                    <option value="0"><?php echo __('None', 'rrze-shorturl'); ?></option>
-                    <?php self::display_parent_categories_dropdown($hierarchicalCategories); ?>
-                </select>
-    
+                <br><?php echo self::makeCategoryDropdown(); ?>
                 <br><input type="button" value="<?php echo __('Add new category', 'rrze-shorturl'); ?>"
                     id="add-shorturl-category-btn">
             </div>
         </div>
         <?php
-    
+
         return ob_get_clean();
-    }
-        
-    private static function display_parent_categories_dropdown($categories, $level = 0)
-    {
-        foreach ($categories as $category) {
-            echo '<option value="' . esc_attr($category->id) . '">' . str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;', $level) . esc_html($category->label) . '</option>';
-            if (!empty($category->children)) {
-                self::display_parent_categories_dropdown($category->children, $level + 1);
-            }
-        }
     }
 
     // Function to display hierarchical categories
@@ -567,7 +549,7 @@ class Shortcode
         foreach ($categories as $category) {
             $isChecked = in_array($category->ID, $aVal) ? 'checked' : '';
 
-            echo str_replace('-', '&nbsp;&nbsp;&nbsp;&nbsp;', $category->hierarchy);
+            echo $category->hierarchy_nbsp;
             echo '<input type="checkbox" name="categories[]" value="' . esc_attr($category->ID) . '" ' . $isChecked . ' />';
             echo esc_html($category->post_title) . '<br>';
         }
@@ -577,7 +559,7 @@ class Shortcode
     {
         $bUpdated = false;
         $message = '';
-    
+
         // Handle link update
         if (!empty($_POST['action']) && $_POST['action'] === 'update_link' && !empty($_POST['link_id'])) {
             $aParams = [
@@ -589,37 +571,43 @@ class Shortcode
                 'valid_until' => sanitize_text_field($_POST['valid_until'] ?? ''),
                 'categories' => !empty($_POST['categories']) ? array_map('sanitize_text_field', $_POST['categories']) : []
             ];
-    
+
             // Call the function to update the link
             ShortURL::updateLink($aParams['idm_id'], $aParams['link_id'], $aParams['domain_id'], $aParams['shortURL'], $aParams['uri'], $aParams['valid_until'], $aParams['categories']);
-    
+
             $bUpdated = true;
             $message = __('Link updated', 'rrze-shorturl');
         }
-    
+
+        $categories = self::get_categories_hierarchically();
+
+        // echo '<pre>';
+        // var_dump($categories);
+        // exit;
+
         // Fetch all categories using get_posts
-        $categories = get_posts([
-            'post_type'      => 'shorturl_category',
-            'posts_per_page' => -1,
-            'post_status'    => 'publish',
-            'meta_query'     => [
-                [
-                    'key'     => 'idm_id',
-                    'value'   => self::$rights['id'],
-                    'compare' => '='
-                ]
-            ],
-            'orderby'        => 'menu_order',
-            'order'          => 'ASC',
-        ]);
-    
+        // $categories = get_posts([
+        //     'post_type' => 'shorturl_category',
+        //     'posts_per_page' => -1,
+        //     'post_status' => 'publish',
+        //     'meta_query' => [
+        //         [
+        //             'key' => 'idm_id',
+        //             'value' => self::$rights['id'],
+        //             'compare' => '='
+        //         ]
+        //     ],
+        //     'orderby' => 'menu_order',
+        //     'order' => 'ASC',
+        // ]);
+
         // Sort links based on the GET parameters for sorting
         $orderby = !empty($_GET['orderby']) ? sanitize_text_field($_GET['orderby']) : 'ID';
         $order = !empty($_GET['order']) && in_array($_GET['order'], ['ASC', 'DESC']) ? sanitize_text_field($_GET['order']) : 'ASC';
-    
+
         // Check if only own links should be displayed
         $own_links = empty($_GET) ? 1 : (int) !empty($_GET['own_links']);
-    
+
         // Prepare the arguments for WP_Query to fetch the links
         $args = [
             'post_type' => 'shorturl_link',
@@ -630,7 +618,7 @@ class Shortcode
                 'relation' => 'AND'
             ],
         ];
-    
+
         if ($own_links == 1) {
             $args['meta_query'][] = [
                 'key' => 'idm_id',
@@ -638,14 +626,14 @@ class Shortcode
                 'compare' => '='
             ];
         }
-    
+
         // Handle category filtering
         $filter_category = !empty($_GET['filter_category']) ? (int) $_GET['filter_category'] : 0;
 
         if ($filter_category > 0) {
             $args['meta_query'][] = [
-                'key'     => 'category_id',
-                'value'   => $filter_category,
+                'key' => 'category_id',
+                'value' => $filter_category,
                 'compare' => '='
             ];
             $args['meta_key'] = ['category_id'];
@@ -657,28 +645,28 @@ class Shortcode
 
         // Generate update message
         $table = '<div class="updated"><p>' . $message . '</p></div>';
-    
+
         // Generate category filter dropdown
         $category_filter_dropdown = '<select name="filter_category">';
         $category_filter_dropdown .= '<option value="0">' . __('All Categories', 'rrze-shorturl') . '</option>';
         foreach ($categories as $category) {
-            $category_filter_dropdown .= '<option value="' . esc_attr($category->ID) . '"' . ($filter_category == $category->ID ? ' selected' : '') . '>' . esc_html($category->post_title) . '</option>';
+            $category_filter_dropdown .= '<option value="' . esc_attr($category->ID) . '"' . ($filter_category == $category->ID ? ' selected' : '') . '>' . $category->hierarchy_nbsp . esc_html($category->post_title) . '</option>';
         }
         $category_filter_dropdown .= '</select>';
-    
+
         // Generate filter button
         $filter_button = '<button type="submit">' . __('Filter', 'rrze-shorturl') . '</button>';
-    
+
         // Generate checkbox for own links
         $checkbox = '<input type="checkbox" name="own_links" value="1" ' . ($own_links == 1 ? 'checked' : '') . '>' . __('My links only', 'rrze-shorturl');
-    
+
         // Generate form for category filtering
         $category_filter_form = '<form method="get">';
         $category_filter_form .= $category_filter_dropdown;
         $category_filter_form .= '&nbsp;' . $filter_button;
         $category_filter_form .= '&nbsp;' . $checkbox;
         $category_filter_form .= '</form>';
-    
+
         // Generate table
         $table .= $category_filter_form;
         $table .= '<table class="shorturl-wp-list-table widefat striped">';
@@ -690,13 +678,13 @@ class Shortcode
         $table .= '<th scope="col">' . __('Categories', 'rrze-shorturl') . '</th>';
         $table .= '<th scope="col">' . __('Actions', 'rrze-shorturl') . '</th>';
         $table .= '</tr></thead><tbody>';
-    
+
         if (empty($results)) {
             $table .= '<tr><td colspan="6">' . __('No links stored yet', 'rrze-shorturl') . '</td></tr>';
         } else {
             foreach ($results as $link) {
                 $link_id = $link->ID;
-    
+
                 $long_url = get_post_meta($link_id, 'long_url', true);
                 $short_url = get_post_meta($link_id, 'short_url', true);
                 $uri = get_post_meta($link_id, 'uri', true);
@@ -715,7 +703,7 @@ class Shortcode
                     $category_names_str = implode(', ', $category_names);
                 }
 
-    
+
                 // Output table row
                 $table .= '<tr>';
                 $table .= '<td><a href="' . esc_url($long_url) . '">' . esc_html($long_url) . '</a></td>';
@@ -727,16 +715,16 @@ class Shortcode
                 $table .= '</tr>';
             }
         }
-    
+
         $table .= '</tbody></table>';
-    
+
         if (!$bUpdated && !empty($results)) {
             $table .= $this->display_edit_link_form();
         }
-    
+
         return $table;
     }
-            
+
 
     private function display_edit_link_form()
     {
@@ -754,7 +742,6 @@ class Shortcode
                 // check if user is allowed to edit
                 if (self::$rights['id'] == $link_data['idm_id'] || is_user_logged_in()) {
                     $aCategories = !empty($link_data['category_ids']) ? explode(',', $link_data['category_ids']) : [];
-                    $aTags = !empty($link_data['tag_ids']) ? explode(',', $link_data['tag_ids']) : [];
 
                     // Display the edit form
                     ob_start();
@@ -837,14 +824,14 @@ class Shortcode
         $idm_id = self::$rights['id'];
         $category_name = !empty($_POST['categoryName']) ? sanitize_text_field($_POST['categoryName']) : '';
         $parent_category = !empty($_POST['parentCategory']) ? (int) $_POST['parentCategory'] : 0;
-    
+
         if (empty($category_name)) {
             wp_send_json_error(__('Category name is required.', 'rrze-shorturl'));
         }
-    
+
         // Check if the category already exists (using post title)
         $existing_category = get_page_by_title($category_name, OBJECT, 'shorturl_category');
-    
+
         if ($existing_category) {
             // Category already exists, return its ID
             wp_send_json_success([
@@ -854,18 +841,18 @@ class Shortcode
         } else {
             // Insert new category using wp_insert_post
             $new_category_id = wp_insert_post(array(
-                'post_title'   => $category_name,
-                'post_name'    => sanitize_title($category_name), // Optional slug
-                'post_type'    => 'shorturl_category', // Custom post type name
-                'post_status'  => 'publish',
-                'post_parent'  => $parent_category, // Set parent category if applicable
+                'post_title' => $category_name,
+                'post_name' => sanitize_title($category_name), // Optional slug
+                'post_type' => 'shorturl_category', // Custom post type name
+                'post_status' => 'publish',
+                'post_parent' => $parent_category, // Set parent category if applicable
             ));
-    
+
             // If the category was successfully inserted
             if (!is_wp_error($new_category_id)) {
                 // Store idm_id as post meta for the new category
                 update_post_meta($new_category_id, 'idm_id', $idm_id);
-    
+
                 error_log('New category inserted: ID ' . $new_category_id);
 
                 // Return the new category ID and updated category list HTML
@@ -880,12 +867,12 @@ class Shortcode
                 wp_send_json_error(__('Failed to add category. Please try again.', 'rrze-shorturl'));
             }
         }
-    
+
         // Always terminate the script after handling the request
         wp_die();
     }
-    
-    
+
+
     private static function generate_category_list_html()
     {
         // Generate HTML for the updated category list
@@ -899,28 +886,28 @@ class Shortcode
     {
         // Verify nonce for security
         check_ajax_referer('store-link-category', '_ajax_nonce');
-    
+
         // Sanitize and retrieve the link ID and category ID
         $link_id = !empty($_POST['linkId']) ? (int) $_POST['linkId'] : 0;
         $category_id = !empty($_POST['categoryId']) ? (int) $_POST['categoryId'] : 0;
-    
+
         // Check if the provided link ID and category ID are valid
         if ($link_id <= 0 || $category_id <= 0) {
             wp_send_json_error(__('Invalid link ID or category ID.', 'rrze-shorturl'));
         }
-    
+
         // Check if the link exists
         $link = get_post($link_id);
         if (!$link || $link->post_type !== 'shorturl_link') {
             wp_send_json_error(__('Invalid link.', 'rrze-shorturl'));
         }
-    
+
         // Check if the category exists
         $category = get_post($category_id);
         if (!$category || $category->post_type !== 'shorturl_category') {
             wp_send_json_error(__('Invalid category.', 'rrze-shorturl'));
         }
-    
+
         // Get current categories assigned to the link from post meta
         $current_categories = get_post_meta($link_id, 'category_id', true);
         if (!$current_categories) {
@@ -928,29 +915,29 @@ class Shortcode
         } else {
             $current_categories = (array) $current_categories;
         }
-    
+
         // Check if the category is already assigned to the link
         if (in_array($category_id, $current_categories)) {
             wp_send_json_success(__('Category is already linked to the link.', 'rrze-shorturl'));
         }
-    
+
         // Add the new category ID to the current list
         $current_categories[] = $category_id;
-    
+
         // Update the post meta with the new list of categories
         $result = update_post_meta($link_id, 'category_id', $current_categories);
-    
+
         // Check if the category was successfully added
         if ($result !== false) {
             wp_send_json_success(__('Category linked to the link successfully.', 'rrze-shorturl'));
         } else {
             wp_send_json_error(__('Failed to link category to the link. Please try again.', 'rrze-shorturl'));
         }
-    
+
         // Don't forget to terminate the script
         wp_die();
     }
-    
+
     public static function display_shorturl_uri($val)
     {
         ob_start();
