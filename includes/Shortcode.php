@@ -7,10 +7,9 @@ class Shortcode
 {
     protected static $rights;
 
-    public function __construct()
+    public function __construct($rights)
     {
-        $rightsObj = new Rights();
-        self::$rights = $rightsObj->getRights();
+        self::$rights = $rights;
 
         add_shortcode('shorturl', [$this, 'shorturl_handler']);
         add_shortcode('shorturl-list', [$this, 'shortcode_list_handler']);
@@ -691,14 +690,7 @@ class Shortcode
             'post_type' => 'shorturl_link',
             'posts_per_page' => -1,
             'orderby' => $orderby,
-            'order' => $order,
-            'meta_query' => [
-                [
-                    'key' => 'idm_id',
-                    'value' => self::$rights['id'],
-                    'compare' => '='
-                ]
-            ]
+            'order' => $order
         ];
     
         if ($own_links == 1) {

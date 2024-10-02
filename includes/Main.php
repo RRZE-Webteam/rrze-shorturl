@@ -4,6 +4,7 @@ namespace RRZE\ShortURL;
 
 defined('ABSPATH') || exit;
 
+use RRZE\ShortURL\Rights;
 use RRZE\ShortURL\CustomerDomains;
 use RRZE\ShortURL\CleanupDB;
 use RRZE\ShortURL\MyCrypt;
@@ -21,12 +22,6 @@ class Main
      * @var string
      */
     protected $pluginFile;
-
-    protected $settings;
-
-    protected $shortcode;
-
-    protected $rights;
 
 
     /**
@@ -50,15 +45,22 @@ class Main
         add_action('admin_enqueue_scripts', [$this, 'enqueueScripts']);
         add_action('init', [$this, 'migrate_db_to_cpt']);
         add_action('init', [$this, 'initialize_services']);
+        add_action('init', [$this, 'init_query_dependend_classes']);
+        
 
         $cpt = new CPT();
         $settings = new Settings();
         $domains = new CustomerDomains();
         $cleanup = new CleanupDB();
         $myCrypt = new MyCrypt();
-        $shortURL = new ShortURL();
-        $api = new API();
-        $shortcode = new Shortcode();
+    }
+
+    public function init_query_dependend_classes(){
+        $rightsObj = new Rights();
+        $rights = $rightsObj->getRights();
+        $shortURL = new ShortURL($rights);
+        $shortcode = new Shortcode($rights);
+        $api = new API($rights);
     }
 
 

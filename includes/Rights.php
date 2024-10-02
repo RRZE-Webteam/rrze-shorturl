@@ -23,6 +23,8 @@ class Rights
         // } else {
         //     error_log('\RRZE\AccessControl\Permissions is not available');
         // }
+        // add_action('init', [$this, 'getRights']);
+
     }
 
     public function getRights(): array
@@ -35,14 +37,14 @@ class Rights
             'allow_utm' => false
         ];
 
-        // TEST
-        $aRet = [
-            'id' => 1,
-            'allow_uri' => false,
-            'allow_get' => false,
-            'allow_utm' => false
-        ];
-        return $aRet;
+        // // TEST
+        // $aRet = [
+        //     'id' => 1,
+        //     'allow_uri' => false,
+        //     'allow_get' => false,
+        //     'allow_utm' => false
+        // ];
+        // return $aRet;
 
         try {
             // Set up WP_Query to search for the IDM Custom Post Type with the provided 'idm'

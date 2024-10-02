@@ -13,20 +13,13 @@ class ShortURL
         "ShortURLModChars" => "abcdefghijklmnopqrstuvwxyz0123456789-"
     ];
 
-    public function __construct()
+    public function __construct($rights)
     {
-        $rightsObj = new Rights();
-        self::$rights = $rightsObj->getRights();
-
+        self::$rights = $rights;
         $options = json_decode(get_option('rrze-shorturl'), true);
 
         self::$CONFIG['ShortURLBase'] = (!empty($options['ShortURLBase']) ? $options['ShortURLBase'] : 'https://go.fau.de');
         self::$CONFIG['maxShortening'] = (!empty($options['maxShortening']) ? $options['maxShortening'] : 60);
-
-        add_action('init', [$this, 'get_data']);
-    }
-
-    public function get_data(){
         self::$CONFIG['AllowedDomains'] = self::getAllowedDomains();
         self::$CONFIG['Services'] = self::getServices();
     }

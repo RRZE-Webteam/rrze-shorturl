@@ -78,7 +78,7 @@ class CPT
                     'name' => __('Links'),
                     'singular_name' => __('Link'),
                 ),
-                'public' => false,
+                'public' => true,
                 'has_archive' => false,
                 'supports' => array('title', 'editor', 'custom-fields'),
             ));
