@@ -550,13 +550,15 @@ class Shortcode
     {
         foreach ($categories as $category) {
             $isChecked = in_array($category->ID, $aVal) ? 'checked' : '';
-
+    
             echo $category->hierarchy_nbsp;
+            echo '<label>';
             echo '<input type="checkbox" name="categories[]" value="' . esc_attr($category->ID) . '" ' . $isChecked . ' />';
-            echo esc_html($category->post_title) . '<br>';
+            echo esc_html($category->post_title);
+            echo '</label><br>';
         }
     }
-
+    
     public function shortcode_list_handler(): string
     {
         $bUpdated = false;
