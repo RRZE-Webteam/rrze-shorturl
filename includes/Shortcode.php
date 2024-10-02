@@ -589,7 +589,6 @@ class Shortcode
                 'valid_until' => sanitize_text_field($_POST['valid_until'] ?? ''),
                 'categories' => !empty($_POST['categories']) ? array_map('sanitize_text_field', $_POST['categories']) : []
             ];
-
     
             // Call the function to update the link
             ShortURL::updateLink($aParams['idm_id'], $aParams['link_id'], $aParams['domain_id'], $aParams['shortURL'], $aParams['uri'], $aParams['valid_until'], $aParams['categories']);
@@ -626,7 +625,10 @@ class Shortcode
             'post_type' => 'shorturl_link',
             'posts_per_page' => -1,
             'orderby' => $orderby,
-            'order' => $order
+            'order' => $order,
+            'meta_query' => [
+                'relation' => 'AND'
+            ],
         ];
     
         if ($own_links == 1) {
@@ -639,18 +641,20 @@ class Shortcode
     
         // Handle category filtering
         $filter_category = !empty($_GET['filter_category']) ? (int) $_GET['filter_category'] : 0;
+
         if ($filter_category > 0) {
             $args['meta_query'][] = [
                 'key'     => 'category_id',
                 'value'   => $filter_category,
                 'compare' => '='
             ];
+            $args['meta_key'] = ['category_id'];
         }
-    
-        // Fetch the links
+
+        // Fetch the links with all necessary meta fields
         $links_query = new \WP_Query($args);
         $results = $links_query->posts;
-    
+
         // Generate update message
         $table = '<div class="updated"><p>' . $message . '</p></div>';
     
@@ -692,21 +696,25 @@ class Shortcode
         } else {
             foreach ($results as $link) {
                 $link_id = $link->ID;
+    
                 $long_url = get_post_meta($link_id, 'long_url', true);
                 $short_url = get_post_meta($link_id, 'short_url', true);
                 $uri = get_post_meta($link_id, 'uri', true);
                 $valid_until = get_post_meta($link_id, 'valid_until', true);
-    
-                // Get the categories from the meta field
-                $category_ids = get_post_meta($link_id, 'category_id', false);
-                $category_names = [];
-                foreach ($category_ids as $category_id) {
-                    $category_post = get_post($category_id);
-                    if ($category_post) {
-                        $category_names[] = $category_post->post_title;
+                $category_ids = get_post_meta($link_id, 'category_id');
+
+                $category_names_str = '';
+                if (!empty($category_ids)) {
+                    $category_names = [];
+                    foreach ($category_ids as $category_id) {
+                        $category_post = get_post((int) $category_id);
+                        if ($category_post) {
+                            $category_names[] = $category_post->post_title;
+                        }
                     }
+                    $category_names_str = implode(', ', $category_names);
                 }
-                $category_names_str = implode(', ', $category_names);
+
     
                 // Output table row
                 $table .= '<tr>';
@@ -728,7 +736,7 @@ class Shortcode
     
         return $table;
     }
-        
+            
 
     private function display_edit_link_form()
     {

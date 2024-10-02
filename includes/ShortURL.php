@@ -188,7 +188,9 @@ class ShortURL
                 // Update categories (using custom fields)
                 if (!empty($categories)) {
                     // Store the category IDs in post meta
-                    update_post_meta($link_id, 'category_id', $categories);
+                    foreach ($categories as $category_id) {
+                        add_post_meta($link_id, 'category_id', $category_id, false);
+                    }                    
                 } else {
                     // Clear categories if none are passed
                     delete_post_meta($link_id, 'category_id');
