@@ -583,26 +583,6 @@ class Shortcode
 
         $categories = self::get_categories_hierarchically();
 
-        // echo '<pre>';
-        // var_dump($categories);
-        // exit;
-
-        // Fetch all categories using get_posts
-        // $categories = get_posts([
-        //     'post_type' => 'shorturl_category',
-        //     'posts_per_page' => -1,
-        //     'post_status' => 'publish',
-        //     'meta_query' => [
-        //         [
-        //             'key' => 'idm_id',
-        //             'value' => self::$rights['id'],
-        //             'compare' => '='
-        //         ]
-        //     ],
-        //     'orderby' => 'menu_order',
-        //     'order' => 'ASC',
-        // ]);
-
         // Sort links based on the GET parameters for sorting
         $orderby = !empty($_GET['orderby']) ? sanitize_text_field($_GET['orderby']) : 'ID';
         $order = !empty($_GET['order']) && in_array($_GET['order'], ['ASC', 'DESC']) ? sanitize_text_field($_GET['order']) : 'ASC';

@@ -568,6 +568,7 @@ class Settings
 
                             if (!is_wp_error($post_id)) {
                                 // Add meta data for the domain
+                                update_post_meta($post_id, 'active', 1);
                                 update_post_meta($post_id, 'prefix', 1);
                                 update_post_meta($post_id, 'external', 1);
                                 $message = __('New external domain added successfully.', 'rrze-shorturl');

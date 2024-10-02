@@ -248,11 +248,6 @@ class ShortURL
                         'key' => 'prefix',
                         'value' => '1',
                         'compare' => '='
-                    ],
-                    [
-                        'key' => 'external',
-                        'value' => '0',
-                        'compare' => '='
                     ]
                 ],
                 'orderby' => 'title', // Sort by the hostname (post_title)
