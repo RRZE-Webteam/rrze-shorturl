@@ -134,9 +134,6 @@ jQuery(document).ready(function ($) {
         var categoryName = $('input[name=new_shorturl_category]').val();
         var category_ids = $('input[name=category_ids]').val();
 
-        alert(category_ids);
-
-
         if (categoryName) {
             $.ajax({
                 url: rrze_shorturl_ajax_object.ajax_url,
