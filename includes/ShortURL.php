@@ -23,9 +23,14 @@ class ShortURL
         self::$CONFIG['ShortURLBase'] = (!empty($options['ShortURLBase']) ? $options['ShortURLBase'] : 'https://go.fau.de');
         self::$CONFIG['maxShortening'] = (!empty($options['maxShortening']) ? $options['maxShortening'] : 60);
 
+        add_action('init', [$this, 'get_data']);
+    }
+
+    public function get_data(){
         self::$CONFIG['AllowedDomains'] = self::getAllowedDomains();
         self::$CONFIG['Services'] = self::getServices();
     }
+
 
     public static function isValidUrl(string $url): bool
     {
@@ -243,13 +248,24 @@ class ShortURL
         try {
             // Set up arguments for WP_Query to fetch all domain posts
             $args = [
-                'post_type' => 'shorturl_domain',  // The Custom Post Type for domains
-                'posts_per_page' => -1,        // Retrieve all domain posts
-                'post_status' => 'publish', // Only fetch published domains
-                'orderby' => 'meta_value', // Order by hostname (stored as meta value)
-                'meta_key' => 'hostname',   // Specify the meta key to sort by
-                'order' => 'ASC'         // Ascending order
+                'post_type' => 'shorturl_domain',
+                'posts_per_page' => -1, // Fetch all domains
+                'meta_query' => [
+                    [
+                        'key' => 'prefix',
+                        'value' => '1',
+                        'compare' => '='
+                    ],
+                    [
+                        'key' => 'external',
+                        'value' => '0',
+                        'compare' => '='
+                    ]
+                ],
+                'orderby' => 'title', // Sort by the hostname (post_title)
+                'order' => 'ASC'
             ];
+    
 
             // Execute the query
             $query = new \WP_Query($args);
@@ -265,7 +281,7 @@ class ShortURL
                     // Collect post meta data (like hostname, prefix, and other relevant fields)
                     $aDomains[] = [
                         'id' => get_the_ID(),
-                        'hostname' => get_post_meta(get_the_ID(), 'hostname', true),
+                        'hostname' => esc_html(get_the_title()),
                         'prefix' => get_post_meta(get_the_ID(), 'prefix', true),
                         'external' => get_post_meta(get_the_ID(), 'external', true),
                         'active' => get_post_meta(get_the_ID(), 'active', true),
