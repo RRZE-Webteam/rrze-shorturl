@@ -173,10 +173,10 @@ class ShortURL
                 'post_title' => $shortURL, // Use short URL as the title (or another appropriate field)
                 'post_content' => $uri,      // Use URI as content or another field
             ];
-
+    
             // Update the post
             $update_result = wp_update_post($post_data);
-
+    
             if ($update_result !== 0) {
                 // Update custom fields (meta data) for the link post
                 update_post_meta($link_id, 'idm_id', $idm_id);
@@ -184,25 +184,23 @@ class ShortURL
                 update_post_meta($link_id, 'short_url', $shortURL);
                 update_post_meta($link_id, 'uri', $uri);
                 update_post_meta($link_id, 'valid_until', $valid_until);
-
-                // Update categories (using taxonomies)
+    
+                // Update categories (using custom fields)
                 if (!empty($categories)) {
-                    wp_set_post_terms($link_id, $categories, 'shorturl_link_category');
+                    // Store the category IDs in post meta
+                    update_post_meta($link_id, 'category_id', $categories);
                 } else {
                     // Clear categories if none are passed
-                    wp_set_post_terms($link_id, [], 'shorturl_link_category');
+                    delete_post_meta($link_id, 'category_id');
                 }
             }
-
+    
             return $update_result;
         } catch (\Throwable $e) {
             error_log("Error in updateLink: " . $e->getMessage());
             return null;
         }
     }
-
-
-
 
     public static function getServices()
     {
