@@ -174,7 +174,7 @@ class Shortcode
                 $output .= '<input type="text" id="category_label" name="category_label" value="' . esc_attr($category_label) . '"><br>';
 
                 // Display parent category dropdown
-                $output .= self::makeCategoryDropdown($category_id, $parent_id);    
+                $output .= self::makeCategoryDropdown($category_id, $parent_id);
                 $output .= '<input type="hidden" name="category_id" value="' . esc_attr($category_id) . '">';
                 $output .= '<br><input type="submit" name="edit_category" value="' . __('Save Changes', 'rrze-shorturl') . '">';
                 $output .= '&nbsp;<a href="' . esc_url(remove_query_arg('action')) . '" class="button">' . __('Cancel', 'rrze-shorturl') . '</a>';
@@ -225,27 +225,27 @@ class Shortcode
     private static function build_category_hierarchy($categories, $parent_id = 0, $depth = 0)
     {
         $result = [];
-    
+
         foreach ($categories as $category) {
             if ($category->post_parent == $parent_id) {
-                $category_data = (object)[
+                $category_data = (object) [
                     'ID' => $category->ID,
                     'post_parent' => $category->post_parent,
                     'post_title' => $category->post_title,
                     'hierarchy' => str_repeat('-', $depth),
                     'hierarchy_nbsp' => str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;', $depth),
                 ];
-    
+
                 $result[] = $category_data;
-    
+
                 $children = self::build_category_hierarchy($categories, $category->ID, $depth + 1);
                 $result = array_merge($result, $children);
             }
         }
-    
+
         return $result;
     }
-            
+
     // Helper function to display the categories table
     private function display_categories_table()
     {

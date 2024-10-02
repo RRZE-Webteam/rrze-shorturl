@@ -173,10 +173,10 @@ class ShortURL
                 'post_title' => $shortURL, // Use short URL as the title (or another appropriate field)
                 'post_content' => $uri,      // Use URI as content or another field
             ];
-    
+
             // Update the post
             $update_result = wp_update_post($post_data);
-    
+
             if ($update_result !== 0) {
                 // Update custom fields (meta data) for the link post
                 update_post_meta($link_id, 'idm_id', $idm_id);
@@ -184,19 +184,19 @@ class ShortURL
                 update_post_meta($link_id, 'short_url', $shortURL);
                 update_post_meta($link_id, 'uri', $uri);
                 update_post_meta($link_id, 'valid_until', $valid_until);
-    
+
                 // Update categories (using custom fields)
                 if (!empty($categories)) {
                     // Store the category IDs in post meta
                     foreach ($categories as $category_id) {
                         add_post_meta($link_id, 'category_id', $category_id, false);
-                    }                    
+                    }
                 } else {
                     // Clear categories if none are passed
                     delete_post_meta($link_id, 'category_id');
                 }
             }
-    
+
             return $update_result;
         } catch (\Throwable $e) {
             error_log("Error in updateLink: " . $e->getMessage());
@@ -212,13 +212,13 @@ class ShortURL
             'numberposts' => -1,                // Retrieve all service posts
             'post_status' => 'publish'          // Only fetch published services
         ];
-    
+
         // Fetch the posts
         $posts = get_posts($args);
-    
+
         // Initialize an empty array to store service data
         $aServices = [];
-    
+
         // Loop through the results and store the relevant data
         foreach ($posts as $post) {
             // Collect post meta data (like hostname, prefix, and regex)
@@ -231,10 +231,10 @@ class ShortURL
                 'notice' => get_post_meta($post->ID, 'notice', true)
             ];
         }
-    
+
         return $aServices;
     }
-    
+
 
     public static function getAllowedDomains()
     {
@@ -253,7 +253,7 @@ class ShortURL
                 'orderby' => 'title', // Sort by the hostname (post_title)
                 'order' => 'ASC'
             ];
-    
+
 
             // Execute the query
             $query = new \WP_Query($args);
@@ -308,11 +308,11 @@ class ShortURL
             ];
 
             $parsed_url = wp_parse_url($long_url);
-    
+
             if (!isset($parsed_url['scheme'])) {
                 $long_url = 'https://' . $long_url;
             }
-    
+
             $domain = wp_parse_url($long_url, PHP_URL_HOST);
 
             if (!$domain) {
@@ -348,8 +348,6 @@ class ShortURL
 
             // Check if the extracted domain belongs to one of our allowed domains
             foreach (self::$CONFIG['AllowedDomains'] as $aEntry) {
-
-
                 if ($domain === $aEntry['hostname']) {
                     $notice = $aEntry['notice'];
 

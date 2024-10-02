@@ -233,9 +233,9 @@ class Settings
 
         $aOptions = json_decode(get_option('rrze-shorturl'), true);
         $aOptions = (empty($aOptions) ? [] : $aOptions);
-        $aOptions['ShortURLBase'] = (empty($aOptions['ShortURLBase'])? 'https://go.fau.de' : $aOptions['ShortURLBase']);
-        $aOptions['maxShortening'] = (empty($aOptions['maxShortening'])? 60 : $aOptions['maxShortening']);
-        $aOptions['allowed_ip_addresses'] = (empty($aOptions['allowed_ip_addresses'])? '' : $aOptions['allowed_ip_addresses']);        
+        $aOptions['ShortURLBase'] = (empty($aOptions['ShortURLBase']) ? 'https://go.fau.de' : $aOptions['ShortURLBase']);
+        $aOptions['maxShortening'] = (empty($aOptions['maxShortening']) ? 60 : $aOptions['maxShortening']);
+        $aOptions['allowed_ip_addresses'] = (empty($aOptions['allowed_ip_addresses']) ? '' : $aOptions['allowed_ip_addresses']);
 
         if (isset($_POST['submit_general'])) {
             if (filter_var($_POST['ShortURLBase'], FILTER_VALIDATE_URL)) {
@@ -307,7 +307,7 @@ class Settings
         $error = true;
         $message = '';
         $bDel = false;
-    
+
         // Check if form is submitted
         if (isset($_POST['submit'])) {
             try {
@@ -320,7 +320,7 @@ class Settings
                     $message = (empty($message) ? '' : $message . '<br \>') . ($bDel ? __('Selected entries deleted successfully.', 'rrze-shorturl') : '');
                     $error = false;
                 }
-    
+
                 // Add new entry
                 if (!empty($_POST['new_hostname'])) {
                     try {
@@ -328,7 +328,7 @@ class Settings
                         $new_hostname = sanitize_text_field($_POST['new_hostname']);
                         $new_prefix = sanitize_text_field($_POST['new_prefix']);
                         $new_regex = sanitize_text_field($_POST['new_regex']);
-    
+
                         // Validate hostname
                         if (!self::isValidHostName($new_hostname)) {
                             $message = __('Hostname is not valid.', 'rrze-shorturl');
@@ -352,7 +352,7 @@ class Settings
                                             )
                                         )
                                     ));
-    
+
                                     if ($existing_services->found_posts > 0) {
                                         $message = __('Prefix is already in use.', 'rrze-shorturl');
                                     } else {
@@ -366,7 +366,7 @@ class Settings
                                                 'regex' => $new_regex
                                             )
                                         ));
-    
+
                                         if (is_wp_error($new_service_id)) {
                                             $message = __('An error occurred: ', 'rrze-shorturl') . $new_service_id->get_error_message();
                                         } else {
@@ -376,7 +376,7 @@ class Settings
 
                                         $new_hostname = '';
                                         $new_prefix = '';
-                                        $new_regex = '';        
+                                        $new_regex = '';
                                     }
                                 }
                             }
@@ -389,7 +389,7 @@ class Settings
                 $message = __('An error occurred: ', 'rrze-shorturl') . $e->getMessage();
             }
         }
-    
+
         // Fetch entries from shorturl_services (prefix = 1 is reserved for customer domains)
         $args = array(
             'post_type' => 'shorturl_service',
@@ -404,7 +404,7 @@ class Settings
             'meta_key' => 'prefix',
             'order' => 'ASC'
         );
-    
+
         $entries = new \WP_Query($args);
         ?>
         <div class="wrap">
@@ -425,24 +425,34 @@ class Settings
                     </thead>
                     <tbody>
                         <?php if ($entries->have_posts()): ?>
-                            <?php while ($entries->have_posts()): $entries->the_post(); ?>
+                            <?php while ($entries->have_posts()):
+                                $entries->the_post(); ?>
                                 <tr>
-                                    <td><input type="text" name="hostname[]" value="<?php echo esc_attr(get_the_title()); ?>" readonly /></td>
-                                    <td><input type="text" name="prefix[]" value="<?php echo esc_attr(get_post_meta(get_the_ID(), 'prefix', true)); ?>" readonly /></td>
-                                    <td><input type="text" name="regex[]" value="<?php echo esc_attr(get_post_meta(get_the_ID(), 'regex', true)); ?>" /></td>
+                                    <td><input type="text" name="hostname[]" value="<?php echo esc_attr(get_the_title()); ?>"
+                                            readonly /></td>
+                                    <td><input type="text" name="prefix[]"
+                                            value="<?php echo esc_attr(get_post_meta(get_the_ID(), 'prefix', true)); ?>" readonly />
+                                    </td>
+                                    <td><input type="text" name="regex[]"
+                                            value="<?php echo esc_attr(get_post_meta(get_the_ID(), 'regex', true)); ?>" /></td>
                                     <td><input type="checkbox" name="delete[]" value="<?php echo esc_attr(get_the_ID()); ?>" /></td>
                                 </tr>
-                            <?php endwhile; wp_reset_postdata(); ?>
+                            <?php endwhile;
+                            wp_reset_postdata(); ?>
                         <?php endif; ?>
                         <tr>
-                            <td><input type="text" name="new_hostname" value="<?php echo (!empty($new_hostname) ? esc_attr($new_hostname) : ''); ?>" /></td>
-                            <td><input type="text" name="new_prefix" value="<?php echo (!empty($new_prefix) ? esc_attr($new_prefix) : ''); ?>" pattern="\d*" /></td>
-                            <td><input type="text" name="new_regex" value="<?php echo (!empty($new_regex) ? esc_attr($new_regex) : ''); ?>" /></td>
+                            <td><input type="text" name="new_hostname"
+                                    value="<?php echo (!empty($new_hostname) ? esc_attr($new_hostname) : ''); ?>" /></td>
+                            <td><input type="text" name="new_prefix"
+                                    value="<?php echo (!empty($new_prefix) ? esc_attr($new_prefix) : ''); ?>" pattern="\d*" />
+                            </td>
+                            <td><input type="text" name="new_regex"
+                                    value="<?php echo (!empty($new_regex) ? esc_attr($new_regex) : ''); ?>" /></td>
                             <td></td>
                         </tr>
                     </tbody>
                 </table>
-    
+
                 <button type="submit" name="submit" class="button button-primary">
                     <?php echo __('Save Changes', 'rrze-shorturl'); ?>
                 </button>
@@ -450,7 +460,7 @@ class Settings
         </div>
         <?php
     }
-    
+
 
     // Render the Customer Domains tab section
     public function render_customer_domains_section()
@@ -676,11 +686,12 @@ class Settings
                     // Check if the IdM already exists
                     $existing_idm_id = get_posts(
                         array(
-                            'post_type'              => 'shorturl_idm',
-                            'title'                  => $idm,
-                            'post_status'            => 'all',
-                            'numberposts'            => 1,
-                            'fields'                 => 'ids')
+                            'post_type' => 'shorturl_idm',
+                            'title' => $idm,
+                            'post_status' => 'all',
+                            'numberposts' => 1,
+                            'fields' => 'ids'
+                        )
                     );
 
                     if (!empty($existing_idm_id)) {

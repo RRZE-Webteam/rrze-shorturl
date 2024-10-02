@@ -46,7 +46,7 @@ class Main
         add_action('init', [$this, 'migrate_db_to_cpt']);
         add_action('init', [$this, 'initialize_services']);
         add_action('init', [$this, 'init_query_dependend_classes']);
-        
+
 
         $cpt = new CPT();
         $settings = new Settings();
@@ -55,7 +55,8 @@ class Main
         $myCrypt = new MyCrypt();
     }
 
-    public function init_query_dependend_classes(){
+    public function init_query_dependend_classes()
+    {
         $rightsObj = new Rights();
         $rights = $rightsObj->getRights();
         $shortURL = new ShortURL($rights);

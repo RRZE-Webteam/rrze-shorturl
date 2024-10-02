@@ -186,42 +186,42 @@ class API
         }
         return $args;
     }
-            
+
     public function get_categories_callback()
     {
         try {
             // Get all posts from the 'shorturl_category' CPT
             $categories = get_posts(array(
-                'post_type'      => 'shorturl_category',
+                'post_type' => 'shorturl_category',
                 'posts_per_page' => -1, // Get all categories
-                'post_status'    => 'publish',
-                'orderby'        => 'title',
-                'order'          => 'ASC',
+                'post_status' => 'publish',
+                'orderby' => 'title',
+                'order' => 'ASC',
             ));
-    
+
             // Check for errors while retrieving posts
             if (empty($categories)) {
                 throw new Exception(__('No short URL categories found', 'rrze-shorturl'));
             }
-    
+
             // Prepare the response with simplified data
             $category_data = array();
             foreach ($categories as $category) {
                 $category_data[] = array(
-                    'id'    => $category->ID,
+                    'id' => $category->ID,
                     'label' => $category->post_title,
                 );
             }
-    
+
             // Return the categories in the REST response
             return new WP_REST_Response($category_data, 200);
-    
+
         } catch (Exception $e) {
             // Return a WP_Error object in case of an error
             return new WP_Error('shorturl_categories_error', $e->getMessage(), array('status' => 500));
         }
     }
-    
+
     public function shorten_url_callback($request)
     {
         try {
