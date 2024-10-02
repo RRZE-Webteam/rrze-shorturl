@@ -534,6 +534,8 @@ class Shortcode
                 <br><input type="text" id="new_shorturl_category" name="new_shorturl_category"
                     placeholder="<?php echo __('New Category Name', 'rrze-shorturl'); ?>">
                 <br><?php echo self::makeCategoryDropdown(); ?>
+                <input type="hidden" name="category_ids" value="<?php echo implode(',', $aVal); ?>">
+
                 <br><input type="button" value="<?php echo __('Add new category', 'rrze-shorturl'); ?>"
                     id="add-shorturl-category-btn">
             </div>
@@ -824,6 +826,7 @@ class Shortcode
         $idm_id = self::$rights['id'];
         $category_name = !empty($_POST['categoryName']) ? sanitize_text_field($_POST['categoryName']) : '';
         $parent_category = !empty($_POST['parentCategory']) ? (int) $_POST['parentCategory'] : 0;
+        $aCategory = !empty($_POST['category_ids']) ? explode(',', $_POST['category_ids']) : [];
 
         if (empty($category_name)) {
             wp_send_json_error(__('Category name is required.', 'rrze-shorturl'));
@@ -836,7 +839,7 @@ class Shortcode
             // Category already exists, return its ID
             wp_send_json_success([
                 'category_id' => $existing_category->ID,
-                'category_list_html' => self::generate_category_list_html()
+                'category_list_html' => self::generate_category_list_html($aCategory)
             ]);
         } else {
             // Insert new category using wp_insert_post
@@ -847,6 +850,7 @@ class Shortcode
                 'post_status' => 'publish',
                 'post_parent' => $parent_category, // Set parent category if applicable
             ));
+            $aCategory[] = $new_category_id;
 
             // If the category was successfully inserted
             if (!is_wp_error($new_category_id)) {
@@ -858,7 +862,7 @@ class Shortcode
                 // Return the new category ID and updated category list HTML
                 wp_send_json_success([
                     'category_id' => $new_category_id,
-                    'category_list_html' => self::generate_category_list_html()
+                    'category_list_html' => self::generate_category_list_html($aCategory)
                 ]);
             } else {
                 error_log('Failed to insert new category: ' . $new_category_id->get_error_message());
@@ -873,11 +877,11 @@ class Shortcode
     }
 
 
-    private static function generate_category_list_html()
+    private static function generate_category_list_html($aCategory = [])
     {
         // Generate HTML for the updated category list
         ob_start();
-        echo self::display_shorturl_category();
+        echo self::display_shorturl_category($aCategory);
         return ob_get_clean();
     }
 

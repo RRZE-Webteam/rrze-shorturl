@@ -132,6 +132,10 @@ jQuery(document).ready(function ($) {
     $(document).on('click', '#add-shorturl-category-btn', function (e) {
         e.preventDefault();
         var categoryName = $('input[name=new_shorturl_category]').val();
+        var category_ids = $('input[name=category_ids]').val();
+
+        alert(category_ids);
+
 
         if (categoryName) {
             $.ajax({
@@ -141,6 +145,7 @@ jQuery(document).ready(function ($) {
                     action: 'add_shorturl_category',
                     categoryName: categoryName,
                     parentCategory: $('select[name=parent_category]').val(),
+                    category_ids: category_ids,
                     _ajax_nonce: rrze_shorturl_ajax_object.add_shorturl_category_nonce
                 },
                 success: function (response) {
