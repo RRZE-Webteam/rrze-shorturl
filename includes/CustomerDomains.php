@@ -75,7 +75,7 @@ class CustomerDomains
 
                             if (!empty($url)) {
                                 // Parse the URL and get the hostname
-                                $parsed_url = parse_url($url);
+                                $parsed_url = wp_parse_url($url);
                                 $host = $parsed_url['host'];
 
                                 // If the site is inactive, fetch webmaster details

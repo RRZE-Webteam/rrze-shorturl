@@ -299,7 +299,7 @@ class ShortURLRedirect
             // Generate RewriteRules
             foreach ($short_urls as $url) {
 
-                $short_url_path = trim(parse_url($url['short_url'], PHP_URL_PATH), '/');
+                $short_url_path = trim(wp_parse_url($url['short_url'], PHP_URL_PATH), '/');
                 $long_url = $url['long_url'];
 
                 // $expires = ($url['valid_until']) ? date('D, d M Y H:i:s', strtotime($url['valid_until'])) . ' GMT' : ''; # spaces lead to an error

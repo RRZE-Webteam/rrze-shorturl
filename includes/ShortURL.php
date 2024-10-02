@@ -319,6 +319,12 @@ class ShortURL
                 'message_type' => 'error'
             ];
 
+            $parsed_url = wp_parse_url($long_url);
+    
+            if (!isset($parsed_url['scheme'])) {
+                $long_url = 'https://' . $long_url;
+            }
+    
             $domain = wp_parse_url($long_url, PHP_URL_HOST);
 
             if (!$domain) {
@@ -470,7 +476,7 @@ class ShortURL
     private static function add_or_replace_utm_parameters($url, $utm_parameters)
     {
 
-        $url_components = parse_url($url);
+        $url_components = wp_parse_url($url);
 
         $query_parameters = [];
         if (isset($url_components['query'])) {
@@ -492,7 +498,7 @@ class ShortURL
 
     private static function add_url_components($url, $components, $query = '')
     {
-        $parsed_url = parse_url($url);
+        $parsed_url = wp_parse_url($url);
         $new_url = '';
 
         if (!isset($parsed_url['scheme'])) {
