@@ -46,22 +46,16 @@ In den Einstellungen kann Folgendes verwaltet werden:
 - /shorten (POST) empfängt die Parameter und liefert das Paar 'error'(true/false) und 'txt' (short_url oder error-message) als JSON
 - /get-longurl (GET) liefert zum Parameter "shortURL" den "long_url" als JSON
 - /categories (GET) liefert die Kategorien als JSON
-- /add-category (POST) trägt eine neue Kategorie mit ggfalls Parent-Kategorie in die Datenbank ein
-- /tags (GET) liefert die Schlagwörter als JSON (seit 1.1.0 deaktiviert)
-- /add-tags (POST) trägt ein neues Schlagwort in die Datenbank ein (seit 1.1.0 deaktiviert)
 - /services (GET) liefert alle Services samt Regex als JSON
 - /decrypt (POST) liefert den decrypted Wert vom Parameter "encrypted" (für einen Service) als JSON
+- /encrypt (GET) liefert den encrypted Wert vom Parameter "decrypted" (für einen Service) als JSON
 
 ## Zugriffsschutz der REST-API Endpoints:
 Alle Endpoints sind zugriffsgeschützt.
 - /active-shorturls : IP (Einstellbar in Settings)
 - /shorten : SSO
 - /categories : SSO
-- /add-category : SSO
-- /tags : SSO
-- /add-tags : SSO
 - /services : IP (Einstellbar in Settings)
-- /service-decrypt : IP (Einstellbar in Settings)
 
 ## Installation
 - Plugin auf WordPress Instanz
