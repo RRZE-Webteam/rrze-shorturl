@@ -80,7 +80,7 @@ class Shortcode
         $category_list = self::get_categories_hierarchically();
 
         // Start building the dropdown HTML output
-        $output = '<label for="parent_category">' . __('Parent Category', 'rrze-shorturl') . ':</label><br>';
+        $output = '<label for="parent_category">' . __('Parent Category', 'rrze-shorturl') . ':</label>';
         $output .= '<select id="parent_category" name="parent_category">';
         $output .= '<option value="0">' . __('None', 'rrze-shorturl') . '</option>';
 
@@ -531,7 +531,7 @@ class Shortcode
                 </a></p>
             <div id="new-shorturl-category">
                 <label for="new_shorturl_category"><?php echo __('New Category Name', 'rrze-shorturl'); ?>:</label>
-                <br><input type="text" id="new_shorturl_category" name="new_shorturl_category"
+                <input type="text" id="new_shorturl_category" name="new_shorturl_category"
                     placeholder="<?php echo __('New Category Name', 'rrze-shorturl'); ?>">
                 <br><?php echo self::makeCategoryDropdown(); ?>
                 <input type="hidden" name="category_ids" value="<?php echo implode(',', $aVal); ?>">
@@ -548,15 +548,13 @@ class Shortcode
     // Function to display hierarchical categories
     private static function display_hierarchical_categories_checkbox($categories, $level = 0, $aVal = [])
     {
+        $ret = '';
         foreach ($categories as $category) {
             $isChecked = in_array($category->ID, $aVal) ? 'checked' : '';
-    
-            echo $category->hierarchy_nbsp;
-            echo '<label>';
-            echo '<input type="checkbox" name="categories[]" value="' . esc_attr($category->ID) . '" ' . $isChecked . ' />';
-            echo esc_html($category->post_title);
-            echo '</label><br>';
+            $ret .= '<label>' . $category->hierarchy_nbsp . '<input type="checkbox" name="categories[]" value="' . esc_attr($category->ID) . '" ' . $isChecked . ' />' . esc_html($category->post_title) . '</label>';
         }
+        if ($ret){$ret .= '<br>';}
+        echo $ret;
     }
     
     public function shortcode_list_handler(): string
