@@ -4,7 +4,7 @@
 Plugin Name:     RRZE ShortURL
 Plugin URI:      https://gitlab.rrze.fau.de/rrze-webteam/rrze-shorturl
 Description:     Plugin, um URLs zu verkürzen. 
-Version:         1.9.4
+Version:         2.0.0
 Requires at least: 6.4
 Requires PHP:      8.2
 Author:          RRZE Webteam
@@ -72,12 +72,11 @@ function system_requirements()
     } elseif (version_compare($GLOBALS['wp_version'], RRZE_WP_VERSION, '<')) {
         /* Übersetzer: 1: aktuelle WP-Version, 2: erforderliche WP-Version */
         $error = sprintf(__('The server is running WordPress version %1$s. The Plugin requires at least WordPress version %2$s.', 'rrze-shorturl'), $GLOBALS['wp_version'], RRZE_WP_VERSION);
-    // } elseif(!class_exists('\RRZE\AccessControl\Permissions')) {
-    //     $error = __('Plugin RRZE-AC is mandatory.', 'rrze-shorturl');
+        // } elseif(!class_exists('\RRZE\AccessControl\Permissions')) {
+        //     $error = __('Plugin RRZE-AC is mandatory.', 'rrze-shorturl');
     }
     return $error;
 }
-
 
 /**
  * Wird durchgeführt, nachdem das Plugin aktiviert wurde.
@@ -97,7 +96,6 @@ function activation()
     // Ab hier können die Funktionen hinzugefügt werden,
     // die bei der Aktivierung des Plugins aufgerufen werden müssen.
     // Bspw. wp_schedule_event, flush_rewrite_rules, etc.
-    Config\create_custom_tables();
 }
 
 /**
@@ -105,171 +103,33 @@ function activation()
  */
 function deactivation()
 {
-
-    // clean up the database
-    Config\drop_custom_tables();
-
     // delete the crons we've added in this plugin
     wp_clear_scheduled_hook('rrze_shorturl_fetch_and_store_customerdomains');
     wp_clear_scheduled_hook('rrze_shorturl_cleanup_inactive_idms');
     wp_clear_scheduled_hook('rrze_shorturl_cleanup_invalid_links');
-}
 
 
-function rrze_shorturl_init()
-{
-    register_block_type(__DIR__ . '/build', ['render_callback' => [Settings::class, 'render_url_form']]);
-}
-
-
-function deleteOldCron(){
-    wp_clear_scheduled_hook('rrze_shorturl_cleanup_database');
-}
-
-function insertWebteam(){
-    try {
-
-    global $wpdb;
-
-        // Insert Default Data
-        // Insert Webteam and other known VIPs
-        define('VIP', [
-            'allow_uri' => true,
-            'allow_get' => true,
-            'allow_utm' => true
-        ]);
-
-        $aEntries = [
-            'qe28nesi',
-            'unrz59',
-            'ej64ojyw',
-            'zo95zofo',
-            'unrz244',
-            'unrz228',
-            'unrz41',
-            'ca27xybo',
-            'zi45hupi',
-            'ug46aqez'
-        ];
-
-        // Add 'fau.de' to each entry and combine with clear IdMs
-        $aEntries = array_merge(
-            $aEntries,
-            array_map(function ($entry) {
-                return $entry . 'fau.de';
-            }, $aEntries)
-        );
-
-        // Merge each entry with VIP array to set allow values
-        foreach ($aEntries as $entry) {
-            $entry_data = array_merge(array('idm' => $entry), VIP);
-
-            $idm = $entry_data['idm'];
-            $allow_uri = $entry_data['allow_uri'];
-            $allow_get = $entry_data['allow_get'];
-            $allow_utm = $entry_data['allow_utm'];
-            $created_by = 'system';
-
-            // Prepare the SQL query string
-            $sql_query = $wpdb->prepare("INSERT IGNORE INTO {$wpdb->prefix}shorturl_idms (idm, allow_uri, allow_get, allow_utm, created_by) VALUES (%s, %d, %d, %d, %s)", $idm, $allow_uri, $allow_get, $allow_utm, $created_by);
-
-            // Log the SQL query string
-            error_log("SQL Query: " . $sql_query);
-
-            // Execute the SQL query
-            $wpdb->query($sql_query);
-
-            // Log the result of the insert operation
-            error_log("Insert result for entry '$idm': Error: " . $wpdb->last_error . ", Rows affected: " . $wpdb->rows_affected);
-        }
-    } catch (Exception $e) {
-        // Handle the exception
-        error_log("Error in drop_custom_tables: " . $e->getMessage());
+    // delete all entries of all CPT
+    $custom_post_types = ['shorturl_idm', 'shorturl_domain', 'shorturl_service', 'shorturl_link', 'shorturl_category'];
+    foreach ($custom_post_types as $cpt) {
+        $post_ids = get_posts(array(
+            'post_type' => $cpt,
+            'numberposts' => -1,
+            'post_status' => 'any',
+            'fields' => 'ids'            
+        ));
+    
+        foreach ($post_ids as $post_id) {
+            wp_delete_post($post_id, true);
+        }    
     }
-
+        
+    // delete our options
+    delete_option('rrze_shorturl_option');
+    delete_option('rrze_shorturl_services_initialized');
+    delete_option('rrze_shorturl_migration_completed');
+    delete_option('rrze_shorturl_custom_tables_dropped');
 }
-
-function setLinksIndefinite() {
-    global $wpdb;
-
-    $table_name = $wpdb->prefix . 'shorturl_links';
-
-    // Update the valid_until to NULL where user has not set valid_until
-    $query = "
-        UPDATE $table_name
-        SET valid_until = NULL
-        WHERE valid_until = DATE(DATE_ADD(created_at, INTERVAL 1 YEAR))
-    ";
-
-    $wpdb->query($query);
-}
-
-function setAllow_UTMtoFalse() {
-    global $wpdb;
-
-    $table_name = $wpdb->prefix . 'shorturl_idms';
-
-    $query = "
-        UPDATE $table_name
-        SET allow_utm = FALSE
-    ";
-
-    $wpdb->query($query);
-}
-
-
-function renameField() {
-    global $wpdb;
-
-    $table_name = $wpdb->prefix . 'shorturl_idms';
-
-    // Check if the column 'allow_longlifelinks' exists
-    $column_exists = $wpdb->get_results(
-        $wpdb->prepare(
-            "SHOW COLUMNS FROM `$table_name` LIKE %s",
-            'allow_longlifelinks'
-        )
-    );
-
-    if (!empty($column_exists)) {
-        // Rename the column
-        $sql = "ALTER TABLE `$table_name` CHANGE `allow_longlifelinks` `allow_utm` TINYINT(1) NOT NULL DEFAULT '0'";
-        $wpdb->query($sql);
-    }
-}
-
-
-function addField(){
-    global $wpdb;
-
-    $table_name = $wpdb->prefix . 'shorturl_domains';
-
-    $column_exists = $wpdb->get_results(
-        $wpdb->prepare(
-            "SHOW COLUMNS FROM `$table_name` LIKE %s", 
-            'external'
-        )
-    );
-
-    if (empty($column_exists)) {
-        $wpdb->query(
-            "ALTER TABLE `$table_name` ADD `external` int(1) NOT NULL DEFAULT 0"
-        );
-    }
-}
-
-function cleanupIdM() {
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'shorturl_idms';
-
-    // Update query to remove "fau-de" from the end of the "idm" field
-    $wpdb->query("
-        UPDATE $table_name
-        SET idm = TRIM(TRAILING 'fau-de' FROM idm)
-        WHERE idm LIKE '%fau-de'
-    ");
-}
-
 
 /**
  * Wird durchgeführt, nachdem das WP-Grundsystem hochgefahren
@@ -290,22 +150,8 @@ function loaded()
             printf('<div class="notice notice-error"><p>%1$s: %2$s</p></div>', esc_html($plugin_name), esc_html($error));
         });
     } else {
-
-        // addField();
-
         // Hauptklasse (Main) wird instanziiert.
         $main = new Main(__FILE__);
         $main->onLoaded();
-
-
-        // insertWebteam();
-        // renameField();
-        // setAllow_UTMtoFalse();
-        // setLinksIndefinite();
-        // deleteOldCron();
-        // cleanupIdM();
     }
-
-    add_action('init', __NAMESPACE__ . '\rrze_shorturl_init');
-
 }

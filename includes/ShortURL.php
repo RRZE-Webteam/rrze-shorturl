@@ -13,19 +13,17 @@ class ShortURL
         "ShortURLModChars" => "abcdefghijklmnopqrstuvwxyz0123456789-"
     ];
 
-    public function __construct()
+    public function __construct($rights)
     {
-        $rightsObj = new Rights();
-        self::$rights = $rightsObj->getRights();
-
+        self::$rights = $rights;
         $options = json_decode(get_option('rrze-shorturl'), true);
 
         self::$CONFIG['ShortURLBase'] = (!empty($options['ShortURLBase']) ? $options['ShortURLBase'] : 'https://go.fau.de');
         self::$CONFIG['maxShortening'] = (!empty($options['maxShortening']) ? $options['maxShortening'] : 60);
-
         self::$CONFIG['AllowedDomains'] = self::getAllowedDomains();
         self::$CONFIG['Services'] = self::getServices();
     }
+
 
     public static function isValidUrl(string $url): bool
     {
@@ -80,53 +78,84 @@ class ShortURL
         }
     }
 
-
     public static function getLinkfromDB($domain_id, $long_url, $idm_id, $uri)
     {
         try {
-            global $wpdb;
-            $table_name = $wpdb->prefix . 'shorturl_links';
+            // Build arguments for the query
+            $args = [
+                'post_type' => 'shorturl_link',  // The Custom Post Type for links
+                'meta_query' => [
+                    [
+                        'key' => 'long_url',
+                        'value' => $long_url,
+                        'compare' => '='
+                    ],
+                    [
+                        'key' => 'domain_id',
+                        'value' => $domain_id,
+                        'compare' => '='
+                    ],
+                ],
+                'posts_per_page' => 1, // Return only one result
+            ];
 
-            if (empty($uri)) {
-                $result = $wpdb->get_results($wpdb->prepare("SELECT id, short_url, valid_until FROM $table_name WHERE long_url = %s LIMIT 1", $long_url), ARRAY_A);
-            } else {
-                $result = $wpdb->get_results(
-                    $wpdb->prepare(
-                        "SELECT id, short_url, valid_until 
-                         FROM $table_name 
-                         WHERE long_url = %s AND uri = %s AND idm_id = %s 
-                         LIMIT 1",
-                        $long_url,
-                        $uri,
-                        $idm_id
-                    ),
-                    ARRAY_A
-                );
+            // If URI is provided, include it in the meta query
+            if (!empty($uri)) {
+                $args['meta_query'][] = [
+                    'key' => 'uri',
+                    'value' => $uri,
+                    'compare' => '='
+                ];
+                $args['meta_query'][] = [
+                    'key' => 'idm_id',
+                    'value' => $idm_id,
+                    'compare' => '='
+                ];
             }
 
-            if (empty($result)) {
-                $long_url = self::$rights['allow_get'] ? self::add_url_components($long_url, array('scheme', 'host', 'path', 'query', 'fragment')) : self::add_url_components($long_url, array('scheme', 'host', 'path', 'fragment'));
+            // Use WP_Query to search for the custom post type
+            $query = new \WP_Query($args);
 
-                // Insert into the links table
-                $wpdb->insert(
-                    $table_name,
-                    array(
-                        'idm_id' => $idm_id,
-                        'domain_id' => (int) $domain_id,
-                        'long_url' => $long_url
-                    )
-                );
-                $link_id = $wpdb->insert_id;
+            if (!$query->have_posts()) {
+                // If no link is found, create a new link
+                $long_url = self::$rights['allow_get']
+                    ? self::add_url_components($long_url, array('scheme', 'host', 'path', 'query', 'fragment'))
+                    : self::add_url_components($long_url, array('scheme', 'host', 'path', 'fragment'));
 
-                return array('id' => $link_id, 'short_url' => '');
+                // Create a new post
+                $post_data = [
+                    'post_title' => $long_url, // You can modify this to use a different title
+                    'post_type' => 'shorturl_link',
+                    'post_status' => 'publish'
+                ];
+
+                // Insert the post into the database
+                $link_id = wp_insert_post($post_data);
+
+                // Add meta data
+                update_post_meta($link_id, 'idm_id', $idm_id);
+                update_post_meta($link_id, 'domain_id', $domain_id);
+                update_post_meta($link_id, 'long_url', $long_url);
+
+                return ['id' => $link_id, 'short_url' => ''];
             } else {
-                return array('id' => $result[0]['id'], 'short_url' => $result[0]['short_url'], 'valid_until' => $result[0]['valid_until']);
+                // If the link is found, retrieve the meta data
+                $post_id = $query->posts[0]->ID;
+                $short_url = get_post_meta($post_id, 'short_url', true);
+                $valid_until = get_post_meta($post_id, 'valid_until', true);
+
+                return [
+                    'id' => $post_id,
+                    'short_url' => $short_url,
+                    'valid_until' => $valid_until
+                ];
             }
         } catch (CustomException $e) {
             error_log("Error in getLinkfromDB: " . $e->getMessage());
             return null;
         }
     }
+
 
     public static function updateLink(
         $idm_id,
@@ -137,51 +166,39 @@ class ShortURL
         $valid_until,
         $categories
     ) {
-        global $wpdb;
-        $table_name = $wpdb->prefix . 'shorturl_links';
-        $link_categories_table = $wpdb->prefix . 'shorturl_links_categories';
-        // $link_tags_table = $wpdb->prefix . 'shorturl_links_tags';
-
         try {
-            $valid_until = ($valid_until ? $valid_until : NULL);
+            // Update the link post (Custom Post Type)
+            $post_data = [
+                'ID' => $link_id, // ID of the post to update
+                'post_title' => $shortURL, // Use short URL as the title (or another appropriate field)
+                'post_content' => $uri,      // Use URI as content or another field
+            ];
 
-            // Store in the database    
-            $update_result = $wpdb->update(
-                $table_name,
-                [
-                    'idm_id' => $idm_id,
-                    'domain_id' => $domain_id,
-                    'short_url' => $shortURL,
-                    'uri' => $uri,
-                    'valid_until' => $valid_until
-                ],
-                ['id' => $link_id]
-            );
+            // Update the post
+            $update_result = wp_update_post($post_data);
 
-            if ($update_result !== false) {
-                // Delete existing categories and tags for the link
-                $wpdb->delete($link_categories_table, ['link_id' => $link_id]);
-                // $wpdb->delete($link_tags_table, ['link_id' => $link_id]);
+            if ($update_result !== 0) {
+                // Update custom fields (meta data) for the link post
+                update_post_meta($link_id, 'idm_id', $idm_id);
+                update_post_meta($link_id, 'domain_id', $domain_id);
+                update_post_meta($link_id, 'short_url', $shortURL);
+                update_post_meta($link_id, 'uri', $uri);
+                update_post_meta($link_id, 'valid_until', $valid_until);
 
-                // Insert new categories
+                // Update categories (using custom fields)
                 if (!empty($categories)) {
-                    foreach ($categories as $category_id) {
-                        $wpdb->insert(
-                            $link_categories_table,
-                            ['link_id' => $link_id, 'category_id' => $category_id]
-                        );
-                    }
-                }
+                    // Store the category IDs in post meta
+                    $current_categories = get_post_meta($link_id, 'category_id', false);
 
-                // Insert new tags
-                // if (!empty ($tags)) {
-                //     foreach ($tags as $tag_id) {
-                //         $wpdb->insert(
-                //             $link_tags_table,
-                //             ['link_id' => $link_id, 'tag_id' => $tag_id]
-                //         );
-                //     }
-                // }
+                    foreach ($categories as $category_id) {
+                        if (!in_array($category_id, $current_categories)) {
+                            add_post_meta($link_id, 'category_id', $category_id, false);
+                        }
+                    }
+                } else {
+                    // Clear categories if none are passed
+                    delete_post_meta($link_id, 'category_id');
+                }
             }
 
             return $update_result;
@@ -191,51 +208,95 @@ class ShortURL
         }
     }
 
-
     public static function getServices()
     {
-        global $wpdb;
+        // Set up arguments for get_posts to fetch all service posts
+        $args = [
+            'post_type' => 'shorturl_service',  // The Custom Post Type for services
+            'numberposts' => -1,                // Retrieve all service posts
+            'post_status' => 'publish'          // Only fetch published services
+        ];
 
-        try {
-            $table_name = $wpdb->prefix . 'shorturl_services';
-            $query = "SELECT * FROM $table_name";
+        // Fetch the posts
+        $posts = get_posts($args);
 
-            $results = $wpdb->get_results($query, ARRAY_A);
+        // Initialize an empty array to store service data
+        $aServices = [];
 
-            $aDomains = [];
-            foreach ($results as $result) {
-                $aDomains[] = $result;
-            }
-
-            return $aDomains;
-        } catch (CustomException $e) {
-            error_log("Error in getServices: " . $e->getMessage());
-            return null;
+        // Loop through the results and store the relevant data
+        foreach ($posts as $post) {
+            // Collect post meta data (like hostname, prefix, and regex)
+            $aServices[] = [
+                'id' => $post->ID,
+                'hostname' => $post->post_title, // Use the post title as hostname
+                'prefix' => get_post_meta($post->ID, 'prefix', true),
+                'regex' => get_post_meta($post->ID, 'regex', true),
+                'active' => get_post_meta($post->ID, 'active', true),
+                'notice' => get_post_meta($post->ID, 'notice', true)
+            ];
         }
+
+        return $aServices;
     }
 
-    // Function to retrieve our domains from the database
+
     public static function getAllowedDomains()
     {
-        global $wpdb;
-
         try {
-            $table_name = $wpdb->prefix . 'shorturl_domains';
-            $query = "SELECT * FROM $table_name ORDER BY hostname";
+            // Set up arguments for WP_Query to fetch all domain posts
+            $args = [
+                'post_type' => 'shorturl_domain',
+                'posts_per_page' => -1, // Fetch all domains
+                'meta_query' => [
+                    [
+                        'key' => 'prefix',
+                        'value' => '1',
+                        'compare' => '='
+                    ]
+                ],
+                'orderby' => 'title', // Sort by the hostname (post_title)
+                'order' => 'ASC'
+            ];
 
-            $results = $wpdb->get_results($query, ARRAY_A);
 
+            // Execute the query
+            $query = new \WP_Query($args);
+
+            // Initialize an empty array to store domain data
             $aDomains = [];
-            foreach ($results as $result) {
-                $aDomains[] = $result;
+
+            // Loop through the results and store the relevant data
+            if ($query->have_posts()) {
+                while ($query->have_posts()) {
+                    $query->the_post();
+
+                    // Collect post meta data (like hostname, prefix, and other relevant fields)
+                    $aDomains[] = [
+                        'id' => get_the_ID(),
+                        'hostname' => esc_html(get_the_title()),
+                        'prefix' => get_post_meta(get_the_ID(), 'prefix', true),
+                        'external' => get_post_meta(get_the_ID(), 'external', true),
+                        'active' => get_post_meta(get_the_ID(), 'active', true),
+                        'notice' => get_post_meta(get_the_ID(), 'notice', true),
+                        'webmaster_name' => get_post_meta(get_the_ID(), 'webmaster_name', true),
+                        'webmaster_email' => get_post_meta(get_the_ID(), 'webmaster_email', true)
+                    ];
+                }
             }
+
+            // Restore original Post Data
+            wp_reset_postdata();
 
             return $aDomains;
         } catch (CustomException $e) {
+            // Log error if a CustomException is caught
             error_log("Error in getAllowedDomains: " . $e->getMessage());
             return null;
         }
     }
+
+
+
 
     public static function checkDomain($long_url)
     {
@@ -249,6 +310,12 @@ class ShortURL
                 'notice' => __('Domain is not allowed to use our shortening service.', 'rrze-shorturl') . ' ' . '<a href="../domain-liste">' . __('List of allowed domains', 'rrze-shorturl') . '</a>',
                 'message_type' => 'error'
             ];
+
+            $parsed_url = wp_parse_url($long_url);
+
+            if (!isset($parsed_url['scheme'])) {
+                $long_url = 'https://' . $long_url;
+            }
 
             $domain = wp_parse_url($long_url, PHP_URL_HOST);
 
@@ -285,8 +352,6 @@ class ShortURL
 
             // Check if the extracted domain belongs to one of our allowed domains
             foreach (self::$CONFIG['AllowedDomains'] as $aEntry) {
-
-
                 if ($domain === $aEntry['hostname']) {
                     $notice = $aEntry['notice'];
 
@@ -315,31 +380,50 @@ class ShortURL
         }
     }
 
+
     public static function isUniqueURI($uri)
     {
+        // If the URI is empty, consider it unique
         if (empty($uri)) {
             return true;
         }
 
-        global $wpdb;
+        // Check if the slug (URI) is used by any post (including pages, posts, or any other post type)
+        $existing_post = get_page_by_path($uri, OBJECT, ['post', 'page', 'link', 'idm', 'domain', 'service']);
 
-        // Check if the slug is used by posts or pages 
-        $query = $wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}posts WHERE post_name = %s", $uri);
-
-        if ($wpdb->get_var($query) != 0) {
-            return false;
+        if ($existing_post) {
+            return false;  // If a post or page exists with this URI, it's not unique
         }
 
-        // Check if the slug exists in shorturl_links
-        $query = $wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}shorturl_links WHERE active = 1 AND uri = %s", $uri);
+        // Check if the URI exists in the 'link' Custom Post Type with 'active' set to true
+        $args = [
+            'post_type' => 'shorturl_link',  // The Custom Post Type for links
+            'meta_query' => [
+                [
+                    'key' => 'uri',
+                    'value' => $uri,
+                    'compare' => '='
+                ],
+                [
+                    'key' => 'active',
+                    'value' => '1',
+                    'compare' => '='
+                ]
+            ],
+            'posts_per_page' => 1 // We only need to check if at least one match exists
+        ];
 
-        if ($wpdb->get_var($query) != 0) {
-            return false;
+        $query = new \WP_Query($args);
+
+        if ($query->have_posts()) {
+            return false; // If a link with the URI exists and is active, it's not unique
         }
 
-        // $uri is not used anywhere, it is unique
+        // URI is not used anywhere, it is unique
         return true;
     }
+
+
 
     public static function isValidURI(string $uri = ''): bool
     {
@@ -375,22 +459,6 @@ class ShortURL
             return ['error' => true, 'txt' => __('Validity date cannot be in the past.', 'rrze-shorturl')];
         }
 
-        // Calculate maxDate (default => 1 year from now; long_life_links_allowed => 5 years from now)
-        // $maxDate = clone $current_date;
-
-        // if (self::$rights['allow_longlifelinks']) {
-        //     $maxDate->add(new \DateInterval('P5Y'));
-        //     $msg = __('five years', 'rrze-shorturl');
-        // } else {
-        //     $maxDate->add(new \DateInterval('P1Y'));
-        //     $msg = __('one year', 'rrze-shorturl');
-        // }
-
-        // // Check if $valid_until is more than $maxDate
-        // if ($valid_until_date > $maxDate) {
-        //     return ['error' => true, 'txt' => sprintf(__('Validity cannot be more than %s in the future.', 'rrze-shorturl'), $msg)];
-        // }
-
         // If the date is valid and within the allowed range
         return ['error' => false, 'txt' => __('Date is valid.', 'rrze-shorturl')];
     }
@@ -398,7 +466,7 @@ class ShortURL
     private static function add_or_replace_utm_parameters($url, $utm_parameters)
     {
 
-        $url_components = parse_url($url);
+        $url_components = wp_parse_url($url);
 
         $query_parameters = [];
         if (isset($url_components['query'])) {
@@ -420,7 +488,7 @@ class ShortURL
 
     private static function add_url_components($url, $components, $query = '')
     {
-        $parsed_url = parse_url($url);
+        $parsed_url = wp_parse_url($url);
         $new_url = '';
 
         if (!isset($parsed_url['scheme'])) {
@@ -447,28 +515,43 @@ class ShortURL
 
     private static function countShortenings()
     {
-        global $wpdb;
-
         try {
-            $query = $wpdb->prepare("
-                SELECT COUNT(*) AS count_shortenings
-                FROM {$wpdb->prefix}shorturl_links
-                WHERE idm_id = %d
-                AND created_at >= %s
-            ", self::$rights['id'], date('Y-m-d H:i:s', strtotime('-60 minutes')));
-            $result = $wpdb->get_row($query);
+            // Define the time range for the query (last 60 minutes)
+            $time_limit = date('Y-m-d H:i:s', strtotime('-60 minutes'));
 
-            if ($result === null) {
-                throw new Exception('Database query returned null.');
-            }
+            // Set up arguments for WP_Query to count posts in 'link' Custom Post Type
+            $args = [
+                'post_type' => 'shorturl_link',  // The Custom Post Type for shortened links
+                'posts_per_page' => -1,      // No limit on posts returned
+                'meta_query' => [
+                    [
+                        'key' => 'idm_id',
+                        'value' => self::$rights['id'],
+                        'compare' => '='
+                    ],
+                    [
+                        'key' => 'created_at',
+                        'value' => $time_limit,
+                        'compare' => '>='
+                    ]
+                ]
+            ];
 
-            $count = isset($result->count_shortenings) ? $result->count_shortenings : 0;
+            // Execute the query
+            $query = new \WP_Query($args);
+
+            // Return the total number of posts found
+            $count = $query->found_posts;
+
             return $count;
         } catch (Exception $e) {
+            // Log error if an exception is thrown
             error_log('Error in countShortenings(): ' . $e->getMessage());
             return 0;
         }
     }
+
+
 
     private static function maxShorteningReached()
     {
@@ -566,7 +649,7 @@ class ShortURL
             }
 
             // if external domain we must allow GET
-            if ($aDomain['external']){
+            if ($aDomain['external']) {
                 self::$rights['allow_get'] = true;
             }
 
@@ -576,7 +659,7 @@ class ShortURL
             } else {
                 $aComponents = ['scheme', 'host', 'path', 'fragment'];
             }
-            
+
             $long_url = self::add_url_components($long_url, $aComponents);
 
             // add / exchange utm_parameters
@@ -699,35 +782,101 @@ class ShortURL
 
     public static function getActiveShortURLs()
     {
-        global $wpdb;
-
         try {
-            // Perform the database query to fetch active short URLs
-            $query = "SELECT long_url, short_url, valid_until FROM {$wpdb->prefix}shorturl_links WHERE active = 1 ORDER BY created_at DESC";
-            $results = $wpdb->get_results($query, ARRAY_A);
+            // Set up arguments for WP_Query to fetch active short URLs
+            $args = [
+                'post_type' => 'shorturl_link',  // The Custom Post Type for links
+                'posts_per_page' => -1,      // Retrieve all matching posts
+                'post_status' => 'publish', // Only fetch published links
+                'meta_query' => [
+                    [
+                        'key' => 'active',
+                        'value' => '1',
+                        'compare' => '='
+                    ]
+                ],
+                'orderby' => 'created_at', // Order by the created_at meta field
+                'order' => 'DESC'        // Order by most recent first
+            ];
 
-            return $results;
+            // Execute the query
+            $query = new \WP_Query($args);
+
+            // Initialize an empty array to store results
+            $active_short_urls = [];
+
+            // Loop through the results and collect data
+            if ($query->have_posts()) {
+                while ($query->have_posts()) {
+                    $query->the_post();
+
+                    // Fetch the relevant post meta data
+                    $active_short_urls[] = [
+                        'long_url' => get_post_meta(get_the_ID(), 'long_url', true),
+                        'short_url' => get_post_meta(get_the_ID(), 'short_url', true),
+                        'valid_until' => get_post_meta(get_the_ID(), 'valid_until', true)
+                    ];
+                }
+            }
+
+            // Restore original Post Data
+            wp_reset_postdata();
+
+            return $active_short_urls;
         } catch (Exception $e) {
+            // Log the error and return a JSON-encoded error message
             error_log("Error fetching active short URLs: " . $e->getMessage());
-            return json_encode(array('error' => 'An error occurred while fetching short URLs.'));
+            return json_encode(['error' => 'An error occurred while fetching short URLs.']);
         }
     }
+
+
 
     public static function getLongURL($short_url)
     {
-        global $wpdb;
-
+        // Construct the full short URL using the base URL from the configuration
         $short_url = self::$CONFIG['ShortURLBase'] . '/' . $short_url;
 
         try {
-            $result = $wpdb->get_var($wpdb->prepare("SELECT long_url FROM {$wpdb->prefix}shorturl_links WHERE short_url = %s LIMIT 1", $short_url));
+            // Set up arguments for WP_Query to fetch the post with the matching short URL
+            $args = [
+                'post_type' => 'shorturl_link',  // The Custom Post Type for links
+                'posts_per_page' => 1,       // We only need one result
+                'post_status' => 'publish', // Only fetch published links
+                'meta_query' => [
+                    [
+                        'key' => 'short_url',
+                        'value' => $short_url,
+                        'compare' => '='
+                    ]
+                ]
+            ];
 
-            return $result;
+            // Execute the query
+            $query = new \WP_Query($args);
+
+            // Check if a matching post was found
+            if ($query->have_posts()) {
+                $query->the_post();
+
+                // Get the long_url meta data from the post
+                $long_url = get_post_meta(get_the_ID(), 'long_url', true);
+
+                // Restore original Post Data
+                wp_reset_postdata();
+
+                return $long_url;
+            } else {
+                // Return null if no matching short URL is found
+                return null;
+            }
         } catch (Exception $e) {
+            // Log the error and return a JSON-encoded error message
             error_log("Error fetching long_url by short_url: " . $e->getMessage());
-            return json_encode(array('error' => 'An error occurred while fetching short URLs.'));
+            return json_encode(['error' => 'An error occurred while fetching the long URL.']);
         }
     }
+
 
 }
 
