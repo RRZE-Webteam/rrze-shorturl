@@ -2,7 +2,7 @@
 
 namespace RRZE\ShortURL;
 
-// use \RRZE\AccessControl\Permissions;
+use \RRZE\AccessControl\Permissions;
 use RRZE\ShortURL\CustomException;
 
 class Rights
