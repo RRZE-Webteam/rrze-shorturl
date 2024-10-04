@@ -732,8 +732,8 @@ class Shortcode
                         <h2>
                             <?php echo __('Edit Link', 'rrze-shorturl'); ?>
                         </h2>
-                        <span><?php echo $link_data['short_url']; ?></span>
                         <form id="edit-link-form" method="post" action="">
+                            <span><?php echo $link_data['short_url']; ?></span><br><br>
                             <input type="hidden" name="action" value="update_link">
                             <input type="hidden" name="link_id" value="<?php echo esc_attr($link_id); ?>">
                             <input type="hidden" name="domain_id" value="<?php echo esc_attr($link_data['domain_id']); ?>">
