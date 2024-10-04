@@ -195,7 +195,6 @@ class Shortcode
 
     private static function get_categories_hierarchically()
     {
-
         $ret = [];
 
         // Fetch all categories for the current IdM using get_posts
@@ -215,7 +214,6 @@ class Shortcode
 
         // WP_Query statt get_posts verwenden, um die Hierarchie besser zu verarbeiten
         $query = new \WP_Query($args);
-        $categories = $query->posts;
 
         $ret = self::build_category_hierarchy($query->posts);
 
@@ -553,10 +551,12 @@ class Shortcode
             $isChecked = in_array($category->ID, $aVal) ? 'checked' : '';
             $ret .= '<label>' . $category->hierarchy_nbsp . '<input type="checkbox" name="categories[]" value="' . esc_attr($category->ID) . '" ' . $isChecked . ' />' . esc_html($category->post_title) . '</label>';
         }
-        if ($ret){$ret .= '<br>';}
+        if ($ret) {
+            $ret .= '<br>';
+        }
         echo $ret;
     }
-    
+
     public function shortcode_list_handler(): string
     {
         $bUpdated = false;
@@ -688,7 +688,7 @@ class Shortcode
 
                 // Output table row
                 $table .= '<tr>';
-                $table .= '<td><a href="' . esc_url($long_url) . '">' . esc_html($long_url) . '</a></td>';
+                $table .= '<td class="column-long-url"><a href="' . esc_url($long_url) . '">' . esc_html($long_url) . '</a></td>';
                 $table .= '<td><a href="' . esc_url($short_url) . '+">' . esc_html($short_url) . '</a></td>';
                 $table .= '<td>' . esc_html($uri) . '</td>';
                 $table .= '<td>' . (!empty($valid_until) ? esc_html($valid_until) : __('indefinite', 'rrze-shorturl')) . '</td>';

@@ -127,6 +127,8 @@ function deactivation()
     // delete our options
     delete_option('rrze_shorturl_option');
     delete_option('rrze_shorturl_services_initialized');
+    delete_option('rrze_shorturl_migration_completed');
+    delete_option('rrze_shorturl_custom_tables_dropped');
 }
 
 /**

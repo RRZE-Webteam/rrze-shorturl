@@ -24,8 +24,12 @@ class CPT
                     'name' => __('IDMs'),
                     'singular_name' => __('IDM'),
                 ),
-                'public' => true,
+                'public' => false,
                 'has_archive' => false,
+                'exclude_from_search' => true,
+                'publicly_queryable' => false,
+                'show_in_rest' => false,
+                'rewrite' => false,
                 'supports' => array('title', 'editor', 'custom-fields'),
             ));
         } catch (CustomException $e) {
@@ -42,8 +46,12 @@ class CPT
                     'name' => __('Domains'),
                     'singular_name' => __('Domain'),
                 ),
-                'public' => true,
+                'public' => false,
                 'has_archive' => false,
+                'exclude_from_search' => true,
+                'publicly_queryable' => false,
+                'show_in_rest' => false,
+                'rewrite' => false,
                 'supports' => array('title', 'custom-fields'),
             ));
         } catch (CustomException $e) {
@@ -60,8 +68,12 @@ class CPT
                     'name' => __('Services'),
                     'singular_name' => __('Service'),
                 ),
-                'public' => true,
+                'public' => false,
                 'has_archive' => false,
+                'exclude_from_search' => true,
+                'publicly_queryable' => false,
+                'show_in_rest' => false,
+                'rewrite' => false,
                 'supports' => array('title', 'custom-fields'),
             ));
         } catch (CustomException $e) {
@@ -78,8 +90,12 @@ class CPT
                     'name' => __('Links'),
                     'singular_name' => __('Link'),
                 ),
-                'public' => true,
+                'public' => false,
                 'has_archive' => false,
+                'exclude_from_search' => true,
+                'publicly_queryable' => false,
+                'show_in_rest' => false,
+                'rewrite' => false,
                 'supports' => array('title', 'editor', 'custom-fields'),
             ));
         } catch (CustomException $e) {
@@ -96,8 +112,12 @@ class CPT
                     'name' => __('Short URL Categories'),
                     'singular_name' => __('Short URL Categories'),
                 ),
-                'public' => true,
+                'public' => false,
                 'has_archive' => false,
+                'exclude_from_search' => true,
+                'publicly_queryable' => false,
+                'show_in_rest' => false,
+                'rewrite' => false,
                 'hierarchical' => true, // Makes this CPT hierarchical
                 'supports' => array('title', 'editor', 'custom-fields', 'page-attributes'),
             ));

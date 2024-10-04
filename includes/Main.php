@@ -44,6 +44,7 @@ class Main
         add_action('wp_enqueue_scripts', [$this, 'enqueueScripts']);
         add_action('admin_enqueue_scripts', [$this, 'enqueueScripts']);
         add_action('init', [$this, 'migrate_db_to_cpt']);
+        // add_action('init', [$this, 'drop_shorturl_tables']);
         add_action('init', [$this, 'initialize_services']);
         add_action('init', [$this, 'init_query_dependend_classes']);
 
@@ -134,12 +135,12 @@ class Main
         global $wpdb;
 
         // Migrate shorturl_idms to CPT 'idm'
-        $idm_ids = ['post_id' => 0];
+        $idm_ids = [];
         $idms = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_idms", ARRAY_A);
 
-        foreach ($idms as $nr => $idm) {
+        foreach ($idms as $idm) {
             // Check if the IDM already exists as a post
-            $existing_idm_id = get_posts(
+            $post_id = get_posts(
                 array(
                     'post_type' => 'shorturl_idm',
                     'title' => $idm['idm'],
@@ -149,7 +150,7 @@ class Main
                 )
             );
 
-            if (empty($existing_idm_id)) {
+            if (empty($post_id)) {
                 // Insert IdM as a CPT post
                 $post_data = [
                     'post_title' => sanitize_text_field($idm['idm']),
@@ -165,18 +166,18 @@ class Main
                     update_post_meta($post_id, 'allow_get', intval($idm['allow_get']));
                     update_post_meta($post_id, 'allow_utm', intval($idm['allow_utm']));
                     update_post_meta($post_id, 'created_by', sanitize_text_field($idm['created_by']));
-                    $idm_ids[$nr]['post_id'] = $post_id;
                 }
             }
+            $idm_ids[$idm['id']] = $post_id;
         }
 
         // Migrate shorturl_domains to CPT 'domain'
-        $domain_ids = ['post_id' => 0];
+        $domain_ids = [];
         $domains = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_domains", ARRAY_A);
 
-        foreach ($domains as $nr => $domain) {
+        foreach ($domains as $domain) {
             // Check if the domain already exists as a post
-            $existing_domain_id = get_posts(
+            $post_id = get_posts(
                 array(
                     'post_type' => 'shorturl_domain',
                     'title' => $domain['hostname'],
@@ -186,7 +187,7 @@ class Main
                 )
             );
 
-            if (empty($existing_domain_id)) {
+            if (empty($post_id)) {
                 // Insert domain as a CPT post
                 $post_data = [
                     'post_title' => sanitize_text_field($domain['hostname']),
@@ -204,19 +205,19 @@ class Main
                     update_post_meta($post_id, 'notice', sanitize_text_field($domain['notice']));
                     update_post_meta($post_id, 'webmaster_name', sanitize_text_field($domain['webmaster_name']));
                     update_post_meta($post_id, 'webmaster_email', sanitize_email($domain['webmaster_email']));
-                    $domain_ids[$nr]['post_id'] = $post_id;
                 }
             }
+            $domain_ids[$domain['id']] = $post_id;
         }
 
 
         // Migrate shorturl_categories to CPT 'shorturl_category'
         $category_ids = [];
-        $categories = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_categories", ARRAY_A);
+        $categories = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_categories ORDER BY id", ARRAY_A);
 
-        foreach ($categories as $nr => $category) {
+        foreach ($categories as $category) {
             // Check if the category already exists as a post
-            $existing_category_id = get_posts(
+            $post_id = get_posts(
                 array(
                     'post_type' => 'shorturl_category',
                     'title' => $category['label'],
@@ -226,28 +227,23 @@ class Main
                 )
             );
 
-            if (empty($existing_category_id)) {
+            if (empty($post_id)) {
                 // Insert category as a CPT post
                 $post_data = [
                     'post_title' => sanitize_text_field($category['label']),
                     'post_type' => 'shorturl_category',
                     'post_status' => 'publish',
-                    'post_parent' => !empty($category['parent_id']) ? intval($category_ids[$category['parent_id']]['post_id']) : 0 // Set parent category if applicable
+                    'post_parent' => !empty($category['parent_id']) ? intval($category_ids[$category['parent_id']]) : 0 // Set parent category if applicable
                 ];
 
                 $post_id = wp_insert_post($post_data);
 
                 if (!is_wp_error($post_id)) {
                     // Add meta fields
-                    update_post_meta($post_id, 'idm_id', intval($category['idm_id']));
-
-                    // Track the new post ID for reference (especially for parent-child relationships)
-                    $category_ids[$category['id']]['post_id'] = $post_id;
+                    update_post_meta($post_id, 'idm_id', intval($idm_ids[$category['idm_id']]));
                 }
-            } else {
-                // If category already exists, store its ID for future reference
-                $category_ids[$category['id']]['post_id'] = $existing_category_id[0];
             }
+            $category_ids[$category['id']] = $post_id;
         }
 
 
@@ -266,11 +262,11 @@ class Main
 
             if (!is_wp_error($post_id)) {
                 // Add meta fields
-                update_post_meta($post_id, 'domain_id', $domain_ids[$link['domain_id']]['post_id']);
+                update_post_meta($post_id, 'domain_id', $domain_ids[$link['domain_id']]);
+                update_post_meta($post_id, 'idm_id', $idm_ids[$link['idm_id']]);
                 update_post_meta($post_id, 'long_url', esc_url($link['long_url']));
                 update_post_meta($post_id, 'short_url', esc_url($link['short_url']));
                 update_post_meta($post_id, 'uri', sanitize_text_field($link['uri']));
-                update_post_meta($post_id, 'idm_id', $idm_ids[$link['idm_id']]['post_id']);
                 update_post_meta($post_id, 'created_at', sanitize_text_field($link['created_at']));
                 update_post_meta($post_id, 'updated_at', sanitize_text_field($link['updated_at']));
                 update_post_meta($post_id, 'deleted_at', sanitize_text_field($link['deleted_at']));
@@ -283,26 +279,23 @@ class Main
                     $link['id']
                 ), ARRAY_A);
 
-                // Collect all category post IDs
-                $category_post_ids = [];
-                foreach ($link_categories as $link_category) {
-                    if (isset($category_ids[$link_category['category_id']])) {
-                        $category_post_ids[] = $category_ids[$link_category['category_id']]['post_id'];
-                    }
-                }
-
-                // Save all category post IDs as an array in the post meta
-                if (!empty($category_post_ids)) {
-                    update_post_meta($post_id, 'category_id', $category_post_ids);
+                // add all categories to link
+                foreach ($link_categories as $category) {
+                    add_post_meta($post_id, 'category_id', $category_ids[$category['category_id']], false);
                 }
             }
         }
 
-        // $this->drop_custom_tables();
-
         update_option('rrze_shorturl_migration_completed', true);
     }
 
+    public function drop_shorturl_tables(){
+        if (get_option('rrze_shorturl_custom_tables_dropped')) {
+            return;
+        }
+        $this->drop_custom_tables();
+        update_option('rrze_shorturl_custom_tables_dropped', true);
+    }
 
     public function initialize_services()
     {

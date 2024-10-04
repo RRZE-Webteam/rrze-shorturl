@@ -41,27 +41,22 @@ class Rights
             $args = [
                 'post_type' => 'shorturl_idm',  // The Custom Post Type for IDMs
                 'posts_per_page' => 1,      // We only need one result
-                'meta_query' => [
-                    [
-                        'key' => 'idm',
-                        'value' => $this->idm,
-                        'compare' => '='
-                    ]
-                ]
+                'fields' => 'ids',
+                'name' => sanitize_title($this->idm)
             ];
 
             // Execute the query
             $query = new \WP_Query($args);
 
             // Check if a matching IDM post was found
-            if ($query->have_posts()) {
-                $query->the_post();
+            if (!empty($query->posts)) {
+                $post_id = $query->posts[0];
 
                 // Fetch the rights from the post meta
-                $aRet['id'] = get_the_ID();
-                $aRet['allow_uri'] = (bool) get_post_meta(get_the_ID(), 'allow_uri', true);
-                $aRet['allow_get'] = (bool) get_post_meta(get_the_ID(), 'allow_get', true);
-                $aRet['allow_utm'] = (bool) get_post_meta(get_the_ID(), 'allow_utm', true);
+                $aRet['id'] = $post_id;
+                $aRet['allow_uri'] = (bool) get_post_meta($post_id, 'allow_uri', true);
+                $aRet['allow_get'] = (bool) get_post_meta($post_id, 'allow_get', true);
+                $aRet['allow_utm'] = (bool) get_post_meta($post_id, 'allow_utm', true);
 
                 // Restore original Post Data
                 wp_reset_postdata();

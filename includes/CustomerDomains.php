@@ -12,7 +12,7 @@ class CustomerDomains
                 add_action('rrze_shorturl_fetch_and_store_customerdomains', array($this, 'fetch_and_store_customerdomains'));
 
                 // job has never run: do it immediately (like on plugin activation)
-                $this->fetch_and_store_customerdomains();
+                // $this->fetch_and_store_customerdomains();
 
                 // let the job run daily as 4 a.m.
                 wp_schedule_event(strtotime('today 4:00'), 'daily', 'rrze_shorturl_fetch_and_store_customerdomains');
@@ -22,7 +22,7 @@ class CustomerDomains
 
     public function fetch_and_store_customerdomains()
     {
-        error_log('fetch_and_store_customerdomains() ran');
+        // error_log('fetch_and_store_customerdomains() ran');
 
         // List of API URLs to fetch data from
         $aAPI_url = [
