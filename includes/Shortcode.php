@@ -103,7 +103,7 @@ class Shortcode
             $category_label = sanitize_text_field(wp_unslash($_POST['category_label']));
             $parent_category = !empty($_POST['parent_category']) ? (int) sanitize_text_field(wp_unslash($_POST['parent_category'])) : 0;
             $idm_id = self::$rights['id'];
-    
+
             // Update the category using wp_update_post
             $args = [
                 'ID' => $category_id,
@@ -111,16 +111,16 @@ class Shortcode
                 'post_parent' => $parent_category,
             ];
             $result = wp_update_post($args);
-    
+
             if (is_wp_error($result)) {
                 return new WP_Error('update_failed', __('Failed to update the category.', 'rrze-shorturl'), array('status' => 500));
             }
-    
+
             // Update idm_id meta field
             if (!empty($idm_id)) {
                 update_post_meta($category_id, 'idm_id', $idm_id);
             }
-    
+
             // Return to the table after editing
             return $this->display_categories_table();
         } elseif (!empty($_POST['add_category'])) {
@@ -128,7 +128,7 @@ class Shortcode
             $category_label = sanitize_text_field(wp_unslash($_POST['category_label']));
             $parent_category = !empty($_POST['parent_category']) ? (int) sanitize_text_field(wp_unslash($_POST['parent_category'])) : 0;
             $idm_id = self::$rights['id'];
-    
+
             if (!empty($category_label)) {
                 // Insert Category as a new post in the 'shorturl_category' CPT
                 $args = [
@@ -139,55 +139,55 @@ class Shortcode
                     'post_parent' => $parent_category,
                 ];
                 $category_id = wp_insert_post($args);
-    
+
                 if (is_wp_error($category_id)) {
                     return new WP_Error('insert_failed', __('Failed to add category.', 'rrze-shorturl'), array('status' => 500));
                 }
-    
+
                 // Store idm_id as post meta
                 if (!empty($idm_id)) {
                     update_post_meta($category_id, 'idm_id', $idm_id);
                 }
             }
-    
+
             return $this->display_categories_table();
         }
-    
+
         // Check if an edit form should be displayed
         if (!empty($_GET['action']) && sanitize_text_field(wp_unslash($_GET['action'])) === 'edit_category' && !empty($_GET['category_id'])) {
             // Retrieve category details based on category ID using get_post
             $category_id = (int) sanitize_text_field(wp_unslash($_GET['category_id']));
             $category = get_post($category_id);
-    
+
             // If category is found, display edit form
             if ($category && $category->post_type === 'shorturl_category') {
                 $category_label = esc_attr($category->post_title);
                 $parent_id = $category->post_parent ?: 0;
-    
+
                 // Start building the form
                 $output = '<form method="post">';
                 $output .= '<label for="category_label">' . __('Category Label', 'rrze-shorturl') . ':</label><br>';
                 $output .= '<input type="text" id="category_label" name="category_label" value="' . esc_attr($category_label) . '"><br>';
-    
+
                 // Display parent category dropdown
                 $output .= self::makeCategoryDropdown($category_id, $parent_id);
                 $output .= '<input type="hidden" name="category_id" value="' . esc_attr($category_id) . '">';
                 $output .= '<br><input type="submit" name="edit_category" value="' . esc_attr__('Save Changes', 'rrze-shorturl') . '">';
                 $output .= '&nbsp;<a href="' . esc_url(remove_query_arg('action')) . '" class="button">' . esc_attr__('Cancel', 'rrze-shorturl') . '</a>';
-    
+
                 $output .= '</form>';
-    
+
                 return $output;
             }
         } elseif (isset($_GET['action']) && sanitize_text_field(wp_unslash($_GET['action'])) === 'add_new_category') {
             // Display add category form
             return $this->add_category_form();
         }
-    
+
         // If no editing is happening, display the categories table
         return $this->display_categories_table();
     }
-        private static function get_categories_hierarchically()
+    private static function get_categories_hierarchically()
     {
         $ret = [];
 
@@ -433,14 +433,14 @@ class Shortcode
             'utm_term' => (!empty($_POST['utm_term']) ? sanitize_text_field(wp_unslash($_POST['utm_term'])) : ''),
             'utm_content' => (!empty($_POST['utm_content']) ? sanitize_text_field(wp_unslash($_POST['utm_content'])) : ''),
         ];
-    
+
         $result_message = ''; // Initialize result message
         // Check if form is submitted
         if ((isset($_SERVER["REQUEST_METHOD"]) && $_SERVER["REQUEST_METHOD"] == "POST") || !empty($_GET['url'])) {
             // Check if URL is provided
             if (!empty($aParams['url'])) {
                 $result = ShortURL::shorten($aParams);
-    
+
                 if ($result['error']) {
                     $result_message = esc_html($result['txt']);
                 } else {
@@ -448,11 +448,11 @@ class Shortcode
                     $result_message .= '<button type="button" class="btn" id="copyButton" name="copyButton" data-shortened-url="' . esc_attr($result['txt']) . '"><img class="shorturl-copy-img" src="data:image/svg+xml,%3Csvg height=\'1024\' width=\'896\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M128 768h256v64H128v-64z m320-384H128v64h320v-64z m128 192V448L384 640l192 192V704h320V576H576z m-288-64H128v64h160v-64zM128 704h160v-64H128v64z m576 64h64v128c-1 18-7 33-19 45s-27 18-45 19H64c-35 0-64-29-64-64V192c0-35 29-64 64-64h192C256 57 313 0 384 0s128 57 128 128h192c35 0 64 29 64 64v320h-64V320H64v576h640V768zM128 256h512c0-35-29-64-64-64h-64c-35 0-64-29-64-64s-29-64-64-64-64 29-64 64-29 64-64 64h-64c-35 0-64 29-64 64z\' fill=\'%23000000\' /%3E%3C/svg%3E" alt="' . esc_attr__('Copy to clipboard', 'rrze-shorturl') . '"><span class="screen-reader-text">' . esc_html__('Copy to clipboard', 'rrze-shorturl') . '</span></button><span id="shorturl-tooltip" class="shorturl-tooltip">' . esc_html__('Copied to clipboard', 'rrze-shorturl') . '</span>';
                     $result_message .= '<br><span class="shorturl-validuntil"><span class="label">' . esc_html__('Valid until', 'rrze-shorturl') . ':</span> ' . esc_html($result['valid_until_formatted']) . '</span>';
                 }
-    
+
                 $aParams['url'] = $result['long_url']; // we might have added the scheme
             }
         }
-    
+
         // Generate form
         $form = '<div class="rrze-shorturl"><form id="shorturl-form" method="post">';
         $form .= '<div class="postbox">';
@@ -476,29 +476,29 @@ class Shortcode
         $form .= '<h6 class="handle">' . esc_html__('Categories', 'rrze-shorturl') . '</h6>';
         $form .= self::display_shorturl_category($aParams['categories']);
         $form .= '</div>';
-    
+
         // Display result message
         // notice or error msg
         $form .= '<div class="rrze-shorturl-result"><p' . (!empty($result['error']) ? ' id="shorturl-err" class="shorturl-msg-' . esc_attr($result['message_type']) . '"' : '') . '>' . esc_html($result_message) . '</p>';
-    
+
         if (!empty($result) && !$result['error']) {
             $form .= '<input id="shortened_url" name="shortened_url" type="hidden" value="' . esc_attr($result['txt']) . '">';
             $form .= '<div id="qr-container"><canvas id="qr"></canvas><button type="button" class="btn" id="downloadButton" name="downloadButton"><img class="shorturl-download-img" src="data:image/svg+xml,%3Csvg width=\'512\' height=\'512\' viewBox=\'0 0 512 512\' xmlns=\'http://www.w3.org/2000/svg\' fill=\'%23000000\'%3E%3Cpath d=\'M376.3 304.3l-71.4 71.4V48c0-8.8-7.2-16-16-16h-48c-8.8 0-16 7.2-16 16v327.6l-71.4-71.4c-6.2-6.2-16.4-6.2-22.6 0l-22.6 22.6c-6.2 6.2-6.2 16.4 0 22.6l128 128c6.2 6.2 16.4 6.2 22.6 0l128-128c6.2-6.2 6.2-16.4 0-22.6l-22.6-22.6c-6.2-6.2-16.4-6.2-22.6 0zM464 448H48c-8.8 0-16 7.2-16 16v32c0 8.8 7.2 16 16 16h416c8.8 0 16-7.2 16-16v-32c0-8.8-7.2-16-16-16z\'/%3E%3C/svg%3E" title="' . esc_attr__('Download QR', 'rrze-shorturl') . '"><span class="screen-reader-text">' . esc_html__('Download QR', 'rrze-shorturl') . '</span></button></div>';
         }
         $form .= '</form></div>';
-    
+
         return $form;
     }
-    
+
     public static function display_shorturl_validity($val)
     {
         ob_start();
 
         ?>
         <label for="valid_until">
-            <?php echo __('Valid until', 'rrze-shorturl'); ?>:
+            <?php echo esc_html__('Valid until', 'rrze-shorturl'); ?>:
         </label>
-        <input type="date" id="valid_until" name="valid_until" value="<?php echo $val; ?>">
+        <input type="date" id="valid_until" name="valid_until" value="<?php echo esc_html($val); ?>">
         <?php
         return ob_get_clean();
 
@@ -519,16 +519,16 @@ class Shortcode
         <div id="shorturl-category-metabox">
             <?php self::display_hierarchical_categories_checkbox($hierarchicalCategories, 0, $aVal); ?>
             <p><a href="#" id="add-new-shorturl-category">
-                    <?php echo __('Add New Category', 'rrze-shorturl'); ?>
+                    <?php echo esc_html__('Add New Category', 'rrze-shorturl'); ?>
                 </a></p>
             <div id="new-shorturl-category">
-                <label for="new_shorturl_category"><?php echo __('New Category Name', 'rrze-shorturl'); ?>:</label>
+                <label for="new_shorturl_category"><?php echo esc_html__('New Category Name', 'rrze-shorturl'); ?>:</label>
                 <input type="text" id="new_shorturl_category" name="new_shorturl_category"
-                    placeholder="<?php echo __('New Category Name', 'rrze-shorturl'); ?>">
-                <br><?php echo self::makeCategoryDropdown(); ?>
-                <input type="hidden" name="category_ids" value="<?php echo implode(',', $aVal); ?>">
+                    placeholder="<?php echo esc_html__('New Category Name', 'rrze-shorturl'); ?>">
+                <br><?php echo wp_kses_post(self::makeCategoryDropdown()); ?>
+                <input type="hidden" name="category_ids" value="<?php echo esc_attr(implode(',', $aVal)); ?>">
 
-                <br><input type="button" value="<?php echo __('Add new category', 'rrze-shorturl'); ?>"
+                <br><input type="button" value="<?php echo esc_html__('Add new category', 'rrze-shorturl'); ?>"
                     id="add-shorturl-category-btn">
             </div>
         </div>
@@ -543,19 +543,19 @@ class Shortcode
         $ret = '';
         foreach ($categories as $category) {
             $isChecked = in_array($category->ID, $aVal) ? 'checked' : '';
-            $ret .= '<label>' . $category->hierarchy_nbsp . '<input type="checkbox" name="categories[]" value="' . esc_attr($category->ID) . '" ' . $isChecked . ' />' . esc_html($category->post_title) . '</label>';
+            $ret .= '<label>' . $category->hierarchy_nbsp . '<input type="checkbox" name="categories[]" value="' . $category->ID . '" ' . $isChecked . ' />' . $category->post_title . '</label>';
         }
         if ($ret) {
             $ret .= '<br>';
         }
-        echo $ret;
+        echo esc_html($ret);
     }
-
+    
     public function shortcode_list_handler(): string
     {
         $bUpdated = false;
         $message = '';
-    
+
         // Handle link update
         if (!empty($_POST['action']) && $_POST['action'] === 'update_link' && !empty($_POST['link_id'])) {
             $aParams = [
@@ -567,23 +567,23 @@ class Shortcode
                 'valid_until' => sanitize_text_field(wp_unslash($_POST['valid_until'] ?? '')),
                 'categories' => !empty($_POST['categories']) ? array_map('sanitize_text_field', wp_unslash($_POST['categories'])) : []
             ];
-    
+
             // Call the function to update the link
             ShortURL::updateLink($aParams['idm_id'], $aParams['link_id'], $aParams['domain_id'], $aParams['shortURL'], $aParams['uri'], $aParams['valid_until'], $aParams['categories']);
-    
+
             $bUpdated = true;
             $message = __('Link updated', 'rrze-shorturl');
         }
-    
+
         $categories = self::get_categories_hierarchically();
-    
+
         // Sort links based on the GET parameters for sorting
         $orderby = !empty($_GET['orderby']) ? sanitize_text_field(wp_unslash($_GET['orderby'])) : 'ID';
         $order = !empty($_GET['order']) && in_array(wp_unslash($_GET['order']), ['ASC', 'DESC']) ? sanitize_text_field(wp_unslash($_GET['order'])) : 'ASC';
-    
+
         // Check if only own links should be displayed
         $own_links = empty($_GET) ? 1 : (int) !empty($_GET['own_links']);
-    
+
         // Prepare the arguments for WP_Query to fetch the links
         $args = [
             'post_type' => 'shorturl_link',
@@ -594,7 +594,7 @@ class Shortcode
                 'relation' => 'AND'
             ],
         ];
-    
+
         if ($own_links == 1) {
             $args['meta_query'][] = [
                 'key' => 'idm_id',
@@ -602,10 +602,10 @@ class Shortcode
                 'compare' => '='
             ];
         }
-    
+
         // Handle category filtering
         $filter_category = !empty($_GET['filter_category']) ? (int) sanitize_text_field(wp_unslash($_GET['filter_category'])) : 0;
-    
+
         if ($filter_category > 0) {
             $args['meta_query'][] = [
                 'key' => 'category_id',
@@ -614,14 +614,14 @@ class Shortcode
             ];
             $args['meta_key'] = ['category_id'];
         }
-    
+
         // Fetch the links with all necessary meta fields
         $links_query = new \WP_Query($args);
         $results = $links_query->posts;
-    
+
         // Generate update message
         $table = '<div class="updated"><p>' . esc_html($message) . '</p></div>';
-    
+
         // Generate category filter dropdown
         $category_filter_dropdown = '<select name="filter_category">';
         $category_filter_dropdown .= '<option value="0">' . esc_html__('All Categories', 'rrze-shorturl') . '</option>';
@@ -629,20 +629,20 @@ class Shortcode
             $category_filter_dropdown .= '<option value="' . esc_attr($category->ID) . '"' . ($filter_category == $category->ID ? ' selected' : '') . '>' . esc_html($category->hierarchy_nbsp . $category->post_title) . '</option>';
         }
         $category_filter_dropdown .= '</select>';
-    
+
         // Generate filter button
         $filter_button = '<button type="submit">' . esc_html__('Filter', 'rrze-shorturl') . '</button>';
-    
+
         // Generate checkbox for own links
         $checkbox = '<input type="checkbox" name="own_links" value="1" ' . checked(1, $own_links, false) . '>' . esc_html__('My links only', 'rrze-shorturl');
-    
+
         // Generate form for category filtering
         $category_filter_form = '<form method="get">';
         $category_filter_form .= $category_filter_dropdown;
         $category_filter_form .= '&nbsp;' . $filter_button;
         $category_filter_form .= '&nbsp;' . $checkbox;
         $category_filter_form .= '</form>';
-    
+
         // Generate table
         $table .= $category_filter_form;
         $table .= '<table class="shorturl-wp-list-table widefat striped">';
@@ -654,19 +654,19 @@ class Shortcode
         $table .= '<th scope="col">' . esc_html__('Categories', 'rrze-shorturl') . '</th>';
         $table .= '<th scope="col">' . esc_html__('Actions', 'rrze-shorturl') . '</th>';
         $table .= '</tr></thead><tbody>';
-    
+
         if (empty($results)) {
             $table .= '<tr><td colspan="6">' . esc_html__('No links stored yet', 'rrze-shorturl') . '</td></tr>';
         } else {
             foreach ($results as $link) {
                 $link_id = $link->ID;
-    
+
                 $long_url = get_post_meta($link_id, 'long_url', true);
                 $short_url = get_post_meta($link_id, 'short_url', true);
                 $uri = get_post_meta($link_id, 'uri', true);
                 $valid_until = get_post_meta($link_id, 'valid_until', true);
                 $category_ids = get_post_meta($link_id, 'category_id');
-    
+
                 $category_names_str = '';
                 if (!empty($category_ids)) {
                     $category_names = [];
@@ -678,7 +678,7 @@ class Shortcode
                     }
                     $category_names_str = implode(', ', $category_names);
                 }
-    
+
                 // Output table row
                 $table .= '<tr>';
                 $table .= '<td class="column-long-url"><a href="' . esc_url($long_url) . '">' . esc_html($long_url) . '</a></td>';
@@ -690,57 +690,50 @@ class Shortcode
                 $table .= '</tr>';
             }
         }
-    
+
         $table .= '</tbody></table>';
-    
+
         if (!$bUpdated && !empty($results)) {
             $table .= $this->display_edit_link_form();
         }
-    
+
         return $table;
     }
-    
+
 
     private function display_edit_link_form()
     {
         $link_id = !empty($_GET['link_id']) ? (int) $_GET['link_id'] : 0;
-
+    
         if ($link_id <= 0) {
             return '';
         } else {
             // Load the link data from the database
             $link_data = $this->get_link_data_by_id($link_id);
-
+    
             if (empty($link_data)) {
                 return '';
             } else {
                 // check if user is allowed to edit
                 if (self::$rights['id'] == $link_data['idm_id'] || is_user_logged_in()) {
                     $aCategories = !empty($link_data['category_ids']) ? explode(',', $link_data['category_ids']) : [];
-
+    
                     // Display the edit form
                     ob_start();
                     ?>
                     <div id="edit-link-form">
-                        <h2>
-                            <?php echo __('Edit Link', 'rrze-shorturl'); ?>
-                        </h2>
+                        <h2><?php echo esc_html__('Edit Link', 'rrze-shorturl'); ?></h2>
                         <form id="edit-link-form" method="post" action="">
-                            <span><?php echo $link_data['short_url']; ?></span><br><br>
+                            <span><?php echo esc_html($link_data['short_url']); ?></span><br><br>
                             <input type="hidden" name="action" value="update_link">
                             <input type="hidden" name="link_id" value="<?php echo esc_attr($link_id); ?>">
                             <input type="hidden" name="domain_id" value="<?php echo esc_attr($link_data['domain_id']); ?>">
                             <input type="hidden" name="shortURL" value="<?php echo esc_attr($link_data['short_url']); ?>">
-                            <input type="hidden" name="uri"
-                                value="<?php echo !empty($link_data['uri']) ? esc_attr($link_data['uri']) : ''; ?>">
-                            <?php echo self::display_shorturl_validity($link_data['valid_until']); ?>
-                            <h2 class="handle">
-                                <?php echo __('Categories', 'rrze-shorturl'); ?>
-                            </h2>
-                            <?php echo self::display_shorturl_category($aCategories); ?>
-                            <button type="submit">
-                                <?php echo __('Update Link', 'rrze-shorturl'); ?>
-                            </button>
+                            <input type="hidden" name="uri" value="<?php echo !empty($link_data['uri']) ? esc_attr($link_data['uri']) : ''; ?>">
+                            <?php echo wp_kses_post(self::display_shorturl_validity(esc_attr($link_data['valid_until']))); ?>
+                            <h2 class="handle"><?php echo esc_html__('Categories', 'rrze-shorturl'); ?></h2>
+                            <?php echo wp_kses_post(self::display_shorturl_category($aCategories)); ?>
+                            <button type="submit"><?php echo esc_html__('Update Link', 'rrze-shorturl'); ?></button>
                         </form>
                     </div>
                     <?php
@@ -751,7 +744,7 @@ class Shortcode
             }
         }
     }
-
+    
     public static function update_category_label()
     {
         // Verify nonce
@@ -807,21 +800,21 @@ class Shortcode
 
         // Check if the category already exists (using post title)
         $args = [
-            'post_type'   => 'shorturl_category',
-            'title'       => $category_name,
+            'post_type' => 'shorturl_category',
+            'title' => $category_name,
             'post_status' => 'publish',
             'posts_per_page' => 1,
         ];
-        
+
         $query = new WP_Query($args);
-        
+
         if ($query->have_posts()) {
             $existing_category = $query->posts[0];
         } else {
             $existing_category = null;
         }
-        
-        wp_reset_postdata();        
+
+        wp_reset_postdata();
 
         if ($existing_category) {
             // Category already exists, return its ID
@@ -869,7 +862,7 @@ class Shortcode
     {
         // Generate HTML for the updated category list
         ob_start();
-        echo self::display_shorturl_category($aCategory);
+        echo wp_kses_post(self::display_shorturl_category($aCategory));
         return ob_get_clean();
     }
 
@@ -936,9 +929,9 @@ class Shortcode
         ?>
         <div>
             <label for="self_explanatory_uri">
-                <?php echo __('Self-Explanatory URI', 'rrze-shorturl'); ?>:
+                <?php echo esc_html__('Self-Explanatory URI', 'rrze-shorturl'); ?>:
             </label>
-            <input type="text" id="uri" name="uri" value="<?php echo $val; ?>">
+            <input type="text" id="uri" name="uri" value="<?php echo esc_html($val); ?>">
         </div>
         <?php
         return ob_get_clean();
@@ -952,25 +945,25 @@ class Shortcode
         ?>
         <div>
             <label for="utm_source">
-                <?php echo __('UTM Source', 'rrze-shorturl'); ?>:
+                <?php echo esc_html__('UTM Source', 'rrze-shorturl'); ?>:
             </label>
-            <input type="text" id="utm_source" name="utm_source" value="<?php echo $utm_source; ?>">
+            <input type="text" id="utm_source" name="utm_source" value="<?php echo esc_html($utm_source); ?>">
             <label for="utm_medium">
-                <?php echo __('UTM Medium', 'rrze-shorturl'); ?>:
+                <?php echo esc_html__('UTM Medium', 'rrze-shorturl'); ?>:
             </label>
-            <input type="text" id="utm_medium" name="utm_medium" value="<?php echo $utm_medium; ?>">
+            <input type="text" id="utm_medium" name="utm_medium" value="<?php echo esc_html($utm_medium); ?>">
             <label for="utm_campaign">
-                <?php echo __('UTM Campaign', 'rrze-shorturl'); ?>:
+                <?php echo esc_html__('UTM Campaign', 'rrze-shorturl'); ?>:
             </label>
-            <input type="text" id="utm_campaign" name="utm_campaign" value="<?php echo $utm_campaign; ?>">
+            <input type="text" id="utm_campaign" name="utm_campaign" value="<?php echo esc_html($utm_campaign); ?>">
             <label for="utm_term">
-                <?php echo __('UTM Term', 'rrze-shorturl'); ?>:
+                <?php echo esc_html__('UTM Term', 'rrze-shorturl'); ?>:
             </label>
-            <input type="text" id="utm_term" name="utm_term" value="<?php echo $utm_term; ?>">
+            <input type="text" id="utm_term" name="utm_term" value="<?php echo esc_html($utm_term); ?>">
             <label for="utm_content">
-                <?php echo __('UTM Content', 'rrze-shorturl'); ?>:
+                <?php echo esc_html__('UTM Content', 'rrze-shorturl'); ?>:
             </label>
-            <input type="text" id="utm_content" name="utm_content" value="<?php echo $utm_content; ?>">
+            <input type="text" id="utm_content" name="utm_content" value="<?php echo esc_html($utm_content); ?>">
         </div>
         <?php
         return ob_get_clean();

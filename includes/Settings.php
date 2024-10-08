@@ -520,7 +520,7 @@ class Settings
             <?php if (!empty($message)): ?>
                 <div class="<?php echo strpos($message, 'error') !== false ? 'error' : 'updated'; ?>">
                     <p>
-                        <?php echo $message; ?>
+                        <?php echo esc_html($message); ?>
                     </p>
                 </div>
             <?php endif; ?>
@@ -528,11 +528,11 @@ class Settings
                 <table class="shorturl-wp-list-table widefat fixed striped">
                     <thead>
                         <tr>
-                            <th><?php echo __('Hostname', 'rrze-shorturl'); ?></th>
-                            <th><?php echo __('Active', 'rrze-shorturl'); ?></th>
-                            <th><?php echo __('Notice', 'rrze-shorturl'); ?></th>
-                            <th><?php echo __('Webmaster Name', 'rrze-shorturl'); ?></th>
-                            <th><?php echo __('Webmaster eMail', 'rrze-shorturl'); ?></th>
+                            <th><?php echo esc_html__('Hostname', 'rrze-shorturl'); ?></th>
+                            <th><?php echo esc_html__('Active', 'rrze-shorturl'); ?></th>
+                            <th><?php echo esc_html__('Notice', 'rrze-shorturl'); ?></th>
+                            <th><?php echo esc_html__('Webmaster Name', 'rrze-shorturl'); ?></th>
+                            <th><?php echo esc_html__('Webmaster eMail', 'rrze-shorturl'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -549,7 +549,7 @@ class Settings
                             <?php endwhile; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="5"><?php echo __('No customer domains found', 'rrze-shorturl'); ?></td>
+                                <td colspan="5"><?php echo esc_html__('No customer domains found', 'rrze-shorturl'); ?></td>
                             </tr>
                         <?php endif; ?>
                     </tbody>
