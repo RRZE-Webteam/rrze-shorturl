@@ -4,7 +4,7 @@
 Plugin Name:     RRZE ShortURL
 Plugin URI:      https://gitlab.rrze.fau.de/rrze-webteam/rrze-shorturl
 Description:     Plugin, um URLs zu verkürzen. 
-Version:         2.0.0
+Version:         2.1.0
 Requires at least: 6.4
 Requires PHP:      8.2
 Author:          RRZE Webteam
@@ -67,13 +67,13 @@ function system_requirements()
 {
     $error = '';
     if (version_compare(PHP_VERSION, RRZE_PHP_VERSION, '<')) {
-        /* Übersetzer: 1: aktuelle PHP-Version, 2: erforderliche PHP-Version */
-        $error = sprintf(__('The server is running PHP version %1$s. The Plugin requires at least PHP version %2$s.', 'rrze-shorturl'), PHP_VERSION, RRZE_PHP_VERSION);
+        /* translators: 1: current PHP version, 2: required PHP version */
+        $error = sprintf(__('The server is running PHP version %1$s. The Plugin requires at least PHP version %2$s.', 'rrze-typesettings'), PHP_VERSION, RRZE_PHP_VERSION);
     } elseif (version_compare($GLOBALS['wp_version'], RRZE_WP_VERSION, '<')) {
-        /* Übersetzer: 1: aktuelle WP-Version, 2: erforderliche WP-Version */
-        $error = sprintf(__('The server is running WordPress version %1$s. The Plugin requires at least WordPress version %2$s.', 'rrze-shorturl'), $GLOBALS['wp_version'], RRZE_WP_VERSION);
-        // } elseif(!class_exists('\RRZE\AccessControl\Permissions')) {
-        //     $error = __('Plugin RRZE-AC is mandatory.', 'rrze-shorturl');
+        /* translators: 1: current WordPress version, 2: required WordPress version */
+        $error = sprintf(__('The server is running WordPress version %1$s. The Plugin requires at least WordPress version %2$s.', 'rrze-typesettings'), $GLOBALS['wp_version'], RRZE_WP_VERSION);
+    } elseif (!class_exists('\RRZE\AccessControl\Permissions')) {
+        $error = __('Plugin RRZE-AC is mandatory.', 'rrze-shorturl');
     }
     return $error;
 }
@@ -116,14 +116,14 @@ function deactivation()
             'post_type' => $cpt,
             'numberposts' => -1,
             'post_status' => 'any',
-            'fields' => 'ids'            
+            'fields' => 'ids'
         ));
-    
+
         foreach ($post_ids as $post_id) {
             wp_delete_post($post_id, true);
-        }    
+        }
     }
-        
+
     // delete our options
     delete_option('rrze_shorturl_option');
     delete_option('rrze_shorturl_services_initialized');
