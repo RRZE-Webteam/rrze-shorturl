@@ -134,6 +134,21 @@ class Main
 
         global $wpdb;
 
+        // Check if all tables exist
+        $tables_to_check = [
+            'shorturl_idms',
+            'shorturl_domains',
+            'shorturl_categories',
+            'shorturl_links',
+            'shorturl_links_categories'
+        ];
+
+        foreach ($tables_to_check as $table) {
+            if ($wpdb->get_var("SHOW TABLES LIKE '{$wpdb->prefix}{$table}'") != "{$wpdb->prefix}{$table}") {
+                return;
+            }
+        }
+
         // Migrate shorturl_idms to CPT 'idm'
         $idm_ids = [];
         $idms = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_idms", ARRAY_A);

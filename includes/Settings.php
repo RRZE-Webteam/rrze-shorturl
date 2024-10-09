@@ -34,8 +34,21 @@ class Settings
 
         global $wpdb;
 
+        // Validate and sanitize input
+        if (!isset($_POST['id']) || !isset($_POST['field'])) {
+            wp_send_json_error('Invalid request');
+            return;
+        }
+
         $id = intval($_POST['id']);
-        $field = sanitize_text_field($_POST['field']);
+        $allowed_fields = ['allow_uri', 'allow_get'];  // List of valid fields
+        $field = sanitize_text_field(wp_unslash($_POST['field']));
+
+        if (!in_array($field, $allowed_fields)) {
+            wp_send_json_error('Invalid field');
+            return;
+        }
+
         $value = isset($_POST['value']) && $_POST['value'] === 'true' ? 1 : 0;
 
         // Update the allow_uri or allow_get field
@@ -122,31 +135,32 @@ class Settings
     // Render the options page
     public function render_options_page()
     {
-        $_GET['tab'] = (empty($_GET['tab']) ? 'general' : $_GET['tab']);
+        // Sanitize and validate the 'tab' parameter
+        $allowed_tabs = ['general', 'services', 'customer-domains', 'external-domains', 'idm', 'statistic'];
+        $current_tab = isset($_GET['tab']) && in_array($_GET['tab'], $allowed_tabs) ? sanitize_text_field(wp_unslash($_GET['tab'])) : 'general';
 
         ?>
         <div class="wrap">
-            <h1>RRZE ShortURL Settings</h1>
+            <h1><?php echo esc_html__('RRZE ShortURL Settings', 'rrze-shorturl'); ?></h1>
             <?php settings_errors(); ?>
 
             <h2 class="nav-tab-wrapper">
                 <a href="?page=rrze-shorturl&tab=general"
-                    class="nav-tab <?php echo isset($_GET['tab']) && $_GET['tab'] === 'general' ? 'nav-tab-active' : ''; ?>"><?php echo __('General', 'rrze-shorturl'); ?></a>
+                    class="nav-tab <?php echo $current_tab === 'general' ? 'nav-tab-active' : ''; ?>"><?php echo esc_html__('General', 'rrze-shorturl'); ?></a>
                 <a href="?page=rrze-shorturl&tab=services"
-                    class="nav-tab <?php echo isset($_GET['tab']) && $_GET['tab'] === 'services' ? 'nav-tab-active' : ''; ?>"><?php echo __('Services', 'rrze-shorturl'); ?></a>
+                    class="nav-tab <?php echo $current_tab === 'services' ? 'nav-tab-active' : ''; ?>"><?php echo esc_html__('Services', 'rrze-shorturl'); ?></a>
                 <a href="?page=rrze-shorturl&tab=customer-domains"
-                    class="nav-tab <?php echo isset($_GET['tab']) && $_GET['tab'] === 'customer-domains' ? 'nav-tab-active' : ''; ?>"><?php echo __('Customers Domains', 'rrze-shorturl'); ?></a>
+                    class="nav-tab <?php echo $current_tab === 'customer-domains' ? 'nav-tab-active' : ''; ?>"><?php echo esc_html__('Customers Domains', 'rrze-shorturl'); ?></a>
                 <a href="?page=rrze-shorturl&tab=external-domains"
-                    class="nav-tab <?php echo isset($_GET['tab']) && $_GET['tab'] === 'external-domains' ? 'nav-tab-active' : ''; ?>"><?php echo __('External Domains', 'rrze-shorturl'); ?></a>
+                    class="nav-tab <?php echo $current_tab === 'external-domains' ? 'nav-tab-active' : ''; ?>"><?php echo esc_html__('External Domains', 'rrze-shorturl'); ?></a>
                 <a href="?page=rrze-shorturl&tab=idm"
-                    class="nav-tab <?php echo isset($_GET['tab']) && $_GET['tab'] === 'idm' ? 'nav-tab-active' : ''; ?>">IdM</a>
+                    class="nav-tab <?php echo $current_tab === 'idm' ? 'nav-tab-active' : ''; ?>"><?php echo esc_html__('IdM', 'rrze-shorturl'); ?></a>
                 <a href="?page=rrze-shorturl&tab=statistic"
-                    class="nav-tab <?php echo isset($_GET['tab']) && $_GET['tab'] === 'statistic' ? 'nav-tab-active' : ''; ?>"><?php echo __('Statistic', 'rrze-shorturl'); ?></a>
+                    class="nav-tab <?php echo $current_tab === 'statistic' ? 'nav-tab-active' : ''; ?>"><?php echo esc_html__('Statistic', 'rrze-shorturl'); ?></a>
             </h2>
 
             <div class="tab-content">
                 <?php
-                $current_tab = isset($_GET['tab']) ? $_GET['tab'] : 'services';
                 switch ($current_tab) {
                     case 'general':
                         settings_fields('rrze_shorturl_general');
@@ -237,27 +251,34 @@ class Settings
         $aOptions['maxShortening'] = (empty($aOptions['maxShortening']) ? 60 : $aOptions['maxShortening']);
         $aOptions['allowed_ip_addresses'] = (empty($aOptions['allowed_ip_addresses']) ? '' : $aOptions['allowed_ip_addresses']);
 
+        // Process form submission
         if (isset($_POST['submit_general'])) {
-            if (filter_var($_POST['ShortURLBase'], FILTER_VALIDATE_URL)) {
-                $aOptions['ShortURLBase'] = esc_url($_POST['ShortURLBase']);
+            // Unslash all the inputs
+            $post_data = wp_unslash($_POST);
+
+            // Validate and sanitize ShortURLBase
+            if (isset($post_data['ShortURLBase']) && filter_var($post_data['ShortURLBase'], FILTER_VALIDATE_URL)) {
+                $aOptions['ShortURLBase'] = esc_url_raw($post_data['ShortURLBase']);
             } else {
                 $message = 'Error: ' . __('Basis is not valid.', 'rrze-shorturl');
             }
 
-            if (filter_var($_POST['maxShortening'], FILTER_VALIDATE_INT, array("options" => array("min_range" => 1))) !== false) {
-                // If it's a valid positive integer
-                $aOptions['maxShortening'] = (int) $_POST['maxShortening']; // Cast to integer
+            // Validate maxShortening (ensure it's a positive integer)
+            if (isset($post_data['maxShortening']) && filter_var($post_data['maxShortening'], FILTER_VALIDATE_INT, array("options" => array("min_range" => 1))) !== false) {
+                $aOptions['maxShortening'] = (int) $post_data['maxShortening']; // Cast to integer
             } else {
                 $message = 'Error: ' . __('Maximum number of shortenings is not valid.', 'rrze-shorturl');
             }
 
-            if (filter_var($_POST['allowed_ip_addresses'], FILTER_SANITIZE_STRING) !== false) {
-                $aOptions['allowed_ip_addresses'] = $_POST['allowed_ip_addresses'];
+            // Sanitize allowed_ip_addresses (assuming it is a comma-separated list of IPs)
+            if (isset($post_data['allowed_ip_addresses'])) {
+                $aOptions['allowed_ip_addresses'] = sanitize_textarea_field($post_data['allowed_ip_addresses']);
             } else {
                 $message = 'Error: ' . __('Allowed IP Addresses for REST API endpoints is not valid.', 'rrze-shorturl');
             }
 
-            update_option('rrze-shorturl', json_encode($aOptions));
+            // Save the options using wp_json_encode()
+            update_option('rrze-shorturl', wp_json_encode($aOptions));
         }
 
         ?>
@@ -266,7 +287,7 @@ class Settings
             <?php if (!empty($message)): ?>
                 <div class="<?php echo strpos($message, 'Error') !== false ? 'error' : 'updated'; ?>">
                     <p>
-                        <?php echo $message; ?>
+                        <?php echo esc_html($message); ?>
                     </p>
                 </div>
             <?php endif; ?>
@@ -274,26 +295,26 @@ class Settings
                 <table class="shorturl-wp-list-table widefat fixed striped">
                     <tbody>
                         <tr>
-                            <td><?php echo __('Basis', 'rrze-shorturl'); ?></td>
+                            <td><?php echo esc_html__('Basis', 'rrze-shorturl'); ?></td>
                             <td><input type="text" name="ShortURLBase" id="ShortURLBase" placeholder="https://go.fau.de"
-                                    value="<?php echo $aOptions['ShortURLBase']; ?>"></td>
+                                    value="<?php echo esc_attr($aOptions['ShortURLBase']); ?>"></td>
                         </tr>
                         <tr>
-                            <td><?php echo __('Maximum shortenings per hour per user', 'rrze-shorturl'); ?></td>
+                            <td><?php echo esc_html__('Maximum shortenings per hour per user', 'rrze-shorturl'); ?></td>
                             <td><input type="number" name="maxShortening" id="maxShortening" min="1"
-                                    value="<?php echo $aOptions['maxShortening']; ?>"></td>
+                                    value="<?php echo esc_attr($aOptions['maxShortening']); ?>"></td>
                         </tr>
                         <tr>
-                            <td><?php echo __('Allowed IP Addresses for REST API endpoints', 'rrze-shorturl'); ?></td>
+                            <td><?php echo esc_html__('Allowed IP Addresses for REST API endpoints', 'rrze-shorturl'); ?></td>
                             <td>
                                 <textarea name="allowed_ip_addresses" id="allowed_ip_addresses" rows="4"
-                                    cols="50"><?php echo $aOptions['allowed_ip_addresses']; ?></textarea>
+                                    cols="50"><?php echo esc_textarea($aOptions['allowed_ip_addresses']); ?></textarea>
                             </td>
                         </tr>
                     </tbody>
                 </table>
                 <button type="submit" name="submit_general" class="button button-primary">
-                    <?php echo __('Save Changes', 'rrze-shorturl'); ?>
+                    <?php echo esc_html__('Save Changes', 'rrze-shorturl'); ?>
                 </button>
             </form>
         </div>
@@ -310,83 +331,85 @@ class Settings
 
         // Check if form is submitted
         if (isset($_POST['submit'])) {
+            // Verify the nonce field
+            check_admin_referer('rrze_shorturl_services_nonce');
+
             try {
+                // Unslash the $_POST data
+                $post_data = wp_unslash($_POST);
+
                 // Delete selected entries
-                if (!empty($_POST['delete'])) {
-                    foreach ($_POST['delete'] as $delete_id) {
-                        wp_delete_post($delete_id, true);
+                if (!empty($post_data['delete'])) {
+                    foreach ($post_data['delete'] as $delete_id) {
+                        wp_delete_post(intval($delete_id), true);
                         $bDel = true;
                     }
-                    $message = (empty($message) ? '' : $message . '<br \>') . ($bDel ? __('Selected entries deleted successfully.', 'rrze-shorturl') : '');
+                    $message = ($bDel ? __('Selected entries deleted successfully.', 'rrze-shorturl') : '');
                     $error = false;
                 }
 
                 // Add new entry
-                if (!empty($_POST['new_hostname'])) {
+                if (!empty($post_data['new_hostname'])) {
                     try {
                         // Sanitize input data
-                        $new_hostname = sanitize_text_field($_POST['new_hostname']);
-                        $new_prefix = sanitize_text_field($_POST['new_prefix']);
-                        $new_regex = sanitize_text_field($_POST['new_regex']);
+                        $new_hostname = sanitize_text_field($post_data['new_hostname']);
+                        $new_prefix = sanitize_text_field($post_data['new_prefix']);
+                        $new_regex = sanitize_text_field($post_data['new_regex']);
 
                         // Validate hostname
                         if (!self::isValidHostName($new_hostname)) {
                             $message = __('Hostname is not valid.', 'rrze-shorturl');
                         } else {
                             if (empty($new_prefix) || $new_prefix == '1') {
-                                // This is a customer domain
                                 $message = __('Prefix 1 is reserved for customer domains. Please use another prefix.', 'rrze-shorturl');
+                            } elseif ($new_prefix == '0') {
+                                $message = __('Prefix not allowed.', 'rrze-shorturl');
                             } else {
-                                // Check if the prefix is 0
-                                if ($new_prefix == '0') {
-                                    $message = __('Prefix not allowed.', 'rrze-shorturl');
+                                // Check if the prefix already exists
+                                $existing_services = new \WP_Query(array(
+                                    'post_type' => 'shorturl_service',
+                                    'meta_query' => array(
+                                        array(
+                                            'key' => 'prefix',
+                                            'value' => $new_prefix,
+                                            'compare' => '='
+                                        )
+                                    )
+                                ));
+
+                                if ($existing_services->found_posts > 0) {
+                                    $message = __('Prefix is already in use.', 'rrze-shorturl');
                                 } else {
-                                    // Check if the prefix already exists
-                                    $existing_services = new \WP_Query(array(
+                                    // Create new post
+                                    $new_service_id = wp_insert_post(array(
                                         'post_type' => 'shorturl_service',
-                                        'meta_query' => array(
-                                            array(
-                                                'key' => 'prefix',
-                                                'value' => $new_prefix,
-                                                'compare' => '='
-                                            )
+                                        'post_title' => $new_hostname,
+                                        'post_status' => 'publish',
+                                        'meta_input' => array(
+                                            'prefix' => $new_prefix,
+                                            'regex' => $new_regex
                                         )
                                     ));
 
-                                    if ($existing_services->found_posts > 0) {
-                                        $message = __('Prefix is already in use.', 'rrze-shorturl');
+                                    if (is_wp_error($new_service_id)) {
+                                        $message = __('An error occurred: ', 'rrze-shorturl') . esc_html($new_service_id->get_error_message());
                                     } else {
-                                        // Create new post
-                                        $new_service_id = wp_insert_post(array(
-                                            'post_type' => 'shorturl_service',
-                                            'post_title' => $new_hostname,
-                                            'post_status' => 'publish',
-                                            'meta_input' => array(
-                                                'prefix' => $new_prefix,
-                                                'regex' => $new_regex
-                                            )
-                                        ));
-
-                                        if (is_wp_error($new_service_id)) {
-                                            $message = __('An error occurred: ', 'rrze-shorturl') . $new_service_id->get_error_message();
-                                        } else {
-                                            $message = __('New service added successfully.', 'rrze-shorturl');
-                                            $error = false;
-                                        }
-
-                                        $new_hostname = '';
-                                        $new_prefix = '';
-                                        $new_regex = '';
+                                        $message = __('New service added successfully.', 'rrze-shorturl');
+                                        $error = false;
                                     }
+
+                                    $new_hostname = '';
+                                    $new_prefix = '';
+                                    $new_regex = '';
                                 }
                             }
                         }
                     } catch (CustomException $e) {
-                        $message = __('An error occurred: ', 'rrze-shorturl') . $e->getMessage();
+                        $message = __('An error occurred: ', 'rrze-shorturl') . esc_html($e->getMessage());
                     }
                 }
             } catch (CustomException $e) {
-                $message = __('An error occurred: ', 'rrze-shorturl') . $e->getMessage();
+                $message = __('An error occurred: ', 'rrze-shorturl') . esc_html($e->getMessage());
             }
         }
 
@@ -409,18 +432,21 @@ class Settings
         ?>
         <div class="wrap">
             <?php if (!empty($message)): ?>
-                <div class="<?php echo ($error ? 'error' : 'updated'); ?>">
-                    <p><?php echo $message; ?></p>
+                <div class="<?php echo esc_attr($error ? 'error' : 'updated'); ?>">
+                    <p><?php echo esc_html($message); ?></p>
                 </div>
             <?php endif; ?>
+
             <form method="post" action="" id="services-form">
+                <?php wp_nonce_field('rrze_shorturl_services_nonce'); ?>
+
                 <table class="shorturl-wp-list-table widefat fixed striped">
                     <thead>
                         <tr>
-                            <th><?php echo __('Hostname', 'rrze-shorturl'); ?></th>
-                            <th><?php echo __('Prefix', 'rrze-shorturl'); ?></th>
-                            <th><?php echo __('Regex', 'rrze-shorturl'); ?></th>
-                            <th><?php echo __('Delete', 'rrze-shorturl'); ?></th>
+                            <th><?php echo esc_html__('Hostname', 'rrze-shorturl'); ?></th>
+                            <th><?php echo esc_html__('Prefix', 'rrze-shorturl'); ?></th>
+                            <th><?php echo esc_html__('Regex', 'rrze-shorturl'); ?></th>
+                            <th><?php echo esc_html__('Delete', 'rrze-shorturl'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -442,19 +468,19 @@ class Settings
                         <?php endif; ?>
                         <tr>
                             <td><input type="text" name="new_hostname"
-                                    value="<?php echo (!empty($new_hostname) ? esc_attr($new_hostname) : ''); ?>" /></td>
+                                    value="<?php echo !empty($new_hostname) ? esc_attr($new_hostname) : ''; ?>" /></td>
                             <td><input type="text" name="new_prefix"
-                                    value="<?php echo (!empty($new_prefix) ? esc_attr($new_prefix) : ''); ?>" pattern="\d*" />
+                                    value="<?php echo !empty($new_prefix) ? esc_attr($new_prefix) : ''; ?>" pattern="\d*" />
                             </td>
                             <td><input type="text" name="new_regex"
-                                    value="<?php echo (!empty($new_regex) ? esc_attr($new_regex) : ''); ?>" /></td>
+                                    value="<?php echo !empty($new_regex) ? esc_attr($new_regex) : ''; ?>" /></td>
                             <td></td>
                         </tr>
                     </tbody>
                 </table>
 
                 <button type="submit" name="submit" class="button button-primary">
-                    <?php echo __('Save Changes', 'rrze-shorturl'); ?>
+                    <?php echo esc_html__('Save Changes', 'rrze-shorturl'); ?>
                 </button>
             </form>
         </div>
@@ -494,7 +520,7 @@ class Settings
             <?php if (!empty($message)): ?>
                 <div class="<?php echo strpos($message, 'error') !== false ? 'error' : 'updated'; ?>">
                     <p>
-                        <?php echo $message; ?>
+                        <?php echo esc_html($message); ?>
                     </p>
                 </div>
             <?php endif; ?>
@@ -502,11 +528,11 @@ class Settings
                 <table class="shorturl-wp-list-table widefat fixed striped">
                     <thead>
                         <tr>
-                            <th><?php echo __('Hostname', 'rrze-shorturl'); ?></th>
-                            <th><?php echo __('Active', 'rrze-shorturl'); ?></th>
-                            <th><?php echo __('Notice', 'rrze-shorturl'); ?></th>
-                            <th><?php echo __('Webmaster Name', 'rrze-shorturl'); ?></th>
-                            <th><?php echo __('Webmaster eMail', 'rrze-shorturl'); ?></th>
+                            <th><?php echo esc_html__('Hostname', 'rrze-shorturl'); ?></th>
+                            <th><?php echo esc_html__('Active', 'rrze-shorturl'); ?></th>
+                            <th><?php echo esc_html__('Notice', 'rrze-shorturl'); ?></th>
+                            <th><?php echo esc_html__('Webmaster Name', 'rrze-shorturl'); ?></th>
+                            <th><?php echo esc_html__('Webmaster eMail', 'rrze-shorturl'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -523,7 +549,7 @@ class Settings
                             <?php endwhile; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="5"><?php echo __('No customer domains found', 'rrze-shorturl'); ?></td>
+                                <td colspan="5"><?php echo esc_html__('No customer domains found', 'rrze-shorturl'); ?></td>
                             </tr>
                         <?php endif; ?>
                     </tbody>
@@ -547,21 +573,27 @@ class Settings
 
         // Check if the form is submitted
         if (isset($_POST['submit'])) {
+            // Verify the nonce field
+            check_admin_referer('rrze_shorturl_external_domains_nonce');
+
             try {
+                // Unslash $_POST data
+                $post_data = wp_unslash($_POST);
+
                 // Delete selected entries
-                if (!empty($_POST['delete'])) {
-                    foreach ($_POST['delete'] as $id => $delete_id) {
-                        wp_delete_post($delete_id, true); // True for force delete (bypassing the trash)
+                if (!empty($post_data['delete'])) {
+                    foreach ($post_data['delete'] as $id => $delete_id) {
+                        wp_delete_post(intval($delete_id), true); // True for force delete (bypassing the trash)
                         $bDel = true;
                     }
-                    $message = (empty($message) ? '' : $message . '<br />') . ($bDel ? __('Selected entries deleted successfully.', 'rrze-shorturl') : '');
+                    $message = ($bDel ? __('Selected entries deleted successfully.', 'rrze-shorturl') : '');
                 }
 
                 // Add new entry
-                if (!empty($_POST['new_hostname'])) {
+                if (!empty($post_data['new_hostname'])) {
                     try {
                         // Sanitize input data
-                        $new_hostname = sanitize_text_field($_POST['new_hostname']);
+                        $new_hostname = sanitize_text_field($post_data['new_hostname']);
 
                         // Validate hostname
                         if (!self::isValidHostName($new_hostname)) {
@@ -584,16 +616,15 @@ class Settings
                                 $message = __('New external domain added successfully.', 'rrze-shorturl');
                                 $new_hostname = '';
                             } else {
-                                $message = __('An error occurred: ', 'rrze-shorturl') . $post_id->get_error_message();
-                                throw new CustomException($post_id->get_error_message());
+                                $message = __('An error occurred: ', 'rrze-shorturl') . esc_html($post_id->get_error_message());
                             }
                         }
                     } catch (CustomException $e) {
-                        $message = __('An error occurred: ', 'rrze-shorturl') . $e->getMessage();
+                        $message = __('An error occurred: ', 'rrze-shorturl') . esc_html($e->getMessage());
                     }
                 }
             } catch (CustomException $e) {
-                $message = __('An error occurred: ', 'rrze-shorturl') . $e->getMessage();
+                $message = __('An error occurred: ', 'rrze-shorturl') . esc_html($e->getMessage());
             }
         }
 
@@ -622,17 +653,19 @@ class Settings
         ?>
         <div class="wrap">
             <?php if (!empty($message)): ?>
-                <div class="<?php echo strpos($message, 'error') !== false ? 'error' : 'updated'; ?>">
-                    <p><?php echo $message; ?></p>
+                <div class="<?php echo esc_attr(strpos($message, 'error') !== false ? 'error' : 'updated'); ?>">
+                    <p><?php echo esc_html($message); ?></p>
                 </div>
             <?php endif; ?>
 
             <form method="post" action="" id="external-domains-form">
+                <?php wp_nonce_field('rrze_shorturl_external_domains_nonce'); ?>
+
                 <table class="shorturl-wp-list-table widefat fixed striped">
                     <thead>
                         <tr>
-                            <th><?php echo __('Hostname', 'rrze-shorturl'); ?></th>
-                            <th><?php echo __('Delete', 'rrze-shorturl'); ?></th>
+                            <th><?php echo esc_html__('Hostname', 'rrze-shorturl'); ?></th>
+                            <th><?php echo esc_html__('Delete', 'rrze-shorturl'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -644,22 +677,23 @@ class Settings
                                             readonly /></td>
                                     <td><input type="checkbox" name="delete[]" value="<?php echo esc_attr(get_the_ID()); ?>" /></td>
                                 </tr>
-                            <?php endwhile; ?>
+                            <?php endwhile;
+                            wp_reset_postdata(); ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="2"><?php echo __('No external domains found', 'rrze-shorturl'); ?></td>
+                                <td colspan="2"><?php echo esc_html__('No external domains found', 'rrze-shorturl'); ?></td>
                             </tr>
                         <?php endif; ?>
                         <tr>
                             <td><input type="text" name="new_hostname"
-                                    value="<?php echo (!empty($new_hostname) ? $new_hostname : ''); ?>" /></td>
+                                    value="<?php echo esc_attr(!empty($new_hostname) ? $new_hostname : ''); ?>" /></td>
                             <td></td>
                         </tr>
                     </tbody>
                 </table>
 
                 <button type="submit" name="submit" class="button button-primary">
-                    <?php echo __('Save Changes', 'rrze-shorturl'); ?>
+                    <?php echo esc_html__('Save Changes', 'rrze-shorturl'); ?>
                 </button>
             </form>
         </div>
@@ -673,47 +707,50 @@ class Settings
     public function render_idm_section()
     {
         // Determine the current sorting order and column
-        $orderby = isset($_GET['orderby']) ? $_GET['orderby'] : 'idm';
-        $order = isset($_GET['order']) && in_array($_GET['order'], ['asc', 'desc']) ? $_GET['order'] : 'asc';
+        $orderby = isset($_GET['orderby']) ? sanitize_text_field(wp_unslash($_GET['orderby'])) : 'idm';
+        $order = isset($_GET['order']) && in_array(sanitize_text_field(wp_unslash($_GET['order'])), ['asc', 'desc']) ? sanitize_text_field(wp_unslash($_GET['order'])) : 'asc';
 
         try {
             // Check if form is submitted
             if (isset($_POST['submit_idm'])) {
+                check_admin_referer('rrze_shorturl_idm_nonce'); // Add nonce check
 
-                $idm = sanitize_text_field($_POST['idm']);
+                if (isset($_POST['idm'])) {
+                    $idm = sanitize_text_field(wp_unslash($_POST['idm']));
 
-                if (!empty($idm)) {
-                    // Check if the IdM already exists
-                    $existing_idm_id = get_posts(
-                        array(
-                            'post_type' => 'shorturl_idm',
-                            'title' => $idm,
-                            'post_status' => 'all',
-                            'numberposts' => 1,
-                            'fields' => 'ids'
-                        )
-                    );
+                    if (!empty($idm)) {
+                        // Check if the IdM already exists
+                        $existing_idm_id = get_posts(
+                            array(
+                                'post_type' => 'shorturl_idm',
+                                'title' => $idm,
+                                'post_status' => 'all',
+                                'numberposts' => 1,
+                                'fields' => 'ids'
+                            )
+                        );
 
-                    if (!empty($existing_idm_id)) {
-                        $message = __('An error occurred: this IdM already exists.', 'rrze-shorturl');
-                    } else {
-                        // Add new entry as a Custom Post Type
-                        $post_data = [
-                            'post_title' => $idm,
-                            'post_type' => 'shorturl_idm',
-                            'post_status' => 'publish'
-                        ];
-
-                        $insert_result = wp_insert_post($post_data);
-
-                        if (is_wp_error($insert_result)) {
-                            $message = __('An error occurred while adding the IdM.', 'rrze-shorturl');
+                        if (!empty($existing_idm_id)) {
+                            $message = __('An error occurred: this IdM already exists.', 'rrze-shorturl');
                         } else {
-                            // Add default meta data
-                            update_post_meta($insert_result, 'allow_uri', 0);
-                            update_post_meta($insert_result, 'allow_get', 0);
-                            update_post_meta($insert_result, 'allow_utm', 0);
-                            $message = __('New IdM has been added.', 'rrze-shorturl');
+                            // Add new entry as a Custom Post Type
+                            $post_data = [
+                                'post_title' => $idm,
+                                'post_type' => 'shorturl_idm',
+                                'post_status' => 'publish'
+                            ];
+
+                            $insert_result = wp_insert_post($post_data);
+
+                            if (is_wp_error($insert_result)) {
+                                $message = __('An error occurred while adding the IdM.', 'rrze-shorturl');
+                            } else {
+                                // Add default meta data
+                                update_post_meta($insert_result, 'allow_uri', 0);
+                                update_post_meta($insert_result, 'allow_get', 0);
+                                update_post_meta($insert_result, 'allow_utm', 0);
+                                $message = __('New IdM has been added.', 'rrze-shorturl');
+                            }
                         }
                     }
                 }
@@ -731,76 +768,84 @@ class Settings
             $idms_query = new \WP_Query($args);
 
             ?>
-            <?php if (!empty($message)): ?>
-                <div class="<?php echo strpos($message, 'error') !== false ? 'error' : 'updated'; ?>">
-                    <p><?php echo $message; ?></p>
-                </div>
-            <?php endif; ?>
-            <form method="post">
-                <table class="shorturl-wp-list-table widefat fixed striped">
-                    <thead>
-                        <tr>
-                            <th scope="col"
-                                class="manage-column column-hostname <?php echo $orderby === 'idm' ? 'sorted' : 'sortable'; ?> <?php echo $order; ?>"
-                                data-sort="<?php echo $orderby === 'idm' ? $order : 'asc'; ?>">
-                                <a
-                                    href="<?php echo admin_url('admin.php?page=rrze-shorturl&tab=idm&orderby=idm&order=' . ($orderby === 'idm' && $order === 'asc' ? 'desc' : 'asc')); ?>">
-                                    <span><?php echo __('IdM', 'rrze-shorturl'); ?></span>
-                                    <span class="sorting-indicators">
-                                        <span class="sorting-indicator asc" aria-hidden="true"></span>
-                                        <span class="sorting-indicator desc" aria-hidden="true"></span>
-                                    </span>
-                                </a>
-                            </th>
-                            <th scope="col"><?php echo __('Allow URI', 'rrze-shorturl'); ?></th>
-                            <th scope="col"><?php echo __('Allow GET', 'rrze-shorturl'); ?></th>
-                            <th scope="col"><?php echo __('Allow UTM', 'rrze-shorturl'); ?></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php
-                        if ($idms_query->have_posts()) {
-                            while ($idms_query->have_posts()) {
-                                $idms_query->the_post();
-                                $allow_uri = get_post_meta(get_the_ID(), 'allow_uri', true);
-                                $allow_get = get_post_meta(get_the_ID(), 'allow_get', true);
-                                $allow_utm = get_post_meta(get_the_ID(), 'allow_utm', true);
-                                ?>
-                                <tr>
-                                    <td><?php echo esc_html(get_the_title()); ?></td>
-                                    <td><input type="checkbox" class="allow-uri-checkbox" data-id="<?php echo get_the_ID(); ?>" <?php echo $allow_uri ? 'checked' : ''; ?>></td>
-                                    <td><input type="checkbox" class="allow-get-checkbox" data-id="<?php echo get_the_ID(); ?>" <?php echo $allow_get ? 'checked' : ''; ?>></td>
-                                    <td><input type="checkbox" class="allow-utm-checkbox" data-id="<?php echo get_the_ID(); ?>" <?php echo $allow_utm ? 'checked' : ''; ?>></td>
-                                </tr>
-                                <?php
+            <div class="wrap">
+                <?php if (!empty($message)): ?>
+                    <div class="<?php echo esc_attr(strpos($message, 'error') !== false ? 'error' : 'updated'); ?>">
+                        <p><?php echo esc_html($message); ?></p>
+                    </div>
+                <?php endif; ?>
+                <form method="post">
+                    <?php wp_nonce_field('rrze_shorturl_idm_nonce'); // Nonce field for form ?>
+                    <table class="shorturl-wp-list-table widefat fixed striped">
+                        <thead>
+                            <tr>
+                                <th scope="col"
+                                    class="manage-column column-hostname <?php echo esc_attr($orderby === 'idm' ? 'sorted' : 'sortable'); ?> <?php echo esc_attr($order); ?>"
+                                    data-sort="<?php echo esc_attr($orderby === 'idm' ? $order : 'asc'); ?>">
+                                    <a
+                                        href="<?php echo esc_url(admin_url('admin.php?page=rrze-shorturl&tab=idm&orderby=idm&order=' . ($orderby === 'idm' && $order === 'asc' ? 'desc' : 'asc'))); ?>">
+                                        <span><?php echo esc_html__('IdM', 'rrze-shorturl'); ?></span>
+                                        <span class="sorting-indicators">
+                                            <span class="sorting-indicator asc" aria-hidden="true"></span>
+                                            <span class="sorting-indicator desc" aria-hidden="true"></span>
+                                        </span>
+                                    </a>
+                                </th>
+                                <th scope="col"><?php echo esc_html__('Allow URI', 'rrze-shorturl'); ?></th>
+                                <th scope="col"><?php echo esc_html__('Allow GET', 'rrze-shorturl'); ?></th>
+                                <th scope="col"><?php echo esc_html__('Allow UTM', 'rrze-shorturl'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                            if ($idms_query->have_posts()) {
+                                while ($idms_query->have_posts()) {
+                                    $idms_query->the_post();
+                                    $allow_uri = get_post_meta(get_the_ID(), 'allow_uri', true);
+                                    $allow_get = get_post_meta(get_the_ID(), 'allow_get', true);
+                                    $allow_utm = get_post_meta(get_the_ID(), 'allow_utm', true);
+                                    ?>
+                                    <tr>
+                                        <td><?php echo esc_html(get_the_title()); ?></td>
+                                        <td><input type="checkbox" class="allow-uri-checkbox"
+                                                data-id="<?php echo esc_attr(get_the_ID()); ?>" <?php echo $allow_uri ? 'checked' : ''; ?>>
+                                        </td>
+                                        <td><input type="checkbox" class="allow-get-checkbox"
+                                                data-id="<?php echo esc_attr(get_the_ID()); ?>" <?php echo $allow_get ? 'checked' : ''; ?>>
+                                        </td>
+                                        <td><input type="checkbox" class="allow-utm-checkbox"
+                                                data-id="<?php echo esc_attr(get_the_ID()); ?>" <?php echo $allow_utm ? 'checked' : ''; ?>>
+                                        </td>
+                                    </tr>
+                                    <?php
+                                }
                             }
-                        }
-                        ?>
-                        <tr>
-                            <td colspan="4"><input type="text" name="idm" id="idm" value=""></td>
-                        </tr>
-                    </tbody>
-                </table>
-                <button type="submit" name="submit_idm"
-                    class="button button-primary"><?php echo __('Save Changes', 'rrze-shorturl'); ?></button>
-            </form>
+                            ?>
+                            <tr>
+                                <td colspan="4"><input type="text" name="idm" id="idm" value=""></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button type="submit" name="submit_idm"
+                        class="button button-primary"><?php echo esc_html__('Save Changes', 'rrze-shorturl'); ?></button>
+                </form>
+            </div>
             <?php
 
             // Restore original Post Data
             wp_reset_postdata();
 
         } catch (CustomException $e) {
-            echo '<div class="error notice"><p>' . $e->getMessage() . '</p></div>';
-            error_log("Error in render_idm_section: " . $e->getMessage());
+            echo '<div class="error notice"><p>' . esc_html($e->getMessage()) . '</p></div>';
+            error_log("Error in render_idm_section: " . esc_html($e->getMessage()));
         }
     }
 
-    public function render_statistic_section()
-    {
+    public function render_statistic_section() {
         // Determine the current sorting order and column
-        $orderby = isset($_GET['orderby']) ? sanitize_text_field($_GET['orderby']) : 'hostname';
-        $order = isset($_GET['order']) && in_array(sanitize_text_field($_GET['order']), ['asc', 'desc']) ? sanitize_text_field($_GET['order']) : 'asc';
-
+        $orderby = isset($_GET['orderby']) ? sanitize_text_field(wp_unslash($_GET['orderby'])) : 'hostname';
+        $order = isset($_GET['order']) && in_array(sanitize_text_field(wp_unslash($_GET['order'])), ['asc', 'desc']) ? sanitize_text_field(wp_unslash($_GET['order'])) : 'asc';
+    
         // Get all domains to count associated links
         $args = [
             'post_type' => 'shorturl_domain',
@@ -808,16 +853,16 @@ class Settings
             'orderby' => 'title', // Sort by hostname (title)
             'order' => $order
         ];
-
+    
         $domain_query = new \WP_Query($args);
         $link_counts = [];
-
+    
         if ($domain_query->have_posts()) {
             while ($domain_query->have_posts()) {
                 $domain_query->the_post();
                 $domain_id = get_the_ID();
                 $hostname = get_the_title();
-
+    
                 // Query to count links associated with the current domain
                 $link_args = [
                     'post_type' => 'shorturl_link',
@@ -831,19 +876,19 @@ class Settings
                     'posts_per_page' => -1, // Count all links
                     'fields' => 'ids' // Only retrieve post IDs for counting
                 ];
-
+    
                 $link_query = new \WP_Query($link_args);
                 $link_count = $link_query->post_count; // Get the count of associated links
-
+    
                 $link_counts[] = (object) [
                     'hostname' => $hostname,
                     'link_count' => $link_count
                 ];
             }
         }
-
+    
         wp_reset_postdata(); // Reset post data after query
-
+    
         // Sort the results by link count if necessary
         if ($orderby === 'link_count') {
             usort($link_counts, function ($a, $b) use ($order) {
@@ -854,7 +899,7 @@ class Settings
                 }
             });
         }
-
+    
         // Output the statistics table
         ?>
         <div class="wrap">
@@ -862,22 +907,22 @@ class Settings
                 <thead>
                     <tr>
                         <th scope="col"
-                            class="manage-column column-hostname <?php echo $orderby === 'hostname' ? 'sorted' : 'sortable'; ?> <?php echo $order; ?>"
-                            data-sort="<?php echo $orderby === 'hostname' ? $order : 'asc'; ?>">
+                            class="manage-column column-hostname <?php echo esc_attr($orderby === 'hostname' ? 'sorted' : 'sortable'); ?> <?php echo esc_attr($order); ?>"
+                            data-sort="<?php echo esc_attr($orderby === 'hostname' ? $order : 'asc'); ?>">
                             <a
-                                href="<?php echo admin_url('admin.php?page=rrze-shorturl&tab=statistic&orderby=hostname&order=' . ($orderby === 'hostname' && $order === 'asc' ? 'desc' : 'asc')); ?>">
-                                <span><?php echo __('Hostname', 'rrze-shorturl'); ?></span>
+                                href="<?php echo esc_url(admin_url('admin.php?page=rrze-shorturl&tab=statistic&orderby=hostname&order=' . ($orderby === 'hostname' && $order === 'asc' ? 'desc' : 'asc'))); ?>">
+                                <span><?php echo esc_html__('Hostname', 'rrze-shorturl'); ?></span>
                                 <span class="sorting-indicators"><span class="sorting-indicator asc"
                                         aria-hidden="true"></span><span class="sorting-indicator desc"
                                         aria-hidden="true"></span></span>
                             </a>
                         </th>
                         <th scope="col"
-                            class="manage-column column-count <?php echo $orderby === 'link_count' ? 'sorted' : 'sortable'; ?> <?php echo $order; ?>"
-                            data-sort="<?php echo $orderby === 'link_count' ? $order : 'asc'; ?>">
+                            class="manage-column column-count <?php echo esc_attr($orderby === 'link_count' ? 'sorted' : 'sortable'); ?> <?php echo esc_attr($order); ?>"
+                            data-sort="<?php echo esc_attr($orderby === 'link_count' ? $order : 'asc'); ?>">
                             <a
-                                href="<?php echo admin_url('admin.php?page=rrze-shorturl&tab=statistic&orderby=link_count&order=' . ($orderby === 'link_count' && $order === 'asc' ? 'desc' : 'asc')); ?>">
-                                <span><?php echo __('Link Count', 'rrze-shorturl'); ?></span>
+                                href="<?php echo esc_url(admin_url('admin.php?page=rrze-shorturl&tab=statistic&orderby=link_count&order=' . ($orderby === 'link_count' && $order === 'asc' ? 'desc' : 'asc'))); ?>">
+                                <span><?php echo esc_html__('Link Count', 'rrze-shorturl'); ?></span>
                                 <span class="sorting-indicators"><span class="sorting-indicator asc"
                                         aria-hidden="true"></span><span class="sorting-indicator desc"
                                         aria-hidden="true"></span></span>
@@ -896,22 +941,22 @@ class Settings
                 <tfoot>
                     <tr>
                         <th scope="col"
-                            class="manage-column column-hostname <?php echo $orderby === 'hostname' ? 'sorted' : 'sortable'; ?> <?php echo $order; ?>"
-                            data-sort="<?php echo $orderby === 'hostname' ? $order : 'asc'; ?>">
+                            class="manage-column column-hostname <?php echo esc_attr($orderby === 'hostname' ? 'sorted' : 'sortable'); ?> <?php echo esc_attr($order); ?>"
+                            data-sort="<?php echo esc_attr($orderby === 'hostname' ? $order : 'asc'); ?>">
                             <a
-                                href="<?php echo admin_url('admin.php?page=rrze-shorturl&tab=statistic&orderby=hostname&order=' . ($orderby === 'hostname' && $order === 'asc' ? 'desc' : 'asc')); ?>">
-                                <span><?php echo __('Hostname', 'rrze-shorturl'); ?></span>
+                                href="<?php echo esc_url(admin_url('admin.php?page=rrze-shorturl&tab=statistic&orderby=hostname&order=' . ($orderby === 'hostname' && $order === 'asc' ? 'desc' : 'asc'))); ?>">
+                                <span><?php echo esc_html__('Hostname', 'rrze-shorturl'); ?></span>
                                 <span class="sorting-indicators"><span class="sorting-indicator asc"
                                         aria-hidden="true"></span><span class="sorting-indicator desc"
                                         aria-hidden="true"></span></span>
                             </a>
                         </th>
                         <th scope="col"
-                            class="manage-column column-count <?php echo $orderby === 'link_count' ? 'sorted' : 'sortable'; ?> <?php echo $order; ?>"
-                            data-sort="<?php echo $orderby === 'link_count' ? $order : 'asc'; ?>">
+                            class="manage-column column-count <?php echo esc_attr($orderby === 'link_count' ? 'sorted' : 'sortable'); ?> <?php echo esc_attr($order); ?>"
+                            data-sort="<?php echo esc_attr($orderby === 'link_count' ? $order : 'asc'); ?>">
                             <a
-                                href="<?php echo admin_url('admin.php?page=rrze-shorturl&tab=statistic&orderby=link_count&order=' . ($orderby === 'link_count' && $order === 'asc' ? 'desc' : 'asc')); ?>">
-                                <span><?php echo __('Link Count', 'rrze-shorturl'); ?></span>
+                                href="<?php echo esc_url(admin_url('admin.php?page=rrze-shorturl&tab=statistic&orderby=link_count&order=' . ($orderby === 'link_count' && $order === 'asc' ? 'desc' : 'asc'))); ?>">
+                                <span><?php echo esc_html__('Link Count', 'rrze-shorturl'); ?></span>
                                 <span class="sorting-indicators"><span class="sorting-indicator asc"
                                         aria-hidden="true"></span><span class="sorting-indicator desc"
                                         aria-hidden="true"></span></span>

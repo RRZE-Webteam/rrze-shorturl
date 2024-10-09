@@ -27,7 +27,7 @@ class API
     public function register_rest_endpoints()
     {
         register_rest_route(
-            'wp/v2/shorturl/',
+            'wp/v2/shorturl',
             '/shorten',
             array(
                 'methods' => 'POST',
@@ -39,27 +39,27 @@ class API
         );
 
         register_rest_route(
-            'wp/v2/shorturl/',
+            'wp/v2/shorturl',
             '/get-longurl',
             array(
                 'methods' => 'GET',
                 'callback' => array($this, 'get_longurl_callback'),
-                // 'permission_callback' => [$this, 'is_ip_allowed']
+                'permission_callback' => [$this, 'is_ip_allowed']
             )
         );
 
         register_rest_route(
-            'wp/v2/shorturl/',
+            'wp/v2/shorturl',
             '/active-shorturls',
             array(
                 'methods' => 'GET',
                 'callback' => array($this, 'get_active_shorturls_callback'),
-                // 'permission_callback' => [$this, 'is_ip_allowed']
+                'permission_callback' => [$this, 'is_ip_allowed']
             )
         );
 
         register_rest_route(
-            'wp/v2/shorturl/',
+            'wp/v2/shorturl',
             '/categories',
             array(
                 'methods' => 'GET',
@@ -71,33 +71,33 @@ class API
         );
 
         register_rest_route(
-            'wp/v2/shorturl/',
+            'wp/v2/shorturl',
             '/services',
             array(
                 'methods' => 'GET',
                 'callback' => array($this, 'get_services_callback'),
-                // 'permission_callback' => [$this, 'is_ip_allowed']
+                'permission_callback' => [$this, 'is_ip_allowed']
             )
         );
 
 
         register_rest_route(
-            'wp/v2/shorturl/',
+            'wp/v2/shorturl',
             '/decrypt',
             array(
                 'methods' => 'GET',
                 'callback' => array($this, 'get_decrypt_callback'),
-                // 'permission_callback' => [$this, 'is_ip_allowed']
+                'permission_callback' => [$this, 'is_ip_allowed']
             )
         );
 
         register_rest_route(
-            'wp/v2/shorturl/',
+            'wp/v2/shorturl',
             '/encrypt',
             array(
                 'methods' => 'GET',
                 'callback' => array($this, 'get_encrypt_callback'),
-                // 'permission_callback' => [$this, 'is_ip_allowed']
+                'permission_callback' => [$this, 'is_ip_allowed']
             )
         );
 
@@ -123,11 +123,11 @@ class API
         $ip = 0;
 
         if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
-            $ip = $_SERVER['HTTP_CLIENT_IP'];
+            $ip = sanitize_text_field(wp_unslash($_SERVER['HTTP_CLIENT_IP']));
         } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-            $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
-        } else {
-            $ip = $_SERVER['REMOTE_ADDR'];
+            $ip = sanitize_text_field(wp_unslash($_SERVER['HTTP_X_FORWARDED_FOR']));
+        } elseif (!empty($_SERVER['REMOTE_ADDR'])) {
+            $ip = sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR']));
         }
 
         return $ip;

@@ -1,3 +1,20 @@
+=== RRZE ShortURL ===
+Contributors: rrze-webteam
+Plugin URI: https://gitlab.rrze.fau.de/rrze-webteam/rrze-shorturl
+Tags: shorturl, url shortener, redirect, link management
+Requires at least: 6.4
+Tested up to: 6.6
+Requires PHP: 8.2
+Stable tag: 2.1.4
+License: GPLv2 or later
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
+Author: RRZE Webteam
+Author URI: https://blogs.fau.de/webworking/
+Text Domain: rrze-shorturl
+Domain Path: /languages
+
+Plugin, um URLs zu verkürzen.
+
 # RRZE-ShortURL
 WordPress-Plugin: URL shortener
 

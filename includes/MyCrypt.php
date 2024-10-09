@@ -17,7 +17,7 @@ class MyCrypt
     public function decrypt(string $code): int
     {
         if (!preg_match('/^[-a-z0-9]+$/i', $code)) {
-            throw new InvalidArgumentException("Invalid code: $code");
+            throw new InvalidArgumentException("Invalid code");
         }
 
         $base37Chars = '-' . self::$baseChars;
@@ -35,7 +35,7 @@ class MyCrypt
     public function encrypt(int $id): string
     {
         if ($id < 0) {
-            throw new InvalidArgumentException("Ungültige ID: $id");
+            throw new InvalidArgumentException("Ungültige ID");
         }
 
         $base37Chars = self::$baseChars . '-';

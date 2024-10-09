@@ -517,9 +517,9 @@ class ShortURL
     {
         try {
             // Define the time range for the query (last 60 minutes)
-            $time_limit = date('Y-m-d H:i:s', strtotime('-60 minutes'));
-
-            // Set up arguments for WP_Query to count posts in 'link' Custom Post Type
+            $time_limit = gmdate('Y-m-d H:i:s', current_time('timestamp', true) - HOUR_IN_SECONDS);
+    
+            // Set up arguments for WP_Query to count posts in 'shorturl_link' Custom Post Type
             $args = [
                 'post_type' => 'shorturl_link',  // The Custom Post Type for shortened links
                 'posts_per_page' => -1,      // No limit on posts returned
@@ -536,21 +536,19 @@ class ShortURL
                     ]
                 ]
             ];
-
+    
             // Execute the query
             $query = new \WP_Query($args);
-
+    
             // Return the total number of posts found
-            $count = $query->found_posts;
-
-            return $count;
-        } catch (Exception $e) {
+            return $query->found_posts;
+        } catch (CustomException $e) {
             // Log error if an exception is thrown
             error_log('Error in countShortenings(): ' . $e->getMessage());
             return 0;
         }
     }
-
+    
 
 
     private static function maxShorteningReached()
@@ -600,6 +598,7 @@ class ShortURL
                     'error' => true,
                     'message_type' => 'notice',
                     'txt' => sprintf(
+                        /* translators: %s: maximum number of links a user can shorten per hour */
                         __('You cannot shorten more than %s links per hour', 'rrze-shorturl'),
                         self::$CONFIG['maxShortening']
                     )
@@ -607,7 +606,7 @@ class ShortURL
             }
 
             $long_url = $shortenParams['url'] ?? null;
-            $uri = self::$rights['allow_uri'] ? sanitize_text_field($_POST['uri'] ?? '') : '';
+            $uri = self::$rights['allow_uri'] ? sanitize_text_field(wp_unslash($_POST['uri'] ?? '')) : '';
 
             // Check if this is the shortened URL
             if (self::isShortURL($long_url)) {
@@ -823,10 +822,10 @@ class ShortURL
             wp_reset_postdata();
 
             return $active_short_urls;
-        } catch (Exception $e) {
+        } catch (CustomException $e) {
             // Log the error and return a JSON-encoded error message
             error_log("Error fetching active short URLs: " . $e->getMessage());
-            return json_encode(['error' => 'An error occurred while fetching short URLs.']);
+            return wp_json_encode(['error' => 'An error occurred while fetching short URLs.']);
         }
     }
 
@@ -870,10 +869,10 @@ class ShortURL
                 // Return null if no matching short URL is found
                 return null;
             }
-        } catch (Exception $e) {
+        } catch (CustomException $e) {
             // Log the error and return a JSON-encoded error message
             error_log("Error fetching long_url by short_url: " . $e->getMessage());
-            return json_encode(['error' => 'An error occurred while fetching the long URL.']);
+            return wp_json_encode(['error' => 'An error occurred while fetching the long URL.']);
         }
     }
 

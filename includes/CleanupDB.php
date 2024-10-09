@@ -111,7 +111,7 @@ class CleanupDB
                 'meta_query' => [
                     [
                         'key' => 'valid_until',
-                        'value' => date('Y-m-d'),
+                        'value' => current_time('Y-m-d'),
                         'compare' => '<',
                         'type' => 'DATE'
                     ],
@@ -181,7 +181,7 @@ class CleanupDB
 
         } catch (CustomException $e) {
             error_log("Error cleaning invalid links: " . $e->getMessage());
-            return json_encode(array('error' => 'An error occurred while cleaning short URLs.'));
+            return wp_json_encode(array('error' => 'An error occurred while cleaning short URLs.'));
         }
     }
 
