@@ -49,8 +49,8 @@ class ShortURLRedirect
     public function handleRequest(): void
     {
         // Log all server and incoming parameters
-        error_log('Incoming SERVER parameters: ' . print_r($_SERVER, true));
-        error_log('Incoming GET parameters: ' . print_r($_GET, true));
+        // error_log('Incoming SERVER parameters: ' . print_r($_SERVER, true));
+        // error_log('Incoming GET parameters: ' . print_r($_GET, true));
 
         // Sanitize and retrieve parameters
         $code = (!empty($_GET["code"]) ? htmlspecialchars($_GET["code"]) : '');
@@ -87,7 +87,7 @@ class ShortURLRedirect
             $url = $this->shorturl_domain . "/wp-json/wp/v2/shorturl/get-longurl?code=" . $code;
             $response = $this->fetchUrl($url);
 
-            error_log('handleCustomerLink() $url = ' . $url);
+            // error_log('handleCustomerLink() $url = ' . $url);
 
             if ($response === false) {
                 throw new Exception("Failed to fetch from the REST API endpoint get-longurl.");
@@ -100,13 +100,13 @@ class ShortURLRedirect
             }
 
             // Log the API response for debugging
-            error_log(print_r($JSONresponse, true));
+            // error_log(print_r($JSONresponse, true));
 
             if (!empty($JSONresponse['long_url'])) {
                 $longUrl = $JSONresponse['long_url'];
 
                 // Log the long URL for debugging
-                error_log("Long URL: " . $longUrl);
+                // error_log("Long URL: " . $longUrl);
 
                 if ($preview) {
                     $short_url = $this->redirect_domain . '/' . $code;
@@ -317,7 +317,7 @@ class ShortURLRedirect
 
     private function updateHtaccess(): void
     {
-        error_log("we are about to write the .htaccess");
+        // error_log("we are about to write the .htaccess");
 
         $new_rules = $this->get_rules();
 

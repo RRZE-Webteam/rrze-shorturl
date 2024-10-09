@@ -11,6 +11,8 @@ class Shortcode
     {
         self::$rights = $rights;
 
+        add_filter( 'wp_kses_allowed_html', [$this, 'my_custom_allowed_html'], 10, 2 );
+
         add_shortcode('shorturl', [$this, 'shorturl_handler']);
         add_shortcode('shorturl-list', [$this, 'shortcode_list_handler']);
         add_shortcode('shorturl-categories', [$this, 'shortcode_categories_handler']);
@@ -36,6 +38,46 @@ class Shortcode
         add_action('wp_ajax_delete_category', [$this, 'delete_category_callback']);
     }
 
+    public function my_custom_allowed_html($allowed_tags, $context)
+    {
+        if ('post' === $context) {
+            // Add the <select> tag and its attributes
+            $allowed_tags['select'] = array(
+                'name' => true,
+                'id' => true,
+                'class' => true,
+                'multiple' => true,
+                'size' => true,
+            );
+
+            // Add the <option> tag and its attributes
+            $allowed_tags['option'] = array(
+                'value' => true,
+                'selected' => true,
+            );
+
+            // Add the <input> tag and its attributes
+            $allowed_tags['input'] = array(
+                'type' => true,
+                'name' => true,
+                'id' => true,
+                'class' => true,
+                'value' => true,
+                'placeholder' => true,
+                'checked' => true,
+                'disabled' => true,
+                'readonly' => true,
+                'maxlength' => true,
+                'size' => true,
+                'min' => true,
+                'max' => true,
+                'step' => true,
+            );
+        }
+
+        return $allowed_tags;
+    }
+    
 
     public function shortcode_services_handler(): string
     {
@@ -479,7 +521,7 @@ class Shortcode
 
         // Display result message
         // notice or error msg
-        $form .= '<div class="rrze-shorturl-result"><p' . (!empty($result['error']) ? ' id="shorturl-err" class="shorturl-msg-' . esc_attr($result['message_type']) . '"' : '') . '>' . esc_html($result_message) . '</p>';
+        $form .= '<div class="rrze-shorturl-result"><p' . (!empty($result['error']) ? ' id="shorturl-err" class="shorturl-msg-' . esc_attr($result['message_type']) . '"' : '') . '>' . $result_message . '</p>';
 
         if (!empty($result) && !$result['error']) {
             $form .= '<input id="shortened_url" name="shortened_url" type="hidden" value="' . esc_attr($result['txt']) . '">';
@@ -548,7 +590,7 @@ class Shortcode
         if ($ret) {
             $ret .= '<br>';
         }
-        echo esc_html($ret);
+        echo wp_kses_post($ret);
     }
     
     public function shortcode_list_handler(): string
@@ -786,8 +828,6 @@ class Shortcode
         // Check nonce for security
         check_ajax_referer('add_shorturl_category_nonce', '_ajax_nonce');
 
-        error_log('POST data: ' . print_r($_POST, true));
-
         // Sanitize the input data
         $idm_id = self::$rights['id'];
         $category_name = !empty($_POST['categoryName']) ? sanitize_text_field(wp_unslash($_POST['categoryName'])) : '';
@@ -806,7 +846,7 @@ class Shortcode
             'posts_per_page' => 1,
         ];
 
-        $query = new WP_Query($args);
+        $query = new \WP_Query($args);
 
         if ($query->have_posts()) {
             $existing_category = $query->posts[0];
@@ -837,8 +877,6 @@ class Shortcode
             if (!is_wp_error($new_category_id)) {
                 // Store idm_id as post meta for the new category
                 update_post_meta($new_category_id, 'idm_id', $idm_id);
-
-                error_log('New category inserted: ID ' . $new_category_id);
 
                 // Return the new category ID and updated category list HTML
                 wp_send_json_success([
