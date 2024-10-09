@@ -841,5 +841,132 @@ class Settings
         }
     }
 
+    public function render_statistic_section() {
+        // Determine the current sorting order and column
+        $orderby = isset($_GET['orderby']) ? sanitize_text_field(wp_unslash($_GET['orderby'])) : 'hostname';
+        $order = isset($_GET['order']) && in_array(sanitize_text_field(wp_unslash($_GET['order'])), ['asc', 'desc']) ? sanitize_text_field(wp_unslash($_GET['order'])) : 'asc';
+    
+        // Get all domains to count associated links
+        $args = [
+            'post_type' => 'shorturl_domain',
+            'posts_per_page' => -1, // Fetch all domains
+            'orderby' => 'title', // Sort by hostname (title)
+            'order' => $order
+        ];
+    
+        $domain_query = new \WP_Query($args);
+        $link_counts = [];
+    
+        if ($domain_query->have_posts()) {
+            while ($domain_query->have_posts()) {
+                $domain_query->the_post();
+                $domain_id = get_the_ID();
+                $hostname = get_the_title();
+    
+                // Query to count links associated with the current domain
+                $link_args = [
+                    'post_type' => 'shorturl_link',
+                    'meta_query' => [
+                        [
+                            'key' => 'domain_id',
+                            'value' => $domain_id,
+                            'compare' => '='
+                        ]
+                    ],
+                    'posts_per_page' => -1, // Count all links
+                    'fields' => 'ids' // Only retrieve post IDs for counting
+                ];
+    
+                $link_query = new \WP_Query($link_args);
+                $link_count = $link_query->post_count; // Get the count of associated links
+    
+                $link_counts[] = (object) [
+                    'hostname' => $hostname,
+                    'link_count' => $link_count
+                ];
+            }
+        }
+    
+        wp_reset_postdata(); // Reset post data after query
+    
+        // Sort the results by link count if necessary
+        if ($orderby === 'link_count') {
+            usort($link_counts, function ($a, $b) use ($order) {
+                if ($order === 'asc') {
+                    return $a->link_count <=> $b->link_count;
+                } else {
+                    return $b->link_count <=> $a->link_count;
+                }
+            });
+        }
+    
+        // Output the statistics table
+        ?>
+        <div class="wrap">
+            <table class="shorturl-wp-list-table widefat striped">
+                <thead>
+                    <tr>
+                        <th scope="col"
+                            class="manage-column column-hostname <?php echo esc_attr($orderby === 'hostname' ? 'sorted' : 'sortable'); ?> <?php echo esc_attr($order); ?>"
+                            data-sort="<?php echo esc_attr($orderby === 'hostname' ? $order : 'asc'); ?>">
+                            <a
+                                href="<?php echo esc_url(admin_url('admin.php?page=rrze-shorturl&tab=statistic&orderby=hostname&order=' . ($orderby === 'hostname' && $order === 'asc' ? 'desc' : 'asc'))); ?>">
+                                <span><?php echo esc_html__('Hostname', 'rrze-shorturl'); ?></span>
+                                <span class="sorting-indicators"><span class="sorting-indicator asc"
+                                        aria-hidden="true"></span><span class="sorting-indicator desc"
+                                        aria-hidden="true"></span></span>
+                            </a>
+                        </th>
+                        <th scope="col"
+                            class="manage-column column-count <?php echo esc_attr($orderby === 'link_count' ? 'sorted' : 'sortable'); ?> <?php echo esc_attr($order); ?>"
+                            data-sort="<?php echo esc_attr($orderby === 'link_count' ? $order : 'asc'); ?>">
+                            <a
+                                href="<?php echo esc_url(admin_url('admin.php?page=rrze-shorturl&tab=statistic&orderby=link_count&order=' . ($orderby === 'link_count' && $order === 'asc' ? 'desc' : 'asc'))); ?>">
+                                <span><?php echo esc_html__('Link Count', 'rrze-shorturl'); ?></span>
+                                <span class="sorting-indicators"><span class="sorting-indicator asc"
+                                        aria-hidden="true"></span><span class="sorting-indicator desc"
+                                        aria-hidden="true"></span></span>
+                            </a>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($link_counts as $link_count): ?>
+                        <tr>
+                            <td class="hostname column-hostname"><?php echo esc_html($link_count->hostname); ?></td>
+                            <td class="count column-count"><?php echo esc_html($link_count->link_count); ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th scope="col"
+                            class="manage-column column-hostname <?php echo esc_attr($orderby === 'hostname' ? 'sorted' : 'sortable'); ?> <?php echo esc_attr($order); ?>"
+                            data-sort="<?php echo esc_attr($orderby === 'hostname' ? $order : 'asc'); ?>">
+                            <a
+                                href="<?php echo esc_url(admin_url('admin.php?page=rrze-shorturl&tab=statistic&orderby=hostname&order=' . ($orderby === 'hostname' && $order === 'asc' ? 'desc' : 'asc'))); ?>">
+                                <span><?php echo esc_html__('Hostname', 'rrze-shorturl'); ?></span>
+                                <span class="sorting-indicators"><span class="sorting-indicator asc"
+                                        aria-hidden="true"></span><span class="sorting-indicator desc"
+                                        aria-hidden="true"></span></span>
+                            </a>
+                        </th>
+                        <th scope="col"
+                            class="manage-column column-count <?php echo esc_attr($orderby === 'link_count' ? 'sorted' : 'sortable'); ?> <?php echo esc_attr($order); ?>"
+                            data-sort="<?php echo esc_attr($orderby === 'link_count' ? $order : 'asc'); ?>">
+                            <a
+                                href="<?php echo esc_url(admin_url('admin.php?page=rrze-shorturl&tab=statistic&orderby=link_count&order=' . ($orderby === 'link_count' && $order === 'asc' ? 'desc' : 'asc'))); ?>">
+                                <span><?php echo esc_html__('Link Count', 'rrze-shorturl'); ?></span>
+                                <span class="sorting-indicators"><span class="sorting-indicator asc"
+                                        aria-hidden="true"></span><span class="sorting-indicator desc"
+                                        aria-hidden="true"></span></span>
+                            </a>
+                        </th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        <?php
+    }
 }
 
