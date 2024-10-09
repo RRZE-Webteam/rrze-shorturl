@@ -8,22 +8,20 @@ class CustomerDomains
     public function __construct()
     {
         add_action('init', function () {
+            // Überprüfen, ob der Cron-Job bereits geplant ist
             if (!wp_next_scheduled('rrze_shorturl_fetch_and_store_customerdomains')) {
-                add_action('rrze_shorturl_fetch_and_store_customerdomains', array($this, 'fetch_and_store_customerdomains'));
-
-                // job has never run: do it immediately (like on plugin activation)
-                // $this->fetch_and_store_customerdomains();
-
-                // let the job run daily as 4 a.m.
+                // Den Cron-Job planen, um täglich um 4 Uhr morgens zu laufen
                 wp_schedule_event(strtotime('today 4:00'), 'daily', 'rrze_shorturl_fetch_and_store_customerdomains');
             }
         });
+
+        // Den Cron-Job mit einer Funktion verbinden
+        add_action('rrze_shorturl_fetch_and_store_customerdomains', array($this, 'fetch_and_store_customerdomains'));
     }
 
     public function fetch_and_store_customerdomains()
     {
-        // error_log('fetch_and_store_customerdomains() ran');
-
+        // error_log('fetch_and_store_customerdomains() start');
         // List of API URLs to fetch data from
         $aAPI_url = [
             'https://statistiken.rrze.fau.de/webauftritte/domains//analyse/domain-analyse-18.json',
