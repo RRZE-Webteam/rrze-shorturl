@@ -20,7 +20,7 @@ class API
 
         self::$aAllowedIPs = [];
         if (!empty($options['allowed_ip_addresses'])) {
-            self::$aAllowedIPs = array_map('trim', explode("\n", $options['allowed_ip_addresses']));
+            self::$aAllowedIPs = array_map('trim', preg_split('/[\s,]+/', $options['allowed_ip_addresses']));        
         }
     }
 
@@ -108,6 +108,9 @@ class API
     public function is_ip_allowed()
     {
         $client_ip = $this->get_client_ip();
+
+        // error_log('debuggig IP live : ip = ' . $client_ip);
+        // return true;
 
         foreach (self::$aAllowedIPs as $allowed_ip) {
             if ($this->ip_in_range($client_ip, $allowed_ip)) {
