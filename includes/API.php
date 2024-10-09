@@ -15,14 +15,12 @@ class API
         flush_rewrite_rules();
         add_action('rest_api_init', array($this, 'register_rest_endpoints'));
 
-        $test = $this->is_ip_allowed();
-
         self::$rights = $rights;
         $options = json_decode(get_option('rrze-shorturl'), true);
 
         self::$aAllowedIPs = [];
         if (!empty($options['allowed_ip_addresses'])) {
-            self::$aAllowedIPs = array_map('trim', explode("\n", $options['allowed_ip_addresses']));
+            self::$aAllowedIPs = array_map('trim', preg_split('/[\s,]+/', $options['allowed_ip_addresses']));        
         }
     }
 
@@ -46,7 +44,7 @@ class API
             array(
                 'methods' => 'GET',
                 'callback' => array($this, 'get_longurl_callback'),
-                // 'permission_callback' => [$this, 'is_ip_allowed']
+                'permission_callback' => [$this, 'is_ip_allowed']
             )
         );
 
@@ -56,7 +54,7 @@ class API
             array(
                 'methods' => 'GET',
                 'callback' => array($this, 'get_active_shorturls_callback'),
-                // 'permission_callback' => [$this, 'is_ip_allowed']
+                'permission_callback' => [$this, 'is_ip_allowed']
             )
         );
 
@@ -78,7 +76,7 @@ class API
             array(
                 'methods' => 'GET',
                 'callback' => array($this, 'get_services_callback'),
-                // 'permission_callback' => [$this, 'is_ip_allowed']
+                'permission_callback' => [$this, 'is_ip_allowed']
             )
         );
 
@@ -89,7 +87,7 @@ class API
             array(
                 'methods' => 'GET',
                 'callback' => array($this, 'get_decrypt_callback'),
-                // 'permission_callback' => [$this, 'is_ip_allowed']
+                'permission_callback' => [$this, 'is_ip_allowed']
             )
         );
 
@@ -99,7 +97,7 @@ class API
             array(
                 'methods' => 'GET',
                 'callback' => array($this, 'get_encrypt_callback'),
-                // 'permission_callback' => [$this, 'is_ip_allowed']
+                'permission_callback' => [$this, 'is_ip_allowed']
             )
         );
 
@@ -110,8 +108,6 @@ class API
     public function is_ip_allowed()
     {
         $client_ip = $this->get_client_ip();
-
-        error_log('client_ip = ' . $client_ip);
 
         foreach (self::$aAllowedIPs as $allowed_ip) {
             if ($this->ip_in_range($client_ip, $allowed_ip)) {
