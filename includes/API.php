@@ -44,7 +44,7 @@ class API
             array(
                 'methods' => 'GET',
                 'callback' => array($this, 'get_longurl_callback'),
-                'permission_callback' => [$this, 'is_ip_allowed']
+                // 'permission_callback' => [$this, 'is_ip_allowed']
             )
         );
 
@@ -54,7 +54,7 @@ class API
             array(
                 'methods' => 'GET',
                 'callback' => array($this, 'get_active_shorturls_callback'),
-                'permission_callback' => [$this, 'is_ip_allowed']
+                // 'permission_callback' => [$this, 'is_ip_allowed']
             )
         );
 
@@ -76,7 +76,7 @@ class API
             array(
                 'methods' => 'GET',
                 'callback' => array($this, 'get_services_callback'),
-                'permission_callback' => [$this, 'is_ip_allowed']
+                // 'permission_callback' => [$this, 'is_ip_allowed']
             )
         );
 
@@ -87,7 +87,7 @@ class API
             array(
                 'methods' => 'GET',
                 'callback' => array($this, 'get_decrypt_callback'),
-                'permission_callback' => [$this, 'is_ip_allowed']
+                // 'permission_callback' => [$this, 'is_ip_allowed']
             )
         );
 
@@ -97,7 +97,7 @@ class API
             array(
                 'methods' => 'GET',
                 'callback' => array($this, 'get_encrypt_callback'),
-                'permission_callback' => [$this, 'is_ip_allowed']
+                // 'permission_callback' => [$this, 'is_ip_allowed']
             )
         );
 
