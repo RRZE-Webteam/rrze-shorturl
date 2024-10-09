@@ -15,6 +15,8 @@ class API
         flush_rewrite_rules();
         add_action('rest_api_init', array($this, 'register_rest_endpoints'));
 
+        $test = $this->is_ip_allowed();
+
         self::$rights = $rights;
         $options = json_decode(get_option('rrze-shorturl'), true);
 
@@ -108,6 +110,8 @@ class API
     public function is_ip_allowed()
     {
         $client_ip = $this->get_client_ip();
+
+        error_log('client_ip = ' . $client_ip);
 
         foreach (self::$aAllowedIPs as $allowed_ip) {
             if ($this->ip_in_range($client_ip, $allowed_ip)) {
