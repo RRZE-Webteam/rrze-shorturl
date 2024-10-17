@@ -514,7 +514,7 @@ class Shortcode
         }
         $form .= self::display_shorturl_validity($aParams['valid_until']);
         if (self::$rights['allow_utm']) {
-            $form .= self::display_shorturl_utm($aParams['utm_source'], $aParams['utm_medium'], $aParams['utm_campaign'], $aParams['utm_term'], $aParams['utm_content']);
+            $form .= self::display_shorturl_utm($aParams);
         }
         $form .= '<h6 class="handle">' . esc_html__('Categories', 'rrze-shorturl') . '</h6>';
         $form .= self::display_shorturl_category($aParams['categories']);
@@ -597,7 +597,7 @@ class Shortcode
     public function shortcode_list_handler(): string
     {
         $bUpdated = false;
-        $this->update_message = ['class' => 'notice-error', 'txt' => 'unknown error occurred'];
+        $this->update_message = ['class' => '', 'txt' => ''];
         $table = '';
 
         // Handle link update
@@ -786,30 +786,25 @@ class Shortcode
                     ob_start();
                     ?>
 
-                    <div class="rrze-shorturl">
+                    <div class="rrze-shorturl-advanced-settings">
                         <?php
 
                         echo '<form id="edit-link-form" method="post">';
 
                         // Generate update message if available
-                        if (!empty($this->update_message)) {
+                        if (!empty($this->update_message['txt'])) {
                             echo '<div class="notice ' . $this->update_message['class'] . ' is-dismissible"><p>' . $this->update_message['txt'] . '</p></div>';
                         }
                         ?>
 
-                        <div class="postbox">
-                            <form id="edit-link-form" method="post">
-                                <div class="postbox">
-                                    <h2 class="handle"><?php echo esc_html__('Edit Link', 'rrze-shorturl'); ?></h2>
-                                    <div class="inside">
-                                        <?php echo esc_html($link_data['long_url']); ?><br><br>
-                                        <input type="hidden" name="long_url" value="<?php echo esc_html($link_data['long_url']); ?>">
-                                        <input type="hidden" name="action" value="update_link">
-                                        <input type="hidden" name="link_id" value="<?php echo esc_attr($link_id); ?>">
-                                        <input type="hidden" name="domain_id" value="<?php echo esc_attr($link_data['domain_id']); ?>">
-                                        <input type="hidden" name="shortURL" value="<?php echo esc_attr($link_data['short_url']); ?>">
-                                    </div>
-                                </div>
+                            <!-- <div class="postbox"> -->  
+                                <h2 class="handle"><?php echo esc_html__('Edit Link', 'rrze-shorturl'); ?></h2>
+                                    <?php echo esc_html($link_data['long_url']); ?><br><br>
+                                    <input type="hidden" name="long_url" value="<?php echo esc_html($link_data['long_url']); ?>">
+                                    <input type="hidden" name="action" value="update_link">
+                                    <input type="hidden" name="link_id" value="<?php echo esc_attr($link_id); ?>">
+                                    <input type="hidden" name="domain_id" value="<?php echo esc_attr($link_data['domain_id']); ?>">
+                                    <input type="hidden" name="shortURL" value="<?php echo esc_attr($link_data['short_url']); ?>">
 
                                 <?php
                                 // Display URI field if allowed
@@ -824,13 +819,7 @@ class Shortcode
 
                                 // Display UTM fields if allowed
                                 if (self::$rights['allow_utm']) {
-                                    echo self::display_shorturl_utm(
-                                        $aParams['utm_source'],
-                                        $aParams['utm_medium'],
-                                        $aParams['utm_campaign'],
-                                        $aParams['utm_term'],
-                                        $aParams['utm_content']
-                                    );
+                                    echo self::display_shorturl_utm($aParams);
                                 }
 
                                 // Display categories
@@ -838,10 +827,9 @@ class Shortcode
                                 echo self::display_shorturl_category($aParams['categories']);
                                 ?>
 
-                                <button type="submit"
-                                    class="btn-update-link"><?php echo esc_html__('Update Link', 'rrze-shorturl'); ?></button>
-                            </form>
-                        </div>
+                                <button type="submit" class="btn-update-link"><?php echo esc_html__('Update Link', 'rrze-shorturl'); ?></button>
+                            <!-- </div> -->
+                        </form>
                         <?php
                         return ob_get_clean();
                 } else {
@@ -1040,8 +1028,15 @@ class Shortcode
     }
 
 
-    public static function display_shorturl_utm($utm_source, $utm_medium, $utm_campaign, $utm_term, $utm_content)
+    public static function display_shorturl_utm($aUTM)
     {
+        // Define UTM keys
+        $utm_source = !empty($aUTM['utm_source']) ? $aUTM['utm_source'] : '';
+        $utm_medium = !empty($aUTM['utm_medium']) ? $aUTM['utm_medium'] : '';
+        $utm_campaign = !empty($aUTM['utm_campaign']) ? $aUTM['utm_campaign'] : '';
+        $utm_term = !empty($aUTM['utm_term']) ? $aUTM['utm_term'] : '';
+        $utm_content = !empty($aUTM['utm_content']) ? $aUTM['utm_content'] : '';
+
         ob_start();
         ?>
             <div>
@@ -1049,18 +1044,22 @@ class Shortcode
                     <?php echo esc_html__('UTM Source', 'rrze-shorturl'); ?>:
                 </label>
                 <input type="text" id="utm_source" name="utm_source" value="<?php echo esc_html($utm_source); ?>">
+
                 <label for="utm_medium">
                     <?php echo esc_html__('UTM Medium', 'rrze-shorturl'); ?>:
                 </label>
                 <input type="text" id="utm_medium" name="utm_medium" value="<?php echo esc_html($utm_medium); ?>">
+
                 <label for="utm_campaign">
                     <?php echo esc_html__('UTM Campaign', 'rrze-shorturl'); ?>:
                 </label>
                 <input type="text" id="utm_campaign" name="utm_campaign" value="<?php echo esc_html($utm_campaign); ?>">
+
                 <label for="utm_term">
                     <?php echo esc_html__('UTM Term', 'rrze-shorturl'); ?>:
                 </label>
                 <input type="text" id="utm_term" name="utm_term" value="<?php echo esc_html($utm_term); ?>">
+
                 <label for="utm_content">
                     <?php echo esc_html__('UTM Content', 'rrze-shorturl'); ?>:
                 </label>

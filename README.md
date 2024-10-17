@@ -5,7 +5,7 @@ Tags: shorturl, url shortener, redirect, link management
 Requires at least: 6.4
 Tested up to: 6.6
 Requires PHP: 8.2
-Stable tag: 2.1.8
+Stable tag: 2.1.9
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Author: RRZE Webteam
@@ -14,6 +14,14 @@ Text Domain: rrze-shorturl
 Domain Path: /languages
 
 Plugin, um URLs zu verkürzen.
+
+
+[![Aktuelle Version](https://img.shields.io/github/package-json/v/rrze-webteam/rrze-shorturl/main?label=Version)](https://github.com/RRZE-Webteam/rrze-shorturl)
+[![Release Version](https://img.shields.io/github/v/release/rrze-webteam/rrze-shorturl?label=Release+Version)](https://github.com/rrze-webteam/rrze-shorturl/releases/)
+[![GitHub License](https://img.shields.io/github/license/rrze-webteam/rrze-shorturl)](https://github.com/RRZE-Webteam/rrze-shorturl)
+[![GitHub issues](https://img.shields.io/github/issues/RRZE-Webteam/rrze-shorturl)](https://github.com/RRZE-Webteam/rrze-shorturl/issues)
+![GitHub milestone details](https://img.shields.io/github/milestones/progress-percent/RRZE-Webteam/rrze-shorturl/3)
+
 
 # RRZE-ShortURL
 WordPress-Plugin: URL shortener
