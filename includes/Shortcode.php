@@ -6,6 +6,7 @@ namespace RRZE\ShortURL;
 class Shortcode
 {
     protected static $rights;
+    protected static $update_message;
 
     public function __construct($rights)
     {
@@ -465,7 +466,7 @@ class Shortcode
     public function shorturl_handler($atts = null): string
     {
         $aParams = [
-            'url' => (!empty($_POST['url']) ? sanitize_text_field(wp_unslash($_POST['url'])) : (!empty($_GET['url']) ? sanitize_text_field(wp_unslash($_GET['url'])) : '')),
+            'long_url' => (!empty($_POST['long_url']) ? sanitize_text_field(wp_unslash($_POST['long_url'])) : (!empty($_GET['long_url']) ? sanitize_text_field(wp_unslash($_GET['long_url'])) : '')),
             'uri' => self::$rights['allow_uri'] ? sanitize_text_field(wp_unslash($_POST['uri'] ?? '')) : '',
             'valid_until' => sanitize_text_field(wp_unslash($_POST['valid_until'] ?? '')),
             'categories' => !empty($_POST['categories']) ? array_map('sanitize_text_field', wp_unslash($_POST['categories'])) : [],
@@ -478,9 +479,9 @@ class Shortcode
 
         $result_message = ''; // Initialize result message
         // Check if form is submitted
-        if ((isset($_SERVER["REQUEST_METHOD"]) && $_SERVER["REQUEST_METHOD"] == "POST") || !empty($_GET['url'])) {
+        if ((isset($_SERVER["REQUEST_METHOD"]) && $_SERVER["REQUEST_METHOD"] == "POST") || !empty($_GET['long_url'])) {
             // Check if URL is provided
-            if (!empty($aParams['url'])) {
+            if (!empty($aParams['long_url'])) {
                 $result = ShortURL::shorten($aParams);
 
                 if ($result['error']) {
@@ -491,7 +492,7 @@ class Shortcode
                     $result_message .= '<br><span class="shorturl-validuntil"><span class="label">' . esc_html__('Valid until', 'rrze-shorturl') . ':</span> ' . esc_html($result['valid_until_formatted']) . '</span>';
                 }
 
-                $aParams['url'] = $result['long_url']; // we might have added the scheme
+                $aParams['long_url'] = $result['long_url']; // we might have added the scheme
             }
         }
 
@@ -500,8 +501,8 @@ class Shortcode
         $form .= '<div class="postbox">';
         $form .= '<h2 class="handle">' . esc_html__('Create Short URL', 'rrze-shorturl') . '</h2>';
         $form .= '<div class="inside">';
-        $form .= '<label for="url">' . esc_html__('Your link', 'rrze-shorturl') . ':</label>';
-        $form .= '<input type="text" name="url" id="url" value="' . esc_attr($aParams['url']) . '" placeholder="https://" ' . (!empty($result['error']) ? ' aria-invalid="true" aria-errormessage="shorturl-err" ' : '') . '>';
+        $form .= '<label for="long_url">' . esc_html__('Your link', 'rrze-shorturl') . ':</label>';
+        $form .= '<input type="text" name="long_url" id="long_url" value="' . esc_attr($aParams['long_url']) . '" placeholder="https://" ' . (!empty($result['error']) ? ' aria-invalid="true" aria-errormessage="shorturl-err" ' : '') . '>';
         $form .= '<input type="submit" id="generate" name="generate" value="' . esc_html__('Shorten', 'rrze-shorturl') . '">';
         $form .= '<input type="hidden" name="link_id" value="' . esc_attr(!empty($result['link_id']) ? $result['link_id'] : '') . '">';
         $form .= '</div>';
@@ -596,26 +597,38 @@ class Shortcode
     public function shortcode_list_handler(): string
     {
         $bUpdated = false;
-        $message = '';
+        $this->update_message = ['class' => 'notice-error', 'txt' => 'unknown error occurred'];
         $table = '';
 
         // Handle link update
         if (!empty($_POST['action']) && $_POST['action'] === 'update_link' && !empty($_POST['link_id'])) {
             $aParams = [
+                'long_url' => filter_var(wp_unslash($_POST['long_url'] ?? ''), FILTER_VALIDATE_URL),
                 'idm_id' => self::$rights['id'],
                 'link_id' => sanitize_text_field(wp_unslash($_POST['link_id'] ?? '')),
                 'domain_id' => sanitize_text_field(wp_unslash($_POST['domain_id'] ?? '')),
-                'shortURL' => filter_var(wp_unslash($_POST['shortURL'] ?? ''), FILTER_VALIDATE_URL),
+                // 'shortURL' => filter_var(wp_unslash($_POST['shortURL'] ?? ''), FILTER_VALIDATE_URL),
                 'uri' => self::$rights['allow_uri'] ? sanitize_text_field(wp_unslash($_POST['uri'] ?? '')) : '',
                 'valid_until' => sanitize_text_field(wp_unslash($_POST['valid_until'] ?? '')),
                 'categories' => !empty($_POST['categories']) ? array_map('sanitize_text_field', wp_unslash($_POST['categories'])) : []
             ];
 
             // Call the function to update the link
-            ShortURL::updateLink($aParams['idm_id'], $aParams['link_id'], $aParams['domain_id'], $aParams['shortURL'], $aParams['uri'], $aParams['valid_until'], $aParams['categories']);
+            // ShortURL::updateLink($aParams['idm_id'], $aParams['link_id'], $aParams['domain_id'], $aParams['shortURL'], $aParams['uri'], $aParams['valid_until'], $aParams['categories']);
+            $result = ShortURL::shorten($aParams);
 
-            $bUpdated = true;
-            $message = __('Link updated', 'rrze-shorturl');
+            // echo '<pre>';
+            // var_dump($result);
+            // exit;
+
+            if ($result['error']) {
+                $this->update_message['class'] = 'notice-error';
+                $this->update_message['txt'] = $result['txt'];
+            } else {
+                $bUpdated = true;
+                $this->update_message['class'] = 'notice-success';
+                $this->update_message['txt'] = __('Link updated', 'rrze-shorturl');
+            }
         }
 
         $categories = self::get_categories_hierarchically();
@@ -661,11 +674,6 @@ class Shortcode
         // Fetch the links with all necessary meta fields
         $links_query = new \WP_Query($args);
         $results = $links_query->posts;
-
-        // Generate update message
-        if (!empty($message)){
-            $table .= '<div class="notice notice-success is-dismissible"><p>' . esc_html($message) . '</p></div>';
-        }
 
         // Generate category filter dropdown
         $category_filter_dropdown = '<select name="filter_category">';
@@ -774,55 +782,68 @@ class Shortcode
                         'categories' => $aCategories
                     ];
 
-                    // Build the form using the same structure as shorturl_handler
+                    // Start output buffering
                     ob_start();
                     ?>
+
                     <div class="rrze-shorturl">
-                        <form id="edit-link-form" method="post">
-                            <div class="postbox">
-                                <h2 class="handle"><?php echo esc_html__('Edit Link', 'rrze-shorturl'); ?></h2>
-                                <div class="inside">
-                                    <label for="shortURL"><?php echo esc_html__('Long URL', 'rrze-shorturl'); ?>:</label>
-                                    <span><?php echo esc_html($link_data['long_url']); ?></span><br><br>
-                                    <input type="hidden" name="action" value="update_link">
-                                    <input type="hidden" name="link_id" value="<?php echo esc_attr($link_id); ?>">
-                                    <input type="hidden" name="domain_id" value="<?php echo esc_attr($link_data['domain_id']); ?>">
-                                    <input type="hidden" name="shortURL" value="<?php echo esc_attr($link_data['short_url']); ?>">
+                        <?php
+
+                        echo '<form id="edit-link-form" method="post">';
+
+                        // Generate update message if available
+                        if (!empty($this->update_message)) {
+                            echo '<div class="notice ' . $this->update_message['class'] . ' is-dismissible"><p>' . $this->update_message['txt'] . '</p></div>';
+                        }
+                        ?>
+
+                        <div class="postbox">
+                            <form id="edit-link-form" method="post">
+                                <div class="postbox">
+                                    <h2 class="handle"><?php echo esc_html__('Edit Link', 'rrze-shorturl'); ?></h2>
+                                    <div class="inside">
+                                        <?php echo esc_html($link_data['long_url']); ?><br><br>
+                                        <input type="hidden" name="long_url" value="<?php echo esc_html($link_data['long_url']); ?>">
+                                        <input type="hidden" name="action" value="update_link">
+                                        <input type="hidden" name="link_id" value="<?php echo esc_attr($link_id); ?>">
+                                        <input type="hidden" name="domain_id" value="<?php echo esc_attr($link_data['domain_id']); ?>">
+                                        <input type="hidden" name="shortURL" value="<?php echo esc_attr($link_data['short_url']); ?>">
+                                    </div>
                                 </div>
-                            </div>
 
-                            <?php
-                            // Display URI field if allowed
-                            if (self::$rights['allow_uri']) {
-                                echo self::display_shorturl_uri($aParams['uri']);
-                            } else {
-                                echo '<input type="hidden" name="uri" value="' . esc_attr($aParams['uri']) . '">';
-                            }
+                                <?php
+                                // Display URI field if allowed
+                                if (self::$rights['allow_uri']) {
+                                    echo self::display_shorturl_uri($aParams['uri']);
+                                } else {
+                                    echo '<input type="hidden" name="uri" value="' . esc_attr($aParams['uri']) . '">';
+                                }
 
-                            // Display validity field
-                            echo self::display_shorturl_validity($aParams['valid_until']);
+                                // Display validity field
+                                echo self::display_shorturl_validity($aParams['valid_until']);
 
-                            // Display UTM fields if allowed
-                            if (self::$rights['allow_utm']) {
-                                echo self::display_shorturl_utm(
-                                    $aParams['utm_source'],
-                                    $aParams['utm_medium'],
-                                    $aParams['utm_campaign'],
-                                    $aParams['utm_term'],
-                                    $aParams['utm_content']
-                                );
-                            }
+                                // Display UTM fields if allowed
+                                if (self::$rights['allow_utm']) {
+                                    echo self::display_shorturl_utm(
+                                        $aParams['utm_source'],
+                                        $aParams['utm_medium'],
+                                        $aParams['utm_campaign'],
+                                        $aParams['utm_term'],
+                                        $aParams['utm_content']
+                                    );
+                                }
 
-                            // Display categories
-                            echo '<h6 class="handle">' . esc_html__('Categories', 'rrze-shorturl') . '</h6>';
-                            echo self::display_shorturl_category($aParams['categories']);
-                            ?>
+                                // Display categories
+                                echo '<h6 class="handle">' . esc_html__('Categories', 'rrze-shorturl') . '</h6>';
+                                echo self::display_shorturl_category($aParams['categories']);
+                                ?>
 
-                            <button type="submit" class="btn-update-link"><?php echo esc_html__('Update Link', 'rrze-shorturl'); ?></button>
-                        </form>
-                    </div>
-                    <?php
-                    return ob_get_clean();
+                                <button type="submit"
+                                    class="btn-update-link"><?php echo esc_html__('Update Link', 'rrze-shorturl'); ?></button>
+                            </form>
+                        </div>
+                        <?php
+                        return ob_get_clean();
                 } else {
                     return '';
                 }
@@ -1008,14 +1029,14 @@ class Shortcode
     {
         ob_start();
         ?>
-        <div>
-            <label for="self_explanatory_uri">
-                <?php echo esc_html__('Self-Explanatory URI', 'rrze-shorturl'); ?>:
-            </label>
-            <input type="text" id="uri" name="uri" value="<?php echo esc_html($val); ?>">
-        </div>
-        <?php
-        return ob_get_clean();
+            <div>
+                <label for="self_explanatory_uri">
+                    <?php echo esc_html__('Self-Explanatory URI', 'rrze-shorturl'); ?>:
+                </label>
+                <input type="text" id="uri" name="uri" value="<?php echo esc_html($val); ?>">
+            </div>
+            <?php
+            return ob_get_clean();
     }
 
 
@@ -1023,30 +1044,30 @@ class Shortcode
     {
         ob_start();
         ?>
-        <div>
-            <label for="utm_source">
-                <?php echo esc_html__('UTM Source', 'rrze-shorturl'); ?>:
-            </label>
-            <input type="text" id="utm_source" name="utm_source" value="<?php echo esc_html($utm_source); ?>">
-            <label for="utm_medium">
-                <?php echo esc_html__('UTM Medium', 'rrze-shorturl'); ?>:
-            </label>
-            <input type="text" id="utm_medium" name="utm_medium" value="<?php echo esc_html($utm_medium); ?>">
-            <label for="utm_campaign">
-                <?php echo esc_html__('UTM Campaign', 'rrze-shorturl'); ?>:
-            </label>
-            <input type="text" id="utm_campaign" name="utm_campaign" value="<?php echo esc_html($utm_campaign); ?>">
-            <label for="utm_term">
-                <?php echo esc_html__('UTM Term', 'rrze-shorturl'); ?>:
-            </label>
-            <input type="text" id="utm_term" name="utm_term" value="<?php echo esc_html($utm_term); ?>">
-            <label for="utm_content">
-                <?php echo esc_html__('UTM Content', 'rrze-shorturl'); ?>:
-            </label>
-            <input type="text" id="utm_content" name="utm_content" value="<?php echo esc_html($utm_content); ?>">
-        </div>
-        <?php
-        return ob_get_clean();
+            <div>
+                <label for="utm_source">
+                    <?php echo esc_html__('UTM Source', 'rrze-shorturl'); ?>:
+                </label>
+                <input type="text" id="utm_source" name="utm_source" value="<?php echo esc_html($utm_source); ?>">
+                <label for="utm_medium">
+                    <?php echo esc_html__('UTM Medium', 'rrze-shorturl'); ?>:
+                </label>
+                <input type="text" id="utm_medium" name="utm_medium" value="<?php echo esc_html($utm_medium); ?>">
+                <label for="utm_campaign">
+                    <?php echo esc_html__('UTM Campaign', 'rrze-shorturl'); ?>:
+                </label>
+                <input type="text" id="utm_campaign" name="utm_campaign" value="<?php echo esc_html($utm_campaign); ?>">
+                <label for="utm_term">
+                    <?php echo esc_html__('UTM Term', 'rrze-shorturl'); ?>:
+                </label>
+                <input type="text" id="utm_term" name="utm_term" value="<?php echo esc_html($utm_term); ?>">
+                <label for="utm_content">
+                    <?php echo esc_html__('UTM Content', 'rrze-shorturl'); ?>:
+                </label>
+                <input type="text" id="utm_content" name="utm_content" value="<?php echo esc_html($utm_content); ?>">
+            </div>
+            <?php
+            return ob_get_clean();
     }
 
 }

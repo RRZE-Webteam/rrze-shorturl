@@ -102,8 +102,8 @@ msgstr "verkürzen"
 
 #: build/block.json:1 src/block.json:1
 msgctxt "block keyword"
-msgid "url"
-msgstr "url"
+msgid "long_url"
+msgstr "long_url"
 
 #: build/block.json:1 src/block.json:1
 msgctxt "block title"

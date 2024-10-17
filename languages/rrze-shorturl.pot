@@ -103,7 +103,7 @@ msgstr ""
 
 #: build/block.json:1 src/block.json:1
 msgctxt "block keyword"
-msgid "url"
+msgid "long_url"
 msgstr ""
 
 #: build/block.json:1 src/block.json:1

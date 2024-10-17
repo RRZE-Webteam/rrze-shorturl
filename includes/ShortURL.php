@@ -157,6 +157,21 @@ class ShortURL
     }
 
 
+
+    /**
+     * Updates an existing link post (Custom Post Type) and its associated metadata, including category IDs.
+     *
+     * @param int    $idm_id       The ID of the IDM (user or entity responsible for the link).
+     * @param int    $link_id      The ID of the link post to update.
+     * @param int    $domain_id    The ID of the associated domain for the link.
+     * @param string $shortURL     The shortened URL (used as post title).
+     * @param string $uri          (Optional) A custom URI, used as the post content.
+     * @param string $valid_until  (Optional) Expiry date of the shortened URL.
+     * @param array  $aCategory    (Optional) Array of category IDs to associate with the link.
+     *
+     * @return int|WP_Error Returns the post ID if the update was successful, or 0 if there was an error, or null if an exception occurred.
+     */
+
     public static function updateLink(
         $idm_id,
         $link_id,
@@ -164,7 +179,7 @@ class ShortURL
         $shortURL,
         $uri,
         $valid_until,
-        $categories
+        $aCategory
     ) {
         try {
             // Update the link post (Custom Post Type)
@@ -185,12 +200,15 @@ class ShortURL
                 update_post_meta($link_id, 'uri', $uri);
                 update_post_meta($link_id, 'valid_until', $valid_until);
 
+                // now activate link
+                update_post_meta($link_id, 'active', '1');
+
                 // Update categories (using custom fields)
-                if (!empty($categories)) {
+                if (!empty($aCategory)) {
                     // Store the category IDs in post meta
                     $current_categories = get_post_meta($link_id, 'category_id', false);
 
-                    foreach ($categories as $category_id) {
+                    foreach ($aCategory as $category_id) {
                         if (!in_array($category_id, $current_categories)) {
                             add_post_meta($link_id, 'category_id', $category_id, false);
                         }
@@ -518,7 +536,7 @@ class ShortURL
         try {
             // Define the time range for the query (last 60 minutes)
             $time_limit = gmdate('Y-m-d H:i:s', current_time('timestamp', true) - HOUR_IN_SECONDS);
-    
+
             // Set up arguments for WP_Query to count posts in 'shorturl_link' Custom Post Type
             $args = [
                 'post_type' => 'shorturl_link',  // The Custom Post Type for shortened links
@@ -536,10 +554,10 @@ class ShortURL
                     ]
                 ]
             ];
-    
+
             // Execute the query
             $query = new \WP_Query($args);
-    
+
             // Return the total number of posts found
             return $query->found_posts;
         } catch (CustomException $e) {
@@ -548,7 +566,7 @@ class ShortURL
             return 0;
         }
     }
-    
+
 
 
     private static function maxShorteningReached()
@@ -589,6 +607,21 @@ class ShortURL
         return '';
     }
 
+    /**
+     * Shortens a given URL and applies additional parameters such as categories, UTM parameters, and a custom URI.
+     *
+     * @param array $shortenParams {
+     *     Parameters used for URL shortening.
+     *
+     *     @type string 'long_url'         The long URL to be shortened.
+     *     @type string 'valid_until' (Optional) Expiry date of the shortened URL.
+     *     @type array  'aCategory'  (Optional) Categories assigned to the shortened URL.
+     *     @type string 'uri'         (Optional) Custom URI, if allowed by user permissions.
+     *     @type string 'utm_*'       (Optional) UTM parameters (e.g., utm_source, utm_medium, etc.).
+     * }
+     *
+     * @return array Returns an array with the result of the shortening process, including any error messages.
+     */
     public static function shorten($shortenParams)
     {
         try {
@@ -605,7 +638,7 @@ class ShortURL
                 ];
             }
 
-            $long_url = $shortenParams['url'] ?? null;
+            $long_url = $shortenParams['long_url'] ?? null;
             $uri = self::$rights['allow_uri'] ? sanitize_text_field(wp_unslash($_POST['uri'] ?? '')) : '';
 
             // Check if this is the shortened URL
@@ -709,7 +742,7 @@ class ShortURL
 
             $valid_until = (!empty($shortenParams['valid_until']) ? $shortenParams['valid_until'] : NULL);
 
-            $categories = $shortenParams['categories'] ?? [];
+            $aCategory = $shortenParams['categories'] ?? [];
             // $tags = $shortenParams['tags'] ?? [];
 
             // Validate the Date
@@ -752,13 +785,13 @@ class ShortURL
                 $shortURL = $aLink['short_url'];
             }
 
-            $bUpdated = self::updateLink(self::$rights['id'], $aLink['id'], $aDomain['id'], $shortURL, $uri, $valid_until, $categories);
+            $bUpdated = self::updateLink(self::$rights['id'], $aLink['id'], $aDomain['id'], $shortURL, $uri, $valid_until, $aCategory);
 
             if ($bUpdated === false) {
                 return [
                     'error' => true,
                     'message_type' => 'error',
-                    'txt' => __('Unable to update database table', 'rrze-shorturl'),
+                    'txt' => __('Unable to update', 'rrze-shorturl'),
                     'long_url' => $long_url
                 ];
             }

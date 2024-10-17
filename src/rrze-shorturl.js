@@ -179,14 +179,14 @@ jQuery(document).ready(function ($) {
     });
 
     // After Update Link
-    $(document).on('submit', '#edit-link-form', function (e) {
-        // remove fragment (#...) and the link ID (?link_id=...)
-        var currentUrl = window.location.href;
-        var newUrl = currentUrl.split('?')[0];
+    // $(document).on('submit', '#edit-link-form', function (e) {
+    //     // remove fragment (#...) and the link ID (?link_id=...)
+    //     var currentUrl = window.location.href;
+    //     var newUrl = currentUrl.split('?')[0];
 
-        // Update the URL in the address bar without reloading the page
-        window.history.pushState({}, document.title, newUrl);
-    });
+    //     // Update the URL in the address bar without reloading the page
+    //     window.history.pushState({}, document.title, newUrl);
+    // });
 
 
     // Delete link

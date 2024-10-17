@@ -230,7 +230,7 @@ class API
         try {
             $parameters = $request->get_json_params();
 
-            if (!isset($parameters['url'])) {
+            if (!isset($parameters['long_url'])) {
                 return new WP_REST_Response(array('error' => 'missing_url_parameter', 'message' => __('url parameter is missing.', 'rrze-shorturl')), 400);
             }
 
