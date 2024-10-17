@@ -5,7 +5,7 @@ Tags: shorturl, url shortener, redirect, link management
 Requires at least: 6.4
 Tested up to: 6.6
 Requires PHP: 8.2
-Stable tag: 2.1.5
+Stable tag: 2.1.7
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Author: RRZE Webteam

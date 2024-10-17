@@ -27,12 +27,11 @@ class Settings
         );
     }
 
+
     public function update_idm_callback()
     {
         // Check if AJAX request to update allow_uri or allow_get
         check_ajax_referer('update_shorturl_idm_nonce', '_ajax_nonce');
-
-        global $wpdb;
 
         // Validate and sanitize input
         if (!isset($_POST['id']) || !isset($_POST['field'])) {
@@ -41,7 +40,7 @@ class Settings
         }
 
         $id = intval($_POST['id']);
-        $allowed_fields = ['allow_uri', 'allow_get'];  // List of valid fields
+        $allowed_fields = ['allow_uri', 'allow_get', 'allow_utm'];  // List of valid fields
         $field = sanitize_text_field(wp_unslash($_POST['field']));
 
         if (!in_array($field, $allowed_fields)) {
@@ -49,22 +48,29 @@ class Settings
             return;
         }
 
+        // Convert the value to an integer 1 or 0 based on the input
         $value = isset($_POST['value']) && $_POST['value'] === 'true' ? 1 : 0;
 
-        // Update the allow_uri or allow_get field
-        $wpdb->update(
-            $wpdb->prefix . 'shorturl_idms',
-            array($field => $value),
-            array('id' => $id),
-            array('%d'),
-            array('%d')
-        );
+        // Check if the post with the given ID exists and is of the correct type
+        if (get_post_type($id) !== 'shorturl_idm') {
+            wp_send_json_error('Invalid post ID or post type');
+            return;
+        }
 
-        // Return success response
-        wp_send_json_success();
+        // Update the corresponding meta field for the Custom Post Type
+        $result = update_post_meta($id, $field, $value);
+
+        // Check if the update was successful and return the appropriate response
+        if (false === $result) {
+            wp_send_json_error('Meta update failed');
+        } else {
+            wp_send_json_success(array(
+                'message' => 'Field updated successfully',
+                'updated_field' => $field,
+                'new_value' => $value,
+            ));
+        }
     }
-
-
 
     // Register settings sections and fields
     public function register_settings()
@@ -841,11 +847,12 @@ class Settings
         }
     }
 
-    public function render_statistic_section() {
+    public function render_statistic_section()
+    {
         // Determine the current sorting order and column
         $orderby = isset($_GET['orderby']) ? sanitize_text_field(wp_unslash($_GET['orderby'])) : 'hostname';
         $order = isset($_GET['order']) && in_array(sanitize_text_field(wp_unslash($_GET['order'])), ['asc', 'desc']) ? sanitize_text_field(wp_unslash($_GET['order'])) : 'asc';
-    
+
         // Get all domains to count associated links
         $args = [
             'post_type' => 'shorturl_domain',
@@ -853,16 +860,16 @@ class Settings
             'orderby' => 'title', // Sort by hostname (title)
             'order' => $order
         ];
-    
+
         $domain_query = new \WP_Query($args);
         $link_counts = [];
-    
+
         if ($domain_query->have_posts()) {
             while ($domain_query->have_posts()) {
                 $domain_query->the_post();
                 $domain_id = get_the_ID();
                 $hostname = get_the_title();
-    
+
                 // Query to count links associated with the current domain
                 $link_args = [
                     'post_type' => 'shorturl_link',
@@ -876,19 +883,19 @@ class Settings
                     'posts_per_page' => -1, // Count all links
                     'fields' => 'ids' // Only retrieve post IDs for counting
                 ];
-    
+
                 $link_query = new \WP_Query($link_args);
                 $link_count = $link_query->post_count; // Get the count of associated links
-    
+
                 $link_counts[] = (object) [
                     'hostname' => $hostname,
                     'link_count' => $link_count
                 ];
             }
         }
-    
+
         wp_reset_postdata(); // Reset post data after query
-    
+
         // Sort the results by link count if necessary
         if ($orderby === 'link_count') {
             usort($link_counts, function ($a, $b) use ($order) {
@@ -899,7 +906,7 @@ class Settings
                 }
             });
         }
-    
+
         // Output the statistics table
         ?>
         <div class="wrap">
