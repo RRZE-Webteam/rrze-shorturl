@@ -11,7 +11,7 @@ class Shortcode
     {
         self::$rights = $rights;
 
-        add_filter( 'wp_kses_allowed_html', [$this, 'my_custom_allowed_html'], 10, 2 );
+        add_filter('wp_kses_allowed_html', [$this, 'my_custom_allowed_html'], 10, 2);
 
         add_shortcode('shorturl', [$this, 'shorturl_handler']);
         add_shortcode('shorturl-list', [$this, 'shortcode_list_handler']);
@@ -77,7 +77,7 @@ class Shortcode
 
         return $allowed_tags;
     }
-    
+
 
     public function shortcode_services_handler(): string
     {
@@ -592,11 +592,12 @@ class Shortcode
         }
         echo wp_kses_post($ret);
     }
-    
+
     public function shortcode_list_handler(): string
     {
         $bUpdated = false;
         $message = '';
+        $table = '';
 
         // Handle link update
         if (!empty($_POST['action']) && $_POST['action'] === 'update_link' && !empty($_POST['link_id'])) {
@@ -662,7 +663,9 @@ class Shortcode
         $results = $links_query->posts;
 
         // Generate update message
-        $table = '<div class="updated"><p>' . esc_html($message) . '</p></div>';
+        if (!empty($message)){
+            $table .= '<div class="notice notice-success is-dismissible"><p>' . esc_html($message) . '</p></div>';
+        }
 
         // Generate category filter dropdown
         $category_filter_dropdown = '<select name="filter_category">';
@@ -742,40 +745,80 @@ class Shortcode
         return $table;
     }
 
-
     private function display_edit_link_form()
     {
         $link_id = !empty($_GET['link_id']) ? (int) $_GET['link_id'] : 0;
-    
+
         if ($link_id <= 0) {
             return '';
         } else {
             // Load the link data from the database
             $link_data = $this->get_link_data_by_id($link_id);
-    
+
             if (empty($link_data)) {
                 return '';
             } else {
-                // check if user is allowed to edit
+                // Check if user is allowed to edit
                 if (self::$rights['id'] == $link_data['idm_id'] || is_user_logged_in()) {
                     $aCategories = !empty($link_data['category_ids']) ? explode(',', $link_data['category_ids']) : [];
-    
-                    // Display the edit form
+
+                    // Prepare parameters for the form
+                    $aParams = [
+                        'uri' => !empty($link_data['uri']) ? esc_attr($link_data['uri']) : '',
+                        'valid_until' => esc_attr($link_data['valid_until']),
+                        'utm_source' => !empty($link_data['utm_source']) ? esc_attr($link_data['utm_source']) : '',
+                        'utm_medium' => !empty($link_data['utm_medium']) ? esc_attr($link_data['utm_medium']) : '',
+                        'utm_campaign' => !empty($link_data['utm_campaign']) ? esc_attr($link_data['utm_campaign']) : '',
+                        'utm_term' => !empty($link_data['utm_term']) ? esc_attr($link_data['utm_term']) : '',
+                        'utm_content' => !empty($link_data['utm_content']) ? esc_attr($link_data['utm_content']) : '',
+                        'categories' => $aCategories
+                    ];
+
+                    // Build the form using the same structure as shorturl_handler
                     ob_start();
                     ?>
-                    <div id="edit-link-form">
-                        <h2><?php echo esc_html__('Edit Link', 'rrze-shorturl'); ?></h2>
-                        <form id="edit-link-form" method="post" action="">
-                            <span><?php echo esc_html($link_data['short_url']); ?></span><br><br>
-                            <input type="hidden" name="action" value="update_link">
-                            <input type="hidden" name="link_id" value="<?php echo esc_attr($link_id); ?>">
-                            <input type="hidden" name="domain_id" value="<?php echo esc_attr($link_data['domain_id']); ?>">
-                            <input type="hidden" name="shortURL" value="<?php echo esc_attr($link_data['short_url']); ?>">
-                            <input type="hidden" name="uri" value="<?php echo !empty($link_data['uri']) ? esc_attr($link_data['uri']) : ''; ?>">
-                            <?php echo wp_kses_post(self::display_shorturl_validity(esc_attr($link_data['valid_until']))); ?>
-                            <h2 class="handle"><?php echo esc_html__('Categories', 'rrze-shorturl'); ?></h2>
-                            <?php echo wp_kses_post(self::display_shorturl_category($aCategories)); ?>
-                            <button type="submit"><?php echo esc_html__('Update Link', 'rrze-shorturl'); ?></button>
+                    <div class="rrze-shorturl">
+                        <form id="edit-link-form" method="post">
+                            <div class="postbox">
+                                <h2 class="handle"><?php echo esc_html__('Edit Link', 'rrze-shorturl'); ?></h2>
+                                <div class="inside">
+                                    <label for="shortURL"><?php echo esc_html__('Long URL', 'rrze-shorturl'); ?>:</label>
+                                    <span><?php echo esc_html($link_data['long_url']); ?></span><br><br>
+                                    <input type="hidden" name="action" value="update_link">
+                                    <input type="hidden" name="link_id" value="<?php echo esc_attr($link_id); ?>">
+                                    <input type="hidden" name="domain_id" value="<?php echo esc_attr($link_data['domain_id']); ?>">
+                                    <input type="hidden" name="shortURL" value="<?php echo esc_attr($link_data['short_url']); ?>">
+                                </div>
+                            </div>
+
+                            <?php
+                            // Display URI field if allowed
+                            if (self::$rights['allow_uri']) {
+                                echo self::display_shorturl_uri($aParams['uri']);
+                            } else {
+                                echo '<input type="hidden" name="uri" value="' . esc_attr($aParams['uri']) . '">';
+                            }
+
+                            // Display validity field
+                            echo self::display_shorturl_validity($aParams['valid_until']);
+
+                            // Display UTM fields if allowed
+                            if (self::$rights['allow_utm']) {
+                                echo self::display_shorturl_utm(
+                                    $aParams['utm_source'],
+                                    $aParams['utm_medium'],
+                                    $aParams['utm_campaign'],
+                                    $aParams['utm_term'],
+                                    $aParams['utm_content']
+                                );
+                            }
+
+                            // Display categories
+                            echo '<h6 class="handle">' . esc_html__('Categories', 'rrze-shorturl') . '</h6>';
+                            echo self::display_shorturl_category($aParams['categories']);
+                            ?>
+
+                            <button type="submit" class="btn-update-link"><?php echo esc_html__('Update Link', 'rrze-shorturl'); ?></button>
                         </form>
                     </div>
                     <?php
@@ -786,7 +829,7 @@ class Shortcode
             }
         }
     }
-    
+
     public static function update_category_label()
     {
         // Verify nonce
@@ -978,7 +1021,6 @@ class Shortcode
 
     public static function display_shorturl_utm($utm_source, $utm_medium, $utm_campaign, $utm_term, $utm_content)
     {
-
         ob_start();
         ?>
         <div>

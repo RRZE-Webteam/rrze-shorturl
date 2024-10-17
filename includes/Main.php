@@ -66,6 +66,22 @@ class Main
     }
 
 
+    /* Load necessary WordPress admin styles for consistent UI elements in the frontend */
+    public function load_admin_styles()
+    {
+        // if (!is_admin()) {
+            // Load the script for the dismissible "X" button functionality
+            wp_enqueue_script('wp-dismiss-notice');
+
+            // Load the basic styles for WordPress admin notices, including the "X" button
+            wp_enqueue_style('common');
+            wp_enqueue_script('common', includes_url('js/wp-admin/common.js'), array('jquery'), null, true);
+
+            // Optionally load table styles if needed for list tables
+            wp_enqueue_style('wp-list-table');
+        // }
+    }
+
     /**
      * Enqueue der globale Skripte.
      */
@@ -75,7 +91,7 @@ class Main
         wp_enqueue_script('qrious', plugins_url('assets/js/qrious.min.js', plugin_basename($this->pluginFile)), array('jquery'), null, true);
         // wp_enqueue_script('rrze-shorturl', plugins_url('assets/js/rrze-shorturl.min.js', plugin_basename($this->pluginFile)), array('jquery'), null, true);
         wp_enqueue_script('rrze-shorturl', plugins_url('src/rrze-shorturl.js', plugin_basename($this->pluginFile)), array('jquery'), null, true);
-        wp_enqueue_style('wp-list-table');
+        $this->load_admin_styles();
 
         // Localize the script with the nonces
         wp_localize_script(
@@ -304,7 +320,8 @@ class Main
         update_option('rrze_shorturl_migration_completed', true);
     }
 
-    public function drop_shorturl_tables(){
+    public function drop_shorturl_tables()
+    {
         if (get_option('rrze_shorturl_custom_tables_dropped')) {
             return;
         }

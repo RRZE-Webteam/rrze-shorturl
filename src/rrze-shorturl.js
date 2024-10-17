@@ -86,6 +86,7 @@ jQuery(document).ready(function ($) {
         $(this).find(".shorturl-edit-category, .shorturl-delete-category").addClass("hidden");
     });
 
+    // edit category
     $(document).on("click", ".shorturl-edit-category", function (e) {
         e.preventDefault();
         var label = $(this).siblings(".shorturl-category-label").text().trim(); // Get the label from the adjacent span
@@ -176,6 +177,17 @@ jQuery(document).ready(function ($) {
 
         window.location.href = newUrl;
     });
+
+    // After Update Link
+    $(document).on('submit', '#edit-link-form', function (e) {
+        // remove fragment (#...) and the link ID (?link_id=...)
+        var currentUrl = window.location.href;
+        var newUrl = currentUrl.split('?')[0];
+
+        // Update the URL in the address bar without reloading the page
+        window.history.pushState({}, document.title, newUrl);
+    });
+
 
     // Delete link
     $(document).on('click', '.delete-link', function (e) {
