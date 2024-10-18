@@ -786,10 +786,13 @@ class Shortcode
                     ob_start();
                     ?>
 
-                    <div class="rrze-shorturl-advanced-settings">
+                    <div class="rrze-shorturl">
                         <?php
 
-                        echo '<form id="edit-link-form" method="post">';
+echo '<form id="edit-link-form" method="post">';
+// echo '<form id="shorturl-form" method="post">';
+
+                        
 
                         // Generate update message if available
                         if (!empty($this->update_message['txt'])) {
@@ -797,7 +800,7 @@ class Shortcode
                         }
                         ?>
 
-                            <!-- <div class="postbox"> -->  
+                            <div class="postbox">  
                                 <h2 class="handle"><?php echo esc_html__('Edit Link', 'rrze-shorturl'); ?></h2>
                                     <?php echo esc_html($link_data['long_url']); ?><br><br>
                                     <input type="hidden" name="long_url" value="<?php echo esc_html($link_data['long_url']); ?>">
@@ -828,7 +831,7 @@ class Shortcode
                                 ?>
 
                                 <button type="submit" class="btn-update-link"><?php echo esc_html__('Update Link', 'rrze-shorturl'); ?></button>
-                            <!-- </div> -->
+                            </div>
                         </form>
                         <?php
                         return ob_get_clean();
