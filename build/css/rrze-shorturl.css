@@ -1,1 +1,283 @@
-.column-long-url{word-wrap:break-word;max-width:200px}.shorturl-edit-container{display:flex;align-items:center}.shorturl-category-input{flex:1;margin-right:10px}.shorturl-update-category{margin-left:10px}.shorturl-wp-list-table{width:100%;border-collapse:collapse}.shorturl-wp-list-table th,.shorturl-wp-list-table td{padding:10px;border:1px solid #ccc}.shorturl-wp-list-table th{background-color:#f1f1f1;font-weight:bold}.shorturl-wp-list-table tbody tr:nth-child(even){background-color:#f9f9f9}.shorturl-link-disabled{pointer-events:none;color:gray !important;cursor:not-allowed}#qr-container{display:flex;align-items:center}#qr{margin-right:5px}#qr-logo{z-index:2;position:absolute;top:50%;left:50%;transform:translate(-50%, -50%);width:40px;height:auto;border:5px solid white;background-color:white}.shorturl-copy-img,.shorturl-download-img{width:20px;cursor:pointer}.shorturl-tooltip{position:absolute;background-color:black;color:white;padding:5px;border-radius:6px;display:none;margin-top:10px}.shorturl-tooltip::after{content:'';position:absolute;top:50%;left:-5px;margin-left:-5px;border-width:5px;border-style:solid;border-color:transparent black transparent transparent}.rrze-shorturl{width:60ch;max-width:100%;margin:0 auto}.rrze-shorturl form#shorturl-form,.rrze-shorturl form#edit-link-form{display:block;position:relative;padding:var(--width-gutter-half, 15px);border:1px solid var(--color-ContentBorders, #dfe6ec);box-shadow:0 3px 12px 0 #ebebeb}.rrze-shorturl form#shorturl-form label,.rrze-shorturl form#edit-link-form label{display:block}.rrze-shorturl form#shorturl-form label[for="valid_until"],.rrze-shorturl form#edit-link-form label[for="valid_until"]{float:left;margin-right:1em}.rrze-shorturl form#shorturl-form .label,.rrze-shorturl form#edit-link-form .label{font-weight:bold}.rrze-shorturl form#shorturl-form input#url,.rrze-shorturl form#edit-link-form input#url{display:block;width:100%;margin-bottom:0}.rrze-shorturl form#shorturl-form input[type=submit],.rrze-shorturl form#edit-link-form input[type=submit]{margin-top:1em;margin-bottom:3px}.rrze-shorturl form#shorturl-form [aria-invalid="true"],.rrze-shorturl form#edit-link-form [aria-invalid="true"]{outline:2px solid var(--color-Negative, #a71c18)}.rrze-shorturl form#shorturl-form [aria-invalid="true"] ~ .errormessage,.rrze-shorturl form#edit-link-form [aria-invalid="true"] ~ .errormessage{visibility:visible}.rrze-shorturl form#shorturl-form button,.rrze-shorturl form#edit-link-form button{cursor:pointer}.rrze-shorturl form#shorturl-form button#btn-show-advanced-settings,.rrze-shorturl form#edit-link-form button#btn-show-advanced-settings{border:1px solid var(--color-ContentBorders, #dfe6ec);border-radius:var(--border-radius-buttons, 3px);box-shadow:none;background:#fff;color:var(--color-Text, #222);cursor:pointer}@media (min-width: 320px){.rrze-shorturl form#shorturl-form button#btn-show-advanced-settings,.rrze-shorturl form#edit-link-form button#btn-show-advanced-settings{position:absolute;right:15px;top:8.5em}}.rrze-shorturl form#shorturl-form button#btn-show-advanced-settings:hover,.rrze-shorturl form#shorturl-form button#btn-show-advanced-settings:focus,.rrze-shorturl form#shorturl-form button#btn-show-advanced-settings.active:hover,.rrze-shorturl form#edit-link-form button#btn-show-advanced-settings:hover,.rrze-shorturl form#edit-link-form button#btn-show-advanced-settings:focus,.rrze-shorturl form#edit-link-form button#btn-show-advanced-settings.active:hover{background:var(--color-ghostbutton-hover-bg, #04316a);color:var(--color-ghostbutton-hover-text, #fff)}.rrze-shorturl form#shorturl-form button#btn-show-advanced-settings:hover .arrow-down,.rrze-shorturl form#shorturl-form button#btn-show-advanced-settings:hover .arrow-up,.rrze-shorturl form#shorturl-form button#btn-show-advanced-settings:focus .arrow-down,.rrze-shorturl form#shorturl-form button#btn-show-advanced-settings:focus .arrow-up,.rrze-shorturl form#shorturl-form button#btn-show-advanced-settings.active:hover .arrow-down,.rrze-shorturl form#shorturl-form button#btn-show-advanced-settings.active:hover .arrow-up,.rrze-shorturl form#edit-link-form button#btn-show-advanced-settings:hover .arrow-down,.rrze-shorturl form#edit-link-form button#btn-show-advanced-settings:hover .arrow-up,.rrze-shorturl form#edit-link-form button#btn-show-advanced-settings:focus .arrow-down,.rrze-shorturl form#edit-link-form button#btn-show-advanced-settings:focus .arrow-up,.rrze-shorturl form#edit-link-form button#btn-show-advanced-settings.active:hover .arrow-down,.rrze-shorturl form#edit-link-form button#btn-show-advanced-settings.active:hover .arrow-up{background-color:var(--color-ghostbutton-hover-text, #fff)}.rrze-shorturl form#shorturl-form button#btn-show-advanced-settings.active,.rrze-shorturl form#edit-link-form button#btn-show-advanced-settings.active{background:var(--color-StandardHellgrau, #e9edf2);color:var(--color-Text, #222)}.rrze-shorturl form#shorturl-form button#btn-show-advanced-settings.active .arrow-down,.rrze-shorturl form#shorturl-form button#btn-show-advanced-settings.active .arrow-up,.rrze-shorturl form#edit-link-form button#btn-show-advanced-settings.active .arrow-down,.rrze-shorturl form#edit-link-form button#btn-show-advanced-settings.active .arrow-up{background-color:var(--color-Text, #222)}.rrze-shorturl form#shorturl-form button#btn-show-advanced-settings .arrow-down,.rrze-shorturl form#shorturl-form button#btn-show-advanced-settings .arrow-up,.rrze-shorturl form#edit-link-form button#btn-show-advanced-settings .arrow-down,.rrze-shorturl form#edit-link-form button#btn-show-advanced-settings .arrow-up{background-color:var(--color-Text, #222);content:" ";display:inline-block;height:1em;-webkit-mask-image:url("data:image/svg+xml;charset=utf-8,%3Csvg aria-hidden='true' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m14.83 11.29-4.24-4.24a1 1 0 0 0-1.42 0 1 1 0 0 0 0 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1 1 0 0 0 0-1.42Z'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml;charset=utf-8,%3Csvg aria-hidden='true' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m14.83 11.29-4.24-4.24a1 1 0 0 0-1.42 0 1 1 0 0 0 0 1.41L12.71 12l-3.54 3.54a1 1 0 0 0 0 1.41 1 1 0 0 0 .71.29 1 1 0 0 0 .71-.29l4.24-4.24a1 1 0 0 0 0-1.42Z'/%3E%3C/svg%3E");-webkit-mask-position:center;mask-position:center;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-size:1.7em;mask-size:1.7em;width:1em;vertical-align:middle;margin-left:.3em;transition:transform .2s linear}.rrze-shorturl form#shorturl-form button#btn-show-advanced-settings .arrow-up,.rrze-shorturl form#edit-link-form button#btn-show-advanced-settings .arrow-up{transform:rotate(270deg)}.rrze-shorturl form#shorturl-form button#btn-show-advanced-settings .arrow-down,.rrze-shorturl form#edit-link-form button#btn-show-advanced-settings .arrow-down{transform:rotate(90deg)}.rrze-shorturl form#shorturl-form .rrze-shorturl-result,.rrze-shorturl form#edit-link-form .rrze-shorturl-result{margin-top:1em}.rrze-shorturl form#shorturl-form .rrze-shorturl-result button.btn,.rrze-shorturl form#edit-link-form .rrze-shorturl-result button.btn{margin-left:1em;background:#0000;border:1px solid var(--color-ContentBorders, #dfe6ec);border-radius:var(--border-radius-buttons, 3px);box-shadow:none;color:var(--color-Text, #222);display:inline-block;font-size:.938rem;font-weight:400;padding:10px 18px}.rrze-shorturl form#shorturl-form .rrze-shorturl-result button.btn:hover,.rrze-shorturl form#shorturl-form .rrze-shorturl-result button.btn:focus,.rrze-shorturl form#shorturl-form .rrze-shorturl-result button.btn:active,.rrze-shorturl form#edit-link-form .rrze-shorturl-result button.btn:hover,.rrze-shorturl form#edit-link-form .rrze-shorturl-result button.btn:focus,.rrze-shorturl form#edit-link-form .rrze-shorturl-result button.btn:active{background:var(--color-StandardHellgrau, #e9edf2)}.rrze-shorturl form#shorturl-form .shorturl-msg-error,.rrze-shorturl form#shorturl-form .shorturl-msg-notice,.rrze-shorturl form#edit-link-form .shorturl-msg-error,.rrze-shorturl form#edit-link-form .shorturl-msg-notice{padding:10px;border-width:1px;border-style:solid;font-weight:normal;overflow:hidden}.rrze-shorturl form#shorturl-form .shorturl-msg-error,.rrze-shorturl form#edit-link-form .shorturl-msg-error{border-color:#ebccd1;color:#78302f;background-color:#f2dede}.rrze-shorturl form#shorturl-form .shorturl-msg-notice,.rrze-shorturl form#edit-link-form .shorturl-msg-notice{color:#66512c;background-color:#fcf8e3;border-color:#faebcc}.rrze-shorturl form#shorturl-form button img,.rrze-shorturl form#edit-link-form button img{box-shadow:none}.rrze-shorturl .shorturl-advanced-settings{border:2px solid var(--color-ContentBorders, #dfe6ec);padding:var(--width-gutter-half, 15px);display:none;position:relative;top:-2px}
+.column-long-url {
+  word-wrap: break-word;
+  max-width: 200px;
+}
+
+.shorturl-edit-container {
+  display: flex;
+  align-items: center;
+  /* Use flexbox layout to center items vertically */
+}
+
+.shorturl-category-input {
+  flex: 1;
+  /* Allow input field to grow and fill remaining space */
+  margin-right: 10px;
+  /* Add some spacing between input and button */
+}
+
+.shorturl-update-category {
+  margin-left: 10px;
+  /* Add some spacing between button and input */
+}
+
+/* frontend-table-styles.css */
+.shorturl-wp-list-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.shorturl-wp-list-table th,
+.shorturl-wp-list-table td {
+  padding: 10px;
+  border: 1px solid #ccc;
+}
+
+.shorturl-wp-list-table th {
+  background-color: #f1f1f1;
+  font-weight: 700;
+}
+
+.shorturl-wp-list-table tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.shorturl-arrow.up::after {
+  /* Placeholder for toggling */
+}
+
+.shorturl-link-disabled {
+  pointer-events: none;
+  /* Prevents clicking on the element */
+  color: #808080 !important;
+  /* Gray */
+  cursor: not-allowed;
+  /* Changes cursor to show that the element is not clickable */
+}
+
+#qr-container {
+  display: flex;
+  align-items: center;
+}
+
+#qr {
+  margin-right: 5px;
+}
+
+#qr-logo {
+  z-index: 2;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: auto;
+  border: 5px solid #fff;
+  background-color: #fff;
+}
+
+.shorturl-copy-img,
+.shorturl-download-img {
+  width: 20px;
+  cursor: pointer;
+  /* Indicate it's clickable */
+}
+
+.shorturl-tooltip {
+  position: absolute;
+  background-color: #000;
+  color: #fff;
+  padding: 5px;
+  border-radius: 6px;
+  display: none;
+  margin-top: 10px;
+}
+
+.shorturl-tooltip::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: -5px;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent #000 transparent transparent;
+}
+
+.rrze-shorturl {
+  width: 60ch;
+  max-width: 100%;
+  margin: 0 auto;
+}
+.rrze-shorturl form#shorturl-form,
+.rrze-shorturl form#edit-link-form {
+  display: block;
+  position: relative;
+  padding: var(--width-gutter-half, 15px);
+  border: 1px solid var(--color-ContentBorders, #dfe6ec);
+  box-shadow: 0 3px 12px 0 #ebebeb;
+}
+.rrze-shorturl form#shorturl-form label,
+.rrze-shorturl form#edit-link-form label {
+  display: block;
+}
+.rrze-shorturl form#shorturl-form label[for=valid_until],
+.rrze-shorturl form#edit-link-form label[for=valid_until] {
+  float: left;
+  margin-right: 1em;
+}
+.rrze-shorturl form#shorturl-form .label,
+.rrze-shorturl form#edit-link-form .label {
+  font-weight: 700;
+}
+.rrze-shorturl form#shorturl-form input#url,
+.rrze-shorturl form#edit-link-form input#url {
+  display: block;
+  width: 100%;
+  margin-bottom: 0;
+}
+.rrze-shorturl form#shorturl-form input[type=submit],
+.rrze-shorturl form#edit-link-form input[type=submit] {
+  margin-top: 1em;
+  margin-bottom: 3px;
+}
+.rrze-shorturl form#shorturl-form [aria-invalid=true],
+.rrze-shorturl form#edit-link-form [aria-invalid=true] {
+  outline: 2px solid var(--color-Negative, #a71c18);
+}
+.rrze-shorturl form#shorturl-form [aria-invalid=true] ~ .errormessage,
+.rrze-shorturl form#edit-link-form [aria-invalid=true] ~ .errormessage {
+  visibility: visible;
+}
+.rrze-shorturl form#shorturl-form button,
+.rrze-shorturl form#edit-link-form button {
+  cursor: pointer;
+}
+.rrze-shorturl form#shorturl-form button#btn-show-advanced-settings,
+.rrze-shorturl form#edit-link-form button#btn-show-advanced-settings {
+  border: 1px solid var(--color-ContentBorders, #dfe6ec);
+  border-radius: var(--border-radius-buttons, 3px);
+  box-shadow: none;
+  background: #fff;
+  color: var(--color-Text, #222);
+  cursor: pointer;
+}
+@media (min-width: 320px) {
+  .rrze-shorturl form#shorturl-form button#btn-show-advanced-settings,
+  .rrze-shorturl form#edit-link-form button#btn-show-advanced-settings {
+    position: absolute;
+    right: 15px;
+    top: 8.5em;
+  }
+}
+.rrze-shorturl form#shorturl-form button#btn-show-advanced-settings .arrow-down,
+.rrze-shorturl form#shorturl-form button#btn-show-advanced-settings .arrow-up,
+.rrze-shorturl form#edit-link-form button#btn-show-advanced-settings .arrow-down,
+.rrze-shorturl form#edit-link-form button#btn-show-advanced-settings .arrow-up {
+  background-color: var(--color-Text, #222);
+  content: " ";
+  display: inline-block;
+  height: 1em;
+  /* stylelint-disable-next-line function-url-quotes */
+  -webkit-mask-image: url("data:image/svg+xml;charset=utf-8,%253Csvg%20aria-hidden='true'%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%253E%253Cpath%20d='m14.83%2011.29-4.24-4.24a1%201%200%200%200-1.42%200%201%201%200%200%200%200%201.41L12.71%2012l-3.54%203.54a1%201%200%200%200%200%201.41%201%201%200%200%200%20.71.29%201%201%200%200%200%20.71-.29l4.24-4.24a1%201%200%200%200%200-1.42Z'%253E%253C/svg%253E");
+  /* stylelint-disable-next-line function-url-quotes */
+  mask-image: url("data:image/svg+xml;charset=utf-8,%253Csvg%20aria-hidden='true'%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%253E%253Cpath%20d='m14.83%2011.29-4.24-4.24a1%201%200%200%200-1.42%200%201%201%200%200%200%200%201.41L12.71%2012l-3.54%203.54a1%201%200%200%200%200%201.41%201%201%200%200%200%20.71.29%201%201%200%200%200%20.71-.29l4.24-4.24a1%201%200%200%200%200-1.42Z'%253E%253C/svg%253E");
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 1.7em;
+  mask-size: 1.7em;
+  width: 1em;
+  vertical-align: middle;
+  margin-left: 0.3em;
+  transition: transform 0.2s linear;
+}
+.rrze-shorturl form#shorturl-form button#btn-show-advanced-settings:hover, .rrze-shorturl form#shorturl-form button#btn-show-advanced-settings:focus, .rrze-shorturl form#shorturl-form button#btn-show-advanced-settings.active,
+.rrze-shorturl form#edit-link-form button#btn-show-advanced-settings:hover,
+.rrze-shorturl form#edit-link-form button#btn-show-advanced-settings:focus,
+.rrze-shorturl form#edit-link-form button#btn-show-advanced-settings.active {
+  background: var(--color-StandardHellgrau, #e9edf2);
+  color: var(--color-Text, #222);
+}
+.rrze-shorturl form#shorturl-form button#btn-show-advanced-settings:hover .arrow-down,
+.rrze-shorturl form#shorturl-form button#btn-show-advanced-settings:hover .arrow-up, .rrze-shorturl form#shorturl-form button#btn-show-advanced-settings:focus .arrow-down,
+.rrze-shorturl form#shorturl-form button#btn-show-advanced-settings:focus .arrow-up, .rrze-shorturl form#shorturl-form button#btn-show-advanced-settings.active .arrow-down,
+.rrze-shorturl form#shorturl-form button#btn-show-advanced-settings.active .arrow-up,
+.rrze-shorturl form#edit-link-form button#btn-show-advanced-settings:hover .arrow-down,
+.rrze-shorturl form#edit-link-form button#btn-show-advanced-settings:hover .arrow-up,
+.rrze-shorturl form#edit-link-form button#btn-show-advanced-settings:focus .arrow-down,
+.rrze-shorturl form#edit-link-form button#btn-show-advanced-settings:focus .arrow-up,
+.rrze-shorturl form#edit-link-form button#btn-show-advanced-settings.active .arrow-down,
+.rrze-shorturl form#edit-link-form button#btn-show-advanced-settings.active .arrow-up {
+  background-color: var(--color-Text, #222);
+}
+.rrze-shorturl form#shorturl-form button#btn-show-advanced-settings.active:hover,
+.rrze-shorturl form#edit-link-form button#btn-show-advanced-settings.active:hover {
+  background: var(--color-ghostbutton-hover-bg, #04316a);
+  color: var(--color-ghostbutton-hover-text, #fff);
+}
+.rrze-shorturl form#shorturl-form button#btn-show-advanced-settings.active:hover .arrow-down,
+.rrze-shorturl form#shorturl-form button#btn-show-advanced-settings.active:hover .arrow-up,
+.rrze-shorturl form#edit-link-form button#btn-show-advanced-settings.active:hover .arrow-down,
+.rrze-shorturl form#edit-link-form button#btn-show-advanced-settings.active:hover .arrow-up {
+  background-color: var(--color-ghostbutton-hover-text, #fff);
+}
+.rrze-shorturl form#shorturl-form .rrze-shorturl-result,
+.rrze-shorturl form#edit-link-form .rrze-shorturl-result {
+  margin-top: 1em;
+}
+.rrze-shorturl form#shorturl-form .rrze-shorturl-result button.btn,
+.rrze-shorturl form#edit-link-form .rrze-shorturl-result button.btn {
+  margin-left: 1em;
+  background: rgba(0, 0, 0, 0);
+  border: 1px solid var(--color-ContentBorders, #dfe6ec);
+  border-radius: var(--border-radius-buttons, 3px);
+  box-shadow: none;
+  color: var(--color-Text, #222);
+  display: inline-block;
+  font-size: 0.938rem;
+  font-weight: 400;
+  padding: 10px 18px;
+}
+.rrze-shorturl form#shorturl-form .rrze-shorturl-result button.btn:hover, .rrze-shorturl form#shorturl-form .rrze-shorturl-result button.btn:focus, .rrze-shorturl form#shorturl-form .rrze-shorturl-result button.btn:active,
+.rrze-shorturl form#edit-link-form .rrze-shorturl-result button.btn:hover,
+.rrze-shorturl form#edit-link-form .rrze-shorturl-result button.btn:focus,
+.rrze-shorturl form#edit-link-form .rrze-shorturl-result button.btn:active {
+  background: var(--color-StandardHellgrau, #e9edf2);
+}
+.rrze-shorturl form#shorturl-form .shorturl-msg-error,
+.rrze-shorturl form#shorturl-form .shorturl-msg-notice,
+.rrze-shorturl form#edit-link-form .shorturl-msg-error,
+.rrze-shorturl form#edit-link-form .shorturl-msg-notice {
+  padding: 10px;
+  border-width: 1px;
+  border-style: solid;
+  font-weight: 400;
+  overflow: hidden;
+}
+.rrze-shorturl form#shorturl-form .shorturl-msg-error,
+.rrze-shorturl form#edit-link-form .shorturl-msg-error {
+  border-color: #ebccd1;
+  color: #78302f;
+  background-color: #f2dede;
+}
+.rrze-shorturl form#shorturl-form .shorturl-msg-notice,
+.rrze-shorturl form#edit-link-form .shorturl-msg-notice {
+  color: #66512c;
+  background-color: #fcf8e3;
+  border-color: #faebcc;
+}
+.rrze-shorturl form#shorturl-form button img,
+.rrze-shorturl form#edit-link-form button img {
+  box-shadow: none;
+}
+.rrze-shorturl .shorturl-advanced-settings {
+  border: 2px solid var(--color-ContentBorders, #dfe6ec);
+  padding: var(--width-gutter-half, 15px);
+  display: none;
+  position: relative;
+  top: -2px;
+}
+
+/*# sourceMappingURL=rrze-shorturl.css.map */

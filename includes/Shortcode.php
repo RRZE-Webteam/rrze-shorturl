@@ -597,7 +597,7 @@ class Shortcode
     public function shortcode_list_handler(): string
     {
         $bUpdated = false;
-        $this->update_message = ['class' => '', 'txt' => ''];
+        self::$update_message = ['class' => '', 'txt' => ''];
         $table = '';
 
         // Handle link update
@@ -614,20 +614,15 @@ class Shortcode
             ];
 
             // Call the function to update the link
-            // ShortURL::updateLink($aParams['idm_id'], $aParams['link_id'], $aParams['domain_id'], $aParams['shortURL'], $aParams['uri'], $aParams['valid_until'], $aParams['categories']);
             $result = ShortURL::shorten($aParams);
 
-            // echo '<pre>';
-            // var_dump($result);
-            // exit;
-
             if ($result['error']) {
-                $this->update_message['class'] = 'notice-error';
-                $this->update_message['txt'] = $result['txt'];
+                self::$update_message['class'] = 'notice-error';
+                self::$update_message['txt'] = $result['txt'];
             } else {
                 $bUpdated = true;
-                $this->update_message['class'] = 'notice-success';
-                $this->update_message['txt'] = __('Link updated', 'rrze-shorturl');
+                self::$update_message['class'] = 'notice-success';
+                self::$update_message['txt'] = __('Link updated', 'rrze-shorturl');
             }
         }
 
@@ -641,23 +636,37 @@ class Shortcode
         $own_links = empty($_GET) ? 1 : (int) !empty($_GET['own_links']);
 
         // Prepare the arguments for WP_Query to fetch the links
+        // $args = [
+        //     'post_type' => 'shorturl_link',
+        //     'posts_per_page' => -1,
+        //     'orderby' => $orderby,
+        //     'order' => $order,
+        //     'meta_query' => [
+        //         'relation' => 'AND'
+        //     ],
+        // ];
+
+        // if ($own_links == 1) {
+        //     $args['meta_query'][] = [
+        //         'key' => 'idm_id',
+        //         'value' => self::$rights['id'],
+        //         'compare' => '='
+        //     ];
+        // }
+
         $args = [
             'post_type' => 'shorturl_link',
             'posts_per_page' => -1,
             'orderby' => $orderby,
             'order' => $order,
             'meta_query' => [
-                'relation' => 'AND'
+                [
+                    'key' => 'idm_id',
+                    'value' => self::$rights['id'],
+                    'compare' => '='
+                ]
             ],
         ];
-
-        if ($own_links == 1) {
-            $args['meta_query'][] = [
-                'key' => 'idm_id',
-                'value' => self::$rights['id'],
-                'compare' => '='
-            ];
-        }
 
         // Handle category filtering
         $filter_category = !empty($_GET['filter_category']) ? (int) sanitize_text_field(wp_unslash($_GET['filter_category'])) : 0;
@@ -687,13 +696,13 @@ class Shortcode
         $filter_button = '<button type="submit">' . esc_html__('Filter', 'rrze-shorturl') . '</button>';
 
         // Generate checkbox for own links
-        $checkbox = '<input type="checkbox" name="own_links" value="1" ' . checked(1, $own_links, false) . '>' . esc_html__('My links only', 'rrze-shorturl');
+        // $checkbox = '<input type="checkbox" name="own_links" value="1" ' . checked(1, $own_links, false) . '>' . esc_html__('My links only', 'rrze-shorturl');
 
         // Generate form for category filtering
         $category_filter_form = '<form method="get">';
         $category_filter_form .= $category_filter_dropdown;
         $category_filter_form .= '&nbsp;' . $filter_button;
-        $category_filter_form .= '&nbsp;' . $checkbox;
+        // $category_filter_form .= '&nbsp;' . $checkbox;
         $category_filter_form .= '</form>';
 
         // Generate table
@@ -795,8 +804,8 @@ echo '<form id="edit-link-form" method="post">';
                         
 
                         // Generate update message if available
-                        if (!empty($this->update_message['txt'])) {
-                            echo '<div class="notice ' . $this->update_message['class'] . ' is-dismissible"><p>' . $this->update_message['txt'] . '</p></div>';
+                        if (!empty(self::$update_message['txt'])) {
+                            echo '<div class="notice ' . self::$update_message['class'] . ' is-dismissible"><p>' . self::$update_message['txt'] . '</p></div>';
                         }
                         ?>
 

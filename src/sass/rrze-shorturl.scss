@@ -5,16 +5,24 @@
 
 .shorturl-edit-container {
 	display: flex;
-	align-items: center; /* Use flexbox layout to center items vertically */
+	align-items: center;
+
+	/* Use flexbox layout to center items vertically */
 }
 
 .shorturl-category-input {
-	flex: 1; /* Allow input field to grow and fill remaining space */
-	margin-right: 10px; /* Add some spacing between input and button */
+	flex: 1;
+
+	/* Allow input field to grow and fill remaining space */
+	margin-right: 10px;
+
+	/* Add some spacing between input and button */
 }
 
 .shorturl-update-category {
-	margin-left: 10px; /* Add some spacing between button and input */
+	margin-left: 10px;
+
+	/* Add some spacing between button and input */
 }
 
 /* frontend-table-styles.css */
@@ -44,9 +52,15 @@
 }
 
 .shorturl-link-disabled {
-	pointer-events: none; /* Prevents clicking on the element */
-	color: #808080 !important; /* Gray */
-	cursor: not-allowed; /* Changes cursor to show that the element is not clickable */
+	pointer-events: none;
+
+	/* Prevents clicking on the element */
+	color: #808080 !important;
+
+	/* Gray */
+	cursor: not-allowed;
+
+	/* Changes cursor to show that the element is not clickable */
 }
 
 #qr-container {
@@ -73,7 +87,9 @@
 .shorturl-copy-img,
 .shorturl-download-img {
 	width: 20px;
-	cursor: pointer; /* Indicate it's clickable */
+	cursor: pointer;
+
+	/* Indicate it's clickable */
 }
 
 .shorturl-tooltip {
