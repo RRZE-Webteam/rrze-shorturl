@@ -23,6 +23,9 @@ class Rights
         } else {
             error_log('\RRZE\AccessControl\Permissions is not available');
         }
+
+        error_log(__FILE__ . ' this is my IdM : ' . $this->idm);
+
         add_action('init', [$this, 'getRights']);
     }
 

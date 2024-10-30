@@ -465,6 +465,8 @@ class Shortcode
 
     public function shorturl_handler($atts = null): string
     {
+        error_log(__FILE__ . ' BK TEST ');
+
         $aParams = [
             'long_url' => (!empty($_POST['long_url']) ? sanitize_text_field(wp_unslash($_POST['long_url'])) : (!empty($_GET['long_url']) ? sanitize_text_field(wp_unslash($_GET['long_url'])) : '')),
             'uri' => self::$rights['allow_uri'] ? sanitize_text_field(wp_unslash($_POST['uri'] ?? '')) : '',

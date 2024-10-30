@@ -72,7 +72,7 @@ class CPT
                 'has_archive' => false,
                 'exclude_from_search' => true,
                 'publicly_queryable' => false,
-                'show_in_rest' => false,
+                'show_in_rest' => true,
                 'rewrite' => false,
                 'supports' => array('title', 'custom-fields'),
             ));
@@ -91,12 +91,14 @@ class CPT
                     'singular_name' => __('Link'),
                 ),
                 'public' => false,
+                'show_ui' => true,
+                'show_in_menu' => true,
                 'has_archive' => false,
                 'exclude_from_search' => true,
                 'publicly_queryable' => false,
                 'show_in_rest' => false,
                 'rewrite' => false,
-                'supports' => array('title', 'editor', 'custom-fields'),
+                'supports' => array('title', 'custom-fields'),
             ));
         } catch (CustomException $e) {
             error_log("Error in register_link_cpt: " . $e->getMessage());
