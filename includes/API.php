@@ -33,7 +33,7 @@ class API
                 'methods' => 'POST',
                 'callback' => array($this, 'shorten_url_callback'),
                 'permission_callback' => function () {
-                    return self::$rights['id'] !== 0;
+                    return self::$rights['idm'] !== '';
                 }
             )
         );
@@ -65,7 +65,7 @@ class API
                 'methods' => 'GET',
                 'callback' => array($this, 'get_categories_callback'),
                 'permission_callback' => function () {
-                    return self::$rights['id'] !== 0;
+                    return self::$rights['idm'] !== '';
                 }
             )
         );

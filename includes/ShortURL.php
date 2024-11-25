@@ -1,5 +1,4 @@
 <?php
-
 namespace RRZE\ShortURL;
 
 use RRZE\ShortURL\CustomException;
@@ -543,7 +542,7 @@ class ShortURL
                 'meta_query' => [
                     [
                         'key' => 'idm',
-                        'value' => self::$rights['id'],
+                        'value' => self::$rights['idm'],
                         'compare' => '='
                     ],
                     [
@@ -767,7 +766,7 @@ class ShortURL
             }
 
             // Fetch or insert on new
-            $aLink = self::getLinkfromDB($aDomain['id'], $long_url, self::$rights['id'], $uri);
+            $aLink = self::getLinkfromDB($aDomain['id'], $long_url, self::$rights['idm'], $uri);
 
             // Create shortURL
             if (!empty($uri)) {
@@ -784,7 +783,7 @@ class ShortURL
                 $shortURL = $aLink['short_url'];
             }
 
-            $bUpdated = self::updateLink(self::$rights['id'], $aLink['id'], $aDomain['id'], $shortURL, $uri, $valid_until, $aCategory);
+            $bUpdated = self::updateLink(self::$rights['idm'], $aLink['id'], $aDomain['id'], $shortURL, $uri, $valid_until, $aCategory);
 
             if ($bUpdated === false) {
                 return [
