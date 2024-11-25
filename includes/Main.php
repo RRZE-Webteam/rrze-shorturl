@@ -43,8 +43,10 @@ class Main
         add_action('enqueue_block_editor_assets', [$this, 'enqueueScripts']);
         add_action('wp_enqueue_scripts', [$this, 'enqueueScripts']);
         add_action('admin_enqueue_scripts', [$this, 'enqueueScripts']);
-        add_action('init', [$this, 'migrate_db_to_cpt']);
+        // add_action('init', [$this, 'migrate_db_to_cpt']);
         // add_action('init', [$this, 'drop_shorturl_tables']);
+        add_action('init', [$this, 'setIdM']);
+
         add_action('init', [$this, 'initialize_services']);
         add_action('init', [$this, 'init_query_dependend_classes']);
 
@@ -60,6 +62,7 @@ class Main
     {
         $rightsObj = new Rights();
         $rights = $rightsObj->getRights();
+
         $shortURL = new ShortURL($rights);
         $shortcode = new Shortcode($rights);
         $api = new API($rights);
@@ -317,6 +320,42 @@ class Main
         update_option('rrze_shorturl_migration_completed', true);
     }
 
+    // sets the actual idm instead of the id of shorturl_idm
+    public function setIdM()
+    {
+
+        // Check if migration has been done already
+        if (get_option('rrze_shorturl_set_idm_completed')) {
+            return;
+        }
+
+        $cpts = ['shorturl_domain', 'shorturl_service', 'shorturl_link', 'shorturl_category'];
+    
+        foreach ($cpts as $cpt) {
+            $posts = get_posts([
+                'post_type'   => $cpt,
+                'post_status' => 'any',
+                'numberposts' => -1,
+                'fields'      => 'ids',
+            ]);
+    
+            foreach ($posts as $post_id) {
+                $idm_id = get_post_meta($post_id, 'idm_id', true);
+    
+                if (!empty($idm_id)) {
+                    $idm_post = get_post($idm_id);
+    
+                    if ($idm_post && $idm_post->post_type === 'shorturl_idm') {
+                        update_post_meta($post_id, 'idm', $idm_post->post_title);
+                        delete_post_meta($post_id, 'idm_id');
+                    }
+                }
+            }
+        }
+
+        update_option('rrze_shorturl_set_idm_completed', true);
+    }
+    
     public function drop_shorturl_tables()
     {
         if (get_option('rrze_shorturl_custom_tables_dropped')) {

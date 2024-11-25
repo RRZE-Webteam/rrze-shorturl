@@ -145,7 +145,7 @@ class Shortcode
             $category_id = (int) sanitize_text_field(wp_unslash($_POST['category_id']));
             $category_label = sanitize_text_field(wp_unslash($_POST['category_label']));
             $parent_category = !empty($_POST['parent_category']) ? (int) sanitize_text_field(wp_unslash($_POST['parent_category'])) : 0;
-            $idm_id = self::$rights['id'];
+            $idm = self::$rights['idm'];
 
             // Update the category using wp_update_post
             $args = [
@@ -159,9 +159,9 @@ class Shortcode
                 return new WP_Error('update_failed', __('Failed to update the category.', 'rrze-shorturl'), array('status' => 500));
             }
 
-            // Update idm_id meta field
-            if (!empty($idm_id)) {
-                update_post_meta($category_id, 'idm_id', $idm_id);
+            // Update idm meta field
+            if (!empty($idm)) {
+                update_post_meta($category_id, 'idm', $idm);
             }
 
             // Return to the table after editing
@@ -170,7 +170,7 @@ class Shortcode
             // Add Category
             $category_label = sanitize_text_field(wp_unslash($_POST['category_label']));
             $parent_category = !empty($_POST['parent_category']) ? (int) sanitize_text_field(wp_unslash($_POST['parent_category'])) : 0;
-            $idm_id = self::$rights['id'];
+            $idm = self::$rights['id'];
 
             if (!empty($category_label)) {
                 // Insert Category as a new post in the 'shorturl_category' CPT
@@ -187,9 +187,9 @@ class Shortcode
                     return new WP_Error('insert_failed', __('Failed to add category.', 'rrze-shorturl'), array('status' => 500));
                 }
 
-                // Store idm_id as post meta
-                if (!empty($idm_id)) {
-                    update_post_meta($category_id, 'idm_id', $idm_id);
+                // Store idm as post meta
+                if (!empty($idm)) {
+                    update_post_meta($category_id, 'idm', $idm);
                 }
             }
 
@@ -241,7 +241,7 @@ class Shortcode
             'post_status' => 'publish',
             'meta_query' => [
                 [
-                    'key' => 'idm_id',
+                    'key' => 'idm',
                     'value' => self::$rights['id'],
                     'compare' => '='
                 ]
@@ -357,7 +357,7 @@ class Shortcode
                 'long_url' => get_post_meta($post_id, 'long_url', true),
                 'short_url' => get_post_meta($post_id, 'short_url', true),
                 'uri' => get_post_meta($post_id, 'uri', true),
-                'idm_id' => get_post_meta($post_id, 'idm_id', true),
+                'idm' => get_post_meta($post_id, 'idm', true),
                 'domain_id' => get_post_meta($post_id, 'domain_id', true),
                 'created_at' => get_post_meta($post_id, 'created_at', true),
                 'updated_at' => get_post_meta($post_id, 'updated_at', true),
@@ -606,7 +606,7 @@ class Shortcode
         if (!empty($_POST['action']) && $_POST['action'] === 'update_link' && !empty($_POST['link_id'])) {
             $aParams = [
                 'long_url' => filter_var(wp_unslash($_POST['long_url'] ?? ''), FILTER_VALIDATE_URL),
-                'idm_id' => self::$rights['id'],
+                'idm' => self::$rights['id'],
                 'link_id' => sanitize_text_field(wp_unslash($_POST['link_id'] ?? '')),
                 'domain_id' => sanitize_text_field(wp_unslash($_POST['domain_id'] ?? '')),
                 // 'shortURL' => filter_var(wp_unslash($_POST['shortURL'] ?? ''), FILTER_VALIDATE_URL),
@@ -650,7 +650,7 @@ class Shortcode
 
         // if ($own_links == 1) {
         //     $args['meta_query'][] = [
-        //         'key' => 'idm_id',
+        //         'key' => 'idm',
         //         'value' => self::$rights['id'],
         //         'compare' => '='
         //     ];
@@ -663,7 +663,7 @@ class Shortcode
             'order' => $order,
             'meta_query' => [
                 [
-                    'key' => 'idm_id',
+                    'key' => 'idm',
                     'value' => self::$rights['id'],
                     'compare' => '='
                 ]
@@ -750,7 +750,7 @@ class Shortcode
                 $table .= '<td>' . esc_html($uri) . '</td>';
                 $table .= '<td>' . (!empty($valid_until) ? esc_html($valid_until) : esc_html__('indefinite', 'rrze-shorturl')) . '</td>';
                 $table .= '<td>' . esc_html($category_names_str) . '</td>';
-                $table .= '<td>' . (self::$rights['id'] == get_post_meta($link_id, 'idm_id', true) || is_user_logged_in() ? '<a href="#" class="edit-link" data-link-id="' . esc_attr($link_id) . '">' . esc_html__('Edit', 'rrze-shorturl') . '</a> | <a href="#" data-link-id="' . esc_attr($link_id) . '" class="delete-link">' . esc_html__('Delete', 'rrze-shorturl') . '</a>' : '') . '</td>';
+                $table .= '<td>' . (self::$rights['id'] == get_post_meta($link_id, 'idm', true) || is_user_logged_in() ? '<a href="#" class="edit-link" data-link-id="' . esc_attr($link_id) . '">' . esc_html__('Edit', 'rrze-shorturl') . '</a> | <a href="#" data-link-id="' . esc_attr($link_id) . '" class="delete-link">' . esc_html__('Delete', 'rrze-shorturl') . '</a>' : '') . '</td>';
                 $table .= '</tr>';
             }
         }
@@ -778,7 +778,7 @@ class Shortcode
                 return '';
             } else {
                 // Check if user is allowed to edit
-                if (self::$rights['id'] == $link_data['idm_id'] || is_user_logged_in()) {
+                if (self::$rights['id'] == $link_data['idm'] || is_user_logged_in()) {
                     $aCategories = !empty($link_data['category_ids']) ? explode(',', $link_data['category_ids']) : [];
 
                     // Prepare parameters for the form
@@ -895,7 +895,7 @@ echo '<form id="edit-link-form" method="post">';
         check_ajax_referer('add_shorturl_category_nonce', '_ajax_nonce');
 
         // Sanitize the input data
-        $idm_id = self::$rights['id'];
+        $idm = self::$rights['id'];
         $category_name = !empty($_POST['categoryName']) ? sanitize_text_field(wp_unslash($_POST['categoryName'])) : '';
         $parent_category = !empty($_POST['parentCategory']) ? (int) $_POST['parentCategory'] : 0;
         $aCategory = !empty($_POST['category_ids']) ? explode(',', sanitize_text_field(wp_unslash($_POST['category_ids']))) : [];
@@ -941,8 +941,8 @@ echo '<form id="edit-link-form" method="post">';
 
             // If the category was successfully inserted
             if (!is_wp_error($new_category_id)) {
-                // Store idm_id as post meta for the new category
-                update_post_meta($new_category_id, 'idm_id', $idm_id);
+                // Store idm as post meta for the new category
+                update_post_meta($new_category_id, 'idm', $idm);
 
                 // Return the new category ID and updated category list HTML
                 wp_send_json_success([

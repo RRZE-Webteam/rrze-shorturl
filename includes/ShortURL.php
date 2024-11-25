@@ -78,7 +78,7 @@ class ShortURL
         }
     }
 
-    public static function getLinkfromDB($domain_id, $long_url, $idm_id, $uri)
+    public static function getLinkfromDB($domain_id, $long_url, $idm, $uri)
     {
         try {
             // Build arguments for the query
@@ -107,8 +107,8 @@ class ShortURL
                     'compare' => '='
                 ];
                 $args['meta_query'][] = [
-                    'key' => 'idm_id',
-                    'value' => $idm_id,
+                    'key' => 'idm',
+                    'value' => $idm,
                     'compare' => '='
                 ];
             }
@@ -124,7 +124,7 @@ class ShortURL
 
                 // Create a new post
                 $post_data = [
-                    'post_title' => $long_url, // You can modify this to use a different title
+                    'post_title' => $long_url,
                     'post_type' => 'shorturl_link',
                     'post_status' => 'publish'
                 ];
@@ -133,7 +133,7 @@ class ShortURL
                 $link_id = wp_insert_post($post_data);
 
                 // Add meta data
-                update_post_meta($link_id, 'idm_id', $idm_id);
+                update_post_meta($link_id, 'idm', $idm);
                 update_post_meta($link_id, 'domain_id', $domain_id);
                 update_post_meta($link_id, 'long_url', $long_url);
 
@@ -161,7 +161,7 @@ class ShortURL
     /**
      * Updates an existing link post (Custom Post Type) and its associated metadata, including category IDs.
      *
-     * @param int    $idm_id       The ID of the IDM (user or entity responsible for the link).
+     * @param int    $idm          The IDM.
      * @param int    $link_id      The ID of the link post to update.
      * @param int    $domain_id    The ID of the associated domain for the link.
      * @param string $shortURL     The shortened URL (used as post title).
@@ -173,7 +173,7 @@ class ShortURL
      */
 
     public static function updateLink(
-        $idm_id,
+        $idm,
         $link_id,
         $domain_id,
         $shortURL,
@@ -184,17 +184,16 @@ class ShortURL
         try {
             // Update the link post (Custom Post Type)
             $post_data = [
-                'ID' => $link_id, // ID of the post to update
-                'post_title' => $shortURL, // Use short URL as the title (or another appropriate field)
-                'post_content' => $uri,      // Use URI as content or another field
+                'ID' => $link_id,
+                'post_title' => $shortURL,
+                'post_content' => $uri,
             ];
 
             // Update the post
             $update_result = wp_update_post($post_data);
 
             if ($update_result !== 0) {
-                // Update custom fields (meta data) for the link post
-                update_post_meta($link_id, 'idm_id', $idm_id);
+                update_post_meta($link_id, 'idm', $idm);
                 update_post_meta($link_id, 'domain_id', $domain_id);
                 update_post_meta($link_id, 'short_url', $shortURL);
                 update_post_meta($link_id, 'uri', $uri);
@@ -543,7 +542,7 @@ class ShortURL
                 'posts_per_page' => -1,      // No limit on posts returned
                 'meta_query' => [
                     [
-                        'key' => 'idm_id',
+                        'key' => 'idm',
                         'value' => self::$rights['id'],
                         'compare' => '='
                     ],
