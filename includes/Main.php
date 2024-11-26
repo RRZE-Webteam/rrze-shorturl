@@ -327,8 +327,6 @@ class Main
 
         // Check if migration has been done already
         if (get_option('rrze_shorturl_set_idm_completed')) {
-            echo 'rrze_shorturl_set_idm_completed<br>';
-            $this->testIdM();
             return;
         }
 
