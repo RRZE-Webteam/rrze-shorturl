@@ -622,6 +622,8 @@ class ShortURL
      */
     public static function shorten($shortenParams)
     {
+        error_log(' in shorten() - START');
+
         try {
             // check if maximum shortenings is reached
             if (self::maxShorteningReached()) {
@@ -706,6 +708,9 @@ class ShortURL
 
             // Validate the URI
             $isValidURI = false;
+
+            error_log(' in shorten() allow_uri = ' . self::$rights['allow_uri'] ? 'true' : 'false');
+
             if (self::$rights['allow_uri']) {
                 $isValidURI = self::isValidURI($uri);
 

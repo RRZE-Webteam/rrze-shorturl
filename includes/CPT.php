@@ -15,7 +15,7 @@ class CPT
         add_action('init', [$this, 'register_link_cpt']);
         add_action('init', [$this, 'register_category_cpt']);
 
-        add_filter('post_row_actions', [$this, 'disable_quick_edit_for_shorturl_link'], 10, 2);
+        add_filter('post_row_actions', [$this, 'modify_post_row_actions_for_shorturl_link'], 10, 2);
         add_filter('manage_shorturl_link_posts_columns', [$this, 'add_shorturl_link_custom_columns']);
         add_action('manage_shorturl_link_posts_custom_column', [$this, 'display_shorturl_link_custom_columns'], 10, 2);
         add_filter('manage_edit-shorturl_link_sortable_columns', [$this, 'make_shorturl_link_columns_sortable']);
@@ -24,9 +24,12 @@ class CPT
 
         add_action('add_meta_boxes', [$this, 'register_shorturl_link_metabox']);
         add_action('save_post_shorturl_link', [$this, 'save_shorturl_link_metabox_data']);
-        add_action('admin_notices', [$this, 'display_shorturl_admin_notices']);
-        add_filter('redirect_post_location', [$this, 'suppress_default_post_updated_notice']);
+        // add_action('admin_notices', [$this, 'display_shorturl_admin_notices']);
+        // add_filter('redirect_post_location', [$this, 'suppress_default_post_updated_notice']);
 
+        add_action('add_meta_boxes', [$this, 'customize_publish_metabox_for_shorturl']);
+        add_filter('wp_insert_post_data', [$this, 'enforce_publish_status_for_shorturl'], 10, 2);
+        add_action('before_delete_post', [$this, 'bypass_trash_for_shorturl']);
     }
 
     // Register Custom Post Type for IDMs
@@ -278,12 +281,26 @@ class CPT
 
     public function save_shorturl_link_metabox_data($post_id)
     {
-        // Verify the nonce to ensure the request is valid
-        if (!isset($_POST['shorturl_link_metabox_nonce']) || !wp_verify_nonce($_POST['shorturl_link_metabox_nonce'], 'save_shorturl_link_metabox_data')) {
+        error_log('NEW : in save_shorturl_link_metabox_data() START');
+
+        // Prevent repeated calls using a static flag
+        static $is_executing = false;
+        if ($is_executing) {
+            return;
+        }
+        $is_executing = true;
+
+        // Ensure this is the correct post type even though we use the hook "save_post_shorturl_link"
+        if ('shorturl_link' !== get_post_type($post_id)) {
             return;
         }
 
-        // Prevent saving during an autosave routine
+        // Skip saving if this is a revision
+        if (wp_is_post_revision($post_id)) {
+            return;
+        }
+
+        // Skip saving during an autosave routine
         if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
             return;
         }
@@ -293,41 +310,42 @@ class CPT
             return;
         }
 
+        // Verify the nonce to ensure the request is valid
+        if (!isset($_POST['shorturl_link_metabox_nonce']) || !wp_verify_nonce($_POST['shorturl_link_metabox_nonce'], 'save_shorturl_link_metabox_data')) {
+            return;
+        }
+
+        error_log('NEW : in save_shorturl_link_metabox_data() - Validated');
+
         // Prepare the parameters to pass to the ShortURL shortening logic
         $shortenParams = [
-            'long_url' => get_post_meta($post_id, 'long_url', true),
-            'uri' => sanitize_text_field($_POST['uri'] ?? ''),
-            'valid_until' => sanitize_text_field($_POST['valid_until'] ?? ''),
+            'long_url' => get_post_meta($post_id, 'long_url', true), // Retrieve the long URL from post meta
+            'uri' => sanitize_text_field($_POST['uri'] ?? ''), // Sanitize the URI input
+            'valid_until' => sanitize_text_field($_POST['valid_until'] ?? ''), // Sanitize the valid_until input
+            'active' => sanitize_text_field($_POST['active'] ?? '') === '1' ? 1 : 0, // Sanitize and set 'active' flag
         ];
 
-        // Set the 'active' status based on the checkbox
-        if (isset($_POST['active'])) {
-            $shortenParams['active'] = 1;
-        } else {
-            $shortenParams['active'] = 0;
-        }
+        error_log('NEW : $shortenParams = ' . print_r($shortenParams, true));
 
         // Call the ShortURL shortening function
         $result = ShortURL::shorten($shortenParams);
 
+        error_log('$result = ' . print_r($result, true));
+
         // Handle error scenarios
         if ($result['error']) {
-            // Store the error message in a transient
-            set_transient('shorturl_error_notice_' . $post_id, $result['txt'], 30);
-
-            return; // Stop further processing if there's an error
+            // Stop further processing if there's an error
+            return;
         }
 
-        // Store a success message in a transient
-        set_transient('shorturl_success_notice_' . $post_id, $result['txt'], 30);
-
         // Update the metadata for the post with the new ShortURL details
-        update_post_meta($post_id, 'uri', $result['uri']);
+        update_post_meta($post_id, 'uri', $result['uri']); // 2DO: ShortURL::shorten() doesn't return 'uri', but this methode has to be updated anyway, see issue #146 https://github.com/RRZE-Webteam/rrze-shorturl/issues/146#issuecomment-2447343874
         update_post_meta($post_id, 'valid_until', $result['valid_until_formatted']);
         update_post_meta($post_id, 'active', $shortenParams['active']);
         update_post_meta($post_id, 'short_url', $result['txt']);
-    }
 
+        error_log('NEW : in save_shorturl_link_metabox_data() - DONE');
+    }
     // Add admin notices
     public function display_shorturl_admin_notices()
     {
@@ -382,12 +400,81 @@ class CPT
     }
 
 
-    public function disable_quick_edit_for_shorturl_link($actions, $post)
+    public function modify_post_row_actions_for_shorturl_link($actions, $post)
     {
         if ('shorturl_link' === $post->post_type) {
+            // remove "Quick Edit"
             unset($actions['inline hide-if-no-js']);
+            // remove "Move to Trash"
+            unset($actions['trash']);
         }
         return $actions;
     }
 
+
+    public function customize_publish_metabox_for_shorturl()
+    {
+        global $post;
+
+        if ('shorturl_link' === get_post_type($post)) {
+            remove_meta_box('submitdiv', 'shorturl_link', 'side'); // Entferne die Standard-Metabox
+            add_meta_box(
+                'custom_submitdiv',
+                __('Save'),
+                [$this, 'render_custom_submit_meta_box_for_shorturl'],
+                'shorturl_link',
+                'side',
+                'high'
+            );
+        }
+    }
+
+    public function render_custom_submit_meta_box_for_shorturl($post)
+    {
+        ?>
+        <div class="submitbox" id="submitpost">
+            <div id="major-publishing-actions">
+                <div id="publishing-action">
+                    <span class="spinner"></span>
+                    <input name="original_publish" type="hidden" id="original_publish" value="Save">
+                    <input type="submit" name="publish" id="publish" class="button button-primary button-large"
+                        value="<?php _e('Save'); ?>">
+                </div>
+                <div id="delete-action">
+                    <a class="submitdelete deletion" href="<?php echo get_delete_post_link($post->ID, '', true); ?>">
+                        <?php _e('Delete Permanently'); ?>
+                    </a>
+                </div>
+                <div class="clear"></div>
+            </div>
+        </div>
+        <?php
+    }
+
+    // Status must always be "publish" to ensure URI uniqueness.
+    // Reason: We want to avoid customers or admins reserving custom or generated URIs unnecessarily.
+    // Additionally, some short_links may be inactive (post_meta "active" = 0) because the associated long_url might temporarily return a 404.
+    // Such cases are handled by CleanupDB::cleanInvalidLinks().
+    public function enforce_publish_status_for_shorturl($data, $postarr)
+    {
+        if ('shorturl_link' === $data['post_type']) {
+            $current_post = get_post($postarr['ID']);
+            if ($current_post && $current_post->post_status !== 'trash') {
+                $data['post_status'] = 'publish';
+            }
+        }
+        return $data;
+    }
+
+    // We must bypass trash and delete permanently.
+    // Reason: We want to avoid customers or admins reserving custom or generated URIs unnecessarily.
+    // Additionally, some short_links may be inactive (post_meta "active" = 0) because the associated long_url might temporarily return a 404.
+    // Such cases are handled by CleanupDB::cleanInvalidLinks().
+    public function bypass_trash($post_id)
+    {
+        $post = get_post($post_id);
+        if ($post && 'shorturl_link' === $post->post_type) {
+            wp_delete_post($post_id, true); // true = delete permanently
+        }
+    }
 }
