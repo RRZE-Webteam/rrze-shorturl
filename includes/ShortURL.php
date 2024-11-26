@@ -468,7 +468,7 @@ class ShortURL
         }
 
         $valid_until_date = \DateTime::createFromFormat('Y-m-d', $valid_until);
-        $current_date = new \DateTime(); // Using DateTime object directly
+        $current_date = new \DateTime();
 
         // Check if $valid_until is in the past
         if ($valid_until_date < $current_date) {
