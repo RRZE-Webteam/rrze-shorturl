@@ -77,84 +77,6 @@ class ShortURL
         }
     }
 
-    public static function getLinkfromDB($domain_id, $long_url, $idm, $uri)
-    {
-        try {
-            // Build arguments for the query
-            $args = [
-                'post_type' => 'shorturl_link',  // The Custom Post Type for links
-                'meta_query' => [
-                    [
-                        'key' => 'long_url',
-                        'value' => $long_url,
-                        'compare' => '='
-                    ],
-                    [
-                        'key' => 'domain_id',
-                        'value' => $domain_id,
-                        'compare' => '='
-                    ],
-                ],
-                'posts_per_page' => 1, // Return only one result
-            ];
-
-            // If URI is provided, include it in the meta query
-            if (!empty($uri)) {
-                $args['meta_query'][] = [
-                    'key' => 'uri',
-                    'value' => $uri,
-                    'compare' => '='
-                ];
-                $args['meta_query'][] = [
-                    'key' => 'idm',
-                    'value' => $idm,
-                    'compare' => '='
-                ];
-            }
-
-            // Use WP_Query to search for the custom post type
-            $query = new \WP_Query($args);
-
-            if (!$query->have_posts()) {
-                // If no link is found, create a new link
-                $long_url = self::$rights['allow_get']
-                    ? self::add_url_components($long_url, array('scheme', 'host', 'path', 'query', 'fragment'))
-                    : self::add_url_components($long_url, array('scheme', 'host', 'path', 'fragment'));
-
-                // Create a new post
-                $post_data = [
-                    'post_title' => $long_url,
-                    'post_type' => 'shorturl_link',
-                    'post_status' => 'publish'
-                ];
-
-                // Insert the post into the database
-                $link_id = wp_insert_post($post_data);
-
-                // Add meta data
-                update_post_meta($link_id, 'idm', $idm);
-                update_post_meta($link_id, 'domain_id', $domain_id);
-                update_post_meta($link_id, 'long_url', $long_url);
-
-                return ['id' => $link_id, 'short_url' => ''];
-            } else {
-                // If the link is found, retrieve the meta data
-                $post_id = $query->posts[0]->ID;
-                $short_url = get_post_meta($post_id, 'short_url', true);
-                $valid_until = get_post_meta($post_id, 'valid_until', true);
-
-                return [
-                    'id' => $post_id,
-                    'short_url' => $short_url,
-                    'valid_until' => $valid_until
-                ];
-            }
-        } catch (CustomException $e) {
-            error_log("Error in getLinkfromDB: " . $e->getMessage());
-            return null;
-        }
-    }
-
 
 
     /**
@@ -608,38 +530,74 @@ class ShortURL
     /**
      * Shortens a given URL and applies additional parameters such as categories, UTM parameters, and a custom URI.
      *
+     * This function takes various parameters to create one shortened URL or two shortened URLs if custom URI is given and allowed to use.
+     * 
+     * Checks that are made:
+     * - allowed domain?
+     * - valid URI?
+     * - unique URI?
+     * - valid expiration date?
+     * - valid given URL?
+     *
      * @param array $shortenParams {
      *     Parameters used for URL shortening.
      *
-     *     @type string 'long_url'         The long URL to be shortened.
-     *     @type string 'valid_until' (Optional) Expiry date of the shortened URL.
-     *     @type array  'aCategory'  (Optional) Categories assigned to the shortened URL.
-     *     @type string 'uri'         (Optional) Custom URI, if allowed by user permissions.
-     *     @type string 'utm_*'       (Optional) UTM parameters (e.g., utm_source, utm_medium, etc.).
+     *     @type string 'idm'          IdM - either own or the customer's if user is logged in 
+     *     @type string 'long_url'          The long URL to be shortened. Required.
+     *     @type string 'valid_until'       (Optional) Expiry date of the shortened URL in `Y-m-d` format.
+     *     @type array  'aCategory'         (Optional) An array of categories to be assigned to the shortened URL.
+     *     @type string 'uri'               (Optional) A custom URI to be used for the shortened URL, if allowed.
+     *     @type string 'utm_*'             (Optional) UTM parameters such as `utm_source`, `utm_medium`, `utm_campaign`, etc.
      * }
      *
-     * @return array Returns an array with the result of the shortening process, including any error messages.
+     * @return array Returns an array with detailed results:
+     * 
+     *  [
+     *    'error' => false/true,
+     *    'message_type' => 'standard'/'notice'/'error',
+     *    'error_msg' => '' or detailed error message,
+     *    'shorturl_generated' => if error '' else shorturl_generated,
+     *    'shorturl_custom' => if error or custom URI is not given or is not allowed '' or shorturl with custom URI,
+     *    'long_url' => the given long_url but without get-parameters if these are not allowed 
+     *    'uri' => '' or given URI,
+     *    'valid_until' => valid_until,
+     *    'valid_until_formatted' => if error '' else formatted given valid_until  
+     *   ]
      */
     public static function shorten($shortenParams)
     {
         error_log(' in shorten() - START');
 
-        try {
-            // check if maximum shortenings is reached
-            if (self::maxShorteningReached()) {
-                return [
-                    'error' => true,
-                    'message_type' => 'notice',
-                    'txt' => sprintf(
-                        /* translators: %s: maximum number of links a user can shorten per hour */
-                        __('You cannot shorten more than %s links per hour', 'rrze-shorturl'),
-                        self::$CONFIG['maxShortening']
-                    )
-                ];
-            }
+        error_log(' $shortenParams = ' . print_r($shortenParams, true));
+        $long_url = $shortenParams['long_url'] ?? null;
+        $uri = self::$rights['allow_uri'] ? sanitize_text_field(wp_unslash($_POST['uri'] ?? '')) : '';
 
-            $long_url = $shortenParams['long_url'] ?? null;
-            $uri = self::$rights['allow_uri'] ? sanitize_text_field(wp_unslash($_POST['uri'] ?? '')) : '';
+        $valid_until = (!empty($shortenParams['valid_until']) ? $shortenParams['valid_until'] : NULL);
+        $valid_until_formatted = (!empty($valid_until) ? date_format(date_create($valid_until), 'd.m.Y') : __('indefinite', 'rrze-shorturl'));
+
+        $aCategory = $shortenParams['aCategory'] ?? null;
+
+        try {
+            if (!is_user_logged_in()) {
+                // check if maximum shortenings is reached
+                if (self::maxShorteningReached()) {
+                    return [
+                        'error' => true,
+                        'message_type' => 'notice',
+                        'error_msg' => sprintf(
+                            /* translators: %s: maximum number of links a user can shorten per hour */
+                            __('You cannot shorten more than %s links per hour', 'rrze-shorturl'),
+                            self::$CONFIG['maxShortening']
+                        ),
+                        'shorturl_generated' => '',
+                        'shorturl_custom' => '',
+                        'long_url' => $long_url,
+                        'uri' => $uri,
+                        'valid_until' => $valid_until,
+                        'valid_until_formatted' => $valid_until_formatted
+                    ];
+                }
+            }
 
             // Check if this is the shortened URL
             if (self::isShortURL($long_url)) {
@@ -655,15 +613,25 @@ class ShortURL
                     return [
                         'error' => true,
                         'message_type' => 'notice',
-                        'txt' => __('You cannot shorten a link to our shortening service. This is the long URL:') . " $true_long_url",
-                        'long_url' => $long_url
+                        'error_msg' => __('You cannot shorten a link to our shortening service. This is the long URL:') . " $true_long_url",
+                        'shorturl_generated' => '',
+                        'shorturl_custom' => '',
+                        'long_url' => $long_url,
+                        'uri' => $uri,
+                        'valid_until' => $valid_until,
+                        'valid_until_formatted' => $valid_until_formatted
                     ];
                 } else {
                     return [
                         'error' => true,
                         'message_type' => 'error',
-                        'txt' => __('You cannot shorten a link to our shortening service. The link you\'ve provided is unknown.'),
-                        'long_url' => $long_url
+                        'error_msg' => __('You cannot shorten a link to our shortening service. The link you\'ve provided is unknown.'),
+                        'shorturl_generated' => '',
+                        'shorturl_custom' => '',
+                        'long_url' => $long_url,
+                        'uri' => $uri,
+                        'valid_until' => $valid_until,
+                        'valid_until_formatted' => $valid_until_formatted
                     ];
                 }
             }
@@ -675,8 +643,13 @@ class ShortURL
                 return [
                     'error' => true,
                     'message_type' => $aDomain['message_type'],
-                    'txt' => $aDomain['notice'],
-                    'long_url' => $long_url
+                    'error_msg' => $aDomain['notice'],
+                    'shorturl_generated' => '',
+                    'shorturl_custom' => '',
+                    'long_url' => $long_url,
+                    'uri' => $uri,
+                    'valid_until' => $valid_until,
+                    'valid_until_formatted' => $valid_until_formatted
                 ];
             }
 
@@ -709,8 +682,6 @@ class ShortURL
             // Validate the URI
             $isValidURI = false;
 
-            error_log(' in shorten() allow_uri = ' . self::$rights['allow_uri'] ? 'true' : 'false');
-
             if (self::$rights['allow_uri']) {
                 $isValidURI = self::isValidURI($uri);
 
@@ -718,8 +689,13 @@ class ShortURL
                     return [
                         'error' => true,
                         'message_type' => 'error',
-                        'txt' => $long_url . __('is not a valid URI', 'rrze-shorturl'),
-                        'long_url' => $long_url
+                        'error_msg' => $long_url . __('is not a valid URI', 'rrze-shorturl'),
+                        'shorturl_generated' => '',
+                        'shorturl_custom' => '',
+                        'long_url' => $long_url,
+                        'uri' => $uri,
+                        'valid_until' => $valid_until,
+                        'valid_until_formatted' => $valid_until_formatted
                     ];
                 }
 
@@ -727,8 +703,13 @@ class ShortURL
                     return [
                         'error' => true,
                         'message_type' => 'error',
-                        'txt' => $uri . ' ' . __('is already in use. Try another one.', 'rrze-shorturl'),
-                        'long_url' => $long_url
+                        'error_msg' => $uri . ' ' . __('is already in use. Try another one.', 'rrze-shorturl'),
+                        'shorturl_generated' => '',
+                        'shorturl_custom' => '',
+                        'long_url' => $long_url,
+                        'uri' => $uri,
+                        'valid_until' => $valid_until,
+                        'valid_until_formatted' => $valid_until_formatted
                     ];
                 }
             }
@@ -738,12 +719,15 @@ class ShortURL
                 return [
                     'error' => true,
                     'message_type' => $aDomain['message_type'],
-                    'txt' => $aDomain['notice'],
-                    'long_url' => $long_url
+                    'error_msg' => $aDomain['notice'],
+                    'shorturl_generated' => '',
+                    'shorturl_custom' => '',
+                    'long_url' => $long_url,
+                    'uri' => $uri,
+                    'valid_until' => $valid_until,
+                    'valid_until_formatted' => $valid_until_formatted
                 ];
             }
-
-            $valid_until = (!empty($shortenParams['valid_until']) ? $shortenParams['valid_until'] : NULL);
 
             $aCategory = $shortenParams['categories'] ?? [];
             // $tags = $shortenParams['tags'] ?? [];
@@ -754,8 +738,13 @@ class ShortURL
                 return [
                     'error' => true,
                     'message_type' => 'error',
-                    'txt' => $isValid['txt'],
-                    'long_url' => $long_url
+                    'error_msg' => $isValid['txt'],
+                    'shorturl_generated' => '',
+                    'shorturl_custom' => '',
+                    'long_url' => $long_url,
+                    'uri' => $uri,
+                    'valid_until' => $valid_until,
+                    'valid_until_formatted' => $valid_until_formatted
                 ];
             }
 
@@ -765,55 +754,136 @@ class ShortURL
                 return [
                     'error' => true,
                     'message_type' => 'error',
-                    'txt' => $long_url . __('is not a valid URL', 'rrze-shorturl'),
-                    'long_url' => $long_url
+                    'error_msg' => $long_url . __('is not a valid URL', 'rrze-shorturl'),
+                    'shorturl_generated' => '',
+                    'shorturl_custom' => '',
+                    'long_url' => $long_url,
+                    'uri' => $uri,
+                    'valid_until' => $valid_until,
+                    'valid_until_formatted' => $valid_until_formatted
                 ];
             }
 
-            // Fetch or insert on new
-            $aLink = self::getLinkfromDB($aDomain['id'], $long_url, self::$rights['idm'], $uri);
+            $idm = (!empty($shortenParams['customer_idm'] ? $shortenParams['customer_idm'] : self::$rights['idm']));
 
-            // Create shortURL
-            if (!empty($uri)) {
-                $targetURL = $uri;
-            } else {
-                // Create shortURL
-                $targetURL = $aDomain['prefix'] . self::cryptNumber($aLink['id']);
-            }
+            $aShortURLs = self::fetch_or_create_shorturls($aDomain['id'], $long_url, $aDomain['prefix'], $idm, $uri, $valid_until, $aCategory);
 
-            if (empty($aLink['short_url'])) {
-                // Create shortURL
-                $shortURL = self::$CONFIG['ShortURLBase'] . '/' . $targetURL;
-            } else {
-                $shortURL = $aLink['short_url'];
-            }
-
-            $bUpdated = self::updateLink(self::$rights['idm'], $aLink['id'], $aDomain['id'], $shortURL, $uri, $valid_until, $aCategory);
-
-            if ($bUpdated === false) {
-                return [
-                    'error' => true,
-                    'message_type' => 'error',
-                    'txt' => __('Unable to update', 'rrze-shorturl'),
-                    'long_url' => $long_url
-                ];
-            }
-
-            $valid_until_formatted = (!empty($valid_until) ? date_format(date_create($valid_until), 'd.m.Y') : __('indefinite', 'rrze-shorturl'));
-
+            // no error occurred
             return [
                 'error' => false,
                 'message_type' => 'standard',
-                'txt' => $shortURL,
-                'link_id' => $aLink['id'],
+                'error_msg' => '',
+                'shorturl_generated' => $aShortURLs['shorturl_generated'],
+                'shorturl_custom' => $aShortURLs['shorturl_custom'],
                 'long_url' => $long_url,
-                'valid_until_formatted' => $valid_until_formatted
+                'uri' => $uri,
+                'valid_until' => $aShortURLs['valid_until'],
+                'valid_until_formatted' => $aShortURLs['valid_until_formatted']
             ];
         } catch (CustomException $e) {
             error_log("Error in shorten: " . $e->getMessage());
+            return [];
+        }
+    }
+
+
+    public static function fetch_or_create_shorturls($domain_id, $long_url, $prefix, $idm, $uri = '', $valid_until = '', $aCategory = '')
+    {
+
+
+        $aRet = [
+            'post_id' => 0,
+            'shorturl_generated' => '',
+            'shorturl_custom' => '',
+            'valid_until' => '',
+            'valid_until_formatted' => '',
+        ];
+
+        try {
+            // try to fetch 
+            $args = [
+                'post_type' => 'shorturl_link',
+                'meta_query' => [
+                    [
+                        'key' => 'idm',
+                        'value' => $idm,
+                        'compare' => '='
+                    ],
+                    [
+                        'key' => 'domain_id',
+                        'value' => $domain_id,
+                        'compare' => '='
+                    ],
+                    [
+                        'key' => 'long_url',
+                        'value' => $long_url,
+                        'compare' => '='
+                    ],
+                ],
+                'posts_per_page' => 1, // Return only one result
+            ];
+
+            $query = new \WP_Query($args);
+
+            if ($query->have_posts()) {
+                $aRet['post_id'] = $query->posts[0]->ID;
+                $aRet['shorturl_generated'] = get_post_meta($post_id, 'shorturl_custom', true);
+                $aRet['shorturl_custom'] = get_post_meta($post_id, 'shorturl_custom', true);
+                $aRet['valid_until'] = get_post_meta($post_id, 'valid_until', true);
+                $aRet['valid_until_formatted'] = get_post_meta($post_id, 'valid_until_formatted', true);
+            } else {
+                // Create a new post
+                $post_data = [
+                    'post_title' => $long_url,
+                    'post_type' => 'shorturl_link',
+                    'post_status' => 'publish'
+                ];
+
+                // Insert the post into the database
+                $post_id = wp_insert_post($post_data);
+
+                $shorturl_generated = $prefix . self::cryptNumber($post_id);
+                $shorturl_custom = (!empty($uri) ? self::$CONFIG['ShortURLBase'] . '/' . $uri : '');
+
+                update_post_meta($post_id, 'idm', $idm);
+                update_post_meta($post_id, 'domain_id', $domain_id);
+                update_post_meta($post_id, 'shorturl_generated', $shorturl_generated);
+                update_post_meta($post_id, 'shorturl_custom', $shorturl_custom);
+                update_post_meta($post_id, 'uri', $uri);
+                update_post_meta($post_id, 'valid_until', $valid_until);
+                $valid_until_formatted = (!empty($valid_until) ? date_format(date_create($valid_until), 'd.m.Y') : __('indefinite', 'rrze-shorturl'));
+                update_post_meta($post_id, 'valid_until_formatted', $valid_until_formatted);
+                update_post_meta($post_id, 'active', '1');
+
+                $aRet['post_id'] = $post_id;
+                $aRet['shorturl_generated'] = $shorturl_generated;
+                $aRet['shorturl_custom'] = $shorturl_custom;
+                $aRet['valid_until'] = $valid_until;
+            }
+
+            // Update categories
+            if (!empty($aCategory)) {
+                // Store the category IDs in post meta
+                $current_categories = get_post_meta($post_id, 'category_id', false);
+
+                foreach ($aCategory as $category_id) {
+                    if (!in_array($category_id, $current_categories)) {
+                        add_post_meta($post_id, 'category_id', $category_id, false);
+                    }
+                }
+            } else {
+                // Clear categories if none are passed
+                delete_post_meta($post_id, 'category_id');
+            }
+
+
+            return $aRet;
+        } catch (CustomException $e) {
+            error_log("Error in getLinkfromDB: " . $e->getMessage());
             return null;
         }
     }
+
 
     public static function getActiveShortURLs()
     {
@@ -867,10 +937,10 @@ class ShortURL
 
 
 
-    public static function getLongURL($short_url)
+    public static function getLongURL($code)
     {
         // Construct the full short URL using the base URL from the configuration
-        $short_url = self::$CONFIG['ShortURLBase'] . '/' . $short_url;
+        $short_url = self::$CONFIG['ShortURLBase'] . '/' . $code;
 
         try {
             // Set up arguments for WP_Query to fetch the post with the matching short URL

@@ -29,7 +29,9 @@ class CPT
 
         add_action('add_meta_boxes', [$this, 'customize_publish_metabox_for_shorturl']);
         add_filter('wp_insert_post_data', [$this, 'enforce_publish_status_for_shorturl'], 10, 2);
-        add_action('before_delete_post', [$this, 'bypass_trash_for_shorturl']);
+
+        add_filter('bulk_actions-edit-shorturl_link', [$this, 'modify_bulk_actions_for_shorturl_link']);
+        add_filter('handle_bulk_actions-edit-shorturl_link', [$this, 'handle_delete_permanently_action'], 10, 3);
     }
 
     // Register Custom Post Type for IDMs
@@ -153,9 +155,12 @@ class CPT
     {
         $columns = [
             'cb' => $columns['cb'],
+            'post_id' => __('post_id', 'rrze-shorturl'),
+            'post_status' => __('post_status', 'rrze-shorturl'),
             'active' => __('Active', 'rrze-shorturl'),
-            'long_url' => __('Long URL', 'rrze-shorturl'),
-            'title' => __('Short URL', 'rrze-shorturl'),
+            'title' => __('Long URL', 'rrze-shorturl'),
+            'shorturl_generated' => __('ShortURL generated', 'rrze-shorturl'),
+            'shorturl_custom' => __('ShortURL custom', 'rrze-shorturl'),
             'uri' => __('URI', 'rrze-shorturl'),
             'date' => $columns['date'],
             'idm' => __('IdM', 'rrze-shorturl'),
@@ -171,8 +176,17 @@ class CPT
             case 'active':
                 echo get_post_meta($post_id, 'active', true) == '1' ? '&#10004;' : '&#10008;';
                 break;
-            case 'long_url':
-                echo esc_html(get_post_meta($post_id, 'long_url', true));
+            case 'post_id':
+                echo $post_id;
+                break;
+            case 'post_status':
+                echo get_post_status($post_id);
+                break;
+            case 'shorturl_generated':
+                echo esc_html(get_post_meta($post_id, 'shorturl_generated', true));
+                break;
+            case 'shorturl_custom':
+                echo esc_html(get_post_meta($post_id, 'shorturl_custom', true));
                 break;
             case 'uri':
                 echo esc_html(get_post_meta($post_id, 'uri', true));
@@ -191,8 +205,11 @@ class CPT
     public function make_shorturl_link_columns_sortable($columns)
     {
         $columns['active'] = 'active';
+        $columns['post_id'] = 'post_id';
         $columns['long_url'] = 'long_url';
         $columns['title'] = 'title';
+        $columns['shorturl_generated'] = 'shorturl_generated';
+        $columns['shorturl_custom'] = 'shorturl_custom';
         $columns['uri'] = 'uri';
         $columns['idm'] = 'idm';
         $columns['valid_until'] = 'valid_until';
@@ -214,6 +231,16 @@ class CPT
 
         if ($orderby === 'long_url') {
             $query->set('meta_key', 'long_url');
+            $query->set('orderby', 'meta_value');
+        }
+
+        if ($orderby === 'shorturl_generated') {
+            $query->set('meta_key', 'shorturl_generated');
+            $query->set('orderby', 'meta_value');
+        }
+
+        if ($orderby === 'shorturl_custom') {
+            $query->set('meta_key', 'shorturl_custom');
             $query->set('orderby', 'meta_value');
         }
 
@@ -252,19 +279,22 @@ class CPT
     public function render_shorturl_link_metabox($post)
     {
         $long_url = get_post_meta($post->ID, 'long_url', true);
-        $short_url = get_post_meta($post->ID, 'short_url', true);
+        $shorturl_generated = get_post_meta($post->ID, 'shorturl_generated', true);
+        $shorturl_custom = get_post_meta($post->ID, 'shorturl_custom', true);
         $uri = get_post_meta($post->ID, 'uri', true);
         $idm = get_post_meta($post->ID, 'idm', true);
         $valid_until = get_post_meta($post->ID, 'valid_until', true);
-        $active = get_post_meta($post->ID, 'active', true);
 
         wp_nonce_field('save_shorturl_link_metabox_data', 'shorturl_link_metabox_nonce');
 
         echo '<label for="long_url">' . __('Long URL', 'rrze-shorturl') . ':</label>';
         echo '<input type="text" id="short_url" name="long_url" value="' . esc_attr($long_url) . '" readonly><br>';
 
-        echo '<label for="short_url">' . __('Short URL', 'rrze-shorturl') . ':</label>';
-        echo '<input type="text" id="short_url" name="short_url" value="' . esc_attr($short_url) . '" readonly><br>';
+        echo '<label for="shorturl_generated">' . __('Short URL generated', 'rrze-shorturl') . ':</label>';
+        echo '<input type="text" id="shorturl_generated" name="shorturl_generated" value="' . esc_attr($shorturl_generated) . '" readonly><br>';
+
+        echo '<label for="shorturl_custom">' . __('Short URL custom', 'rrze-shorturl') . ':</label>';
+        echo '<input type="text" id="shorturl_custom" name="shorturl_custom" value="' . esc_attr($shorturl_custom) . '" readonly><br>';
 
         echo '<label for="uri">' . __('URI', 'rrze-shorturl') . ':</label>';
         echo '<input type="text" id="uri" name="uri" value="' . esc_attr($uri) . '"><br>';
@@ -274,9 +304,6 @@ class CPT
 
         echo '<label for="valid_until">' . __('Valid until', 'rrze-shorturl') . ':</label>';
         echo '<input type="date" id="valid_until" name="valid_until" value="' . esc_attr($valid_until) . '"><br>';
-
-        echo '<label for="active">' . __('Active', 'rrze-shorturl') . ':</label>';
-        echo '<input type="checkbox" id="active" name="active" value="1" ' . checked($active, 1, false) . '>';
     }
 
     public function save_shorturl_link_metabox_data($post_id)
@@ -319,10 +346,11 @@ class CPT
 
         // Prepare the parameters to pass to the ShortURL shortening logic
         $shortenParams = [
-            'long_url' => get_post_meta($post_id, 'long_url', true), // Retrieve the long URL from post meta
-            'uri' => sanitize_text_field($_POST['uri'] ?? ''), // Sanitize the URI input
-            'valid_until' => sanitize_text_field($_POST['valid_until'] ?? ''), // Sanitize the valid_until input
-            'active' => sanitize_text_field($_POST['active'] ?? '') === '1' ? 1 : 0, // Sanitize and set 'active' flag
+            'customer_idm' => get_post_meta($post_id, 'idm', true),
+            'long_url' => get_post_meta($post_id, 'long_url', true),
+            'valid_until' => sanitize_text_field($_POST['valid_until'] ?? ''),
+            'aCategory' => [],
+            'uri' => sanitize_text_field($_POST['uri'] ?? ''),
         ];
 
         error_log('NEW : $shortenParams = ' . print_r($shortenParams, true));
@@ -337,12 +365,6 @@ class CPT
             // Stop further processing if there's an error
             return;
         }
-
-        // Update the metadata for the post with the new ShortURL details
-        update_post_meta($post_id, 'uri', $result['uri']); // 2DO: ShortURL::shorten() doesn't return 'uri', but this methode has to be updated anyway, see issue #146 https://github.com/RRZE-Webteam/rrze-shorturl/issues/146#issuecomment-2447343874
-        update_post_meta($post_id, 'valid_until', $result['valid_until_formatted']);
-        update_post_meta($post_id, 'active', $shortenParams['active']);
-        update_post_meta($post_id, 'short_url', $result['txt']);
 
         error_log('NEW : in save_shorturl_link_metabox_data() - DONE');
     }
@@ -431,6 +453,10 @@ class CPT
 
     public function render_custom_submit_meta_box_for_shorturl($post)
     {
+        // We must bypass trash and delete permanently => get_delete_post_link($post->ID, '', true);
+        // Reason: We want to avoid customers or admins reserving custom or generated URIs unnecessarily.
+        // Additionally, some short_links may be inactive (post_meta "active" = 0) because the associated long_url might temporarily return a 404.
+        // Such cases are handled by CleanupDB::cleanInvalidLinks().
         ?>
         <div class="submitbox" id="submitpost">
             <div id="major-publishing-actions">
@@ -466,15 +492,32 @@ class CPT
         return $data;
     }
 
-    // We must bypass trash and delete permanently.
-    // Reason: We want to avoid customers or admins reserving custom or generated URIs unnecessarily.
-    // Additionally, some short_links may be inactive (post_meta "active" = 0) because the associated long_url might temporarily return a 404.
-    // Such cases are handled by CleanupDB::cleanInvalidLinks().
-    public function bypass_trash($post_id)
+    public function modify_bulk_actions_for_shorturl_link($bulk_actions)
     {
-        $post = get_post($post_id);
-        if ($post && 'shorturl_link' === $post->post_type) {
-            wp_delete_post($post_id, true); // true = delete permanently
-        }
+        // Remove "Move to Trash" option
+        unset($bulk_actions['trash']);
+
+        // Add "Delete Permanently" option
+        $bulk_actions['delete_permanently'] = __('Delete Permanently', 'textdomain');
+
+        return $bulk_actions;
     }
+
+
+    public function handle_delete_permanently_action($redirect_to, $action, $post_ids)
+    {
+        if ($action !== 'delete_permanently') {
+            return $redirect_to;
+        }
+
+        // Delete posts permanently
+        foreach ($post_ids as $post_id) {
+            wp_delete_post($post_id, true); // true = permanently delete
+        }
+
+        // Add query parameter to the redirect URL for user feedback
+        $redirect_to = add_query_arg('deleted', count($post_ids), $redirect_to);
+        return $redirect_to;
+    }
+
 }

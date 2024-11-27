@@ -12,17 +12,17 @@ class Rights
     public function __construct()
     {
         $this->idm = 'system';
-        // if (is_user_logged_in()) {
-        //     $current_user = wp_get_current_user();
-        //     $this->idm = $current_user->user_nicename;
-        // } elseif (class_exists('\RRZE\AccessControl\Permissions')) {
+        if (is_user_logged_in()) {
+            $current_user = wp_get_current_user();
+            $this->idm = $current_user->user_nicename;
+        } elseif (class_exists('\RRZE\AccessControl\Permissions')) {
             $permissionsInstance = new Permissions();
             $checkSSOLoggedIn = $permissionsInstance->checkSSOLoggedIn();
             $personAttributes = $permissionsInstance->personAttributes;
             $this->idm = (!empty($personAttributes['uid'][0]) ? $personAttributes['uid'][0] : null);
-        // } else {
-        //     error_log('\RRZE\AccessControl\Permissions is not available');
-        // }
+        } else {
+            error_log('\RRZE\AccessControl\Permissions is not available');
+        }
 
         add_action('init', [$this, 'getRights']);
     }
@@ -31,13 +31,24 @@ class Rights
     {
         $this->idm = sanitize_text_field($this->idm);
 
-        // Default return array with no rights
-        $aRet = [
-            'idm' => $this->idm,
-            'allow_uri' => false,
-            'allow_get' => false,
-            'allow_utm' => false
-        ];
+
+        if (is_user_logged_in()) {
+            $aRet = [
+                'idm' => $this->idm,
+                'allow_uri' => true,
+                'allow_get' => true,
+                'allow_utm' => true
+            ];
+            return $aRet;
+        }else{
+            // Default return array with no rights
+            $aRet = [
+                'idm' => $this->idm,
+                'allow_uri' => false,
+                'allow_get' => false,
+                'allow_utm' => false
+            ];    
+        }
 
         try {
             $args = [
