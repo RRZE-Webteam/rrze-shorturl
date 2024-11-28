@@ -37,69 +37,62 @@ class CleanupDB
     public function cleanInactiveIdMs()
     {
         try {
-            // Set up arguments for WP_Query to fetch all 'idm' posts that have no associated 'link' posts
             $args = [
-                'post_type' => 'shorturl_idm',    // Custom Post Type for IdMs
-                'posts_per_page' => -1,       // Fetch all IdMs
-                'meta_query' => [
-                    [
-                        'key' => 'idm',   // Exclude system IdM
-                        'value' => 'system',
-                        'compare' => '!='
-                    ]
-                ]
+                'post_type'      => 'shorturl_idm',
+                'posts_per_page' => -1,
+                'post_status'    => 'any',
             ];
-
-            // Execute the query to get all non-system IdMs
+    
             $query = new \WP_Query($args);
-
-            // Array to store unused IdM post IDs
+    
             $unused_idms = [];
-
-            // Loop through the IdMs to check if they are associated with any links
+    
             if ($query->have_posts()) {
                 while ($query->have_posts()) {
                     $query->the_post();
-
-                    $idm_id = get_the_ID();
-
+    
+                    $idm_title = get_the_title();
+                    $idm_id    = get_the_ID();
+    
+                    // Skip if IdM is "system"
+                    if (strtolower($idm_title) === 'system') {
+                        continue;
+                    }
+    
                     // Check if there are any links associated with this IdM
                     $link_query = new \WP_Query([
-                        'post_type' => 'shorturl_link',
-                        'posts_per_page' => 1,
-                        'meta_query' => [
+                        'post_type'      => 'shorturl_link',
+                        'posts_per_page' => 1,              // we need just one entry
+                        'meta_query'     => [
                             [
-                                'key' => 'idm_id',
-                                'value' => $idm_id,
+                                'key'     => 'idm',       
+                                'value'   => $idm_title, 
                                 'compare' => '='
                             ]
                         ]
                     ]);
-
-                    // If no links found, mark this IdM as unused
+    
                     if (!$link_query->have_posts()) {
                         $unused_idms[] = $idm_id;
                     }
-
-                    // Restore original Post Data
+    
                     wp_reset_postdata();
                 }
             }
-
-            // Restore original Post Data
+    
             wp_reset_postdata();
-
-            // If there are unused IdMs, delete them
+    
+            // Delete unused IdMs
             if (!empty($unused_idms)) {
                 foreach ($unused_idms as $idm_id) {
-                    wp_delete_post($idm_id, true); // Force delete the unused IdMs
+                    wp_delete_post($idm_id, true);
                 }
             }
         } catch (CustomException $e) {
-            error_log('An error occurred: ' . $e->getMessage());
+            error_log('An error occurred while cleaning inactive IdMs: ' . $e->getMessage());
         }
     }
-
+    
 
     public static function cleanInvalidLinks()
     {

@@ -1,6 +1,6 @@
 {
   "name": "rrze-shorturl",
-  "version": "2.1.18",
+  "version": "2.1.19",
   "main": "build/js/index.js",
   "scripts": {
     "lint:css": "wp-scripts lint-style",
