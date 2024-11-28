@@ -43,13 +43,12 @@ class Main
         add_action('enqueue_block_editor_assets', [$this, 'enqueueScripts']);
         add_action('wp_enqueue_scripts', [$this, 'enqueueScripts']);
         add_action('admin_enqueue_scripts', [$this, 'enqueueScripts']);
-        // add_action('init', [$this, 'migrate_db_to_cpt']);
-        // add_action('init', [$this, 'drop_shorturl_tables']);
+
         add_action('init', [$this, 'setIdM']);
+        add_action('init', [$this, 'rrze_shorturl_set_shorturls'], 20); // priority 20 to make sure CPT is already registered
 
         add_action('init', [$this, 'initialize_services']);
         add_action('init', [$this, 'init_query_dependend_classes']);
-
 
         $cpt = new CPT();
         $settings = new Settings();
@@ -57,7 +56,6 @@ class Main
         $cleanup = new CleanupDB();
         $myCrypt = new MyCrypt();
     }
-
 
     public function init_query_dependend_classes()
     {
@@ -357,6 +355,51 @@ class Main
         update_option('rrze_shorturl_set_idm_completed', true);
     }
     
+    public function rrze_shorturl_set_shorturls() {
+        // Check if the process has already been completed
+        if (get_option('rrze_shorturl_set_shorturls_completed')) {
+            return;
+        }
+
+        $args = [
+            'post_type'      => 'shorturl_link',
+            'posts_per_page' => -1,
+            'post_status'    => 'any',
+        ];
+
+        $query = new \WP_Query($args);
+
+        if ($query->have_posts()) {
+            while ($query->have_posts()) {
+                $query->the_post();
+                $post_id = get_the_ID();
+
+                $long_url = get_post_meta($post_id, 'long_url', true);
+                $uri = get_post_meta($post_id, 'uri', true);
+                $current_title = get_the_title($post_id);
+
+                if (empty($long_url)) {
+                    continue;
+                }
+
+                if (!empty($uri)) {
+                    update_post_meta($post_id, 'shorturl_custom', $current_title);
+                } else {
+                    update_post_meta($post_id, 'shorturl_generated', $current_title);
+                }
+
+                wp_update_post([
+                    'ID'         => $post_id,
+                    'post_title' => $long_url,
+                ]);
+            }
+
+            wp_reset_postdata();
+        }
+
+        update_option('rrze_shorturl_set_shorturls_completed', true);
+    }
+
     // public function drop_shorturl_tables()
     // {
     //     if (get_option('rrze_shorturl_custom_tables_dropped')) {
