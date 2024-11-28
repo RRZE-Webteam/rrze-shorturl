@@ -278,7 +278,7 @@ class CPT
 
     public function render_shorturl_link_metabox($post)
     {
-        $long_url = get_post_meta($post->ID, 'long_url', true);
+        $long_url = get_the_title($post->ID); 
         $shorturl_generated = get_post_meta($post->ID, 'shorturl_generated', true);
         $shorturl_custom = get_post_meta($post->ID, 'shorturl_custom', true);
         $uri = get_post_meta($post->ID, 'uri', true);
