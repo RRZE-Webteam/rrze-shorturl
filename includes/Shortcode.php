@@ -485,10 +485,11 @@ class Shortcode
                 $result = ShortURL::shorten($aParams);
 
                 if ($result['error']) {
-                    $result_message = esc_html($result['txt']);
+                    $result_message = esc_html($result['message']);
                 } else {
-                    $result_message = '<span class="shorturl-shortened-msg"><span class="label">' . esc_html__('Short URL', 'rrze-shorturl') . ':</span> <code>' . esc_html($result['txt']) . '</code></span>';
-                    $result_message .= '<button type="button" class="btn" id="copyButton" name="copyButton" data-shortened-url="' . esc_attr($result['txt']) . '"><img class="shorturl-copy-img" src="data:image/svg+xml,%3Csvg height=\'1024\' width=\'896\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M128 768h256v64H128v-64z m320-384H128v64h320v-64z m128 192V448L384 640l192 192V704h320V576H576z m-288-64H128v64h160v-64zM128 704h160v-64H128v64z m576 64h64v128c-1 18-7 33-19 45s-27 18-45 19H64c-35 0-64-29-64-64V192c0-35 29-64 64-64h192C256 57 313 0 384 0s128 57 128 128h192c35 0 64 29 64 64v320h-64V320H64v576h640V768zM128 256h512c0-35-29-64-64-64h-64c-35 0-64-29-64-64s-29-64-64-64-64 29-64 64-29 64-64 64h-64c-35 0-64 29-64 64z\' fill=\'%23000000\' /%3E%3C/svg%3E" alt="' . esc_attr__('Copy to clipboard', 'rrze-shorturl') . '"><span class="screen-reader-text">' . esc_html__('Copy to clipboard', 'rrze-shorturl') . '</span></button><span id="shorturl-tooltip" class="shorturl-tooltip">' . esc_html__('Copied to clipboard', 'rrze-shorturl') . '</span>';
+                    $shortened_url = (!empty($result['shorturl_custom']) ? $result['shorturl_custom'] : $result['shorturl_generated']);
+                    $result_message = '<span class="shorturl-shortened-msg"><span class="label">' . esc_html__('Short URL', 'rrze-shorturl') . ':</span> <code>' . esc_html($shortened_url) . '</code></span>';
+                    $result_message .= '<button type="button" class="btn" id="copyButton" name="copyButton" data-shortened-url="' . esc_attr($shortened_url) . '"><img class="shorturl-copy-img" src="data:image/svg+xml,%3Csvg height=\'1024\' width=\'896\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M128 768h256v64H128v-64z m320-384H128v64h320v-64z m128 192V448L384 640l192 192V704h320V576H576z m-288-64H128v64h160v-64zM128 704h160v-64H128v64z m576 64h64v128c-1 18-7 33-19 45s-27 18-45 19H64c-35 0-64-29-64-64V192c0-35 29-64 64-64h192C256 57 313 0 384 0s128 57 128 128h192c35 0 64 29 64 64v320h-64V320H64v576h640V768zM128 256h512c0-35-29-64-64-64h-64c-35 0-64-29-64-64s-29-64-64-64-64 29-64 64-29 64-64 64h-64c-35 0-64 29-64 64z\' fill=\'%23000000\' /%3E%3C/svg%3E" alt="' . esc_attr__('Copy to clipboard', 'rrze-shorturl') . '"><span class="screen-reader-text">' . esc_html__('Copy to clipboard', 'rrze-shorturl') . '</span></button><span id="shorturl-tooltip" class="shorturl-tooltip">' . esc_html__('Copied to clipboard', 'rrze-shorturl') . '</span>';
                     $result_message .= '<br><span class="shorturl-validuntil"><span class="label">' . esc_html__('Valid until', 'rrze-shorturl') . ':</span> ' . esc_html($result['valid_until_formatted']) . '</span>';
                 }
 
@@ -525,7 +526,8 @@ class Shortcode
         $form .= '<div class="rrze-shorturl-result"><p' . (!empty($result['error']) ? ' id="shorturl-err" class="shorturl-msg-' . esc_attr($result['message_type']) . '"' : '') . '>' . $result_message . '</p>';
 
         if (!empty($result) && !$result['error']) {
-            $form .= '<input id="shortened_url" name="shortened_url" type="hidden" value="' . esc_attr($result['txt']) . '">';
+            $shortened_url = (!empty($result['shorturl_custom']) ? $result['shorturl_custom'] : $result['shorturl_generated']);
+            $form .= '<input id="shortened_url" name="shortened_url" type="hidden" value="' . esc_attr($shortened_url) . '">';
             $form .= '<div id="qr-container"><canvas id="qr"></canvas><button type="button" class="btn" id="downloadButton" name="downloadButton"><img class="shorturl-download-img" src="data:image/svg+xml,%3Csvg width=\'512\' height=\'512\' viewBox=\'0 0 512 512\' xmlns=\'http://www.w3.org/2000/svg\' fill=\'%23000000\'%3E%3Cpath d=\'M376.3 304.3l-71.4 71.4V48c0-8.8-7.2-16-16-16h-48c-8.8 0-16 7.2-16 16v327.6l-71.4-71.4c-6.2-6.2-16.4-6.2-22.6 0l-22.6 22.6c-6.2 6.2-6.2 16.4 0 22.6l128 128c6.2 6.2 16.4 6.2 22.6 0l128-128c6.2-6.2 6.2-16.4 0-22.6l-22.6-22.6c-6.2-6.2-16.4-6.2-22.6 0zM464 448H48c-8.8 0-16 7.2-16 16v32c0 8.8 7.2 16 16 16h416c8.8 0 16-7.2 16-16v-32c0-8.8-7.2-16-16-16z\'/%3E%3C/svg%3E" title="' . esc_attr__('Download QR', 'rrze-shorturl') . '"><span class="screen-reader-text">' . esc_html__('Download QR', 'rrze-shorturl') . '</span></button></div>';
         }
         $form .= '</form></div>';
@@ -607,7 +609,6 @@ class Shortcode
                 'idm' => self::$rights['idm'],
                 'link_id' => sanitize_text_field(wp_unslash($_POST['link_id'] ?? '')),
                 'domain_id' => sanitize_text_field(wp_unslash($_POST['domain_id'] ?? '')),
-                // 'shortURL' => filter_var(wp_unslash($_POST['shortURL'] ?? ''), FILTER_VALIDATE_URL),
                 'uri' => self::$rights['allow_uri'] ? sanitize_text_field(wp_unslash($_POST['uri'] ?? '')) : '',
                 'valid_until' => sanitize_text_field(wp_unslash($_POST['valid_until'] ?? '')),
                 'categories' => !empty($_POST['categories']) ? array_map('sanitize_text_field', wp_unslash($_POST['categories'])) : []
@@ -618,7 +619,7 @@ class Shortcode
 
             if ($result['error']) {
                 self::$update_message['class'] = 'notice-error';
-                self::$update_message['txt'] = $result['txt'];
+                self::$update_message['txt'] = $result['message'];
             } else {
                 $bUpdated = true;
                 self::$update_message['class'] = 'notice-success';
@@ -726,7 +727,7 @@ class Shortcode
                 $long_url = get_post_meta($link_id, 'long_url', true);
                 $shorturl_generated = get_post_meta($link_id, 'shorturl_generated', true);
                 $shorturl_custom = get_post_meta($link_id, 'shorturl_custom', true);
-                $uri = get_post_meta($link_id, 'uri', true);
+                // $uri = get_post_meta($link_id, 'uri', true);
                 $valid_until = get_post_meta($link_id, 'valid_until', true);
                 $category_ids = get_post_meta($link_id, 'category_id');
 
@@ -746,7 +747,7 @@ class Shortcode
                 $table .= '<tr>';
                 $table .= '<td class="column-long-url"><a href="' . esc_url($long_url) . '">' . esc_html($long_url) . '</a></td>';
                 $table .= '<td><a href="' . esc_url($shorturl_generated) . '+">' . esc_html($shorturl_generated) . '</a>'. (!empty($shorturl_custom) ? '<br><a href="' . esc_url($shorturl_custom) . '+">' . esc_html($shorturl_custom) . '</a>':'') .'</td>';
-                $table .= '<td>' . esc_html($uri) . '</td>';
+                // $table .= '<td>' . esc_html($uri) . '</td>';
                 $table .= '<td>' . (!empty($valid_until) ? esc_html($valid_until) : esc_html__('indefinite', 'rrze-shorturl')) . '</td>';
                 $table .= '<td>' . esc_html($category_names_str) . '</td>';
                 $table .= '<td>' . (self::$rights['idm'] == get_post_meta($link_id, 'idm', true) || is_user_logged_in() ? '<a href="#" class="edit-link" data-link-id="' . esc_attr($link_id) . '">' . esc_html__('Edit', 'rrze-shorturl') . '</a> | <a href="#" data-link-id="' . esc_attr($link_id) . '" class="delete-link">' . esc_html__('Delete', 'rrze-shorturl') . '</a>' : '') . '</td>';

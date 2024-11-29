@@ -20,12 +20,11 @@ class CPT
         add_action('manage_shorturl_link_posts_custom_column', [$this, 'display_shorturl_link_custom_columns'], 10, 2);
         add_filter('manage_edit-shorturl_link_sortable_columns', [$this, 'make_shorturl_link_columns_sortable']);
         add_action('pre_get_posts', [$this, 'sort_shorturl_link_columns']);
-        // add_action('pre_get_posts', [$this, 'filter_shorturl_link_admin_query']);
 
         add_action('add_meta_boxes', [$this, 'register_shorturl_link_metabox']);
         add_action('save_post_shorturl_link', [$this, 'save_shorturl_link_metabox_data']);
-        // add_action('admin_notices', [$this, 'display_shorturl_admin_notices']);
-        // add_filter('redirect_post_location', [$this, 'suppress_default_post_updated_notice']);
+        add_action('admin_notices', [$this, 'display_shorturl_admin_notices']);
+        add_filter('redirect_post_location', [$this, 'suppress_default_post_updated_notice']);
 
         add_action('add_meta_boxes', [$this, 'customize_publish_metabox_for_shorturl']);
         add_filter('wp_insert_post_data', [$this, 'enforce_publish_status_for_shorturl'], 10, 2);
@@ -155,8 +154,8 @@ class CPT
     {
         $columns = [
             'cb' => $columns['cb'],
-            'post_id' => __('post_id', 'rrze-shorturl'),
-            'post_status' => __('post_status', 'rrze-shorturl'),
+            // 'post_id' => __('post_id', 'rrze-shorturl'),
+            // 'post_status' => __('post_status', 'rrze-shorturl'),
             'active' => __('Active', 'rrze-shorturl'),
             'title' => __('Long URL', 'rrze-shorturl'),
             'shorturl_generated' => __('ShortURL generated', 'rrze-shorturl'),
@@ -176,12 +175,12 @@ class CPT
             case 'active':
                 echo get_post_meta($post_id, 'active', true) == '1' ? '&#10004;' : '&#10008;';
                 break;
-            case 'post_id':
-                echo $post_id;
-                break;
-            case 'post_status':
-                echo get_post_status($post_id);
-                break;
+            // case 'post_id':
+            //     echo $post_id;
+            //     break;
+            // case 'post_status':
+            //     echo get_post_status($post_id);
+            //     break;
             case 'shorturl_generated':
                 echo esc_html(get_post_meta($post_id, 'shorturl_generated', true));
                 break;
@@ -284,6 +283,7 @@ class CPT
         $uri = get_post_meta($post->ID, 'uri', true);
         $idm = get_post_meta($post->ID, 'idm', true);
         $valid_until = get_post_meta($post->ID, 'valid_until', true);
+        $active = get_post_meta($post->ID, 'active', true);
 
         wp_nonce_field('save_shorturl_link_metabox_data', 'shorturl_link_metabox_nonce');
 
@@ -304,12 +304,13 @@ class CPT
 
         echo '<label for="valid_until">' . __('Valid until', 'rrze-shorturl') . ':</label>';
         echo '<input type="date" id="valid_until" name="valid_until" value="' . esc_attr($valid_until) . '"><br>';
+
+        echo '<label for="active">' . __('Active', 'rrze-shorturl') . ':</label>';
+        echo '<input type="checkbox" id="active" name="active" value="1" ' . checked($active, '1', false) . '>';
     }
 
     public function save_shorturl_link_metabox_data($post_id)
     {
-        error_log('NEW : in save_shorturl_link_metabox_data() START');
-
         // Prevent repeated calls using a static flag
         static $is_executing = false;
         if ($is_executing) {
@@ -345,29 +346,37 @@ class CPT
         // Prepare the parameters to pass to the ShortURL shortening logic
         $shortenParams = [
             'customer_idm' => get_post_meta($post_id, 'idm', true),
-            'long_url' => get_post_meta($post_id, 'long_url', true),
+            'long_url' => get_the_title($post_id),
             'valid_until' => sanitize_text_field($_POST['valid_until'] ?? ''),
-            'aCategory' => [],
+            'categories' => [],
             'uri' => sanitize_text_field($_POST['uri'] ?? ''),
-            'post_id' => $post_id,
+            'link_id' => $post_id,
+            'active' => sanitize_text_field($_POST['active'] ?? null),
         ];
-
-        // error_log('NEW : $shortenParams = ' . print_r($shortenParams, true));
 
         // Call the ShortURL shortening function
         $result = ShortURL::shorten($shortenParams);
 
-        error_log('shorten() returns $result = ' . print_r($result, true));
-
         // Handle error scenarios
         if ($result['error']) {
-            // Stop further processing if there's an error
-            return;
+            set_transient(
+                'shorturl_error_notice_' . $post_id,
+                $result['message'],
+                30
+            );   
+            
+            return; // Stop execution
+        }else{
+            set_transient(
+                'shorturl_success_notice_' . $post_id,
+                $result['message'],
+                30
+            );            
         }
 
         error_log('NEW : in save_shorturl_link_metabox_data() - DONE');
     }
-    // Add admin notices
+
     public function display_shorturl_admin_notices()
     {
         global $post;
@@ -380,7 +389,7 @@ class CPT
         $success_notice = get_transient('shorturl_success_notice_' . $post->ID);
         if ($success_notice) {
             echo '<div class="notice notice-success is-dismissible">';
-            echo '<p>' . esc_html__('ShortURL saved successfully:', 'text-domain') . ' ' . esc_html($success_notice) . '</p>';
+            echo '<p>' . esc_html($success_notice) . '</p>';
             echo '</div>';
             delete_transient('shorturl_success_notice_' . $post->ID);
         }
@@ -389,7 +398,7 @@ class CPT
         $error_notice = get_transient('shorturl_error_notice_' . $post->ID);
         if ($error_notice) {
             echo '<div class="notice notice-error is-dismissible">';
-            echo '<p>' . esc_html__('Error saving ShortURL:', 'text-domain') . ' ' . esc_html($error_notice) . '</p>';
+            echo '<p>' . esc_html($error_notice) . '</p>';
             echo '</div>';
             delete_transient('shorturl_error_notice_' . $post->ID);
         }
@@ -410,14 +419,6 @@ class CPT
         }
 
         return $location;
-    }
-
-
-    public function filter_shorturl_link_admin_query($query)
-    {
-        if (is_admin() && $query->is_main_query() && $query->get('post_type') === 'shorturl_link') {
-            $query->set('post_status', 'publish');
-        }
     }
 
 
