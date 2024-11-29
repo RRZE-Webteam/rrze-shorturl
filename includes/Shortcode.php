@@ -659,13 +659,13 @@ class Shortcode
             'posts_per_page' => -1,
             'orderby' => $orderby,
             'order' => $order,
-            'meta_query' => [
-                [
-                    'key' => 'idm',
-                    'value' => self::$rights['idm'],
-                    'compare' => '='
-                ]
-            ],
+            // 'meta_query' => [
+            //     [
+            //         'key' => 'idm',
+            //         'value' => self::$rights['idm'],
+            //         'compare' => '='
+            //     ]
+            // ],
         ];
 
         // Handle category filtering
@@ -711,7 +711,7 @@ class Shortcode
         $table .= '<thead><tr>';
         $table .= '<th scope="col"><a href="?orderby=long_url&order=' . ($orderby === 'long_url' && $order === 'ASC' ? 'DESC' : 'ASC') . '">' . esc_html__('Long URL', 'rrze-shorturl') . '</a></th>';
         $table .= '<th scope="col"><a href="?orderby=short_url&order=' . ($orderby === 'short_url' && $order === 'ASC' ? 'DESC' : 'ASC') . '">' . esc_html__('Short URL', 'rrze-shorturl') . '</a></th>';
-        $table .= '<th scope="col">' . esc_html__('URI', 'rrze-shorturl') . '</th>';
+        // $table .= '<th scope="col">' . esc_html__('URI', 'rrze-shorturl') . '</th>';
         $table .= '<th scope="col"><a href="?orderby=valid_until&order=' . ($orderby === 'valid_until' && $order === 'ASC' ? 'DESC' : 'ASC') . '">' . esc_html__('Valid until', 'rrze-shorturl') . '</a></th>';
         $table .= '<th scope="col">' . esc_html__('Categories', 'rrze-shorturl') . '</th>';
         $table .= '<th scope="col">' . esc_html__('Actions', 'rrze-shorturl') . '</th>';
@@ -724,7 +724,8 @@ class Shortcode
                 $link_id = $link->ID;
 
                 $long_url = get_post_meta($link_id, 'long_url', true);
-                $short_url = get_post_meta($link_id, 'short_url', true);
+                $shorturl_generated = get_post_meta($link_id, 'shorturl_generated', true);
+                $shorturl_custom = get_post_meta($link_id, 'shorturl_custom', true);
                 $uri = get_post_meta($link_id, 'uri', true);
                 $valid_until = get_post_meta($link_id, 'valid_until', true);
                 $category_ids = get_post_meta($link_id, 'category_id');
@@ -744,7 +745,7 @@ class Shortcode
                 // Output table row
                 $table .= '<tr>';
                 $table .= '<td class="column-long-url"><a href="' . esc_url($long_url) . '">' . esc_html($long_url) . '</a></td>';
-                $table .= '<td><a href="' . esc_url($short_url) . '+">' . esc_html($short_url) . '</a></td>';
+                $table .= '<td><a href="' . esc_url($shorturl_generated) . '+">' . esc_html($shorturl_generated) . '</a>'. (!empty($shorturl_custom) ? '<br><a href="' . esc_url($shorturl_custom) . '+">' . esc_html($shorturl_custom) . '</a>':'') .'</td>';
                 $table .= '<td>' . esc_html($uri) . '</td>';
                 $table .= '<td>' . (!empty($valid_until) ? esc_html($valid_until) : esc_html__('indefinite', 'rrze-shorturl')) . '</td>';
                 $table .= '<td>' . esc_html($category_names_str) . '</td>';
@@ -798,8 +799,7 @@ class Shortcode
                     <div class="rrze-shorturl">
                         <?php
 
-echo '<form id="edit-link-form" method="post">';
-// echo '<form id="shorturl-form" method="post">';
+                    echo '<form id="edit-link-form" method="post">';
 
                         
 
@@ -820,11 +820,11 @@ echo '<form id="edit-link-form" method="post">';
 
                                 <?php
                                 // Display URI field if allowed
-                                if (self::$rights['allow_uri']) {
-                                    echo self::display_shorturl_uri($aParams['uri']);
-                                } else {
-                                    echo '<input type="hidden" name="uri" value="' . esc_attr($aParams['uri']) . '">';
-                                }
+                                // if (self::$rights['allow_uri']) {
+                                //     echo self::display_shorturl_uri($aParams['uri']);
+                                // } else {
+                                //     echo '<input type="hidden" name="uri" value="' . esc_attr($aParams['uri']) . '">';
+                                // }
 
                                 // Display validity field
                                 echo self::display_shorturl_validity($aParams['valid_until']);

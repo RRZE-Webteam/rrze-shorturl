@@ -342,8 +342,6 @@ class CPT
             return;
         }
 
-        error_log('NEW : in save_shorturl_link_metabox_data() - Validated');
-
         // Prepare the parameters to pass to the ShortURL shortening logic
         $shortenParams = [
             'customer_idm' => get_post_meta($post_id, 'idm', true),
@@ -351,14 +349,15 @@ class CPT
             'valid_until' => sanitize_text_field($_POST['valid_until'] ?? ''),
             'aCategory' => [],
             'uri' => sanitize_text_field($_POST['uri'] ?? ''),
+            'post_id' => $post_id,
         ];
 
-        error_log('NEW : $shortenParams = ' . print_r($shortenParams, true));
+        // error_log('NEW : $shortenParams = ' . print_r($shortenParams, true));
 
         // Call the ShortURL shortening function
         $result = ShortURL::shorten($shortenParams);
 
-        error_log('$result = ' . print_r($result, true));
+        error_log('shorten() returns $result = ' . print_r($result, true));
 
         // Handle error scenarios
         if ($result['error']) {

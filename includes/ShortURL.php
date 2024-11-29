@@ -319,11 +319,20 @@ class ShortURL
     }
 
 
-    public static function isUniqueURI($uri)
+    public static function isUniqueURI($uri, $post_id = 0)
     {
         // If the URI is empty, consider it unique
         if (empty($uri)) {
             return true;
+        }
+
+        // Only admins are allowed to change URI!
+        if ($post_id && is_user_logged_in()){
+            // has URI changed?
+            $stored_uri = get_post_meta($post_id, 'uri', true);
+            if ($stored_uri == $uri){
+                return true;
+            }
         }
 
         // Check if the slug (URI) is used by any post (including pages, posts, or any other post type)
@@ -570,9 +579,11 @@ class ShortURL
 
         error_log(' $shortenParams = ' . print_r($shortenParams, true));
         $long_url = $shortenParams['long_url'] ?? null;
+        $post_id = $shortenParams['post_id'] ?? null;
         $uri = self::$rights['allow_uri'] ? sanitize_text_field(wp_unslash($_POST['uri'] ?? '')) : '';
 
         $valid_until = (!empty($shortenParams['valid_until']) ? $shortenParams['valid_until'] : NULL);
+
         $valid_until_formatted = (!empty($valid_until) ? date_format(date_create($valid_until), 'd.m.Y') : __('indefinite', 'rrze-shorturl'));
 
         $aCategory = $shortenParams['aCategory'] ?? null;
@@ -683,7 +694,7 @@ class ShortURL
             $isValidURI = false;
 
             if (self::$rights['allow_uri']) {
-                $isValidURI = self::isValidURI($uri);
+                $isValidURI = self::isValidURI($uri, $post_id);
 
                 if ($isValidURI !== true) {
                     return [
@@ -764,9 +775,13 @@ class ShortURL
                 ];
             }
 
-            $idm = (!empty($shortenParams['customer_idm'] ? $shortenParams['customer_idm'] : self::$rights['idm']));
+            $idm = (!empty($shortenParams['customer_idm']) ? $shortenParams['customer_idm'] : self::$rights['idm']);
 
             $aShortURLs = self::fetch_or_create_shorturls($aDomain['id'], $long_url, $aDomain['prefix'], $idm, $uri, $valid_until, $aCategory);
+
+            error_log(' fetch_or_create_shorturls() returned $aShortURLs = ' . print_r($aShortURLs, true));
+
+            error_log('shorten() -- END');
 
             // no error occurred
             return [
@@ -790,6 +805,7 @@ class ShortURL
     public static function fetch_or_create_shorturls($domain_id, $long_url, $prefix, $idm, $uri = '', $valid_until = '', $aCategory = '')
     {
 
+        error_log(' fetch_or_create_shorturls() START');
 
         $aRet = [
             'post_id' => 0,
@@ -823,15 +839,33 @@ class ShortURL
                 'posts_per_page' => 1, // Return only one result
             ];
 
+
+            error_log(' fetch_or_create_shorturls() $args = ' . print_r($args, true));
+
             $query = new \WP_Query($args);
 
             if ($query->have_posts()) {
-                $aRet['post_id'] = $query->posts[0]->ID;
-                $aRet['shorturl_generated'] = get_post_meta($post_id, 'shorturl_custom', true);
+                error_log(' fetch_or_create_shorturls() we have posts');
+                $post_id = $query->posts[0]->ID;
+
+                $aRet['post_id'] = $post_id;
+                $aRet['shorturl_generated'] = get_post_meta($post_id, 'shorturl_generated', true);
+
+                // Only admins are allowed to edit URI!
+                if (is_user_logged_in()){
+                    $shorturl_custom = (!empty($uri) ? self::$CONFIG['ShortURLBase'] . '/' . $uri : '');
+                    update_post_meta($post_id, 'shorturl_custom', $shorturl_custom);
+                    update_post_meta($post_id, 'uri', $uri);
+                }
+
+                update_post_meta($post_id, 'valid_until', $valid_until);
                 $aRet['shorturl_custom'] = get_post_meta($post_id, 'shorturl_custom', true);
                 $aRet['valid_until'] = get_post_meta($post_id, 'valid_until', true);
                 $aRet['valid_until_formatted'] = get_post_meta($post_id, 'valid_until_formatted', true);
             } else {
+
+                error_log(' fetch_or_create_shorturls() about to create a new post');
+
                 // Create a new post
                 $post_data = [
                     'post_title' => $long_url,
@@ -842,7 +876,7 @@ class ShortURL
                 // Insert the post into the database
                 $post_id = wp_insert_post($post_data);
 
-                $shorturl_generated = $prefix . self::cryptNumber($post_id);
+                $shorturl_generated = self::$CONFIG['ShortURLBase'] . '/' . $prefix . self::cryptNumber($post_id);
                 $shorturl_custom = (!empty($uri) ? self::$CONFIG['ShortURLBase'] . '/' . $uri : '');
 
                 update_post_meta($post_id, 'idm', $idm);
@@ -876,6 +910,7 @@ class ShortURL
                 delete_post_meta($post_id, 'category_id');
             }
 
+            error_log(' fetch_or_create_shorturls() END');
 
             return $aRet;
         } catch (CustomException $e) {

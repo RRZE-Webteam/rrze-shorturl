@@ -23,6 +23,8 @@ class Main
      */
     protected $pluginFile;
 
+    public static array $CONFIG = [
+    ];
 
     /**
      * Variablen Werte zuweisen.
@@ -31,7 +33,9 @@ class Main
     public function __construct($pluginFile)
     {
         $this->pluginFile = $pluginFile;
+        $options = json_decode(get_option('rrze-shorturl'), true);
 
+        self::$CONFIG['ShortURLBase'] = (!empty($options['ShortURLBase']) ? $options['ShortURLBase'] : 'https://go.fau.de');
     }
 
 
@@ -383,6 +387,10 @@ class Main
                 }
 
                 if (!empty($uri)) {
+                    // create a new 'shorturl_generated'
+                    $prefix = '1'; // only customer domains (prefix = 1) can have an URI
+                    $shorturl_generated = self::$CONFIG['ShortURLBase'] . '/' . $prefix . ShortURL::cryptNumber($post_id);
+                    update_post_meta($post_id, 'shorturl_generated', $shorturl_generated);
                     update_post_meta($post_id, 'shorturl_custom', $current_title);
                 } else {
                     update_post_meta($post_id, 'shorturl_generated', $current_title);
