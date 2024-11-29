@@ -150,7 +150,7 @@ class CleanupDB
             if ($active_links->have_posts()) {
                 while ($active_links->have_posts()) {
                     $active_links->the_post();
-                    $long_url = get_post_meta(get_the_ID(), 'long_url', true);
+                    $long_url = get_the_title(get_the_ID());
 
                     // Perform a remote GET request to the long URL
                     $response = wp_remote_get($long_url);

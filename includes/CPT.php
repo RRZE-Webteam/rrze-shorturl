@@ -228,11 +228,6 @@ class CPT
             $query->set('orderby', 'meta_value');
         }
 
-        if ($orderby === 'long_url') {
-            $query->set('meta_key', 'long_url');
-            $query->set('orderby', 'meta_value');
-        }
-
         if ($orderby === 'shorturl_generated') {
             $query->set('meta_key', 'shorturl_generated');
             $query->set('orderby', 'meta_value');
@@ -288,7 +283,7 @@ class CPT
         wp_nonce_field('save_shorturl_link_metabox_data', 'shorturl_link_metabox_nonce');
 
         echo '<label for="long_url">' . __('Long URL', 'rrze-shorturl') . ':</label>';
-        echo '<input type="text" id="short_url" name="long_url" value="' . esc_attr($long_url) . '" readonly><br>';
+        echo '<input type="text" id="long_url" name="long_url" value="' . esc_attr($long_url) . '" readonly><br>';
 
         echo '<label for="shorturl_generated">' . __('Short URL generated', 'rrze-shorturl') . ':</label>';
         echo '<input type="text" id="shorturl_generated" name="shorturl_generated" value="' . esc_attr($shorturl_generated) . '" readonly><br>';

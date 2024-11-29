@@ -120,75 +120,6 @@ class ShortURL
         }
     }
 
-
-
-    /**
-     * Updates an existing link post (Custom Post Type) and its associated metadata, including category IDs.
-     *
-     * @param int    $idm          The IDM.
-     * @param int    $link_id      The ID of the link post to update.
-     * @param int    $domain_id    The ID of the associated domain for the link.
-     * @param string $shortURL     The shortened URL (used as post title).
-     * @param string $uri          (Optional) A custom URI, used as the post content.
-     * @param string $valid_until  (Optional) Expiry date of the shortened URL.
-     * @param array  $aCategory    (Optional) Array of category IDs to associate with the link.
-     *
-     * @return int|WP_Error Returns the post ID if the update was successful, or 0 if there was an error, or null if an exception occurred.
-     */
-
-    // public static function updateLink(
-    //     $idm,
-    //     $link_id,
-    //     $domain_id,
-    //     $shortURL,
-    //     $uri,
-    //     $valid_until,
-    //     $aCategory
-    // ) {
-    //     try {
-    //         // Update the link post (Custom Post Type)
-    //         $post_data = [
-    //             'ID' => $link_id,
-    //             'post_title' => $shortURL,
-    //             'post_content' => $uri,
-    //         ];
-
-    //         // Update the post
-    //         $update_result = wp_update_post($post_data);
-
-    //         if ($update_result !== 0) {
-    //             update_post_meta($link_id, 'idm', $idm);
-    //             update_post_meta($link_id, 'domain_id', $domain_id);
-    //             update_post_meta($link_id, 'short_url', $shortURL);
-    //             update_post_meta($link_id, 'uri', $uri);
-    //             update_post_meta($link_id, 'valid_until', $valid_until);
-
-    //             // now activate link
-    //             update_post_meta($link_id, 'active', '1');
-
-    //             // Update categories (using custom fields)
-    //             if (!empty($aCategory)) {
-    //                 // Store the category IDs in post meta
-    //                 $current_categories = get_post_meta($link_id, 'category_id', false);
-
-    //                 foreach ($aCategory as $category_id) {
-    //                     if (!in_array($category_id, $current_categories)) {
-    //                         add_post_meta($link_id, 'category_id', $category_id, false);
-    //                     }
-    //                 }
-    //             } else {
-    //                 // Clear categories if none are passed
-    //                 delete_post_meta($link_id, 'category_id');
-    //             }
-    //         }
-
-    //         return $update_result;
-    //     } catch (\Throwable $e) {
-    //         error_log("Error in updateLink: " . $e->getMessage());
-    //         return null;
-    //     }
-    // }
-
     public static function getServices()
     {
         // Set up arguments for get_posts to fetch all service posts
@@ -838,6 +769,8 @@ class ShortURL
 
             $idm = (!empty($shortenParams['customer_idm']) ? $shortenParams['customer_idm'] : self::$rights['idm']);
 
+    
+    
             $aShortURLs = self::fetch_or_create_shorturls($aDomain['id'], $long_url, $aDomain['prefix'], $idm, $uri, $valid_until, $aCategory);
 
             error_log(' fetch_or_create_shorturls() returned $aShortURLs = ' . print_r($aShortURLs, true));
@@ -899,7 +832,7 @@ class ShortURL
 
             $query = new \WP_Query($args);
 
-            if ($query->have_posts()) {
+            if ($query->have_posts()) {    
                 error_log(' fetch_or_create_shorturls() we have posts');
                 $post_id = $query->posts[0]->ID;
 
@@ -945,6 +878,7 @@ class ShortURL
                 $aRet['shorturl_generated'] = $shorturl_generated;
                 $aRet['shorturl_custom'] = $shorturl_custom;
                 $aRet['valid_until'] = $valid_until;
+                $aRet['valid_until_formatted'] = $valid_until_formatted;
             }
 
             // Update categories
@@ -1001,10 +935,13 @@ class ShortURL
                     $query->the_post();
 
                     // Fetch the relevant post meta data
+                    $post_id = get_the_ID();
+
                     $active_short_urls[] = [
-                        'long_url' => get_post_meta(get_the_ID(), 'long_url', true),
-                        'short_url' => get_post_meta(get_the_ID(), 'short_url', true),
-                        'valid_until' => get_post_meta(get_the_ID(), 'valid_until', true)
+                        'long_url' => get_the_title($post_id),
+                        'shorturl_generated' => get_post_meta($post_id, 'shorturl_generated', true),
+                        'shorturl_custom' => get_post_meta($post_id, 'shorturl_custom', true),
+                        'valid_until' => get_post_meta($post_id, 'valid_until', true)
                     ];
                 }
             }
@@ -1030,16 +967,22 @@ class ShortURL
         try {
             // Set up arguments for WP_Query to fetch the post with the matching short URL
             $args = [
-                'post_type' => 'shorturl_link',  // The Custom Post Type for links
-                'posts_per_page' => 1,       // We only need one result
-                'post_status' => 'publish', // Only fetch published links
+                'post_type' => 'shorturl_link',
+                'posts_per_page' => 1,     
+                'post_status' => 'publish',
                 'meta_query' => [
+                    'relation' => 'OR',        // We now have TWO short-links see https://github.com/RRZE-Webteam/rrze-shorturl/issues/146
                     [
-                        'key' => 'short_url',
+                        'key' => 'shorturl_generated',
+                        'value' => $short_url,
+                        'compare' => '='
+                    ],
+                    [
+                        'key' => 'shorturl_custom',
                         'value' => $short_url,
                         'compare' => '='
                     ]
-                ]
+                ]                
             ];
 
             // Execute the query
@@ -1049,8 +992,7 @@ class ShortURL
             if ($query->have_posts()) {
                 $query->the_post();
 
-                // Get the long_url meta data from the post
-                $long_url = get_post_meta(get_the_ID(), 'long_url', true);
+                $long_url = get_the_title(get_the_ID());
 
                 // Restore original Post Data
                 wp_reset_postdata();

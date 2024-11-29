@@ -354,8 +354,9 @@ class Shortcode
 
             $result = [
                 'id' => $post_id,
-                'long_url' => get_post_meta($post_id, 'long_url', true),
-                'short_url' => get_post_meta($post_id, 'short_url', true),
+                'long_url' => get_the_title($post_id),
+                'shorturl_generated' => get_post_meta($post_id, 'shorturl_generated', true),
+                'shorturl_custom' => get_post_meta($post_id, 'shorturl_custom', true),
                 'uri' => get_post_meta($post_id, 'uri', true),
                 'idm' => get_post_meta($post_id, 'idm', true),
                 'domain_id' => get_post_meta($post_id, 'domain_id', true),
@@ -482,6 +483,8 @@ class Shortcode
         if ((isset($_SERVER["REQUEST_METHOD"]) && $_SERVER["REQUEST_METHOD"] == "POST") || !empty($_GET['long_url'])) {
             // Check if URL is provided
             if (!empty($aParams['long_url'])) {
+
+
                 $result = ShortURL::shorten($aParams);
 
                 if ($result['error']) {
@@ -615,13 +618,16 @@ class Shortcode
             ];
 
             // Call the function to update the link
-            $result = ShortURL::shorten($aParams);
+            $shorten_result = ShortURL::shorten($aParams);
 
-            if ($result['error']) {
+            if ($shorten_result['error']) {
+                // $bUpdated = true;
+                self::$update_message['error'] = true;
                 self::$update_message['class'] = 'notice-error';
-                self::$update_message['txt'] = $result['message'];
+                self::$update_message['txt'] = $shorten_result['message'];
             } else {
-                $bUpdated = true;
+                // $bUpdated = true;
+                self::$update_message['error'] = false;
                 self::$update_message['class'] = 'notice-success';
                 self::$update_message['txt'] = __('Link updated', 'rrze-shorturl');
             }
@@ -633,40 +639,18 @@ class Shortcode
         $orderby = !empty($_GET['orderby']) ? sanitize_text_field(wp_unslash($_GET['orderby'])) : 'ID';
         $order = !empty($_GET['order']) && in_array(wp_unslash($_GET['order']), ['ASC', 'DESC']) ? sanitize_text_field(wp_unslash($_GET['order'])) : 'ASC';
 
-        // Check if only own links should be displayed
-        $own_links = empty($_GET) ? 1 : (int) !empty($_GET['own_links']);
-
-        // Prepare the arguments for WP_Query to fetch the links
-        // $args = [
-        //     'post_type' => 'shorturl_link',
-        //     'posts_per_page' => -1,
-        //     'orderby' => $orderby,
-        //     'order' => $order,
-        //     'meta_query' => [
-        //         'relation' => 'AND'
-        //     ],
-        // ];
-
-        // if ($own_links == 1) {
-        //     $args['meta_query'][] = [
-        //         'key' => 'idm',
-        //         'value' => self::$rights['idm'],
-        //         'compare' => '='
-        //     ];
-        // }
-
         $args = [
             'post_type' => 'shorturl_link',
             'posts_per_page' => -1,
             'orderby' => $orderby,
             'order' => $order,
-            // 'meta_query' => [
-            //     [
-            //         'key' => 'idm',
-            //         'value' => self::$rights['idm'],
-            //         'compare' => '='
-            //     ]
-            // ],
+            'meta_query' => [
+                [
+                    'key' => 'idm',
+                    'value' => self::$rights['idm'],
+                    'compare' => '='
+                ]
+            ],
         ];
 
         // Handle category filtering
@@ -724,7 +708,7 @@ class Shortcode
             foreach ($results as $link) {
                 $link_id = $link->ID;
 
-                $long_url = get_post_meta($link_id, 'long_url', true);
+                $long_url = get_the_title($link_id);
                 $shorturl_generated = get_post_meta($link_id, 'shorturl_generated', true);
                 $shorturl_custom = get_post_meta($link_id, 'shorturl_custom', true);
                 // $uri = get_post_meta($link_id, 'uri', true);
@@ -805,9 +789,9 @@ class Shortcode
                         
 
                         // Generate update message if available
-                        if (!empty(self::$update_message['txt'])) {
+                        // if (!empty(self::$update_message['txt'])) {
                             echo '<div class="notice ' . self::$update_message['class'] . ' is-dismissible"><p>' . self::$update_message['txt'] . '</p></div>';
-                        }
+                        // }
                         ?>
 
                             <div class="postbox">  
@@ -817,15 +801,15 @@ class Shortcode
                                     <input type="hidden" name="action" value="update_link">
                                     <input type="hidden" name="link_id" value="<?php echo esc_attr($link_id); ?>">
                                     <input type="hidden" name="domain_id" value="<?php echo esc_attr($link_data['domain_id']); ?>">
-                                    <input type="hidden" name="shortURL" value="<?php echo esc_attr($link_data['short_url']); ?>">
-
+                                    <input type="text" name="shorturl_generated" value="<?php echo esc_attr($link_data['shorturl_generated']); ?>">
+                                    <input type="text" name="shorturl_custom" value="<?php echo esc_attr($link_data['shorturl_custom']); ?>">
                                 <?php
                                 // Display URI field if allowed
-                                // if (self::$rights['allow_uri']) {
-                                //     echo self::display_shorturl_uri($aParams['uri']);
-                                // } else {
-                                //     echo '<input type="hidden" name="uri" value="' . esc_attr($aParams['uri']) . '">';
-                                // }
+                                if (self::$rights['allow_uri']) {
+                                    echo self::display_shorturl_uri($aParams['uri']);
+                                } else {
+                                    echo '<input type="hidden" name="uri" value="' . esc_attr($aParams['uri']) . '">';
+                                }
 
                                 // Display validity field
                                 echo self::display_shorturl_validity($aParams['valid_until']);
