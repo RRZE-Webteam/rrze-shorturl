@@ -335,6 +335,8 @@ class Shortcode
         return $output;
     }
 
+    // We no longer check HTTP response codes, so 'active' post_meta is unused 
+    // see: https://github.com/RRZE-Webteam/rrze-shorturl/issues/123
     private function get_link_data_by_id($link_id)
     {
         // Fetch the link post using WP_Query
@@ -363,8 +365,8 @@ class Shortcode
                 'created_at' => get_post_meta($post_id, 'created_at', true),
                 'updated_at' => get_post_meta($post_id, 'updated_at', true),
                 'deleted_at' => get_post_meta($post_id, 'deleted_at', true),
-                'valid_until' => get_post_meta($post_id, 'valid_until', true),
-                'active' => get_post_meta($post_id, 'active', true)
+                'valid_until' => get_post_meta($post_id, 'valid_until', true)
+                // , 'active' => get_post_meta($post_id, 'active', true)
             ];
 
             // Fetch associated category IDs (assuming relationships are managed by post meta)

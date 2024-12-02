@@ -38,46 +38,48 @@ class ShortURL
         }
     }
 
-    public static function check_url_status_and_switch_active(string $url, $link_id = 0, $active = null): array
-    {
-        $aRet = [
-            'error' => true,
-            'message' => '',
-        ];
+    // We no longer check HTTP response codes, so 'active' post_meta is unused 
+    // see: https://github.com/RRZE-Webteam/rrze-shorturl/issues/123
+    // public static function check_url_status_and_switch_active(string $url, $link_id = 0, $active = null): array
+    // {
+    //     $aRet = [
+    //         'error' => true,
+    //         'message' => '',
+    //     ];
 
-        $response = wp_remote_get($url, ['timeout' => 10]);
+    //     $response = wp_remote_get($url, ['timeout' => 10]);
 
-        if (is_wp_error($response)) {
-            $message = __('Error fetching URL', 'rrze-shorturl') . ' "' . $url . '" ' . $response->get_error_message();
-            $aRet['message'] = $message;
-            error_log($message);
-            return $aRet;
-        }
+    //     if (is_wp_error($response)) {
+    //         $message = __('Error fetching URL', 'rrze-shorturl') . ' "' . $url . '" ' . $response->get_error_message();
+    //         $aRet['message'] = $message;
+    //         error_log($message);
+    //         return $aRet;
+    //     }
 
-        $http_code = wp_remote_retrieve_response_code($response);
-        if ($http_code >= 200 && $http_code < 400) {
-            if (!empty($link_id) && !is_null($active)){
-                // only admins can switch active
-                update_post_meta($link_id, 'active', $active);
-            }
+    //     $http_code = wp_remote_retrieve_response_code($response);
+    //     if ($http_code >= 200 && $http_code < 400) {
+    //         if (!empty($link_id) && !is_null($active)){
+    //             // only admins can switch active
+    //             update_post_meta($link_id, 'active', $active);
+    //         }
 
-            $aRet['error'] = false;
-        }else{
-            $message = sprintf(
-                __('URL unreachable: "%s" (HTTP-Code: %d)', 'rrze-shorturl'),
-                $url,
-                $http_code
-            );            
-            $aRet['message'] = $message;
+    //         $aRet['error'] = false;
+    //     }else{
+    //         $message = sprintf(
+    //             __('URL unreachable: "%s" (HTTP-Code: %d)', 'rrze-shorturl'),
+    //             $url,
+    //             $http_code
+    //         );            
+    //         $aRet['message'] = $message;
 
-            if (!empty($link_id)){
-                // Set active = 0 because this URL is invalid
-                update_post_meta($link_id, 'active', 0);
-            }
-        }
+    //         if (!empty($link_id)){
+    //             // Set active = 0 because this URL is invalid
+    //             update_post_meta($link_id, 'active', 0);
+    //         }
+    //     }
 
-        return $aRet;
-    }
+    //     return $aRet;
+    // }
 
 
 
@@ -293,6 +295,8 @@ class ShortURL
     }
 
 
+    // We no longer check HTTP response codes, so 'active' post_meta is unused 
+    // see: https://github.com/RRZE-Webteam/rrze-shorturl/issues/123
     public static function isUniqueURI($uri, $link_id = 0)
     {
         // If the URI is empty, consider it unique
@@ -324,12 +328,13 @@ class ShortURL
                     'key' => 'uri',
                     'value' => $uri,
                     'compare' => '='
-                ],
-                [
-                    'key' => 'active',
-                    'value' => '1',
-                    'compare' => '='
                 ]
+                // ,
+                // [
+                    // 'key' => 'active',
+                //     'value' => '1',
+                //     'compare' => '='
+                // ]
             ],
             'posts_per_page' => 1 // We only need to check if at least one match exists
         ];
@@ -337,7 +342,7 @@ class ShortURL
         $query = new \WP_Query($args);
 
         if ($query->have_posts()) {
-            return false; // If a link with the URI exists and is active, it's not unique
+            return false; // If a link with the URI exists, it's not unique
         }
 
         // URI is not used anywhere, it is unique
@@ -532,7 +537,6 @@ class ShortURL
      *     @type string 'uri'               (Optional) A custom URI to be used for the shortened URL, if allowed.
      *     @type string 'utm_*'             (Optional) UTM parameters such as `utm_source`, `utm_medium`, `utm_campaign`, etc.
      *     @type string 'link_id'            (Optional) ID of the post of this link
-     *     @type string 'active'             (Optional) post_meta "active" of this link
      * }
      *
      * @return array Returns an array with detailed results:
@@ -549,6 +553,8 @@ class ShortURL
      *    'valid_until_formatted' => if error '' else formatted given valid_until  
      *   ]
      */
+    // We no longer check HTTP response codes, so 'active' post_meta is unused 
+    // see: https://github.com/RRZE-Webteam/rrze-shorturl/issues/123
     public static function shorten($shortenParams)
     {
         error_log(' in shorten() - START');
@@ -556,7 +562,7 @@ class ShortURL
         error_log(' $shortenParams = ' . print_r($shortenParams, true));
         $long_url = $shortenParams['long_url'] ?? null;
         $link_id = $shortenParams['link_id'] ?? null;
-        $active = $shortenParams['active'] ?? null;
+        // $active = $shortenParams['active'] ?? null;
         $uri = self::$rights['allow_uri'] ? sanitize_text_field(wp_unslash($_POST['uri'] ?? '')) : '';
 
         $valid_until = (!empty($shortenParams['valid_until']) ? $shortenParams['valid_until'] : NULL);
@@ -752,20 +758,20 @@ class ShortURL
                 ];
             }
 
-            $aCheckUrlStatus = self::check_url_status_and_switch_active($long_url, $link_id, $active);
-            if ($aCheckUrlStatus['error'] !== false) {
-                return [
-                    'error' => true,
-                    'message_type' => 'error',
-                    'message' => $aCheckUrlStatus['message'],
-                    'shorturl_generated' => '',
-                    'shorturl_custom' => '',
-                    'long_url' => $long_url,
-                    'uri' => $uri,
-                    'valid_until' => $valid_until,
-                    'valid_until_formatted' => $valid_until_formatted
-                ];
-            }
+            // $aCheckUrlStatus = self::check_url_status_and_switch_active($long_url, $link_id, $active);
+            // if ($aCheckUrlStatus['error'] !== false) {
+            //     return [
+            //         'error' => true,
+            //         'message_type' => 'error',
+            //         'message' => $aCheckUrlStatus['message'],
+            //         'shorturl_generated' => '',
+            //         'shorturl_custom' => '',
+            //         'long_url' => $long_url,
+            //         'uri' => $uri,
+            //         'valid_until' => $valid_until,
+            //         'valid_until_formatted' => $valid_until_formatted
+            //     ];
+            // }
 
             $idm = (!empty($shortenParams['customer_idm']) ? $shortenParams['customer_idm'] : self::$rights['idm']);
 
@@ -796,6 +802,8 @@ class ShortURL
     }
 
 
+    // We no longer check HTTP response codes, so 'active' post_meta is unused 
+    // see: https://github.com/RRZE-Webteam/rrze-shorturl/issues/123
     public static function fetch_or_create_shorturls($domain_id, $long_url, $prefix, $idm, $uri = '', $valid_until = '', $aCategory = '')
     {
         $aRet = [
@@ -872,7 +880,7 @@ class ShortURL
                 update_post_meta($post_id, 'valid_until', $valid_until);
                 $valid_until_formatted = (!empty($valid_until) ? date_format(date_create($valid_until), 'd.m.Y') : __('indefinite', 'rrze-shorturl'));
                 update_post_meta($post_id, 'valid_until_formatted', $valid_until_formatted);
-                update_post_meta($post_id, 'active', '1');
+                // update_post_meta($post_id, 'active', '1');
 
                 $aRet['post_id'] = $post_id;
                 $aRet['shorturl_generated'] = $shorturl_generated;
@@ -904,21 +912,23 @@ class ShortURL
     }
 
 
+    // We no longer check HTTP response codes, so 'active' post_meta is unused 
+    // see: https://github.com/RRZE-Webteam/rrze-shorturl/issues/123
     public static function getActiveShortURLs()
     {
         try {
             // Set up arguments for WP_Query to fetch active short URLs
             $args = [
-                'post_type' => 'shorturl_link',  // The Custom Post Type for links
-                'posts_per_page' => -1,      // Retrieve all matching posts
-                'post_status' => 'publish', // Only fetch published links
-                'meta_query' => [
-                    [
-                        'key' => 'active',
-                        'value' => '1',
-                        'compare' => '='
-                    ]
-                ],
+                'post_type' => 'shorturl_link',
+                'posts_per_page' => -1,
+                'post_status' => 'publish', 
+                // 'meta_query' => [
+                //     [
+                //         'key' => 'active',
+                //         'value' => '1',
+                //         'compare' => '='
+                //     ]
+                // ],
                 'orderby' => 'created_at', // Order by the created_at meta field
                 'order' => 'DESC'        // Order by most recent first
             ];

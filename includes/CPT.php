@@ -150,13 +150,15 @@ class CPT
 
 
     // Add columns to table of shorturl_link
+    // We no longer check HTTP response codes, so 'active' post_meta is unused 
+    // see: https://github.com/RRZE-Webteam/rrze-shorturl/issues/123
     public function add_shorturl_link_custom_columns($columns)
     {
         $columns = [
             'cb' => $columns['cb'],
             // 'post_id' => __('post_id', 'rrze-shorturl'),
             // 'post_status' => __('post_status', 'rrze-shorturl'),
-            'active' => __('Active', 'rrze-shorturl'),
+            // 'active' => __('Active', 'rrze-shorturl'),
             'title' => __('Long URL', 'rrze-shorturl'),
             'shorturl_generated' => __('ShortURL generated', 'rrze-shorturl'),
             'shorturl_custom' => __('ShortURL custom', 'rrze-shorturl'),
@@ -169,12 +171,14 @@ class CPT
     }
 
     // return values for columns of shorturl_link
+    // We no longer check HTTP response codes, so 'active' post_meta is unused 
+    // see: https://github.com/RRZE-Webteam/rrze-shorturl/issues/123
     public function display_shorturl_link_custom_columns($column, $post_id)
     {
         switch ($column) {
-            case 'active':
-                echo get_post_meta($post_id, 'active', true) == '1' ? '&#10004;' : '&#10008;';
-                break;
+            // case 'active':
+            //     echo get_post_meta($post_id, 'active', true) == '1' ? '&#10004;' : '&#10008;';
+            //     break;
             // case 'post_id':
             //     echo $post_id;
             //     break;
@@ -201,10 +205,12 @@ class CPT
         }
     }
 
+    // We no longer check HTTP response codes, so 'active' post_meta is unused 
+    // see: https://github.com/RRZE-Webteam/rrze-shorturl/issues/123
     public function make_shorturl_link_columns_sortable($columns)
     {
-        $columns['active'] = 'active';
-        $columns['post_id'] = 'post_id';
+        // $columns['active'] = 'active';
+        // $columns['post_id'] = 'post_id';
         $columns['long_url'] = 'long_url';
         $columns['title'] = 'title';
         $columns['shorturl_generated'] = 'shorturl_generated';
@@ -215,6 +221,8 @@ class CPT
         return $columns;
     }
 
+    // We no longer check HTTP response codes, so 'active' post_meta is unused 
+    // see: https://github.com/RRZE-Webteam/rrze-shorturl/issues/123
     public function sort_shorturl_link_columns($query)
     {
         if (!is_admin() || !$query->is_main_query()) {
@@ -223,10 +231,10 @@ class CPT
 
         $orderby = $query->get('orderby');
 
-        if ($orderby === 'active') {
-            $query->set('meta_key', 'active');
-            $query->set('orderby', 'meta_value');
-        }
+        // if ($orderby === 'active') {
+        //     $query->set('meta_key', 'active');
+        //     $query->set('orderby', 'meta_value');
+        // }
 
         if ($orderby === 'shorturl_generated') {
             $query->set('meta_key', 'shorturl_generated');
@@ -270,6 +278,8 @@ class CPT
     }
 
 
+    // We no longer check HTTP response codes, so 'active' post_meta is unused 
+    // see: https://github.com/RRZE-Webteam/rrze-shorturl/issues/123
     public function render_shorturl_link_metabox($post)
     {
         $long_url = get_the_title($post->ID); 
@@ -278,7 +288,7 @@ class CPT
         $uri = get_post_meta($post->ID, 'uri', true);
         $idm = get_post_meta($post->ID, 'idm', true);
         $valid_until = get_post_meta($post->ID, 'valid_until', true);
-        $active = get_post_meta($post->ID, 'active', true);
+        // $active = get_post_meta($post->ID, 'active', true);
 
         wp_nonce_field('save_shorturl_link_metabox_data', 'shorturl_link_metabox_nonce');
 
@@ -300,10 +310,12 @@ class CPT
         echo '<label for="valid_until">' . __('Valid until', 'rrze-shorturl') . ':</label>';
         echo '<input type="date" id="valid_until" name="valid_until" value="' . esc_attr($valid_until) . '"><br>';
 
-        echo '<label for="active">' . __('Active', 'rrze-shorturl') . ':</label>';
-        echo '<input type="checkbox" id="active" name="active" value="1" ' . checked($active, '1', false) . '>';
+        // echo '<label for="active">' . __('Active', 'rrze-shorturl') . ':</label>';
+        // echo '<input type="checkbox" id="active" name="active" value="1" ' . checked($active, '1', false) . '>';
     }
 
+    // We no longer check HTTP response codes, so 'active' post_meta is unused 
+    // see: https://github.com/RRZE-Webteam/rrze-shorturl/issues/123
     public function save_shorturl_link_metabox_data($post_id)
     {
         // Prevent repeated calls using a static flag
@@ -346,7 +358,7 @@ class CPT
             'categories' => [],
             'uri' => sanitize_text_field($_POST['uri'] ?? ''),
             'link_id' => $post_id,
-            'active' => sanitize_text_field($_POST['active'] ?? null),
+            // 'active' => sanitize_text_field($_POST['active'] ?? null),
         ];
 
         // Call the ShortURL shortening function

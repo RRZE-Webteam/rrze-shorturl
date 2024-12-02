@@ -94,10 +94,12 @@ class CleanupDB
     }
     
 
+    // We no longer check HTTP response codes, so 'active' post_meta is unused 
+    // see: https://github.com/RRZE-Webteam/rrze-shorturl/issues/123
     public static function cleanInvalidLinks()
     {
         try {
-            // Query to find links with 'valid_until' date in the past and update them to inactive
+            // Query to find links with 'valid_until' date in the past and delete them
             $args = [
                 'post_type' => 'shorturl_link',  // The Custom Post Type for links
                 'posts_per_page' => -1,      // Get all links
@@ -119,10 +121,17 @@ class CleanupDB
             $expired_links = new \WP_Query($args);
 
             // Set the expired links as inactive
+            // if ($expired_links->have_posts()) {
+            //     while ($expired_links->have_posts()) {
+            //         $expired_links->the_post();
+            //         update_post_meta(get_the_ID(), 'active', 0);
+            //     }
+            // }
+
             if ($expired_links->have_posts()) {
                 while ($expired_links->have_posts()) {
                     $expired_links->the_post();
-                    update_post_meta(get_the_ID(), 'active', 0);
+                    wp_delete_post(get_the_ID(), true); // Delete post permanently
                 }
             }
 
@@ -130,47 +139,47 @@ class CleanupDB
             wp_reset_postdata();
 
             // Now query all active links
-            $args = [
-                'post_type' => 'shorturl_link',
-                'posts_per_page' => -1,  // Get all active links
-                'meta_query' => [
-                    [
-                        'key' => 'active',
-                        'value' => '1',
-                        'compare' => '='
-                    ]
-                ],
-                'orderby' => 'created_at',
-                'order' => 'DESC'
-            ];
+            // $args = [
+            //     'post_type' => 'shorturl_link',
+            //     'posts_per_page' => -1,  // Get all active links
+            //     'meta_query' => [
+            //         [
+            //             'key' => 'active',
+            //             'value' => '1',
+            //             'compare' => '='
+            //         ]
+            //     ],
+            //     'orderby' => 'created_at',
+            //     'order' => 'DESC'
+            // ];
 
-            $active_links = new \WP_Query($args);
+            // $active_links = new \WP_Query($args);
 
             // Loop through the active links and check their validity
-            if ($active_links->have_posts()) {
-                while ($active_links->have_posts()) {
-                    $active_links->the_post();
-                    $long_url = get_the_title(get_the_ID());
+            // if ($active_links->have_posts()) {
+            //     while ($active_links->have_posts()) {
+            //         $active_links->the_post();
+            //         $long_url = get_the_title(get_the_ID());
 
-                    // Perform a remote GET request to the long URL
-                    $response = wp_remote_get($long_url);
+            //         // Perform a remote GET request to the long URL
+            //         $response = wp_remote_get($long_url);
 
-                    if (is_wp_error($response)) {
-                        // Log the error and continue with the next URL
-                        error_log("Error fetching URL: " . $long_url);
-                        continue;
-                    }
+            //         if (is_wp_error($response)) {
+            //             // Log the error and continue with the next URL
+            //             error_log("Error fetching URL: " . $long_url);
+            //             continue;
+            //         }
 
-                    $http_code = wp_remote_retrieve_response_code($response);
-                    if ($http_code >= 400 && $http_code < 500) {
-                        // Set active = 0 for invalid URLs
-                        update_post_meta(get_the_ID(), 'active', 0);
-                    }
-                }
-            }
+            //         $http_code = wp_remote_retrieve_response_code($response);
+            //         if ($http_code >= 400 && $http_code < 500) {
+            //             // Set active = 0 for invalid URLs
+            //             update_post_meta(get_the_ID(), 'active', 0);
+            //         }
+            //     }
+            // }
 
             // Reset post data after the query
-            wp_reset_postdata();
+            // wp_reset_postdata();
 
         } catch (CustomException $e) {
             error_log("Error cleaning invalid links: " . $e->getMessage());
