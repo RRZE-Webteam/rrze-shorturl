@@ -2,7 +2,6 @@
 
 
 jQuery(document).ready(function ($) {
-
     // Make some fancy QR
     var inputField = document.getElementById("shortened_url");
     var qrValue = inputField ? inputField.value : "https://www.fau.de";
@@ -169,24 +168,24 @@ jQuery(document).ready(function ($) {
 
     // Links
     // Edit link
-    $(document).on('click', '.edit-link', function (e) {
-        e.preventDefault();
-        var linkId = $(this).data('link-id');
-        var currentUrl = window.location.href;
-        var newUrl = currentUrl.split('?')[0] + '?link_id=' + linkId + '#edit-link-form';
+    // $(document).on('click', '.edit-link', function (e) {
+    //     e.preventDefault();
+    //     var linkId = $(this).data('link-id');
+    //     var currentUrl = window.location.href;
+    //     var newUrl = currentUrl.split('?')[0] + '?link_id=' + linkId + '#edit-link-form';
 
-        window.location.href = newUrl;
-    });
+    //     window.location.href = newUrl;
+    // });
 
-    // After Update Link
-    $(document).on('submit', '#edit-link-form', function (e) {
-        // remove fragment (#...) and the link ID (?link_id=...)
-        var currentUrl = window.location.href;
-        var newUrl = currentUrl.split('?')[0];
+    // // After Update Link
+    // $(document).on('submit', '#edit-link-form', function (e) {
+    //     // remove fragment (#...) and the link ID (?link_id=...)
+    //     var currentUrl = window.location.href;
+    //     var newUrl = currentUrl.split('?')[0];
 
-        // Update the URL in the address bar without reloading the page
-        window.history.pushState({}, document.title, newUrl);
-    });
+    //     // Update the URL in the address bar without reloading the page
+    //     window.history.pushState({}, document.title, newUrl);
+    // });
 
 
     // Delete link

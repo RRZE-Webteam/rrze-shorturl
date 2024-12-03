@@ -72,8 +72,8 @@ function system_requirements()
     } elseif (version_compare($GLOBALS['wp_version'], RRZE_WP_VERSION, '<')) {
         /* translators: 1: current WordPress version, 2: required WordPress version */
         $error = sprintf(__('The server is running WordPress version %1$s. The Plugin requires at least WordPress version %2$s.', 'rrze-typesettings'), $GLOBALS['wp_version'], RRZE_WP_VERSION);
-    // } elseif (!class_exists('\RRZE\AccessControl\Permissions')) {
-    //     $error = __('Plugin RRZE-AC is mandatory.', 'rrze-shorturl');
+    } elseif (!class_exists('\RRZE\AccessControl\Permissions')) {
+        $error = __('Plugin RRZE-AC is mandatory.', 'rrze-shorturl');
     }
     return $error;
 }

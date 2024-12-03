@@ -15,7 +15,6 @@ class Settings
         add_action('wp_ajax_update_idm', [$this, 'update_idm_callback']);
     }
 
-    // Add a menu item to the Settings menu
     public function add_options_page()
     {
         add_options_page(
@@ -30,17 +29,15 @@ class Settings
 
     public function update_idm_callback()
     {
-        // Check if AJAX request to update allow_uri or allow_get
         check_ajax_referer('update_shorturl_idm_nonce', '_ajax_nonce');
 
-        // Validate and sanitize input
         if (!isset($_POST['id']) || !isset($_POST['field'])) {
             wp_send_json_error('Invalid request');
             return;
         }
 
         $id = intval($_POST['id']);
-        $allowed_fields = ['allow_uri', 'allow_get', 'allow_utm'];  // List of valid fields
+        $allowed_fields = ['allow_uri', 'allow_get', 'allow_utm'];
         $field = sanitize_text_field(wp_unslash($_POST['field']));
 
         if (!in_array($field, $allowed_fields)) {
@@ -48,19 +45,15 @@ class Settings
             return;
         }
 
-        // Convert the value to an integer 1 or 0 based on the input
         $value = isset($_POST['value']) && $_POST['value'] === 'true' ? 1 : 0;
 
-        // Check if the post with the given ID exists and is of the correct type
         if (get_post_type($id) !== 'shorturl_idm') {
             wp_send_json_error('Invalid post ID or post type');
             return;
         }
 
-        // Update the corresponding meta field for the Custom Post Type
         $result = update_post_meta($id, $field, $value);
 
-        // Check if the update was successful and return the appropriate response
         if (false === $result) {
             wp_send_json_error('Meta update failed');
         } else {
@@ -72,7 +65,6 @@ class Settings
         }
     }
 
-    // Register settings sections and fields
     public function register_settings()
     {
         // General tab settings
@@ -124,6 +116,7 @@ class Settings
         );
 
         register_setting('rrze_shorturl_statistic', 'rrze_shorturl_statistic');
+
         // Statistic tab settings
         add_settings_section(
             'rrze_shorturl_statistic_section',
@@ -133,15 +126,12 @@ class Settings
         );
 
         register_setting('rrze_shorturl_statistic', 'rrze_shorturl_statistic');
-
     }
 
 
 
-    // Render the options page
     public function render_options_page()
     {
-        // Sanitize and validate the 'tab' parameter
         $allowed_tabs = ['general', 'services', 'customer-domains', 'external-domains', 'idm', 'statistic'];
         $current_tab = isset($_GET['tab']) && in_array($_GET['tab'], $allowed_tabs) ? sanitize_text_field(wp_unslash($_GET['tab'])) : 'general';
 
@@ -204,7 +194,6 @@ class Settings
 
     private static function isValidHostName($hostname)
     {
-        // Check if the hostname is not empty
         if (empty($hostname)) {
             return false;
         }
@@ -241,7 +230,6 @@ class Settings
             }
         }
 
-        // Passed all checks, hostname is valid
         return true;
     }
 
@@ -257,9 +245,7 @@ class Settings
         $aOptions['maxShortening'] = (empty($aOptions['maxShortening']) ? 60 : $aOptions['maxShortening']);
         $aOptions['allowed_ip_addresses'] = (empty($aOptions['allowed_ip_addresses']) ? '' : $aOptions['allowed_ip_addresses']);
 
-        // Process form submission
         if (isset($_POST['submit_general'])) {
-            // Unslash all the inputs
             $post_data = wp_unslash($_POST);
 
             // Validate and sanitize ShortURLBase
@@ -283,7 +269,6 @@ class Settings
                 $message = 'Error: ' . __('Allowed IP Addresses for REST API endpoints is not valid.', 'rrze-shorturl');
             }
 
-            // Save the options using wp_json_encode()
             update_option('rrze-shorturl', wp_json_encode($aOptions));
         }
 
@@ -335,13 +320,10 @@ class Settings
         $message = '';
         $bDel = false;
 
-        // Check if form is submitted
         if (isset($_POST['submit'])) {
-            // Verify the nonce field
             check_admin_referer('rrze_shorturl_services_nonce');
 
             try {
-                // Unslash the $_POST data
                 $post_data = wp_unslash($_POST);
 
                 // Delete selected entries
@@ -497,10 +479,9 @@ class Settings
     // Render the Customer Domains tab section
     public function render_customer_domains_section()
     {
-        // Define arguments for WP_Query to fetch 'domain' CPT entries with specific conditions
         $args = [
             'post_type' => 'shorturl_domain',
-            'posts_per_page' => -1, // Fetch all domains
+            'posts_per_page' => -1,
             'meta_query' => [
                 [
                     'key' => 'prefix',
@@ -513,12 +494,10 @@ class Settings
                     'compare' => '='
                 ]
             ],
-            'orderby' => 'title', // Sort by the hostname (post_title)
+            'orderby' => 'title',
             'order' => 'ASC'
         ];
 
-
-        // Execute the query
         $query = new \WP_Query($args);
 
         ?>
@@ -577,13 +556,10 @@ class Settings
         $message = '';
         $bDel = false;
 
-        // Check if the form is submitted
         if (isset($_POST['submit'])) {
-            // Verify the nonce field
             check_admin_referer('rrze_shorturl_external_domains_nonce');
 
             try {
-                // Unslash $_POST data
                 $post_data = wp_unslash($_POST);
 
                 // Delete selected entries
@@ -605,7 +581,7 @@ class Settings
                         if (!self::isValidHostName($new_hostname)) {
                             $message = __('Hostname is not valid.', 'rrze-shorturl');
                         } else {
-                            // Insert new domain as a Custom Post Type
+                            // Insert new domain
                             $post_data = [
                                 'post_title' => $new_hostname,
                                 'post_type' => 'shorturl_domain',
@@ -634,10 +610,10 @@ class Settings
             }
         }
 
-        // Fetch entries from the 'domain' Custom Post Type where prefix = 1 and external = 1
+        // Fetch entries where prefix = 1 and external = 1
         $args = [
             'post_type' => 'shorturl_domain',
-            'posts_per_page' => -1, // Fetch all domains
+            'posts_per_page' => -1,
             'meta_query' => [
                 [
                     'key' => 'prefix',
@@ -650,7 +626,7 @@ class Settings
                     'compare' => '='
                 ]
             ],
-            'orderby' => 'title', // Sort by the hostname (post_title)
+            'orderby' => 'title',
             'order' => 'ASC'
         ];
 
@@ -717,7 +693,6 @@ class Settings
         $order = isset($_GET['order']) && in_array(sanitize_text_field(wp_unslash($_GET['order'])), ['asc', 'desc']) ? sanitize_text_field(wp_unslash($_GET['order'])) : 'asc';
 
         try {
-            // Check if form is submitted
             if (isset($_POST['submit_idm'])) {
                 check_admin_referer('rrze_shorturl_idm_nonce'); // Add nonce check
 
@@ -739,7 +714,7 @@ class Settings
                         if (!empty($existing_idm_id)) {
                             $message = __('An error occurred: this IdM already exists.', 'rrze-shorturl');
                         } else {
-                            // Add new entry as a Custom Post Type
+                            // Add new entry
                             $post_data = [
                                 'post_title' => $idm,
                                 'post_type' => 'shorturl_idm',
@@ -762,12 +737,11 @@ class Settings
                 }
             }
 
-            // Prepare the WP_Query to fetch IdM entries sorted by title
             $args = [
                 'post_type' => 'shorturl_idm',
-                'posts_per_page' => -1, // Fetch all IdMs
+                'posts_per_page' => -1,
                 'orderby' => $orderby === 'idm' ? 'title' : 'meta_value',
-                'meta_key' => $orderby === 'idm' ? '' : $orderby, // Sort by meta if not 'idm'
+                'meta_key' => $orderby === 'idm' ? '' : $orderby,
                 'order' => $order
             ];
 
@@ -856,8 +830,8 @@ class Settings
         // Get all domains to count associated links
         $args = [
             'post_type' => 'shorturl_domain',
-            'posts_per_page' => -1, // Fetch all domains
-            'orderby' => 'title', // Sort by hostname (title)
+            'posts_per_page' => -1,
+            'orderby' => 'title',
             'order' => $order
         ];
 
@@ -880,12 +854,12 @@ class Settings
                             'compare' => '='
                         ]
                     ],
-                    'posts_per_page' => -1, // Count all links
-                    'fields' => 'ids' // Only retrieve post IDs for counting
+                    'posts_per_page' => -1,
+                    'fields' => 'ids'
                 ];
 
                 $link_query = new \WP_Query($link_args);
-                $link_count = $link_query->post_count; // Get the count of associated links
+                $link_count = $link_query->post_count;
 
                 $link_counts[] = (object) [
                     'hostname' => $hostname,

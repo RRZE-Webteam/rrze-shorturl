@@ -847,12 +847,9 @@ class ShortURL
                 $aRet['post_id'] = $post_id;
                 $aRet['shorturl_generated'] = get_post_meta($post_id, 'shorturl_generated', true);
 
-                // Only admins are allowed to edit URI!
-                if (is_user_logged_in()) {
-                    $shorturl_custom = (!empty($uri) ? self::$CONFIG['ShortURLBase'] . '/' . $uri : '');
-                    update_post_meta($post_id, 'shorturl_custom', $shorturl_custom);
-                    update_post_meta($post_id, 'uri', $uri);
-                }
+                $shorturl_custom = (!empty($uri) ? self::$CONFIG['ShortURLBase'] . '/' . $uri : '');
+                update_post_meta($post_id, 'shorturl_custom', $shorturl_custom);
+                update_post_meta($post_id, 'uri', $uri);
 
                 update_post_meta($post_id, 'valid_until', $valid_until);
                 $aRet['shorturl_custom'] = get_post_meta($post_id, 'shorturl_custom', true);
