@@ -621,14 +621,13 @@ class Shortcode
 
             // Call the function to update the link
             $shorten_result = ShortURL::shorten($aParams);
+            $bUpdated = true;
 
             if ($shorten_result['error']) {
-                // $bUpdated = true;
                 self::$update_message['error'] = true;
                 self::$update_message['class'] = 'notice-error';
                 self::$update_message['txt'] = $shorten_result['message'];
             } else {
-                // $bUpdated = true;
                 self::$update_message['error'] = false;
                 self::$update_message['class'] = 'notice-success';
                 self::$update_message['txt'] = __('Link updated', 'rrze-shorturl');
@@ -692,7 +691,11 @@ class Shortcode
         // $category_filter_form .= '&nbsp;' . $checkbox;
         $category_filter_form .= '</form>';
 
-        // Generate table
+        // Display success notice
+        if ($bUpdated && !self::$update_message['error']){
+            $table .= '<div class="notice ' . self::$update_message['class'] . ' is-dismissible"><p>' . self::$update_message['txt'] . '</p></div>';
+        }
+        
         $table .= $category_filter_form;
         $table .= '<table class="shorturl-wp-list-table widefat striped">';
         $table .= '<thead><tr>';
@@ -736,14 +739,16 @@ class Shortcode
                 // $table .= '<td>' . esc_html($uri) . '</td>';
                 $table .= '<td>' . (!empty($valid_until) ? esc_html($valid_until) : esc_html__('indefinite', 'rrze-shorturl')) . '</td>';
                 $table .= '<td>' . esc_html($category_names_str) . '</td>';
-                $table .= '<td>' . (self::$rights['idm'] == get_post_meta($link_id, 'idm', true) || is_user_logged_in() ? '<a href="#" class="edit-link" data-link-id="' . esc_attr($link_id) . '">' . esc_html__('Edit', 'rrze-shorturl') . '</a> | <a href="#" data-link-id="' . esc_attr($link_id) . '" class="delete-link">' . esc_html__('Delete', 'rrze-shorturl') . '</a>' : '') . '</td>';
+                // 2.1.24 : Admins now edit links in backend
+                // $table .= '<td>' . (self::$rights['idm'] == get_post_meta($link_id, 'idm', true) || is_user_logged_in() ? '<a href="#" class="edit-link" data-link-id="' . esc_attr($link_id) . '">' . esc_html__('Edit', 'rrze-shorturl') . '</a> | <a href="#" data-link-id="' . esc_attr($link_id) . '" class="delete-link">' . esc_html__('Delete', 'rrze-shorturl') . '</a>' : '') . '</td>';
+                $table .= '<td><a href="#" class="edit-link" data-link-id="' . esc_attr($link_id) . '">' . esc_html__('Edit', 'rrze-shorturl') . '</a> | <a href="#" data-link-id="' . esc_attr($link_id) . '" class="delete-link">' . esc_html__('Delete', 'rrze-shorturl') . '</a></td>';
                 $table .= '</tr>';
             }
         }
 
         $table .= '</tbody></table>';
 
-        if (!$bUpdated && !empty($results)) {
+        if ((!$bUpdated && !empty($results)) || self::$update_message['error']) {
             $table .= $this->display_edit_link_form();
         }
 
@@ -752,7 +757,7 @@ class Shortcode
 
     private function display_edit_link_form()
     {
-        $link_id = !empty($_GET['link_id']) ? (int) $_GET['link_id'] : 0;
+        $link_id = (!empty($_GET['link_id']) ? (int) $_GET['link_id'] : (!empty($_POST['link_id']) ? (int) $_POST['link_id'] : 0));
 
         if ($link_id <= 0) {
             return '';

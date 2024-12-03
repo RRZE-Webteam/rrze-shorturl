@@ -168,14 +168,14 @@ jQuery(document).ready(function ($) {
 
     // Links
     // Edit link
-    // $(document).on('click', '.edit-link', function (e) {
-    //     e.preventDefault();
-    //     var linkId = $(this).data('link-id');
-    //     var currentUrl = window.location.href;
-    //     var newUrl = currentUrl.split('?')[0] + '?link_id=' + linkId + '#edit-link-form';
+    $(document).on('click', '.edit-link', function (e) {
+        e.preventDefault();
+        var linkId = $(this).data('link-id');
+        var currentUrl = window.location.href;
+        var newUrl = currentUrl.split('?')[0] + '?link_id=' + linkId + '#edit-link-form';
 
-    //     window.location.href = newUrl;
-    // });
+        window.location.href = newUrl;
+    });
 
     // // After Update Link
     // $(document).on('submit', '#edit-link-form', function (e) {
