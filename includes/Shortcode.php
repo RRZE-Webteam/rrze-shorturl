@@ -490,7 +490,7 @@ class Shortcode
                 $result = ShortURL::shorten($aParams);
 
                 if ($result['error']) {
-                    $result_message = esc_html($result['message']);
+                    $result_message = $result['message'];
                 } else {
                     $shortened_url = (!empty($result['shorturl_custom']) ? $result['shorturl_custom'] : $result['shorturl_generated']);
                     $result_message = '<span class="shorturl-shortened-msg"><span class="label">' . esc_html__('Short URL', 'rrze-shorturl') . ':</span> <code>' . esc_html($shortened_url) . '</code></span>';
@@ -604,7 +604,7 @@ class Shortcode
     public function shortcode_list_handler(): string
     {
         $bUpdated = false;
-        self::$update_message = ['class' => '', 'txt' => ''];
+        self::$update_message = ['error' => '', 'class' => '', 'txt' => ''];
         $table = '';
 
         // Handle link update
@@ -693,7 +693,7 @@ class Shortcode
 
         // Display success notice
         if ($bUpdated && !self::$update_message['error']){
-            $table .= '<div class="notice ' . self::$update_message['class'] . ' is-dismissible"><p>' . self::$update_message['txt'] . '</p></div>';
+            $table .= '<div class="notice ' . self::$update_message['class'] . ' is-dismissible data-error="' . (self::$update_message['error'] ? 'true' : 'false') . '"><p>' . self::$update_message['txt'] . '</p></div>';
         }
         
         $table .= $category_filter_form;
@@ -717,7 +717,7 @@ class Shortcode
                 $shorturl_generated = get_post_meta($link_id, 'shorturl_generated', true);
                 $shorturl_custom = get_post_meta($link_id, 'shorturl_custom', true);
                 // $uri = get_post_meta($link_id, 'uri', true);
-                $valid_until = get_post_meta($link_id, 'valid_until', true);
+                $valid_until = get_post_meta($link_id, 'valid_until_formatted', true);
                 $category_ids = get_post_meta($link_id, 'category_id');
 
                 $category_names_str = '';
@@ -796,9 +796,9 @@ class Shortcode
                         
 
                         // Generate update message if available
-                        // if (!empty(self::$update_message['txt'])) {
+                        if (!empty(self::$update_message['txt'])) {
                             echo '<div class="notice ' . self::$update_message['class'] . ' is-dismissible"><p>' . self::$update_message['txt'] . '</p></div>';
-                        // }
+                        }
                         ?>
 
                             <div class="postbox">  
@@ -808,8 +808,8 @@ class Shortcode
                                     <input type="hidden" name="action" value="update_link">
                                     <input type="hidden" name="link_id" value="<?php echo esc_attr($link_id); ?>">
                                     <input type="hidden" name="domain_id" value="<?php echo esc_attr($link_data['domain_id']); ?>">
-                                    <input type="text" name="shorturl_generated" value="<?php echo esc_attr($link_data['shorturl_generated']); ?>">
-                                    <input type="text" name="shorturl_custom" value="<?php echo esc_attr($link_data['shorturl_custom']); ?>">
+                                    <input type="hidden" name="shorturl_generated" value="<?php echo esc_attr($link_data['shorturl_generated']); ?>">
+                                    <input type="hidden" name="shorturl_custom" value="<?php echo esc_attr($link_data['shorturl_custom']); ?>">
                                 <?php
                                 // Display URI field if allowed
                                 if (self::$rights['allow_uri']) {

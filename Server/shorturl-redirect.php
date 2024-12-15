@@ -18,8 +18,15 @@
 // then save new .htaccess 
 
 // SETTINGS
+
+// LIVE ! 
 $shorturl_domain = "https://www.shorturl.rrze.fau.de";
 $redirect_domain = "https://go.fau.de";
+
+// TEST !
+// $shorturl_domain = "https://go-fau.test.rrze.fau.de";
+// $redirect_domain = "https://go-fau.test.rrze.fau.de";
+
 $htaccess_file = '.htaccess';
 $services_file = 'rrze-shorturl-services.json';
 

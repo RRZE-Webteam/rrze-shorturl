@@ -562,6 +562,7 @@ class ShortURL
         error_log(' $shortenParams = ' . print_r($shortenParams, true));
         $long_url = $shortenParams['long_url'] ?? null;
         $link_id = $shortenParams['link_id'] ?? null;
+
         // $active = $shortenParams['active'] ?? null;
         $uri = self::$rights['allow_uri'] ? sanitize_text_field(wp_unslash($_POST['uri'] ?? '')) : '';
 
@@ -777,10 +778,9 @@ class ShortURL
 
     
     
-            $aShortURLs = self::fetch_or_create_shorturls($aDomain['id'], $long_url, $aDomain['prefix'], $idm, $uri, $valid_until, $aCategory);
+            $aShortURLs = self::fetch_or_create_shorturls($aDomain['id'], $long_url, $aDomain['prefix'], $idm, $uri, $valid_until, $aCategory, $link_id);
 
-            error_log(' fetch_or_create_shorturls() returned $aShortURLs = ' . print_r($aShortURLs, true));
-
+            error_log('fetch_or_create_shorturls() returned $aShortURLs = ' . print_r($aShortURLs, true));
             error_log('shorten() -- END');
 
             // no error occurred
@@ -804,7 +804,7 @@ class ShortURL
 
     // We no longer check HTTP response codes, so 'active' post_meta is unused 
     // see: https://github.com/RRZE-Webteam/rrze-shorturl/issues/123
-    public static function fetch_or_create_shorturls($domain_id, $long_url, $prefix, $idm, $uri = '', $valid_until = '', $aCategory = '')
+    public static function fetch_or_create_shorturls($domain_id, $long_url, $prefix, $idm, $uri = '', $valid_until = '', $aCategory = '', $link_id = null)
     {
         $aRet = [
             'post_id' => 0,
@@ -813,6 +813,29 @@ class ShortURL
             'valid_until' => '',
             'valid_until_formatted' => '',
         ];
+
+        if ($link_id) {
+            // we are editing via backend
+            $post_id = $link_id;
+
+            $shorturl_generated = get_post_meta($post_id, 'shorturl_generated', true);
+            $shorturl_custom = (!empty($uri) ? self::$CONFIG['ShortURLBase'] . '/' . $uri : '');
+
+            update_post_meta($post_id, 'shorturl_custom', $shorturl_custom);
+            update_post_meta($post_id, 'uri', $uri);
+            update_post_meta($post_id, 'valid_until', $valid_until);
+            $valid_until_formatted = (!empty($valid_until) ? date_format(date_create($valid_until), 'd.m.Y') : __('indefinite', 'rrze-shorturl'));
+            update_post_meta($post_id, 'valid_until_formatted', $valid_until_formatted);
+
+            // return result
+            $aRet['post_id'] = $post_id;
+            $aRet['shorturl_generated'] = $shorturl_generated;
+            $aRet['shorturl_custom'] = $shorturl_custom;
+            $aRet['valid_until'] = $valid_until;
+            $aRet['valid_until_formatted'] = $valid_until_formatted;
+
+            return $aRet;
+        }
 
         try {
             // try to fetch 

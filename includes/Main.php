@@ -44,6 +44,12 @@ class Main
      */
     public function onLoaded()
     {
+        $cpt = new CPT();
+        $settings = new Settings();
+        $domains = new CustomerDomains();
+        $cleanup = new CleanupDB();
+        $myCrypt = new MyCrypt();
+
         add_action('enqueue_block_editor_assets', [$this, 'enqueueScripts']);
         add_action('wp_enqueue_scripts', [$this, 'enqueueScripts']);
         add_action('admin_enqueue_scripts', [$this, 'enqueueScripts']);
@@ -53,13 +59,10 @@ class Main
 
         add_action('init', [$this, 'initialize_services']);
         add_action('init', [$this, 'init_query_dependend_classes']);
-
-        $cpt = new CPT();
-        $settings = new Settings();
-        $domains = new CustomerDomains();
-        $cleanup = new CleanupDB();
-        $myCrypt = new MyCrypt();
     }
+
+
+
 
     public function init_query_dependend_classes()
     {
@@ -70,6 +73,8 @@ class Main
         $shortcode = new Shortcode($rights);
         $api = new API($rights);
     }
+
+
 
 
     /* Load necessary WordPress admin styles for consistent UI elements in the frontend */
@@ -95,8 +100,14 @@ class Main
     {
         wp_enqueue_script('wp-i18n');
         wp_enqueue_script('qrious', plugins_url('assets/js/qrious.min.js', plugin_basename($this->pluginFile)), array('jquery'), null, true);
-        // wp_enqueue_script('rrze-shorturl', plugins_url('build/js/index.js', plugin_basename($this->pluginFile)), array('jquery'), null, true);
-        wp_enqueue_script('rrze-shorturl', plugins_url('src/index.js', plugin_basename($this->pluginFile)), array('jquery'), null, true);
+
+        wp_enqueue_script(
+            'rrze-shorturl', 
+            plugins_url('build/index.js', plugin_basename($this->pluginFile)), 
+            array('jquery'), 
+            filemtime(plugin_dir_path($this->pluginFile) . 'build/index.js'), 
+            true);
+
         $this->load_admin_styles();
 
         // Localize the script with the nonces
@@ -115,8 +126,12 @@ class Main
             )
         );
 
-        wp_enqueue_style('rrze-shorturl-css', plugins_url('build/css/rrze-shorturl.css', plugin_basename($this->pluginFile)));
-        //wp_enqueue_style('rrze-shorturl-css', plugins_url('src/rrze-shorturl.css', plugin_basename($this->pluginFile)));
+        wp_enqueue_style(
+            'rrze-shorturl-css',
+            plugins_url('build/css/rrze-shorturl.css', $this->pluginFile),
+            [],
+            filemtime(plugin_dir_path($this->pluginFile) . 'build/css/rrze-shorturl.css')
+        );        
     }
 
     // private function drop_custom_tables()
@@ -216,6 +231,7 @@ class Main
                     update_post_meta($post_id, 'shorturl_custom', $old_shorturl);
                 } else {
                     update_post_meta($post_id, 'shorturl_generated', $old_shorturl);
+                    update_post_meta($post_id, 'shorturl_custom', ''); // Set as empty string to make the column sortable without using "relation OR and EXISTS / NOT EXISTS in the backend
                 }
 
                 wp_update_post([

@@ -9,11 +9,11 @@ class CPT
 
     public function __construct()
     {
-        add_action('init', [$this, 'register_idm_cpt']);
-        add_action('init', [$this, 'register_domain_cpt']);
-        add_action('init', [$this, 'register_service_cpt']);
-        add_action('init', [$this, 'register_link_cpt']);
-        add_action('init', [$this, 'register_category_cpt']);
+        add_action('init', [$this, 'register_idm_cpt'], 0);
+        add_action('init', [$this, 'register_domain_cpt'], 0);
+        add_action('init', [$this, 'register_service_cpt'], 0);
+        add_action('init', [$this, 'register_link_cpt'], 0);
+        add_action('init', [$this, 'register_category_cpt'], 0);
 
         add_filter('post_row_actions', [$this, 'modify_post_row_actions_for_shorturl_link'], 10, 2);
         add_filter('manage_shorturl_link_posts_columns', [$this, 'add_shorturl_link_custom_columns']);
@@ -105,8 +105,8 @@ class CPT
         try {
             register_post_type('shorturl_link', array(
                 'labels' => array(
-                    'name' => __('Links'),
-                    'singular_name' => __('Link'),
+                    'name' => __('Links', 'rrze-shorturl'),
+                    'singular_name' => __('Link', 'rrze-shorturl'),
                 ),
                 'public' => false,
                 'show_ui' => true,
@@ -117,6 +117,10 @@ class CPT
                 'show_in_rest' => false,
                 'rewrite' => false,
                 'supports' => array('title'),
+                'capabilities' => array(
+                    'create_posts' => 'do_not_allow', // Creating shortURLs in the backend is not allowed. This functionality is only available in the frontend by design.
+                ),
+                'map_meta_cap' => true,                
             ));
         } catch (CustomException $e) {
             error_log("Error in register_link_cpt: " . $e->getMessage());
@@ -147,8 +151,6 @@ class CPT
         }
     }
 
-
-
     // Add columns to table of shorturl_link
     // We no longer check HTTP response codes, so 'active' post_meta is unused 
     // see: https://github.com/RRZE-Webteam/rrze-shorturl/issues/123
@@ -163,7 +165,7 @@ class CPT
             'shorturl_generated' => __('ShortURL generated', 'rrze-shorturl'),
             'shorturl_custom' => __('ShortURL custom', 'rrze-shorturl'),
             'uri' => __('URI', 'rrze-shorturl'),
-            'date' => $columns['date'],
+            'creation_date' => __('Creation date', 'rrze-shorturl'), // 'date' wouldn't work because WordPress uses a default renderer for the "date" column, ignoring custom output in the manage_shorturl_link_posts_custom_column hook. 
             'idm' => __('IdM', 'rrze-shorturl'),
             'valid_until' => __('Valid until', 'rrze-shorturl'),
         ];
@@ -194,6 +196,11 @@ class CPT
             case 'uri':
                 echo esc_html(get_post_meta($post_id, 'uri', true));
                 break;
+            case 'creation_date':
+                $post_date = get_post_field('post_date', $post_id);
+                $formatted_date = date_i18n('d.m.Y', strtotime($post_date));
+                echo esc_html($formatted_date);
+                break;
             case 'idm':
                 echo esc_html(get_post_meta($post_id, 'idm', true));
                 break;
@@ -216,6 +223,7 @@ class CPT
         $columns['shorturl_generated'] = 'shorturl_generated';
         $columns['shorturl_custom'] = 'shorturl_custom';
         $columns['uri'] = 'uri';
+        $columns['creation_date'] = 'creation_date';
         $columns['idm'] = 'idm';
         $columns['valid_until'] = 'valid_until';
         return $columns;
@@ -282,36 +290,49 @@ class CPT
     // see: https://github.com/RRZE-Webteam/rrze-shorturl/issues/123
     public function render_shorturl_link_metabox($post)
     {
-        $long_url = get_the_title($post->ID); 
+        $long_url = get_the_title($post->ID);
         $shorturl_generated = get_post_meta($post->ID, 'shorturl_generated', true);
         $shorturl_custom = get_post_meta($post->ID, 'shorturl_custom', true);
         $uri = get_post_meta($post->ID, 'uri', true);
         $idm = get_post_meta($post->ID, 'idm', true);
         $valid_until = get_post_meta($post->ID, 'valid_until', true);
-        // $active = get_post_meta($post->ID, 'active', true);
 
         wp_nonce_field('save_shorturl_link_metabox_data', 'shorturl_link_metabox_nonce');
 
+        echo '<div class="shorturl-metabox">';
+
+        echo '<div class="metabox-row">';
         echo '<label for="long_url">' . __('Long URL', 'rrze-shorturl') . ':</label>';
-        echo '<input type="text" id="long_url" name="long_url" value="' . esc_attr($long_url) . '" readonly><br>';
+        echo '<input type="text" id="long_url" name="long_url" value="' . esc_attr($long_url) . '" readonly>';
+        echo '</div>';
 
+        echo '<div class="metabox-row">';
         echo '<label for="shorturl_generated">' . __('Short URL generated', 'rrze-shorturl') . ':</label>';
-        echo '<input type="text" id="shorturl_generated" name="shorturl_generated" value="' . esc_attr($shorturl_generated) . '" readonly><br>';
+        echo '<input type="text" id="shorturl_generated" name="shorturl_generated" value="' . esc_attr($shorturl_generated) . '" readonly>';
+        echo '</div>';
 
-        echo '<label for="shorturl_custom">' . __('Short URL custom', 'rrze-shorturl') . ':</label>';
-        echo '<input type="text" id="shorturl_custom" name="shorturl_custom" value="' . esc_attr($shorturl_custom) . '" readonly><br>';
-
+        echo '<div class="metabox-row">';
         echo '<label for="uri">' . __('URI', 'rrze-shorturl') . ':</label>';
-        echo '<input type="text" id="uri" name="uri" value="' . esc_attr($uri) . '"><br>';
+        echo '<input type="text" id="uri" name="uri" value="' . esc_attr($uri) . '">';
+        echo '</div>';
 
-        echo '<label for="idm">' . __('IdM', 'rrze-shorturl') . ':</label>';
-        echo '<input type="text" id="idm" name="idm" value="' . esc_attr($idm) . '" readonly><br>';
+        echo '<div class="metabox-row">';
+        echo '<label for="shorturl_custom">' . __('Short URL custom', 'rrze-shorturl') . ':</label>';
+        echo '<input type="text" id="shorturl_custom" name="shorturl_custom" value="' . esc_attr($shorturl_custom) . '" readonly>';
+        echo '</div>';
 
+        echo '<div class="metabox-row">';
         echo '<label for="valid_until">' . __('Valid until', 'rrze-shorturl') . ':</label>';
-        echo '<input type="date" id="valid_until" name="valid_until" value="' . esc_attr($valid_until) . '"><br>';
+        echo '<input type="date" id="valid_until" name="valid_until" value="' . esc_attr($valid_until) . '">';
+        echo '</div>';
 
-        // echo '<label for="active">' . __('Active', 'rrze-shorturl') . ':</label>';
-        // echo '<input type="checkbox" id="active" name="active" value="1" ' . checked($active, '1', false) . '>';
+        echo '<div class="metabox-row">';
+        echo '<label for="idm">' . __('IdM', 'rrze-shorturl') . ':</label>';
+        echo '<input type="text" id="idm" name="idm" value="' . esc_attr($idm) . '" readonly>';
+        echo '</div>';
+
+        echo '</div>';
+
     }
 
     // We no longer check HTTP response codes, so 'active' post_meta is unused 
@@ -370,15 +391,15 @@ class CPT
                 'shorturl_error_notice_' . $post_id,
                 $result['message'],
                 30
-            );   
-            
+            );
+
             return; // Stop execution
-        }else{
+        } else {
             set_transient(
                 'shorturl_success_notice_' . $post_id,
                 $result['message'],
                 30
-            );            
+            );
         }
 
         error_log('NEW : in save_shorturl_link_metabox_data() - DONE');
@@ -446,7 +467,7 @@ class CPT
         global $post;
 
         if ('shorturl_link' === get_post_type($post)) {
-            remove_meta_box('submitdiv', 'shorturl_link', 'side'); // Entferne die Standard-Metabox
+            remove_meta_box('submitdiv', 'shorturl_link', 'side'); // Remove the standard metabox
             add_meta_box(
                 'custom_submitdiv',
                 __('Save'),
@@ -465,21 +486,11 @@ class CPT
         // Additionally, some short_links may be inactive (post_meta "active" = 0) because the associated long_url might temporarily return a 404.
         // Such cases are handled by CleanupDB::cleanInvalidLinks().
         ?>
-        <div class="submitbox" id="submitpost">
-            <div id="major-publishing-actions">
-                <div id="publishing-action">
-                    <span class="spinner"></span>
-                    <input name="original_publish" type="hidden" id="original_publish" value="Save">
-                    <input type="submit" name="publish" id="publish" class="button button-primary button-large"
-                        value="<?php _e('Save'); ?>">
-                </div>
-                <div id="delete-action">
-                    <a class="submitdelete deletion" href="<?php echo get_delete_post_link($post->ID, '', true); ?>">
-                        <?php _e('Delete Permanently'); ?>
-                    </a>
-                </div>
-                <div class="clear"></div>
-            </div>
+        <div class="shorturl-metabox-save">
+            <input type="submit" name="publish" id="publish" class="button button-primary" value="<?php _e('Save'); ?>">
+            <a class="submitdelete deletion" href="<?php echo get_delete_post_link($post->ID, '', true); ?>">
+                <?php _e('Delete Permanently'); ?>
+            </a>
         </div>
         <?php
     }
