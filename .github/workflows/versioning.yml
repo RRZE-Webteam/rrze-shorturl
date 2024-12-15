@@ -1,0 +1,55 @@
+name: Increment Version
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed
+
+permissions:
+  contents: write
+
+jobs:
+  update-version:
+    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main' && github.event.pull_request.head.ref == 'dev'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the dev branch
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Increment version (minor update)
+        run: |
+          node increment-version.js minor || { echo "Error: increment-version.js failed"; exit 1; }
+
+      - name: Commit version changes to dev
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add .
+          git commit -m "Incremented minor version to $(cat package.json | jq -r .version)" || echo "No changes to commit"
+          git push origin dev || { echo "Error: Push to dev branch failed"; exit 1; }
+
+      - name: Check out the main branch
+        run: |
+          git fetch origin
+          git checkout main
+
+      - name: Merge dev into main
+        run: |
+          git merge dev --no-ff -m "Merging updated version from dev to main" || { echo "Error: Merge failed"; exit 1; }
+
+      - name: Push changes to main
+        run: |
+          git push origin main || { echo "Error: Push to main branch failed"; exit 1; }
