@@ -61,9 +61,6 @@ class Main
         add_action('init', [$this, 'init_query_dependend_classes']);
     }
 
-
-
-
     public function init_query_dependend_classes()
     {
         $rightsObj = new Rights();
@@ -103,7 +100,7 @@ class Main
 
         wp_enqueue_script(
             'rrze-shorturl', 
-            plugins_url('build/index.js', plugin_basename($this->pluginFile)), 
+            plugins_url('src/index.js', plugin_basename($this->pluginFile)), // BK 2024-12-15 : "wp-scripts build" causes issues by breaking the functionality of $(document).on('submit', '#edit-link-form', function (e) { ... }
             array('jquery'), 
             filemtime(plugin_dir_path($this->pluginFile) . 'build/index.js'), 
             true);

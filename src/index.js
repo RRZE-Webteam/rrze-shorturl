@@ -1,4 +1,4 @@
-import { __, _x, _n, sprintf } from '@wordpress/i18n';
+// import { __, _x, _n, sprintf } from '@wordpress/i18n';
 
 
 jQuery(document).ready(function ($) {
@@ -153,13 +153,11 @@ jQuery(document).ready(function ($) {
                         var newCategoryId = response.data.category_id;
                         $('input[name="shorturl_categories[]"][value="' + newCategoryId + '"]').prop('checked', true);
                     } else {
-                        // alert(__('Failed to add category. Please try again.', 'rrze-shorturl'));
                         alert('Failed to add category. Please try again.');
                     }
                 }
             });
         } else {
-            // alert(__('Please enter a category name.', 'rrze-shorturl'));
             alert('Please enter a category name.');
         }
     });
@@ -180,6 +178,7 @@ jQuery(document).ready(function ($) {
     // After Update Link
     $(document).on('submit', '#edit-link-form', function (e) {
         var errorStatus = $('.notice.is-dismissible').data('error'); // get value of data-error 
+
         if (errorStatus === false || errorStatus === 'false') {        
             // no error occurred
             // remove fragment (#...) and the link ID (?link_id=...)
