@@ -23,59 +23,69 @@ class Rights
         } else {
             error_log('\RRZE\AccessControl\Permissions is not available');
         }
+
         add_action('init', [$this, 'getRights']);
     }
 
     public function getRights(): array
     {
-        // Default return array with no rights
-        $aRet = [
-            'id' => 0,
-            'allow_uri' => false,
-            'allow_get' => false,
-            'allow_utm' => false
-        ];
+        $this->idm = sanitize_text_field($this->idm);
+
+
+        if (is_user_logged_in()) {
+            $aRet = [
+                'idm' => $this->idm,
+                'allow_uri' => true,
+                'allow_get' => true,
+                'allow_utm' => true
+            ];
+            return $aRet;
+        }else{
+            // Default return array with no rights
+            $aRet = [
+                'idm' => $this->idm,
+                'allow_uri' => false,
+                'allow_get' => false,
+                'allow_utm' => false
+            ];    
+        }
 
         try {
-            // Set up WP_Query to search for the IDM Custom Post Type with the provided 'idm'
             $args = [
-                'post_type' => 'shorturl_idm',  // The Custom Post Type for IDMs
-                'posts_per_page' => 1,      // We only need one result
+                'post_type' => 'shorturl_idm',
+                'posts_per_page' => 1,
                 'fields' => 'ids',
-                'name' => sanitize_title($this->idm)
+                'name' => $this->idm
             ];
-
-            // Execute the query
+            
             $query = new \WP_Query($args);
 
             // Check if a matching IDM post was found
             if (!empty($query->posts)) {
                 $post_id = $query->posts[0];
+                $post_meta = get_post_meta($post_id);
 
                 // Fetch the rights from the post meta
-                $aRet['id'] = $post_id;
-                $aRet['allow_uri'] = (bool) get_post_meta($post_id, 'allow_uri', true);
-                $aRet['allow_get'] = (bool) get_post_meta($post_id, 'allow_get', true);
-                $aRet['allow_utm'] = (bool) get_post_meta($post_id, 'allow_utm', true);
+                $aRet['allow_uri'] = isset($post_meta['allow_uri'][0]) ? (bool) $post_meta['allow_uri'][0] : false;
+                $aRet['allow_get'] = isset($post_meta['allow_get'][0]) ? (bool) $post_meta['allow_get'][0] : false;
+                $aRet['allow_utm'] = isset($post_meta['allow_utm'][0]) ? (bool) $post_meta['allow_utm'][0] : false;
 
                 // Restore original Post Data
                 wp_reset_postdata();
             } else {
-                // If no matching IDM post exists, create a new one if 'idm' is provided
                 if (!empty($this->idm)) {
                     $post_data = [
-                        'post_title' => $this->idm,  // Using the IDM as the title for the post
+                        'post_title' => $this->idm,
                         'post_type' => 'shorturl_idm',
                         'post_status' => 'publish'
                     ];
 
-                    // Insert the new IDM post
                     $inserted_post_id = wp_insert_post($post_data);
 
                     if ($inserted_post_id) {
-                        // If the post was successfully inserted, add 'idm' meta data
-                        update_post_meta($inserted_post_id, 'idm', $this->idm);
-                        $aRet['id'] = $inserted_post_id;
+                        update_post_meta($inserted_post_id, 'allow_uri', 0);
+                        update_post_meta($inserted_post_id, 'allow_get', 0);
+                        update_post_meta($inserted_post_id, 'allow_utm', 0);
                     }
                 }
             }

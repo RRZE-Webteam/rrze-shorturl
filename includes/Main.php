@@ -23,6 +23,8 @@ class Main
      */
     protected $pluginFile;
 
+    public static array $CONFIG = [
+    ];
 
     /**
      * Variablen Werte zuweisen.
@@ -31,7 +33,9 @@ class Main
     public function __construct($pluginFile)
     {
         $this->pluginFile = $pluginFile;
+        $options = json_decode(get_option('rrze-shorturl'), true);
 
+        self::$CONFIG['ShortURLBase'] = (!empty($options['ShortURLBase']) ? $options['ShortURLBase'] : 'https://go.fau.de');
     }
 
 
@@ -40,31 +44,54 @@ class Main
      */
     public function onLoaded()
     {
-        add_action('enqueue_block_editor_assets', [$this, 'enqueueScripts']);
-        add_action('wp_enqueue_scripts', [$this, 'enqueueScripts']);
-        add_action('admin_enqueue_scripts', [$this, 'enqueueScripts']);
-        add_action('init', [$this, 'migrate_db_to_cpt']);
-        // add_action('init', [$this, 'drop_shorturl_tables']);
-        add_action('init', [$this, 'initialize_services']);
-        add_action('init', [$this, 'init_query_dependend_classes']);
-
-
         $cpt = new CPT();
         $settings = new Settings();
         $domains = new CustomerDomains();
         $cleanup = new CleanupDB();
         $myCrypt = new MyCrypt();
+
+        add_action('enqueue_block_editor_assets', [$this, 'enqueueScripts']);
+        add_action('wp_enqueue_scripts', [$this, 'enqueueScripts']);
+        add_action('admin_enqueue_scripts', [$this, 'enqueueScripts']);
+
+        add_action('init', [$this, 'setIdM']);
+        add_action('init', [$this, 'rrze_shorturl_set_shorturls'], 20); // priority 20 to make sure CPT is already registered
+
+        add_action('init', [$this, 'initialize_services']);
+        add_action('init', [$this, 'init_query_dependend_classes']);
     }
+
+
+
 
     public function init_query_dependend_classes()
     {
         $rightsObj = new Rights();
         $rights = $rightsObj->getRights();
+
         $shortURL = new ShortURL($rights);
         $shortcode = new Shortcode($rights);
         $api = new API($rights);
     }
 
+
+
+
+    /* Load necessary WordPress admin styles for consistent UI elements in the frontend */
+    public function load_admin_styles()
+    {
+        // if (!is_admin()) {
+            // Load the script for the dismissible "X" button functionality
+            wp_enqueue_script('wp-dismiss-notice');
+
+            // Load the basic styles for WordPress admin notices, including the "X" button
+            wp_enqueue_style('common');
+            wp_enqueue_script('common', includes_url('js/wp-admin/common.js'), array('jquery'), null, true);
+
+            // Optionally load table styles if needed for list tables
+            wp_enqueue_style('wp-list-table');
+        // }
+    }
 
     /**
      * Enqueue der globale Skripte.
@@ -73,9 +100,15 @@ class Main
     {
         wp_enqueue_script('wp-i18n');
         wp_enqueue_script('qrious', plugins_url('assets/js/qrious.min.js', plugin_basename($this->pluginFile)), array('jquery'), null, true);
-        // wp_enqueue_script('rrze-shorturl', plugins_url('assets/js/rrze-shorturl.min.js', plugin_basename($this->pluginFile)), array('jquery'), null, true);
-        wp_enqueue_script('rrze-shorturl', plugins_url('src/rrze-shorturl.js', plugin_basename($this->pluginFile)), array('jquery'), null, true);
-        wp_enqueue_style('wp-list-table');
+
+        wp_enqueue_script(
+            'rrze-shorturl', 
+            plugins_url('build/index.js', plugin_basename($this->pluginFile)), 
+            array('jquery'), 
+            filemtime(plugin_dir_path($this->pluginFile) . 'build/index.js'), 
+            true);
+
+        $this->load_admin_styles();
 
         // Localize the script with the nonces
         wp_localize_script(
@@ -93,224 +126,134 @@ class Main
             )
         );
 
-        wp_enqueue_script('select2', plugins_url('assets/js/select2.min.js', plugin_basename($this->pluginFile)), array('jquery'), null, true);
-        wp_enqueue_style('select2', plugins_url('assets/css/select2.min.css', plugin_basename($this->pluginFile)));
-
-        wp_enqueue_style('rrze-shorturl-css', plugins_url('assets/css/rrze-shorturl.css', plugin_basename($this->pluginFile)));
-        //wp_enqueue_style('rrze-shorturl-css', plugins_url('src/rrze-shorturl.css', plugin_basename($this->pluginFile)));
+        wp_enqueue_style(
+            'rrze-shorturl-css',
+            plugins_url('build/css/rrze-shorturl.css', $this->pluginFile),
+            [],
+            filemtime(plugin_dir_path($this->pluginFile) . 'build/css/rrze-shorturl.css')
+        );        
     }
 
-    private function drop_custom_tables()
-    {
-        global $wpdb;
+    // private function drop_custom_tables()
+    // {
+    //     global $wpdb;
 
-        try {
-            // Drop shorturl table if they exist
-            $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_links_categories");
-            $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_links_tags");
-            $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_categories");
-            $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_tags");
-            $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_links");
-            $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_domains");
-            $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_services");
-            $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_idms");
-            // Delete triggers just to be sure (they should be deleted as they are binded to the dropped tables)
-            $wpdb->query("DROP TRIGGER IF EXISTS validate_url");
-            $wpdb->query("DROP TRIGGER IF EXISTS validate_hostname");
-        } catch (CustomException $e) {
-            // Handle the exception
-            error_log("Error in drop_custom_tables: " . $e->getMessage());
-        }
-    }
+    //     try {
+    //         // Drop shorturl table if they exist
+    //         $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_links_categories");
+    //         $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_links_tags");
+    //         $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_categories");
+    //         $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_tags");
+    //         $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_links");
+    //         $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_domains");
+    //         $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_services");
+    //         $result = $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}shorturl_idms");
+    //         // Delete triggers just to be sure (they should be deleted as they are binded to the dropped tables)
+    //         $wpdb->query("DROP TRIGGER IF EXISTS validate_url");
+    //         $wpdb->query("DROP TRIGGER IF EXISTS validate_hostname");
+    //     } catch (CustomException $e) {
+    //         // Handle the exception
+    //         error_log("Error in drop_custom_tables: " . $e->getMessage());
+    //     }
+    // }
 
 
-    public function migrate_db_to_cpt()
+    // sets the actual idm instead of the id of shorturl_idm
+    public function setIdM()
     {
 
         // Check if migration has been done already
-        if (get_option('rrze_shorturl_migration_completed')) {
+        if (get_option('rrze_shorturl_set_idm_completed')) {
             return;
         }
 
-        global $wpdb;
+        $cpts = ['shorturl_domain', 'shorturl_service', 'shorturl_link', 'shorturl_category'];
+    
+        foreach ($cpts as $cpt) {
+            $posts = get_posts([
+                'post_type'   => $cpt,
+                'post_status' => 'any',
+                'numberposts' => -1,
+                'fields'      => 'ids',
+            ]);
+    
+            foreach ($posts as $post_id) {
+                $idm_id = get_post_meta($post_id, 'idm_id', true);
+    
+                if (!empty($idm_id)) {
+                    $idm_post = get_post($idm_id);
+    
+                    if ($idm_post && $idm_post->post_type === 'shorturl_idm') {
+                        update_post_meta($post_id, 'idm', $idm_post->post_title);
+                        // delete_post_meta($post_id, 'idm_id');
+                    }
+                }
+            }
+        }
 
-        // Check if all tables exist
-        $tables_to_check = [
-            'shorturl_idms',
-            'shorturl_domains',
-            'shorturl_categories',
-            'shorturl_links',
-            'shorturl_links_categories'
+        update_option('rrze_shorturl_set_idm_completed', true);
+    }
+    
+    public function rrze_shorturl_set_shorturls() {
+        // Check if the process has already been completed
+        if (get_option('rrze_shorturl_set_shorturls_completed')) {
+            return;
+        }
+
+        $args = [
+            'post_type'      => 'shorturl_link',
+            'posts_per_page' => -1,
+            'post_status'    => 'any',
         ];
 
-        foreach ($tables_to_check as $table) {
-            if ($wpdb->get_var("SHOW TABLES LIKE '{$wpdb->prefix}{$table}'") != "{$wpdb->prefix}{$table}") {
-                return;
-            }
-        }
+        $query = new \WP_Query($args);
 
-        // Migrate shorturl_idms to CPT 'idm'
-        $idm_ids = [];
-        $idms = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_idms", ARRAY_A);
+        if ($query->have_posts()) {
+            while ($query->have_posts()) {
+                $query->the_post();
+                $post_id = get_the_ID();
 
-        foreach ($idms as $idm) {
-            // Check if the IDM already exists as a post
-            $post_id = get_posts(
-                array(
-                    'post_type' => 'shorturl_idm',
-                    'title' => $idm['idm'],
-                    'post_status' => 'all',
-                    'numberposts' => 1,
-                    'fields' => 'ids'
-                )
-            );
+                $long_url = get_post_meta($post_id, 'long_url', true);
 
-            if (empty($post_id)) {
-                // Insert IdM as a CPT post
-                $post_data = [
-                    'post_title' => sanitize_text_field($idm['idm']),
-                    'post_type' => 'shorturl_idm',
-                    'post_status' => 'publish'
-                ];
-
-                $post_id = wp_insert_post($post_data);
-
-                if (!is_wp_error($post_id)) {
-                    // Add meta fields
-                    update_post_meta($post_id, 'allow_uri', intval($idm['allow_uri']));
-                    update_post_meta($post_id, 'allow_get', intval($idm['allow_get']));
-                    update_post_meta($post_id, 'allow_utm', intval($idm['allow_utm']));
-                    update_post_meta($post_id, 'created_by', sanitize_text_field($idm['created_by']));
+                if (empty($long_url)) {
+                    continue;
                 }
-            }
-            $idm_ids[$idm['id']] = $post_id;
-        }
 
-        // Migrate shorturl_domains to CPT 'domain'
-        $domain_ids = [];
-        $domains = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_domains", ARRAY_A);
+                $uri = get_post_meta($post_id, 'uri', true);
+                $old_shorturl = get_post_meta($post_id, 'short_url', true);
 
-        foreach ($domains as $domain) {
-            // Check if the domain already exists as a post
-            $post_id = get_posts(
-                array(
-                    'post_type' => 'shorturl_domain',
-                    'title' => $domain['hostname'],
-                    'post_status' => 'all',
-                    'numberposts' => 1,
-                    'fields' => 'ids'
-                )
-            );
-
-            if (empty($post_id)) {
-                // Insert domain as a CPT post
-                $post_data = [
-                    'post_title' => sanitize_text_field($domain['hostname']),
-                    'post_type' => 'shorturl_domain',
-                    'post_status' => 'publish'
-                ];
-
-                $post_id = wp_insert_post($post_data);
-
-                if (!is_wp_error($post_id)) {
-                    // Add meta fields
-                    update_post_meta($post_id, 'prefix', intval($domain['prefix']));
-                    update_post_meta($post_id, 'external', intval($domain['external']));
-                    update_post_meta($post_id, 'active', intval($domain['active']));
-                    update_post_meta($post_id, 'notice', sanitize_text_field($domain['notice']));
-                    update_post_meta($post_id, 'webmaster_name', sanitize_text_field($domain['webmaster_name']));
-                    update_post_meta($post_id, 'webmaster_email', sanitize_email($domain['webmaster_email']));
+                if (!empty($uri)) {
+                    // we have a custom URI
+                    // create a new 'shorturl_generated'
+                    $prefix = '1'; // only customer domains (prefix = 1) can have an URI
+                    $shorturl_generated = self::$CONFIG['ShortURLBase'] . '/' . $prefix . ShortURL::cryptNumber($post_id);
+                    update_post_meta($post_id, 'shorturl_generated', $shorturl_generated);
+                    update_post_meta($post_id, 'shorturl_custom', $old_shorturl);
+                } else {
+                    update_post_meta($post_id, 'shorturl_generated', $old_shorturl);
+                    update_post_meta($post_id, 'shorturl_custom', ''); // Set as empty string to make the column sortable without using "relation OR and EXISTS / NOT EXISTS in the backend
                 }
+
+                wp_update_post([
+                    'ID'         => $post_id,
+                    'post_title' => $long_url,
+                ]);
             }
-            $domain_ids[$domain['id']] = $post_id;
+
+            wp_reset_postdata();
         }
 
-
-        // Migrate shorturl_categories to CPT 'shorturl_category'
-        $category_ids = [];
-        $categories = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_categories ORDER BY id", ARRAY_A);
-
-        foreach ($categories as $category) {
-            // Check if the category already exists as a post
-            $post_id = get_posts(
-                array(
-                    'post_type' => 'shorturl_category',
-                    'title' => $category['label'],
-                    'post_status' => 'all',
-                    'numberposts' => 1,
-                    'fields' => 'ids'
-                )
-            );
-
-            if (empty($post_id)) {
-                // Insert category as a CPT post
-                $post_data = [
-                    'post_title' => sanitize_text_field($category['label']),
-                    'post_type' => 'shorturl_category',
-                    'post_status' => 'publish',
-                    'post_parent' => !empty($category['parent_id']) ? intval($category_ids[$category['parent_id']]) : 0 // Set parent category if applicable
-                ];
-
-                $post_id = wp_insert_post($post_data);
-
-                if (!is_wp_error($post_id)) {
-                    // Add meta fields
-                    update_post_meta($post_id, 'idm_id', intval($idm_ids[$category['idm_id']]));
-                }
-            }
-            $category_ids[$category['id']] = $post_id;
-        }
-
-
-        // Migrate shorturl_links to CPT 'link'
-        $links = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}shorturl_links", ARRAY_A);
-
-        foreach ($links as $link) {
-            // Insert link as a CPT post
-            $post_data = [
-                'post_title' => sanitize_text_field($link['short_url']),
-                'post_type' => 'shorturl_link',
-                'post_status' => 'publish'
-            ];
-
-            $post_id = wp_insert_post($post_data);
-
-            if (!is_wp_error($post_id)) {
-                // Add meta fields
-                update_post_meta($post_id, 'domain_id', $domain_ids[$link['domain_id']]);
-                update_post_meta($post_id, 'idm_id', $idm_ids[$link['idm_id']]);
-                update_post_meta($post_id, 'long_url', esc_url($link['long_url']));
-                update_post_meta($post_id, 'short_url', esc_url($link['short_url']));
-                update_post_meta($post_id, 'uri', sanitize_text_field($link['uri']));
-                update_post_meta($post_id, 'created_at', sanitize_text_field($link['created_at']));
-                update_post_meta($post_id, 'updated_at', sanitize_text_field($link['updated_at']));
-                update_post_meta($post_id, 'deleted_at', sanitize_text_field($link['deleted_at']));
-                update_post_meta($post_id, 'valid_until', sanitize_text_field($link['valid_until']));
-                update_post_meta($post_id, 'active', intval($link['active']));
-
-                // Fetch the categories linked to this link from the `shorturl_links_categories` table
-                $link_categories = $wpdb->get_results($wpdb->prepare(
-                    "SELECT category_id FROM {$wpdb->prefix}shorturl_links_categories WHERE link_id = %d",
-                    $link['id']
-                ), ARRAY_A);
-
-                // add all categories to link
-                foreach ($link_categories as $category) {
-                    add_post_meta($post_id, 'category_id', $category_ids[$category['category_id']], false);
-                }
-            }
-        }
-
-        update_option('rrze_shorturl_migration_completed', true);
+        update_option('rrze_shorturl_set_shorturls_completed', true);
     }
 
-    public function drop_shorturl_tables(){
-        if (get_option('rrze_shorturl_custom_tables_dropped')) {
-            return;
-        }
-        $this->drop_custom_tables();
-        update_option('rrze_shorturl_custom_tables_dropped', true);
-    }
+    // public function drop_shorturl_tables()
+    // {
+    //     if (get_option('rrze_shorturl_custom_tables_dropped')) {
+    //         return;
+    //     }
+    //     $this->drop_custom_tables();
+    //     update_option('rrze_shorturl_custom_tables_dropped', true);
+    // }
 
     public function initialize_services()
     {
@@ -329,7 +272,7 @@ class Main
             [
                 'hostname' => 'www.faq.rrze.fau.de',
                 'prefix' => 8,
-                'regex' => 'https://www.helpdesk.rrze.fau.de/otrs/public.pl?Action=PublicFAQ&ItemID=$id'
+                'regex' => 'https://www.faq.rrze.fau.de/otrs/public.pl?Action=PublicFAQZoom;ItemID=$id'
             ],
             [
                 'hostname' => 'www.helpdesk.rrze.fau.de',

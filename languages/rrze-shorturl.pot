@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: RRZE ShortURL\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-07-08 12:17+0000\n"
+"POT-Creation-Date: 2024-12-15 02:21+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: \n"
@@ -16,233 +16,225 @@ msgstr ""
 "X-Loco-Version: 2.6.7; wp-6.4.3\n"
 "X-Domain: rrze-shorturl"
 
-#: includes/ShortURL.php:292
+#: includes/ShortURL.php:273
 msgid "A short URL cannot currently be created on the website because"
 msgstr ""
 
-#: includes/Shortcode.php:418 includes/Shortcode.php:924
+#: includes/Shortcode.php:294 includes/Shortcode.php:707
 msgid "Actions"
 msgstr ""
 
-#: includes/Settings.php:475
+#: includes/Settings.php:517
 msgid "Active"
 msgstr ""
 
-#: includes/Shortcode.php:468
+#: includes/Shortcode.php:331
 msgid "Add Category"
 msgstr ""
 
-#: includes/Shortcode.php:436 includes/Shortcode.php:463
-#: includes/Shortcode.php:746
+#: includes/Shortcode.php:316 includes/Shortcode.php:326
+#: includes/Shortcode.php:572
 msgid "Add New Category"
 msgstr ""
 
-#: includes/Shortcode.php:759
+#: includes/Shortcode.php:581
 msgid "Add new category"
 msgstr ""
 
-#: includes/Shortcode.php:690
+#: includes/Shortcode.php:516
 msgid "Advanced Settings"
 msgstr ""
 
-#: includes/Shortcode.php:895
+#: includes/Shortcode.php:675
 msgid "All Categories"
 msgstr ""
 
-#: includes/Settings.php:667
+#: includes/Settings.php:775
 msgid "Allow GET"
 msgstr ""
 
-#: includes/Settings.php:666
+#: includes/Settings.php:774
 msgid "Allow URI"
 msgstr ""
 
-#: includes/Settings.php:668
+#: includes/Settings.php:776
 msgid "Allow UTM"
 msgstr ""
 
-#: includes/Settings.php:286
+#: includes/Settings.php:299
 msgid "Allowed IP Addresses for REST API endpoints"
 msgstr ""
 
-#: includes/Settings.php:256
+#: includes/Settings.php:269
 msgid "Allowed IP Addresses for REST API endpoints is not valid."
 msgstr ""
 
-#: includes/Settings.php:366 includes/Settings.php:376
-#: includes/Settings.php:381 includes/Settings.php:547
-#: includes/Settings.php:553 includes/Settings.php:558
+#: includes/Settings.php:727
+msgid "An error occurred while adding the IdM."
+msgstr ""
+
+#: includes/Settings.php:383 includes/Settings.php:396
+#: includes/Settings.php:400 includes/Settings.php:601
+#: includes/Settings.php:605 includes/Settings.php:609
 msgid "An error occurred: "
 msgstr ""
 
-#: includes/Settings.php:635
+#: includes/Settings.php:715
 msgid "An error occurred: this IdM already exists."
 msgstr ""
 
-#: includes/Shortcode.php:1121
-msgid "Association already exists."
-msgstr ""
-
-#: includes/Settings.php:276
+#: includes/Settings.php:289
 msgid "Basis"
 msgstr ""
 
-#: includes/Settings.php:243
+#: includes/Settings.php:255
 msgid "Basis is not valid."
 msgstr ""
 
-#: build/block.json:1 src/block.json:1
-msgctxt "block description"
-msgid "A block to shorten URLs."
-msgstr ""
-
-#: build/block.json:1 src/block.json:1
-msgctxt "block keyword"
-msgid "shorten"
-msgstr ""
-
-#: build/block.json:1 src/block.json:1
-msgctxt "block keyword"
-msgid "url"
-msgstr ""
-
-#: build/block.json:1 src/block.json:1
-msgctxt "block title"
-msgid "Shorten URL RRZE"
-msgstr ""
-
-#: includes/Shortcode.php:379 includes/Shortcode.php:469
+#: includes/Shortcode.php:219 includes/Shortcode.php:332
 msgid "Cancel"
 msgstr ""
 
-#: includes/Shortcode.php:699 includes/Shortcode.php:922
-#: includes/Shortcode.php:1006
+#: includes/Shortcode.php:525 includes/Shortcode.php:706
+#: includes/Shortcode.php:830
 msgid "Categories"
 msgstr ""
 
-#: includes/Shortcode.php:417
+#: includes/Shortcode.php:293
 msgid "Category"
 msgstr ""
 
-#: includes/Shortcode.php:580
+#: includes/Shortcode.php:454
 msgid "Category deleted successfully"
 msgstr ""
 
-#: includes/Shortcode.php:369 includes/Shortcode.php:465
+#: includes/Shortcode.php:1000
+msgid "Category is already linked to the link."
+msgstr ""
+
+#: includes/Shortcode.php:212 includes/Shortcode.php:328
 msgid "Category Label"
 msgstr ""
 
-#: includes/API.php:234
-msgid "Category label is required."
-msgstr ""
-
-#: includes/Shortcode.php:1127
+#: includes/Shortcode.php:1011
 msgid "Category linked to the link successfully."
 msgstr ""
 
-#: includes/Shortcode.php:1060
+#: includes/Shortcode.php:894
 msgid "Category name is required."
 msgstr ""
 
-#: includes/Shortcode.php:1040
+#: includes/Shortcode.php:868
 msgid "Category updated"
 msgstr ""
 
-#: includes/API.php:305
+#: includes/API.php:262
 msgid "code parameter is missing."
 msgstr ""
 
-#: includes/Shortcode.php:671
+#: includes/Shortcode.php:497
 msgid "Copied to clipboard"
 msgstr ""
 
-#: includes/Shortcode.php:671
+#: includes/Shortcode.php:497
 msgid "Copy to clipboard"
 msgstr ""
 
-#: includes/Shortcode.php:682
+#: includes/Shortcode.php:508
 msgid "Create Short URL"
 msgstr ""
 
-#: includes/Settings.php:138
+#: includes/CPT.php:166
+msgid "Creation date"
+msgstr ""
+
+#: includes/Settings.php:149
 msgid "Customers Domains"
 msgstr ""
 
-#: includes/ShortURL.php:359 includes/ShortURL.php:392
+#: includes/ShortURL.php:372 includes/ShortURL.php:389
 msgid "Date is valid."
 msgstr ""
 
-#: includes/API.php:352
+#: includes/API.php:309
 msgid "decrypted value is required."
 msgstr ""
 
-#: includes/Settings.php:411 includes/Settings.php:582
-#: includes/Shortcode.php:429 includes/Shortcode.php:962
+#: includes/Settings.php:437 includes/Settings.php:650
+#: includes/Shortcode.php:309 includes/Shortcode.php:744
 msgid "Delete"
 msgstr ""
 
-#: includes/ShortURL.php:247
+#: includes/ShortURL.php:224
 msgid "Domain is not allowed to use our shortening service."
 msgstr ""
 
-#: includes/Shortcode.php:709
+#: includes/Shortcode.php:536
 msgid "Download QR"
 msgstr ""
 
-#: includes/Shortcode.php:428 includes/Shortcode.php:962
+#: includes/Shortcode.php:308 includes/Shortcode.php:744
 msgid "Edit"
 msgstr ""
 
-#: includes/Shortcode.php:995
+#: includes/Shortcode.php:805
 msgid "Edit Link"
 msgstr ""
 
-#: includes/API.php:334
+#: includes/CustomerDomains.php:90
+msgid "Email not found"
+msgstr ""
+
+#: includes/API.php:291
 msgid "encrypted value is required."
 msgstr ""
 
-#: includes/Shortcode.php:583
+#: includes/Shortcode.php:457
 msgid "Error deleting category"
 msgstr ""
 
-#: includes/Shortcode.php:531
+#: includes/Shortcode.php:401
 msgid "Error deleting link"
 msgstr ""
 
-#: includes/API.php:284 includes/API.php:295 includes/API.php:312
-#: includes/API.php:324 includes/API.php:343 includes/API.php:361
+#: includes/API.php:241 includes/API.php:252 includes/API.php:269
+#: includes/API.php:281 includes/API.php:300 includes/API.php:318
 msgid "Error processing request."
 msgstr ""
 
-#: includes/API.php:262
-msgid "Error retrieving shorturl categories"
-msgstr ""
-
-#: includes/Shortcode.php:1043
+#: includes/Shortcode.php:870
 msgid "Error: Could not update category"
 msgstr ""
 
-#: includes/Settings.php:140
+#: includes/Settings.php:151
 msgid "External Domains"
 msgstr ""
 
-#: includes/API.php:243
-msgid "Failed to add category to the database."
+#: includes/Shortcode.php:187
+msgid "Failed to add category."
 msgstr ""
 
-#: includes/Shortcode.php:1087
+#: includes/Shortcode.php:946
 msgid "Failed to add category. Please try again."
 msgstr ""
 
-#: includes/Shortcode.php:1129
+#: includes/Shortcode.php:1013
 msgid "Failed to link category to the link. Please try again."
+msgstr ""
+
+#: includes/Shortcode.php:159
+msgid "Failed to update the category."
+msgstr ""
+
+#: includes/Shortcode.php:682
+msgid "Filter"
 msgstr ""
 
 #: config/config.php:45
 msgid "For more information"
 msgstr ""
 
-#: includes/Settings.php:134
+#: includes/Settings.php:145
 msgid "General"
 msgstr ""
 
@@ -250,13 +242,13 @@ msgstr ""
 msgid "Here comes the Context Help content."
 msgstr ""
 
-#: includes/Settings.php:402 includes/Settings.php:472
-#: includes/Settings.php:579 includes/Settings.php:733
-#: includes/Settings.php:771
+#: includes/Settings.php:434 includes/Settings.php:516
+#: includes/Settings.php:649 includes/Settings.php:895
+#: includes/Settings.php:929
 msgid "Hostname"
 msgstr ""
 
-#: includes/Settings.php:333 includes/Settings.php:534
+#: includes/Settings.php:349 includes/Settings.php:582
 msgid "Hostname is not valid."
 msgstr ""
 
@@ -268,43 +260,73 @@ msgstr ""
 msgid "https://gitlab.rrze.fau.de/rrze-webteam/rrze-shorturl"
 msgstr ""
 
-#: includes/Shortcode.php:959 includes/ShortURL.php:676
+#: includes/CPT.php:167 includes/CPT.php:307 includes/Settings.php:153
+#: includes/Settings.php:767
+msgid "IdM"
+msgstr ""
+
+#: includes/CPT.php:202 includes/ShortURL.php:571 includes/ShortURL.php:827
+#: includes/ShortURL.php:901 includes/Shortcode.php:740
 msgid "indefinite"
 msgstr ""
 
-#: includes/Shortcode.php:1109
+#: includes/Shortcode.php:425 includes/Shortcode.php:461
+msgid "Invalid category ID"
+msgstr ""
+
+#: includes/Shortcode.php:873
+msgid "Invalid category ID or label"
+msgstr ""
+
+#: includes/Shortcode.php:987
+msgid "Invalid category."
+msgstr ""
+
+#: includes/Shortcode.php:405
+msgid "Invalid link ID"
+msgstr ""
+
+#: includes/Shortcode.php:975
 msgid "Invalid link ID or category ID."
 msgstr ""
 
-#: includes/ShortURL.php:603
+#: includes/Shortcode.php:981
+msgid "Invalid link."
+msgstr ""
+
+#: includes/ShortURL.php:701
 msgid "is already in use. Try another one."
 msgstr ""
 
-#: includes/ShortURL.php:292
+#: includes/ShortURL.php:273
 msgid "is missing"
 msgstr ""
 
-#: includes/ShortURL.php:594
+#: includes/ShortURL.php:687
 msgid "is not a valid URI"
 msgstr ""
 
-#: includes/ShortURL.php:642
+#: includes/ShortURL.php:752
 msgid "is not a valid URL"
 msgstr ""
 
-#: includes/Settings.php:744 includes/Settings.php:782
+#: includes/Settings.php:906 includes/Settings.php:940
 msgid "Link Count"
 msgstr ""
 
-#: includes/Shortcode.php:528
+#: includes/Shortcode.php:398
 msgid "Link deleted successfully"
 msgstr ""
 
-#: includes/Shortcode.php:837
+#: includes/ShortURL.php:790
+msgid "Link saved"
+msgstr ""
+
+#: includes/Shortcode.php:633
 msgid "Link updated"
 msgstr ""
 
-#: includes/ShortURL.php:247
+#: includes/ShortURL.php:224
 msgid "List of allowed domains"
 msgstr ""
 
@@ -312,47 +334,63 @@ msgstr ""
 msgid "Logfile"
 msgstr ""
 
-#: includes/Shortcode.php:918
+#: includes/CPT.php:162 includes/CPT.php:295 includes/Shortcode.php:702
 msgid "Long URL"
 msgstr ""
 
-#: includes/Settings.php:250
+#: includes/Settings.php:262
 msgid "Maximum number of shortenings is not valid."
 msgstr ""
 
-#: includes/Settings.php:281
+#: includes/Settings.php:294
 msgid "Maximum shortenings per hour per user"
 msgstr ""
 
-#: includes/Shortcode.php:904
-msgid "My links only"
+#: includes/CustomerDomains.php:89
+msgid "Name not found"
 msgstr ""
 
-#: includes/Shortcode.php:749 includes/Shortcode.php:751
+#: includes/Shortcode.php:575 includes/Shortcode.php:577
 msgid "New Category Name"
 msgstr ""
 
-#: includes/Settings.php:544
+#: includes/Settings.php:598
 msgid "New external domain added successfully."
 msgstr ""
 
-#: includes/Settings.php:637
+#: includes/Settings.php:733
 msgid "New IdM has been added."
 msgstr ""
 
-#: includes/Settings.php:363
+#: includes/Settings.php:385
 msgid "New service added successfully."
 msgstr ""
 
-#: includes/Shortcode.php:928
+#: includes/Settings.php:537
+msgid "No customer domains found"
+msgstr ""
+
+#: includes/Settings.php:666
+msgid "No external domains found"
+msgstr ""
+
+#: includes/Shortcode.php:711
 msgid "No links stored yet"
 msgstr ""
 
-#: includes/Shortcode.php:305 includes/Shortcode.php:755
+#: includes/API.php:207
+msgid "No short URL categories found"
+msgstr ""
+
+#: includes/Shortcode.php:850
+msgid "Nonce verification failed."
+msgstr ""
+
+#: includes/Shortcode.php:128
 msgid "None"
 msgstr ""
 
-#: includes/Settings.php:478
+#: includes/Settings.php:518
 msgid "Notice"
 msgstr ""
 
@@ -360,27 +398,35 @@ msgstr ""
 msgid "Overview"
 msgstr ""
 
-#: includes/Shortcode.php:303 includes/Shortcode.php:753
+#: includes/Shortcode.php:126
 msgid "Parent Category"
+msgstr ""
+
+#: rrze-shorturl.php:76
+msgid "Plugin RRZE-AC is mandatory."
 msgstr ""
 
 #. Description of the plugin
 msgid "Plugin, um URLs zu verkürzen."
 msgstr ""
 
-#: includes/Settings.php:405
+#: includes/Settings.php:435
 msgid "Prefix"
 msgstr ""
 
-#: includes/Settings.php:341 includes/Settings.php:352
+#: includes/Settings.php:352
+msgid "Prefix 1 is reserved for customer domains. Please use another prefix."
+msgstr ""
+
+#: includes/Settings.php:369
+msgid "Prefix is already in use."
+msgstr ""
+
+#: includes/Settings.php:354
 msgid "Prefix not allowed."
 msgstr ""
 
-#: includes/Shortcode.php:919
-msgid "Preview"
-msgstr ""
-
-#: includes/Settings.php:408
+#: includes/Settings.php:436
 msgid "Regex"
 msgstr ""
 
@@ -389,7 +435,7 @@ msgstr ""
 msgid "RRZE ShortURL"
 msgstr ""
 
-#: config/config.php:28
+#: config/config.php:28 includes/Settings.php:140
 msgid "RRZE ShortURL Settings"
 msgstr ""
 
@@ -401,139 +447,140 @@ msgstr ""
 msgid "RRZE Webteam on Github"
 msgstr ""
 
-#: includes/Settings.php:295 includes/Settings.php:442
-#: includes/Settings.php:604 includes/Settings.php:695
-#: includes/Shortcode.php:378
+#: includes/Settings.php:308 includes/Settings.php:471
+#: includes/Settings.php:678 includes/Settings.php:810
+#: includes/Shortcode.php:218
 msgid "Save Changes"
 msgstr ""
 
-#: includes/Settings.php:320 includes/Settings.php:523
+#: includes/Settings.php:335 includes/Settings.php:571
 msgid "Selected entries deleted successfully."
 msgstr ""
 
-#: includes/Shortcode.php:1140
+#: includes/Shortcode.php:1026
 msgid "Self-Explanatory URI"
 msgstr ""
 
-#: includes/Settings.php:136
+#: includes/Settings.php:147
 msgid "Services"
 msgstr ""
 
-#: includes/Shortcode.php:670 includes/Shortcode.php:919
-#: includes/ShortURL.php:277
+#: includes/ShortURL.php:260 includes/Shortcode.php:496
+#: includes/Shortcode.php:703
 msgid "Short URL"
 msgstr ""
 
-#: includes/Shortcode.php:686
+#: includes/CPT.php:301
+msgid "Short URL custom"
+msgstr ""
+
+#: includes/CPT.php:272
+msgid "Short URL Details"
+msgstr ""
+
+#: includes/CPT.php:298
+msgid "Short URL generated"
+msgstr ""
+
+#: includes/Shortcode.php:512
 msgid "Shorten"
 msgstr ""
 
-#: includes/Settings.php:144
+#: includes/CPT.php:164
+msgid "ShortURL custom"
+msgstr ""
+
+#: includes/CPT.php:163
+msgid "ShortURL generated"
+msgstr ""
+
+#: includes/Settings.php:155
 msgid "Statistic"
 msgstr ""
 
-#: includes/CustomerDomains.php:59
+#: includes/CustomerDomains.php:68
 msgid "the accessibility statement"
 msgstr ""
 
-#: includes/CustomerDomains.php:53
+#: includes/CustomerDomains.php:62
 msgid "the imprint"
 msgstr ""
 
-#: includes/CustomerDomains.php:56
+#: includes/CustomerDomains.php:65
 msgid "the privacy policy"
 msgstr ""
 
-#: includes/ShortURL.php:254
+#: includes/ShortURL.php:237
 msgid "The provided URL is not a valid domain."
 msgstr ""
 
-#: rrze-shorturl.php:71
-#, php-format
-msgid ""
-"The server is running PHP version %1$s. The Plugin requires at least PHP "
-"version %2$s."
-msgstr ""
-
-#: rrze-shorturl.php:74
-#, php-format
-msgid ""
-"The server is running WordPress version %1$s. The Plugin requires at least "
-"WordPress version %2$s."
-msgstr ""
-
-#: includes/ShortURL.php:293
+#: includes/ShortURL.php:274
 msgid ""
 "To resolve this issue, please contact the technical support person for the "
 "website in question"
 msgstr ""
 
-#: includes/ShortURL.php:671
-msgid "Unable to update database table"
-msgstr ""
-
-#: includes/Shortcode.php:1010
+#: includes/Shortcode.php:834
 msgid "Update Link"
 msgstr ""
 
-#: includes/API.php:277
+#: includes/CPT.php:165 includes/CPT.php:304
+msgid "URI"
+msgstr ""
+
+#: includes/API.php:234
 msgid "url parameter is missing."
 msgstr ""
 
-#: includes/Shortcode.php:1164
+#: includes/Shortcode.php:1058
 msgid "UTM Campaign"
 msgstr ""
 
-#: includes/Shortcode.php:1172
+#: includes/Shortcode.php:1068
 msgid "UTM Content"
 msgstr ""
 
-#: includes/Shortcode.php:1160
+#: includes/Shortcode.php:1053
 msgid "UTM Medium"
 msgstr ""
 
-#: includes/Shortcode.php:1156
+#: includes/Shortcode.php:1048
 msgid "UTM Source"
 msgstr ""
 
-#: includes/Shortcode.php:1168
+#: includes/Shortcode.php:1063
 msgid "UTM Term"
 msgstr ""
 
-#: includes/Shortcode.php:672 includes/Shortcode.php:722
-#: includes/Shortcode.php:921
+#: includes/CPT.php:168 includes/CPT.php:310 includes/Shortcode.php:498
+#: includes/Shortcode.php:549 includes/Shortcode.php:705
 msgid "Valid until"
 msgstr ""
 
-#: includes/ShortURL.php:372
+#: includes/ShortURL.php:385
 msgid "Validity date cannot be in the past."
 msgstr ""
 
-#: includes/Settings.php:484
+#: includes/Settings.php:520
 msgid "Webmaster eMail"
 msgstr ""
 
-#: includes/Settings.php:481
+#: includes/Settings.php:519
 msgid "Webmaster Name"
 msgstr ""
 
-#: includes/Settings.php:337
-msgid ""
-"You are trying to enter a customer domain. Please use tab \"Customer "
-"Domains\" to do this."
-msgstr ""
-
-#: includes/ShortURL.php:516
+#. %s: maximum number of links a user can shorten per hour
+#: includes/ShortURL.php:584
 #, php-format
 msgid "You cannot shorten more than %s links per hour"
 msgstr ""
 
-#: includes/ShortURL.php:276
+#: includes/ShortURL.php:259
 msgid ""
 "You've tried to shorten a service domain. Services will automatically be "
 "shortened and redirected."
 msgstr ""
 
-#: includes/Shortcode.php:684
+#: includes/Shortcode.php:510
 msgid "Your link"
 msgstr ""

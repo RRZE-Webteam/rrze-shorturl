@@ -1,8 +1,7 @@
-// import { __, _x, _n, sprintf } from '@wordpress/i18n';
+import { __, _x, _n, sprintf } from '@wordpress/i18n';
 
 
 jQuery(document).ready(function ($) {
-
     // Make some fancy QR
     var inputField = document.getElementById("shortened_url");
     var qrValue = inputField ? inputField.value : "https://www.fau.de";
@@ -86,6 +85,7 @@ jQuery(document).ready(function ($) {
         $(this).find(".shorturl-edit-category, .shorturl-delete-category").addClass("hidden");
     });
 
+    // edit category
     $(document).on("click", ".shorturl-edit-category", function (e) {
         e.preventDefault();
         var label = $(this).siblings(".shorturl-category-label").text().trim(); // Get the label from the adjacent span
@@ -177,6 +177,21 @@ jQuery(document).ready(function ($) {
         window.location.href = newUrl;
     });
 
+    // After Update Link
+    $(document).on('submit', '#edit-link-form', function (e) {
+        var errorStatus = $('.notice.is-dismissible').data('error'); // get value of data-error 
+        if (errorStatus === false || errorStatus === 'false') {        
+            // no error occurred
+            // remove fragment (#...) and the link ID (?link_id=...)
+            var currentUrl = window.location.href;
+            var newUrl = currentUrl.split('?')[0];
+
+            // Update the URL in the address bar without reloading the page
+            window.history.pushState({}, document.title, newUrl);
+        }
+    });
+
+
     // Delete link
     $(document).on('click', '.delete-link', function (e) {
         e.preventDefault();
@@ -243,7 +258,7 @@ jQuery(document).ready(function ($) {
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(shortenedUrl)
                     .then(() => {
-                        showTooltip('URL copied!');
+                        showTooltip(__('URL copied!', 'rrze-shorturl'));
                     })
                     .catch(err => {
                         console.error('Copy failed:', err);
@@ -257,7 +272,7 @@ jQuery(document).ready(function ($) {
                 textArea.select();
                 try {
                     document.execCommand('copy');
-                    showTooltip('URL copied!');
+                    showTooltip(__('URL copied!', 'rrze-shorturl'));
                 } catch (err) {
                     console.error('Copy failed:', err);
                 } finally {

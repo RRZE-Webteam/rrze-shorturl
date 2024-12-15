@@ -18,8 +18,15 @@
 // then save new .htaccess 
 
 // SETTINGS
+
+// LIVE ! 
 $shorturl_domain = "https://www.shorturl.rrze.fau.de";
 $redirect_domain = "https://go.fau.de";
+
+// TEST !
+// $shorturl_domain = "https://go-fau.test.rrze.fau.de";
+// $redirect_domain = "https://go-fau.test.rrze.fau.de";
+
 $htaccess_file = '.htaccess';
 $services_file = 'rrze-shorturl-services.json';
 
@@ -63,11 +70,10 @@ class ShortURLRedirect
         if (empty($code)) {
             $this->send404Response("Unknown link. No code given.");
         } elseif ($prefix == 1 || $prefix == 7) {
-            // $short_url = ($prefix == 1 ? $prefix . $code : $code);
-            $short_url = $prefix . $code;
-            // error_log('handleRequest() $short_url = ' . $short_url);
+            $code = $prefix . $code;
+            // error_log('handleRequest() $code = ' . $code);
 
-            $this->handleCustomerLink($short_url, $preview);
+            $this->handleCustomerLink($code, $preview);
         } else {
             $this->handleServiceLink($code, $prefix, $preview);
         }
@@ -298,14 +304,17 @@ class ShortURLRedirect
 
             // Generate RewriteRules
             foreach ($short_urls as $url) {
-
-                $short_url_path = trim(wp_parse_url($url['short_url'], PHP_URL_PATH), '/');
+                $short_url_path = trim(wp_parse_url($url['shorturl_generated'], PHP_URL_PATH), '/');
                 $long_url = $url['long_url'];
 
-                // $expires = ($url['valid_until']) ? date('D, d M Y H:i:s', strtotime($url['valid_until'])) . ' GMT' : ''; # spaces lead to an error
-                // $rules .= "RewriteRule ^$short_url$ $long_url [R=303,L,E=set_expires:1]\n";
-                // $rules .= "Header set Expires $expires env=set_expires\n";
                 $ret .= "RewriteRule ^$short_url_path$ $long_url [R=303,L,NE]\n";
+
+                if (!empty($url['shorturl_custom'])){
+                    $short_url_path = trim(wp_parse_url($url['shorturl_custom'], PHP_URL_PATH), '/');
+                    $long_url = $url['long_url'];
+    
+                    $ret .= "RewriteRule ^$short_url_path$ $long_url [R=303,L,NE]\n";    
+                }
             }
         } catch (Exception $e) {
             echo "Error: " . $e->getMessage();

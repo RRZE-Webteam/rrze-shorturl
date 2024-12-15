@@ -1,23 +1,28 @@
 {
-	"description": "Plugin, um URLs zu verkürzen.",
-	"author": "RRZE Webteam",
-	"license": "GPL-2.0-or-later",
-	"main": "build/index.js",
-	"scripts": {
-		"format": "wp-scripts format",
-		"lint:css": "wp-scripts lint-style",
-		"lint:js": "wp-scripts lint-js",
-		"packages-update": "wp-scripts packages-update",
-		"plugin-zip": "wp-scripts plugin-zip"
-	},
-	"devDependencies": {
-		"@wordpress/scripts": "^26.19.0",
-		"webpack-cli": "^5.1.4"
-	},
-	"dependencies": {
-		"clipboard": "latest",
-		"use-clipboard-copy": "latest",
-		"webpack-dev-middleware": "latest",
-		"jquery": "latest"		
-	}
+  "name": "rrze-shorturl",
+  "version": "3.0.0",
+  "main": "build/js/index.js",
+  "scripts": {
+    "lint:css": "wp-scripts lint-style --fix",
+    "lint:js": "wp-scripts lint-js",
+    "build-css": "sass --style=compressed src/sass:build/css",
+    "watch-css": "sass --watch src/sass:build/css",
+    "increment-version": "node increment-version.js patch",
+    "build": "npm run lint:css && npm run increment-version && wp-scripts build && npm run build-css",
+    "start": "npm run watch-css && wp-scripts start",
+    "precommit": "npm run increment-version"
+  },
+  "devDependencies": {
+    "@wordpress/scripts": "^30.3.0",
+    "sass": "^1.80.1",
+    "webpack": "^5.88.2",
+    "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {
+    "clipboard": "latest",
+    "jquery": "latest",
+    "use-clipboard-copy": "latest",
+    "webpack-dev-middleware": "latest",
+    "prismjs": "^1.29.0"
+  }
 }
