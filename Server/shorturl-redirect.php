@@ -304,17 +304,17 @@ class ShortURLRedirect
 
             // Generate RewriteRules
             foreach ($short_urls as $url) {
-                $short_url_path = trim(wp_parse_url($url['shorturl_generated'], PHP_URL_PATH), '/');
-                $long_url = $url['long_url'];
-
-                $ret .= "RewriteRule ^$short_url_path$ $long_url [R=303,L,NE]\n";
-
                 if (!empty($url['shorturl_custom'])){
-                    $short_url_path = trim(wp_parse_url($url['shorturl_custom'], PHP_URL_PATH), '/');
-                    $long_url = $url['long_url'];
-    
-                    $ret .= "RewriteRule ^$short_url_path$ $long_url [R=303,L,NE]\n";    
+                        $parsedUrl = parse_url($url['shorturl_custom']);
+                        $short_url_path = trim($parsedUrl['path']);
+                        $long_url = $url['long_url'];
+                        if (empty($short_url_path)) {
+                                continue;
+                        }
+
+                    $ret .= "RewriteRule ^$short_url_path$ $long_url [R=303,L,NE]\n";
                 }
+
             }
         } catch (Exception $e) {
             echo "Error: " . $e->getMessage();
