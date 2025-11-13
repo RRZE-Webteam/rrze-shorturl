@@ -306,7 +306,7 @@ class ShortURLRedirect
             foreach ($short_urls as $url) {
                 if (!empty($url['shorturl_custom'])){
                         $parsedUrl = parse_url($url['shorturl_custom']);
-                        $short_url_path = trim($parsedUrl['path']);
+                        $short_url_path = trim($parsedUrl['path'], '/');
                         $long_url = $url['long_url'];
                         if (empty($short_url_path)) {
                                 continue;
