@@ -264,8 +264,10 @@ class ShortURL
                 }
             }
 
+            $allowedDomains = static::getAllowedDomains();
+
             // Check if the extracted domain belongs to one of our allowed domains
-            foreach (self::$CONFIG['AllowedDomains'] as $aEntry) {
+            foreach ($allowedDomains as $aEntry) {
                 if ($domain === $aEntry['hostname']) {
                     $notice = $aEntry['notice'];
 
