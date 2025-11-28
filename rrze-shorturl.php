@@ -4,7 +4,7 @@
 Plugin Name:     RRZE ShortURL
 Plugin URI:      https://gitlab.rrze.fau.de/rrze-webteam/rrze-shorturl
 Description:     Plugin, um URLs zu verkürzen. 
-Version: 3.0.5
+Version: 3.0.10
 Requires at least: 6.4
 Requires PHP:      8.2
 Author:          RRZE Webteam
@@ -131,6 +131,88 @@ function deactivation()
     delete_option('rrze_shorturl_custom_tables_dropped');
 }
 
+
+function rrze_shorturl_domain_cleanup()
+{
+
+    if (get_site_option('rrze_shorturl_domain_cleanup_done')) {
+        return;
+    }
+
+    $args = [
+        'post_type' => 'shorturl_domain',
+        'posts_per_page' => -1,
+        'post_status' => 'any',
+        'fields' => 'ids',
+    ];
+
+    $all_posts = get_posts($args);
+
+    if (empty($all_posts)) {
+        error_log('rrze_shorturl_cleanup_duplicate_domains(): No shorturl_domain posts found.');
+        return;
+    }
+
+    // Map hostnames (post_title) to post IDs
+    $hostname_map = []; // [hostname => [id1, id2, ...]]
+
+    foreach ($all_posts as $post_id) {
+        $post = get_post($post_id);
+        if (!$post) {
+            continue;
+        }
+
+        $hostname = $post->post_title;
+
+        // Normalize hostname just in case (lowercase, trim)
+        $hostname = trim(mb_strtolower($hostname));
+
+        if (!isset($hostname_map[$hostname])) {
+            $hostname_map[$hostname] = [];
+        }
+
+        $hostname_map[$hostname][] = $post_id;
+    }
+
+    $deleted_count = 0;
+
+    // Iterate over hostnames and delete duplicates
+    foreach ($hostname_map as $hostname => $ids) {
+        if (count($ids) <= 1) {
+            // No duplicates, nothing to do
+            continue;
+        }
+
+        sort($ids); // first is the smallest ID
+
+        $keep_id = array_shift($ids); // keep this one
+        $duplicate_ids = $ids;
+
+        error_log(sprintf(
+            'rrze_shorturl_cleanup_duplicate_domains(): Keeping ID %d for hostname "%s", deleting duplicates: %s',
+            $keep_id,
+            $hostname,
+            implode(', ', $duplicate_ids)
+        ));
+
+        // Delete all duplicates
+        foreach ($duplicate_ids as $dup_id) {
+            // true = force delete, not move to trash
+            wp_delete_post($dup_id, true);
+            $deleted_count++;
+        }
+    }
+
+    error_log(sprintf(
+        'rrze_shorturl_cleanup_duplicate_domains(): Finished. Deleted %d duplicate shorturl_domain posts.',
+        $deleted_count
+    ));
+
+    update_site_option('rrze_shorturl_domain_cleanup_done', 1);
+
+}
+
+
 /**
  * Wird durchgeführt, nachdem das WP-Grundsystem hochgefahren
  * und alle Plugins eingebunden wurden.
@@ -149,9 +231,12 @@ function loaded()
         add_action($tag, function () use ($plugin_name, $error) {
             printf('<div class="notice notice-error"><p>%1$s: %2$s</p></div>', esc_html($plugin_name), esc_html($error));
         });
-    } else {        
+    } else {
         // Hauptklasse (Main) wird instanziiert.
         $main = new Main(__FILE__);
         $main->onLoaded();
+
+        add_action('admin_init', __NAMESPACE__ . '\rrze_shorturl_domain_cleanup');
+
     }
 }
