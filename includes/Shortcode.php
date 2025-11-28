@@ -98,13 +98,7 @@ class Shortcode
 
     public function shortcode_customer_domains_handler(): string
     {
-
-
         $domains = ShortURL::getAllowedDomains();
-
-        echo '<pre>';
-        var_dump($domains);
-        exit;
 
         $html = '<table class="shorturl-wp-list-table widefat">';
         $html .= '<thead><tr><th>' . __('Domains', 'text-domain') . '</th></tr></thead>';
