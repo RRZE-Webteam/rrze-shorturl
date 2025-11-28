@@ -91,7 +91,7 @@ class CustomerDomains
                                 }
 
                                 // Insert or update the domain entry in the database
-                                $existing_domain_id = get_posts(
+                                $existing_domain_ids = get_posts(
                                     array(
                                         'post_type' => 'shorturl_domain',
                                         'title' => $host,
