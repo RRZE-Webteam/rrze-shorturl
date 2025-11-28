@@ -101,12 +101,14 @@ class CustomerDomains
                                     )
                                 );
 
-                                if ($existing_domain_id) {
+                                if (!empty($existing_domain_ids)) {
+                                    $post_id = $existing_domain_ids[0];
+
                                     // Update existing domain
-                                    update_post_meta($existing_domain_id, 'notice', $notice);
-                                    update_post_meta($existing_domain_id, 'webmaster_name', $webmaster_name);
-                                    update_post_meta($existing_domain_id, 'webmaster_email', $webmaster_email);
-                                    update_post_meta($existing_domain_id, 'active', $active);
+                                    update_post_meta($post_id, 'notice', $notice);
+                                    update_post_meta($post_id, 'webmaster_name', $webmaster_name);
+                                    update_post_meta($post_id, 'webmaster_email', $webmaster_email);
+                                    update_post_meta($post_id, 'active', $active);
                                 } else {
                                     // Create a new domain entry as a Custom Post Type
                                     $post_data = [
