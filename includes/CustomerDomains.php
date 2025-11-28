@@ -65,7 +65,7 @@ class CustomerDomains
                                 $active = 0;
                             }
 
-                            $url = !empty($entry['wmp']['long_url']) ? $entry['wmp']['long_url'] : '';
+                            $url = !empty($entry['wmp']['url']) ? $entry['wmp']['url'] : '';
 
                             if (!empty($url)) {
                                 // Parse the URL and get the hostname
