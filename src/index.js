@@ -179,7 +179,7 @@ jQuery(document).ready(function ($) {
     $(document).on('submit', '#edit-link-form', function (e) {
         var errorStatus = $('.notice.is-dismissible').data('error'); // get value of data-error 
 
-        if (errorStatus === false || errorStatus === 'false') {        
+        if (errorStatus === false || errorStatus === 'false') {
             // no error occurred
             // remove fragment (#...) and the link ID (?link_id=...)
             var currentUrl = window.location.href;
@@ -195,24 +195,32 @@ jQuery(document).ready(function ($) {
     $(document).on('click', '.delete-link', function (e) {
         e.preventDefault();
         var linkId = $(this).data('link-id');
+
         if (confirm('Are you sure you want to delete this link?')) {
             $.ajax({
                 url: rrze_shorturl_ajax_object.ajax_url,
                 method: 'POST',
+                dataType: 'json',
                 data: {
                     action: 'delete_link',
                     link_id: linkId,
                     _ajax_nonce: rrze_shorturl_ajax_object.delete_shorturl_link_nonce
                 },
                 success: function (response) {
-                    // Remove the hash from the URL
-                    if (window.location.hash) {
-                        history.replaceState(null, null, window.location.href.split('#')[0]);
+                    // Only reload if the server confirmed success
+                    if (response && response.success) {
+                        if (window.location.hash) {
+                            history.replaceState(null, null, window.location.href.split('#')[0]);
+                        }
+                        location.reload();
+                    } else {
+                        console.error('Delete failed:', response);
+                        alert(response && response.data ? response.data : 'Löschen fehlgeschlagen.');
                     }
-                    location.reload();
                 },
                 error: function (xhr, status, error) {
                     console.error('Error deleting link:', error);
+                    alert('AJAX error while deleting link (see console for details).');
                 }
             });
         }
