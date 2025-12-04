@@ -383,29 +383,30 @@ class Shortcode
 
     public function delete_link_callback()
     {
-        // Check if the request is coming from a valid source
         check_ajax_referer('delete_shorturl_link_nonce', '_ajax_nonce');
 
-        // Get the link ID from the AJAX request
         $link_id = !empty($_POST['link_id']) ? (int) $_POST['link_id'] : 0;
 
         if ($link_id > 0) {
-            // Delete the post using wp_delete_post
-            $result = wp_delete_post($link_id, true); // 'true' forces permanent deletion
+
+            // Check capabilities explicitly
+            if (!current_user_can('delete_post', $link_id)) {
+                error_log('ShortURL delete: current user cannot delete post ' . $link_id);
+                wp_send_json_error(__('Keine Berechtigung zum Löschen dieses Links.', 'rrze-shorturl'));
+            }
+
+            $result = wp_delete_post($link_id, true);
 
             if ($result !== false) {
-                // Link deleted successfully
                 wp_send_json_success(__('Link deleted successfully', 'rrze-shorturl'));
             } else {
-                // Error deleting link
+                error_log('ShortURL delete: wp_delete_post failed for ' . $link_id);
                 wp_send_json_error(__('Error deleting link', 'rrze-shorturl'));
             }
         } else {
-            // Invalid link ID
             wp_send_json_error(__('Invalid link ID', 'rrze-shorturl'));
         }
 
-        // Always exit to avoid further execution
         wp_die();
     }
 
@@ -692,10 +693,10 @@ class Shortcode
         $category_filter_form .= '</form>';
 
         // Display success notice
-        if ($bUpdated && !self::$update_message['error']){
+        if ($bUpdated && !self::$update_message['error']) {
             $table .= '<div class="notice ' . self::$update_message['class'] . ' is-dismissible data-error="' . (self::$update_message['error'] ? 'true' : 'false') . '"><p>' . self::$update_message['txt'] . '</p></div>';
         }
-        
+
         $table .= $category_filter_form;
         $table .= '<table class="shorturl-wp-list-table widefat striped">';
         $table .= '<thead><tr>';
@@ -735,7 +736,7 @@ class Shortcode
                 // Output table row
                 $table .= '<tr>';
                 $table .= '<td class="column-long-url"><a href="' . esc_url($long_url) . '">' . esc_html($long_url) . '</a></td>';
-                $table .= '<td><a href="' . esc_url($shorturl_generated) . '+">' . esc_html($shorturl_generated) . '</a>'. (!empty($shorturl_custom) ? '<br><a href="' . esc_url($shorturl_custom) . '+">' . esc_html($shorturl_custom) . '</a>':'') .'</td>';
+                $table .= '<td><a href="' . esc_url($shorturl_generated) . '+">' . esc_html($shorturl_generated) . '</a>' . (!empty($shorturl_custom) ? '<br><a href="' . esc_url($shorturl_custom) . '+">' . esc_html($shorturl_custom) . '</a>' : '') . '</td>';
                 // $table .= '<td>' . esc_html($uri) . '</td>';
                 $table .= '<td>' . (!empty($valid_until) ? esc_html($valid_until) : esc_html__('indefinite', 'rrze-shorturl')) . '</td>';
                 $table .= '<td>' . esc_html($category_names_str) . '</td>';
@@ -791,9 +792,9 @@ class Shortcode
                     <div class="rrze-shorturl">
                         <?php
 
-                    echo '<form id="edit-link-form" method="post">';
+                        echo '<form id="edit-link-form" method="post">';
 
-                        
+
 
                         // Generate update message if available
                         if (!empty(self::$update_message['txt'])) {
@@ -801,38 +802,39 @@ class Shortcode
                         }
                         ?>
 
-                            <div class="postbox">  
-                                <h2 class="handle"><?php echo esc_html__('Edit Link', 'rrze-shorturl'); ?></h2>
-                                    <?php echo esc_html($link_data['long_url']); ?><br><br>
-                                    <input type="hidden" name="long_url" value="<?php echo esc_html($link_data['long_url']); ?>">
-                                    <input type="hidden" name="action" value="update_link">
-                                    <input type="hidden" name="link_id" value="<?php echo esc_attr($link_id); ?>">
-                                    <input type="hidden" name="domain_id" value="<?php echo esc_attr($link_data['domain_id']); ?>">
-                                    <input type="hidden" name="shorturl_generated" value="<?php echo esc_attr($link_data['shorturl_generated']); ?>">
-                                    <input type="hidden" name="shorturl_custom" value="<?php echo esc_attr($link_data['shorturl_custom']); ?>">
-                                <?php
-                                // Display URI field if allowed
-                                if (self::$rights['allow_uri']) {
-                                    echo self::display_shorturl_uri($aParams['uri']);
-                                } else {
-                                    echo '<input type="hidden" name="uri" value="' . esc_attr($aParams['uri']) . '">';
-                                }
+                        <div class="postbox">
+                            <h2 class="handle"><?php echo esc_html__('Edit Link', 'rrze-shorturl'); ?></h2>
+                            <?php echo esc_html($link_data['long_url']); ?><br><br>
+                            <input type="hidden" name="long_url" value="<?php echo esc_html($link_data['long_url']); ?>">
+                            <input type="hidden" name="action" value="update_link">
+                            <input type="hidden" name="link_id" value="<?php echo esc_attr($link_id); ?>">
+                            <input type="hidden" name="domain_id" value="<?php echo esc_attr($link_data['domain_id']); ?>">
+                            <input type="hidden" name="shorturl_generated"
+                                value="<?php echo esc_attr($link_data['shorturl_generated']); ?>">
+                            <input type="hidden" name="shorturl_custom" value="<?php echo esc_attr($link_data['shorturl_custom']); ?>">
+                            <?php
+                            // Display URI field if allowed
+                            if (self::$rights['allow_uri']) {
+                                echo self::display_shorturl_uri($aParams['uri']);
+                            } else {
+                                echo '<input type="hidden" name="uri" value="' . esc_attr($aParams['uri']) . '">';
+                            }
 
-                                // Display validity field
-                                echo self::display_shorturl_validity($aParams['valid_until']);
+                            // Display validity field
+                            echo self::display_shorturl_validity($aParams['valid_until']);
 
-                                // Display UTM fields if allowed
-                                if (self::$rights['allow_utm']) {
-                                    echo self::display_shorturl_utm($aParams);
-                                }
+                            // Display UTM fields if allowed
+                            if (self::$rights['allow_utm']) {
+                                echo self::display_shorturl_utm($aParams);
+                            }
 
-                                // Display categories
-                                echo '<h6 class="handle">' . esc_html__('Categories', 'rrze-shorturl') . '</h6>';
-                                echo self::display_shorturl_category($aParams['categories']);
-                                ?>
+                            // Display categories
+                            echo '<h6 class="handle">' . esc_html__('Categories', 'rrze-shorturl') . '</h6>';
+                            echo self::display_shorturl_category($aParams['categories']);
+                            ?>
 
-                                <button type="submit" class="btn-update-link"><?php echo esc_html__('Update Link', 'rrze-shorturl'); ?></button>
-                            </div>
+                            <button type="submit" class="btn-update-link"><?php echo esc_html__('Update Link', 'rrze-shorturl'); ?></button>
+                        </div>
                         </form>
                         <?php
                         return ob_get_clean();
