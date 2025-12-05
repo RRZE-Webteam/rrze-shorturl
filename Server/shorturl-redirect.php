@@ -69,8 +69,8 @@ class ShortURLRedirect
 
         if (empty($code)) {
             $this->send404Response("Unknown link. No code given.");
-        } elseif ($prefix == 1 || $prefix == 7) {
-            $code = $prefix . $code;
+        } elseif ($prefix == 1 || $prefix == 7 || $prefix == 0) {
+            $code = ($prefix > 0 ? $prefix : '') . $code;
             // error_log('handleRequest() $code = ' . $code);
 
             $this->handleCustomerLink($code, $preview);
