@@ -1,11 +1,11 @@
 {
   "name": "rrze-shorturl",
-  "version": "3.0.12",
+  "version": "3.1.2",
   "main": "build/js/index.js",
   "scripts": {
     "lint:css": "wp-scripts lint-style --fix",
     "lint:js": "wp-scripts lint-js",
-    "build-css": "sass src/sass:build/css --style compressed --no-source-map",
+    "build-css": "sass --style=compressed src/sass:build/css",
     "watch-css": "sass --watch src/sass:build/css",
     "increment-version": "node increment-version.js patch",
     "build": "npm run lint:css && npm run increment-version && wp-scripts build && npm run build-css",
