@@ -41,6 +41,8 @@ class CustomerDomains
             $this->insert_or_update_domain($domain['url'], $domain);
         }
 
+        var_dump('true');
+        exit;
         // update_option('rrze_shorturl_special_domains_added', 1);
     }
 
