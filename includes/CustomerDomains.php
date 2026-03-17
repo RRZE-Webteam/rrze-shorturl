@@ -27,7 +27,7 @@ class CustomerDomains
 
         $domains = [
             [
-                'url' => 'https://faubox2.rrze.uni-erlangen.de',
+                'url' => 'https://faubox.rrze.uni-erlangen.de',
                 'notice' => '',
                 'webmaster_name' => '',
                 'webmaster_email' => '',
