@@ -11,11 +11,11 @@ class CustomerDomains
         add_action('init', [$this, 'add_special_domains']);
 
         // Schedule daily fetch if not scheduled
-        // add_action('init', function () {
-        //     if (!wp_next_scheduled('rrze_shorturl_fetch_and_store_customerdomains')) {
-        //         wp_schedule_event(strtotime('tomorrow 4:00'), 'daily', 'rrze_shorturl_fetch_and_store_customerdomains');
-        //     }
-        // });
+        add_action('init', function () {
+            if (!wp_next_scheduled('rrze_shorturl_fetch_and_store_customerdomains')) {
+                wp_schedule_event(strtotime('tomorrow 4:00'), 'daily', 'rrze_shorturl_fetch_and_store_customerdomains');
+            }
+        });
 
         // Hook fetch function to cron
         add_action('rrze_shorturl_fetch_and_store_customerdomains', [$this, 'fetch_and_store_customerdomains']);
@@ -135,6 +135,18 @@ class CustomerDomains
             } else {
                 error_log("Insert error: $host");
             }
+        }
+
+        if (is_admin() && !wp_doing_ajax() && !empty($id) && !is_wp_error($id)) {
+            $payload = [
+                'id' => $id,
+                'title' => get_the_title($id),
+                'meta' => get_post_meta($id),
+            ];
+            add_action('admin_footer', function () use ($payload) {
+                $json = wp_json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+                echo '<script>try{alert(' . $json . ');}catch(e){console.error(e);}</script>';
+            });
         }
     }
 }
