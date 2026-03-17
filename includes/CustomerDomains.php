@@ -23,7 +23,7 @@ class CustomerDomains
 
     public function add_special_domains()
     {
-        // if (get_option('rrze_shorturl_special_domains_added')) return;
+        if (get_option('rrze_shorturl_add_special_domains')) return;
 
         $domains = [
             [
@@ -41,7 +41,7 @@ class CustomerDomains
             $this->insert_or_update_domain($domain['url'], $domain);
         }
 
-        // update_option('rrze_shorturl_special_domains_added', 1);
+        update_option('rrze_shorturl_add_special_domains', 1);
     }
 
     public function fetch_and_store_customerdomains()
@@ -140,18 +140,6 @@ class CustomerDomains
             } else {
                 error_log("Insert error: $host");
             }
-        }
-
-        if (is_admin() && !wp_doing_ajax() && !empty($id) && !is_wp_error($id)) {
-            $payload = [
-                'id' => $id,
-                'title' => get_the_title($id),
-                'meta' => get_post_meta($id),
-            ];
-            add_action('admin_footer', function () use ($payload) {
-                $json = wp_json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-                echo '<script>try{var data=' . $json . ';alert(JSON.stringify(data, null, 2));}catch(e){console.error(e);}</script>';
-            });
         }
     }
 }
