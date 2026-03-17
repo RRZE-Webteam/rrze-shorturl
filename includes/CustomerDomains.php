@@ -122,6 +122,11 @@ class CustomerDomains
 
         if ($existing) {
             $id = $existing[0];
+            wp_update_post([
+                'ID' => $id,
+                'post_title' => $host,
+                'post_name' => $name,
+            ]);
             foreach ($meta as $key => $value) update_post_meta($id, $key, $value);
         } else {
             $id = wp_insert_post([
