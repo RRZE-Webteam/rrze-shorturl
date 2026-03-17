@@ -11,11 +11,11 @@ class CustomerDomains
         add_action('init', [$this, 'add_special_domains']);
 
         // Schedule daily fetch if not scheduled
-        add_action('init', function () {
-            if (!wp_next_scheduled('rrze_shorturl_fetch_and_store_customerdomains')) {
-                wp_schedule_event(strtotime('tomorrow 4:00'), 'daily', 'rrze_shorturl_fetch_and_store_customerdomains');
-            }
-        });
+        // add_action('init', function () {
+        //     if (!wp_next_scheduled('rrze_shorturl_fetch_and_store_customerdomains')) {
+        //         wp_schedule_event(strtotime('tomorrow 4:00'), 'daily', 'rrze_shorturl_fetch_and_store_customerdomains');
+        //     }
+        // });
 
         // Hook fetch function to cron
         add_action('rrze_shorturl_fetch_and_store_customerdomains', [$this, 'fetch_and_store_customerdomains']);
