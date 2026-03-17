@@ -145,7 +145,7 @@ class CustomerDomains
             ];
             add_action('admin_footer', function () use ($payload) {
                 $json = wp_json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-                echo '<script>try{alert(' . $json . ');}catch(e){console.error(e);}</script>';
+                echo '<script>try{var data=' . $json . ';alert(JSON.stringify(data, null, 2));}catch(e){console.error(e);}</script>';
             });
         }
     }
