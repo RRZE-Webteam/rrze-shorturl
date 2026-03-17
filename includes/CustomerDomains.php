@@ -38,9 +38,6 @@ class CustomerDomains
         ];
 
         foreach ($domains as $domain) {
-echo '<script language="javascript">';
-echo 'alert("' . $domain['url'] . '")';
-echo '</script>';            
             $this->insert_or_update_domain($domain['url'], $domain);
         }
 
@@ -99,11 +96,6 @@ echo '</script>';
     private function insert_or_update_domain(string $url, array $meta)
     {
         $host = wp_parse_url($url, PHP_URL_HOST);
-
-        echo '<script language="javascript">';
-echo 'alert("host ' . $host . '")';
-echo '</script>';            
-
         if (!$host) return;
 
         if (empty($meta['active'])) {
@@ -129,10 +121,6 @@ echo '</script>';
         ]);
 
         if ($existing) {
-        echo '<script language="javascript">';
-echo 'alert("exists")';
-echo '</script>';            
-
             $id = $existing[0];
             foreach ($meta as $key => $value) update_post_meta($id, $key, $value);
         } else {
@@ -142,17 +130,7 @@ echo '</script>';
                 'post_type' => 'shorturl_domain',
                 'post_status' => 'publish',
             ]);
-
-        echo '<script language="javascript">';
-echo 'alert("after insert")';
-echo '</script>';            
-
-
             if (!is_wp_error($id)) {
-        echo '<script language="javascript">';
-echo 'alert("no errors")';
-echo '</script>';            
-
                 foreach ($meta as $key => $value) update_post_meta($id, $key, $value);
             } else {
                 error_log("Insert error: $host");
