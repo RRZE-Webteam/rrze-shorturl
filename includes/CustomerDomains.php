@@ -31,9 +31,9 @@ class CustomerDomains
                 'notice' => '',
                 'webmaster_name' => '',
                 'webmaster_email' => '',
-                'active' => 1,
-                'prefix' => 1,
-                'external' => 0,
+                'active' => '1',
+                'prefix' => '1',
+                'external' => '0',
             ],
         ];
 
