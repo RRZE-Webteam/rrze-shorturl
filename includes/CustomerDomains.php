@@ -7,138 +7,133 @@ class CustomerDomains
 {
     public function __construct()
     {
+        // Add special domains on init
+        add_action('init', [$this, 'add_special_domains']);
+
+        // Schedule daily fetch if not scheduled
         add_action('init', function () {
             if (!wp_next_scheduled('rrze_shorturl_fetch_and_store_customerdomains')) {
-                wp_schedule_event(strtotime('today 4:00'), 'daily', 'rrze_shorturl_fetch_and_store_customerdomains');
+                wp_schedule_event(strtotime('tomorrow 4:00'), 'daily', 'rrze_shorturl_fetch_and_store_customerdomains');
             }
         });
 
-        add_action('rrze_shorturl_fetch_and_store_customerdomains', array($this, 'fetch_and_store_customerdomains'));
+        // Hook fetch function to cron
+        add_action('rrze_shorturl_fetch_and_store_customerdomains', [$this, 'fetch_and_store_customerdomains']);
+    }
+
+    public function add_special_domains()
+    {
+        if (get_option('rrze_shorturl_special_domains_added')) return;
+
+        $domains = [
+            [
+                'url' => 'https://faubox.rrze.uni-erlangen.de',
+                'notice' => '',
+                'webmaster_name' => '',
+                'webmaster_email' => '',
+                'active' => 1,
+                'prefix' => 1,
+                'external' => 0,
+            ],
+        ];
+
+        foreach ($domains as $domain) {
+            $this->insert_or_update_domain($domain['url'], $domain);
+        }
+
+        update_option('rrze_shorturl_special_domains_added', 1);
     }
 
     public function fetch_and_store_customerdomains()
     {
-        // List of API URLs to fetch data from
-        $aAPI_url = [
+        $api_urls = [
             'https://statistiken.rrze.fau.de/webauftritte/domains//analyse/domain-analyse-18.json',
             'https://statistiken.rrze.fau.de/webauftritte/domains/analyse/domain-analyse-1.json',
             'https://statistiken.rrze.fau.de/webauftritte/domains//analyse/domain-analyse-2-3.json',
         ];
 
-        foreach ($aAPI_url as $api_url) {
+        foreach ($api_urls as $url) {
             try {
-                // Fetch data from the API URL
-                $response = wp_remote_get($api_url);
+                $response = wp_remote_get($url, ['timeout' => 10]);
+                if (is_wp_error($response) || wp_remote_retrieve_response_code($response) !== 200) continue;
 
-                // Check if the response is valid and contains data
-                if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200) {
-                    $body = wp_remote_retrieve_body($response);
-                    $jsonArray = json_decode($body, true);
+                $data = json_decode(wp_remote_retrieve_body($response), true);
+                if (json_last_error() !== JSON_ERROR_NONE) continue;
 
-                    // Extract the 'data' array from the response
-                    $jsonArray = !empty($jsonArray['data']) ? $jsonArray['data'] : [];
+                $entries = array_filter($data['data'] ?? [], fn($item) => isset($item['httpstatus']) && $item['httpstatus'] == '200');
 
-                    // Filter for entries with 'httpstatus' == '200'
-                    $filteredResponse = array_filter($jsonArray, function ($item) {
-                        return $item['httpstatus'] == '200';
-                    });
+                foreach ($entries as $entry) {
+                    $meta = [
+                        'notice' => '',
+                        'webmaster_name' => '',
+                        'webmaster_email' => '',
+                        'active' => 1,
+                        'prefix' => 1,
+                        'external' => 0,
+                    ];
 
-                    // If there are valid entries, process each one
-                    if (!empty($filteredResponse)) {
-                        foreach ($filteredResponse as $entry) {
-                            $notice = '';
-                            $webmaster_name = '';
-                            $webmaster_email = '';
-                            $active = 1;
-                            $prefix = 1;
-                            $external = 0;
+                    $impressum = $entry['content']['tos']['Impressum']['href'] ?? null;
+                    $datenschutz = $entry['content']['tos']['Datenschutz']['href'] ?? null;
+                    $barrierefreiheit = $entry['content']['tos']['Barrierefreiheit']['href'] ?? null;
 
-                            // Validate the presence of necessary links
-                            if (empty($entry['content']['tos']['Impressum']['href'])) {
-                                $notice = __('the imprint', 'rrze-shorturl');
-                                $active = 0;
-                            } elseif (empty($entry['content']['tos']['Datenschutz']['href'])) {
-                                $notice = __('the privacy policy', 'rrze-shorturl');
-                                $active = 0;
-                            } elseif (empty($entry['content']['tos']['Barrierefreiheit']['href'])) {
-                                $notice = __('the accessibility statement', 'rrze-shorturl');
-                                $active = 0;
-                            }
-
-                            $url = !empty($entry['wmp']['long_url']) ? $entry['wmp']['long_url'] : '';
-
-                            if (!empty($url)) {
-                                // Parse the URL and get the hostname
-                                $parsed_url = wp_parse_url($url);
-                                $host = $parsed_url['host'];
-
-                                // If the site is inactive, fetch webmaster details
-                                if (!$active) {
-                                    try {
-                                        $api_url = 'https://www.wmp.rrze.fau.de/suche/impressum/' . $host . '/format/json';
-
-                                        $response = wp_remote_get($api_url);
-
-                                        if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200) {
-                                            $body = wp_remote_retrieve_body($response);
-                                            $jsonArray = json_decode($body, true);
-                                            $webmaster_name = !empty($jsonArray['webmaster']['name']) ? $jsonArray['webmaster']['name'] : __('Name not found', 'rrze-shorturl');
-                                            $webmaster_email = !empty($jsonArray['webmaster']['email']) ? $jsonArray['webmaster']['email'] : __('Email not found', 'rrze-shorturl');
-                                        }
-                                    } catch (CustomException $e) {
-                                        error_log('An error occurred while fetching webmaster info: ' . $e->getMessage());
-                                    }
-                                }
-
-                                // Insert or update the domain entry in the database
-                                $existing_domain_id = get_posts(
-                                    array(
-                                        'post_type' => 'shorturl_domain',
-                                        'title' => $host,
-                                        'post_status' => 'all',
-                                        'numberposts' => 1,
-                                        'fields' => 'ids'
-                                    )
-                                );
-
-                                if ($existing_domain_id) {
-                                    // Update existing domain
-                                    update_post_meta($existing_domain_id, 'notice', $notice);
-                                    update_post_meta($existing_domain_id, 'webmaster_name', $webmaster_name);
-                                    update_post_meta($existing_domain_id, 'webmaster_email', $webmaster_email);
-                                    update_post_meta($existing_domain_id, 'active', $active);
-                                } else {
-                                    // Create a new domain entry as a Custom Post Type
-                                    $post_data = [
-                                        'post_title' => $host,
-                                        'post_type' => 'shorturl_domain',
-                                        'post_status' => 'publish'
-                                    ];
-
-                                    $post_id = wp_insert_post($post_data);
-
-                                    if (!is_wp_error($post_id)) {
-                                        // Add meta data for the new domain
-                                        update_post_meta($post_id, 'notice', $notice);
-                                        update_post_meta($post_id, 'webmaster_name', $webmaster_name);
-                                        update_post_meta($post_id, 'webmaster_email', $webmaster_email);
-                                        update_post_meta($post_id, 'active', $active);
-                                        update_post_meta($post_id, 'prefix', $prefix);
-                                        update_post_meta($post_id, 'external', $external);
-                                    } else {
-                                        error_log('Error inserting domain: ' . $host);
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        error_log('fetch_and_store_customerdomains() $data is empty');
+                    if (!$impressum) {
+                        $meta['notice'] = __('the imprint', 'rrze-shorturl'); $meta['active'] = 0;
+                    } elseif (!$datenschutz) {
+                        $meta['notice'] = __('the privacy policy', 'rrze-shorturl'); $meta['active'] = 0;
+                    } elseif (!$barrierefreiheit) {
+                        $meta['notice'] = __('the accessibility statement', 'rrze-shorturl'); $meta['active'] = 0;
                     }
-                } else {
-                    error_log('fetch_and_store_customerdomains() API returned ' . wp_remote_retrieve_response_code($response));
+
+                    $long_url = $entry['wmp']['long_url'] ?? '';
+                    if ($long_url) $this->insert_or_update_domain($long_url, $meta);
                 }
             } catch (CustomException $e) {
-                error_log('An error occurred: ' . $e->getMessage());
+                error_log('Fetch error: ' . $e->getMessage());
+            }
+        }
+    }
+
+    private function insert_or_update_domain(string $url, array $meta)
+    {
+        $host = wp_parse_url($url, PHP_URL_HOST);
+        if (!$host) return;
+
+        if (empty($meta['active'])) {
+            try {
+                $response = wp_remote_get("https://www.wmp.rrze.fau.de/suche/impressum/{$host}/format/json", ['timeout' => 10]);
+                if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200) {
+                    $json = json_decode(wp_remote_retrieve_body($response), true);
+                    $meta['webmaster_name'] = $json['webmaster']['name'] ?? __('Name not found', 'rrze-shorturl');
+                    $meta['webmaster_email'] = $json['webmaster']['email'] ?? __('Email not found', 'rrze-shorturl');
+                }
+            } catch (CustomException $e) {
+                error_log('Webmaster fetch error: ' . $e->getMessage());
+            }
+        }
+
+        $name = sanitize_title($host);
+        $existing = get_posts([
+            'post_type' => 'shorturl_domain',
+            'post_name' => $name,
+            'post_status' => 'all',
+            'numberposts' => 1,
+            'fields' => 'ids',
+        ]);
+
+        if ($existing) {
+            $id = $existing[0];
+            foreach ($meta as $key => $value) update_post_meta($id, $key, $value);
+        } else {
+            $id = wp_insert_post([
+                'post_name' => $name,
+                'post_title' => $host,
+                'post_type' => 'shorturl_domain',
+                'post_status' => 'publish',
+            ]);
+            if (!is_wp_error($id)) {
+                foreach ($meta as $key => $value) update_post_meta($id, $key, $value);
+            } else {
+                error_log("Insert error: $host");
             }
         }
     }
