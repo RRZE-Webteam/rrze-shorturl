@@ -69,8 +69,8 @@ class ShortURLRedirect
 
         if (empty($code)) {
             $this->send404Response("Unknown link. No code given.");
-        } elseif ($prefix == 1 || $prefix == 7) {
-            $code = $prefix . $code;
+        } elseif ($prefix == 1 || $prefix == 7 || $prefix == 0) {
+            $code = ($prefix > 0 ? $prefix : '') . $code;
             // error_log('handleRequest() $code = ' . $code);
 
             $this->handleCustomerLink($code, $preview);
@@ -304,17 +304,17 @@ class ShortURLRedirect
 
             // Generate RewriteRules
             foreach ($short_urls as $url) {
-                $short_url_path = trim(wp_parse_url($url['shorturl_generated'], PHP_URL_PATH), '/');
-                $long_url = $url['long_url'];
-
-                $ret .= "RewriteRule ^$short_url_path$ $long_url [R=303,L,NE]\n";
-
                 if (!empty($url['shorturl_custom'])){
-                    $short_url_path = trim(wp_parse_url($url['shorturl_custom'], PHP_URL_PATH), '/');
-                    $long_url = $url['long_url'];
-    
-                    $ret .= "RewriteRule ^$short_url_path$ $long_url [R=303,L,NE]\n";    
+                        $parsedUrl = parse_url($url['shorturl_custom']);
+                        $short_url_path = trim($parsedUrl['path'], '/');
+                        $long_url = $url['long_url'];
+                        if (empty($short_url_path)) {
+                                continue;
+                        }
+
+                    $ret .= "RewriteRule ^$short_url_path$ $long_url [R=303,L,NE]\n";
                 }
+
             }
         } catch (Exception $e) {
             echo "Error: " . $e->getMessage();
@@ -339,9 +339,11 @@ class ShortURLRedirect
             $rules .= "RewriteCond %{QUERY_STRING} .\n";
             $rules .= "RewriteRule ^ - [E=DEBUG_LOG:%{QUERY_STRING}]\n";
             // First rule: redirect all paths that start with a number or not (not = a customer URI) and end with "+" to shorturl-redirect.php with preview = 1
-            $rules .= "RewriteRule ^([0-9]*)?(.*)\\+$ shorturl-redirect.php?prefix=\$1&code=\$2&preview=1 [L]\n";
+            $rules .= "RewriteRule ^([0-9])?(.*)\\+$ shorturl-redirect.php?prefix=\$1&code=\$2&preview=1 [L]\n";
+
             // Second rule: redirect all paths that start with a number but not 1 to shorturl-redirect.php (1 == customer domain)
-            $rules .= "RewriteRule ^([2-9][0-9]*)(.*)$ shorturl-redirect.php?prefix=\$1&code=\$2 [L]\n";
+            $rules .= "RewriteRule ^([2-9])(.*)$ shorturl-redirect.php?prefix=\$1&code=\$2 [L]\n";
+
             // List of customer rules
             $rules .= $new_rules;
             // Next-to-last rule: redirect shorturl-redirect.php to find out if new customer rule (not custom URI)
