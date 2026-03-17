@@ -55,12 +55,10 @@ class CustomerDomains
         foreach ($api_urls as $url) {
             try {
                 $response = wp_remote_get($url, ['timeout' => 10]);
-                if (is_wp_error($response) || wp_remote_retrieve_response_code($response) !== 200)
-                    continue;
+                if (is_wp_error($response) || wp_remote_retrieve_response_code($response) !== 200) continue;
 
                 $data = json_decode(wp_remote_retrieve_body($response), true);
-                if (json_last_error() !== JSON_ERROR_NONE)
-                    continue;
+                if (json_last_error() !== JSON_ERROR_NONE) continue;
 
                 $entries = array_filter($data['data'] ?? [], fn($item) => isset($item['httpstatus']) && $item['httpstatus'] == '200');
 
@@ -79,19 +77,15 @@ class CustomerDomains
                     $barrierefreiheit = $entry['content']['tos']['Barrierefreiheit']['href'] ?? null;
 
                     if (!$impressum) {
-                        $meta['notice'] = __('the imprint', 'rrze-shorturl');
-                        $meta['active'] = 0;
+                        $meta['notice'] = __('the imprint', 'rrze-shorturl'); $meta['active'] = 0;
                     } elseif (!$datenschutz) {
-                        $meta['notice'] = __('the privacy policy', 'rrze-shorturl');
-                        $meta['active'] = 0;
+                        $meta['notice'] = __('the privacy policy', 'rrze-shorturl'); $meta['active'] = 0;
                     } elseif (!$barrierefreiheit) {
-                        $meta['notice'] = __('the accessibility statement', 'rrze-shorturl');
-                        $meta['active'] = 0;
+                        $meta['notice'] = __('the accessibility statement', 'rrze-shorturl'); $meta['active'] = 0;
                     }
 
                     $long_url = $entry['wmp']['long_url'] ?? '';
-                    if ($long_url)
-                        $this->insert_or_update_domain($long_url, $meta);
+                    if ($long_url) $this->insert_or_update_domain($long_url, $meta);
                 }
             } catch (CustomException $e) {
                 error_log('Fetch error: ' . $e->getMessage());
@@ -102,11 +96,7 @@ class CustomerDomains
     private function insert_or_update_domain(string $url, array $meta)
     {
         $host = wp_parse_url($url, PHP_URL_HOST);
-        if (!$host)
-            return;
-
-        // Debug: Host prüfen
-        echo "<script>alert('Host: " . esc_js($host) . "');</script>";
+        if (!$host) return;
 
         if (empty($meta['active'])) {
             try {
@@ -115,13 +105,9 @@ class CustomerDomains
                     $json = json_decode(wp_remote_retrieve_body($response), true);
                     $meta['webmaster_name'] = $json['webmaster']['name'] ?? __('Name not found', 'rrze-shorturl');
                     $meta['webmaster_email'] = $json['webmaster']['email'] ?? __('Email not found', 'rrze-shorturl');
-
-                    // Debug: Webmaster Info
-                    echo "<script>alert('Webmaster Name: " . esc_js($meta['webmaster_name']) . "\\nEmail: " . esc_js($meta['webmaster_email']) . "');</script>";
                 }
             } catch (CustomException $e) {
                 error_log('Webmaster fetch error: ' . $e->getMessage());
-                echo "<script>alert('Webmaster fetch error: " . esc_js($e->getMessage()) . "');</script>";
             }
         }
 
@@ -136,11 +122,7 @@ class CustomerDomains
 
         if ($existing) {
             $id = $existing[0];
-            foreach ($meta as $key => $value)
-                update_post_meta($id, $key, $value);
-
-            // Debug: Domain aktualisiert
-            echo "<script>alert('Domain aktualisiert: " . esc_js($host) . " (ID: " . esc_js($id) . ")');</script>";
+            foreach ($meta as $key => $value) update_post_meta($id, $key, $value);
         } else {
             $id = wp_insert_post([
                 'post_name' => $name,
@@ -148,16 +130,10 @@ class CustomerDomains
                 'post_type' => 'shorturl_domain',
                 'post_status' => 'publish',
             ]);
-
             if (!is_wp_error($id)) {
-                foreach ($meta as $key => $value)
-                    update_post_meta($id, $key, $value);
-
-                // Debug: Domain neu eingefügt
-                echo "<script>alert('Domain eingefügt: " . esc_js($host) . " (ID: " . esc_js($id) . ")');</script>";
+                foreach ($meta as $key => $value) update_post_meta($id, $key, $value);
             } else {
                 error_log("Insert error: $host");
-                echo "<script>alert('Insert error: " . esc_js($host) . "');</script>";
             }
         }
     }
