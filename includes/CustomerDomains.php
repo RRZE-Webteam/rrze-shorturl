@@ -23,7 +23,7 @@ class CustomerDomains
 
     public function add_special_domains()
     {
-        if (get_option('rrze_shorturl_special_domains_added')) return;
+        // if (get_option('rrze_shorturl_special_domains_added')) return;
 
         $domains = [
             [
@@ -41,7 +41,7 @@ class CustomerDomains
             $this->insert_or_update_domain($domain['url'], $domain);
         }
 
-        update_option('rrze_shorturl_special_domains_added', 1);
+        // update_option('rrze_shorturl_special_domains_added', 1);
     }
 
     public function fetch_and_store_customerdomains()
