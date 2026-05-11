@@ -1138,9 +1138,6 @@ class Shortcode
                     <?php echo esc_html__('Transparent', 'rrze-shorturl'); ?>
                 </label>
             </div>
-            <div class="shorturl-qr-colors-preview">
-                <canvas id="shorturl-qr-preview" width="120" height="120" aria-label="<?php echo esc_attr__('QR Code', 'rrze-shorturl'); ?>"></canvas>
-            </div>
         </div>
         <?php
         return ob_get_clean();
