@@ -110,6 +110,17 @@ class Shortcode
             ? array_merge((array) $allowed_tags['p'], $p)
             : $p;
 
+        $canvas = [
+            'id' => true,
+            'class' => true,
+            'width' => true,
+            'height' => true,
+            'aria-label' => true,
+        ];
+        $allowed_tags['canvas'] = isset($allowed_tags['canvas'])
+            ? array_merge((array) $allowed_tags['canvas'], $canvas)
+            : $canvas;
+
         return $allowed_tags;
     }
 
@@ -518,6 +529,7 @@ class Shortcode
         ];
 
         $result_message = ''; // Initialize result message
+        $result = null;
         // Check if form is submitted
         if ((isset($_SERVER["REQUEST_METHOD"]) && $_SERVER["REQUEST_METHOD"] == "POST") || !empty($_GET['long_url'])) {
             // Check if URL is provided
@@ -545,13 +557,16 @@ class Shortcode
         $form .= '<h2 class="handle">' . esc_html__('Create Short URL', 'rrze-shorturl') . '</h2>';
         $form .= '<div class="inside">';
         $form .= '<label for="long_url">' . esc_html__('Your link', 'rrze-shorturl') . ':</label>';
-        $form .= '<input type="text" name="long_url" id="long_url" value="' . esc_attr($aParams['long_url']) . '" placeholder="https://" ' . (!empty($result['error']) ? ' aria-invalid="true" aria-errormessage="shorturl-err" ' : '') . '>';
+        $form .= '<input type="text" name="long_url" id="long_url" value="' . esc_attr($aParams['long_url']) . '" placeholder="https://" ' . (is_array($result) && !empty($result['error']) ? ' aria-invalid="true" aria-errormessage="shorturl-err" ' : '') . '>';
         $form .= '<input type="submit" id="generate" name="generate" value="' . esc_html__('Shorten', 'rrze-shorturl') . '">';
-        $form .= '<input type="hidden" name="link_id" value="' . esc_attr(!empty($result['link_id']) ? $result['link_id'] : '') . '">';
+        $form .= '<input type="hidden" name="link_id" value="' . esc_attr(is_array($result) && !empty($result['link_id']) ? $result['link_id'] : '') . '">';
         $form .= '</div>';
         $form .= '</div>';
         $form .= '<button id="btn-show-advanced-settings" type="button" aria-haspopup="true" aria-controls="shorturl-advanced-settings" aria-expanded="false">' . esc_html__('Advanced Settings', 'rrze-shorturl') . '<span class="arrow-down"></span></button>';
         $form .= '<div id="shorturl-advanced-settings" class="shorturl-advanced-settings">';
+        // QR colours first so they appear at the top when advanced settings are opened.
+        $form .= '<h6 class="handle">' . esc_html__('QR Code', 'rrze-shorturl') . '</h6>';
+        $form .= self::display_shorturl_qr_colors($aParams['qr_foreground'], $aParams['qr_background']);
         if (self::$rights['allow_uri']) {
             $form .= self::display_shorturl_uri($aParams['uri']);
         }
@@ -559,18 +574,15 @@ class Shortcode
         if (self::$rights['allow_utm']) {
             $form .= self::display_shorturl_utm($aParams);
         }
-        // QR colours: always offered here (not tied to allow_uri / allow_utm / idm).
-        $form .= '<h6 class="handle">' . esc_html__('QR Code', 'rrze-shorturl') . '</h6>';
-        $form .= self::display_shorturl_qr_colors($aParams['qr_foreground'], $aParams['qr_background']);
         $form .= '<h6 class="handle">' . esc_html__('Categories', 'rrze-shorturl') . '</h6>';
         $form .= self::display_shorturl_category($aParams['categories']);
         $form .= '</div>';
 
         // Display result message
         // notice or error msg
-        $form .= '<div class="rrze-shorturl-result"><p' . (!empty($result['error']) ? ' id="shorturl-err" class="shorturl-msg-' . esc_attr($result['message_type']) . '"' : '') . '>' . $result_message . '</p>';
+        $form .= '<div class="rrze-shorturl-result"><p' . (is_array($result) && !empty($result['error']) ? ' id="shorturl-err" class="shorturl-msg-' . esc_attr($result['message_type']) . '"' : '') . '>' . $result_message . '</p>';
 
-        if (!empty($result) && !$result['error']) {
+        if (is_array($result) && isset($result['error']) && $result['error'] === false) {
             $shortened_url = (!empty($result['shorturl_custom']) ? $result['shorturl_custom'] : $result['shorturl_generated']);
             $form .= '<input id="shortened_url" name="shortened_url" type="hidden" value="' . esc_attr($shortened_url) . '">';
             $form .= '<div id="qr-container"><canvas id="qr"></canvas><button type="button" class="btn" id="downloadButton" name="downloadButton"><img class="shorturl-download-img" src="data:image/svg+xml,%3Csvg width=\'512\' height=\'512\' viewBox=\'0 0 512 512\' xmlns=\'http://www.w3.org/2000/svg\' fill=\'%23000000\'%3E%3Cpath d=\'M376.3 304.3l-71.4 71.4V48c0-8.8-7.2-16-16-16h-48c-8.8 0-16 7.2-16 16v327.6l-71.4-71.4c-6.2-6.2-16.4-6.2-22.6 0l-22.6 22.6c-6.2 6.2-6.2 16.4 0 22.6l128 128c6.2 6.2 16.4 6.2 22.6 0l128-128c6.2-6.2 6.2-16.4 0-22.6l-22.6-22.6c-6.2-6.2-16.4-6.2-22.6 0zM464 448H48c-8.8 0-16 7.2-16 16v32c0 8.8 7.2 16 16 16h416c8.8 0 16-7.2 16-16v-32c0-8.8-7.2-16-16-16z\'/%3E%3C/svg%3E" title="' . esc_attr__('Download QR', 'rrze-shorturl') . '"><span class="screen-reader-text">' . esc_html__('Download QR', 'rrze-shorturl') . '</span></button></div>';

@@ -24,15 +24,15 @@ jQuery(document).ready(function ($) {
         return options;
     }
 
-    // Make some fancy QR
+    // Main QR canvas (only present after successful shortening).
     var qr = null;
     function renderShorturlQrPreview() {
         var canvas = document.getElementById('qr');
         if (!canvas || typeof QRious === 'undefined') {
             return;
         }
-        var inputField = document.getElementById('shortened_url');
-        var qrValue = inputField ? inputField.value : 'https://www.fau.de';
+        var shortenedEl = document.getElementById('shortened_url');
+        var qrValue = shortenedEl && shortenedEl.value ? $.trim(shortenedEl.value) : 'https://www.fau.de';
         qr = new QRious(
             Object.assign(
                 {
