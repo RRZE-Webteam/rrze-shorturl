@@ -41,47 +41,74 @@ class Shortcode
 
     public function my_custom_allowed_html($allowed_tags, $context)
     {
-        if ('post' === $context) {
-            // Add the <select> tag and its attributes
-            $allowed_tags['select'] = array(
-                'name' => true,
-                'id' => true,
-                'class' => true,
-                'multiple' => true,
-                'size' => true,
-            );
+        // Shortcode-Formular muss in allen KSES-Kontexten (inkl. Gast-Frontend) überleben,
+        // nicht nur bei context "post".
+        return self::merge_rrze_shorturl_form_allowed_html($allowed_tags);
+    }
 
-            // Add the <option> tag and its attributes
-            $allowed_tags['option'] = array(
-                'value' => true,
-                'selected' => true,
-            );
+    /**
+     * Whitelist der Formular-Tags/Attribute für [shorturl] usw. (kses-sicher, ohne event handlers).
+     *
+     * @param array<string, array<string, bool>> $allowed_tags
+     * @return array<string, array<string, bool>>
+     */
+    private static function merge_rrze_shorturl_form_allowed_html(array $allowed_tags): array
+    {
+        $select = [
+            'name' => true,
+            'id' => true,
+            'class' => true,
+            'multiple' => true,
+            'size' => true,
+        ];
+        $allowed_tags['select'] = isset($allowed_tags['select'])
+            ? array_merge((array) $allowed_tags['select'], $select)
+            : $select;
 
-            // Add the <input> tag and its attributes
-            $allowed_tags['input'] = array(
-                'type' => true,
-                'name' => true,
-                'id' => true,
-                'class' => true,
-                'value' => true,
-                'placeholder' => true,
-                'checked' => true,
-                'disabled' => true,
-                'readonly' => true,
-                'maxlength' => true,
-                'size' => true,
-                'min' => true,
-                'max' => true,
-                'step' => true,
-            );
+        $option = [
+            'value' => true,
+            'selected' => true,
+        ];
+        $allowed_tags['option'] = isset($allowed_tags['option'])
+            ? array_merge((array) $allowed_tags['option'], $option)
+            : $option;
 
-            $allowed_tags['fieldset'] = [
-                'class' => true,
-            ];
-            $allowed_tags['legend'] = [
-                'class' => true,
-            ];
-        }
+        $input = [
+            'type' => true,
+            'name' => true,
+            'id' => true,
+            'class' => true,
+            'value' => true,
+            'placeholder' => true,
+            'checked' => true,
+            'disabled' => true,
+            'readonly' => true,
+            'maxlength' => true,
+            'size' => true,
+            'min' => true,
+            'max' => true,
+            'step' => true,
+        ];
+        $allowed_tags['input'] = isset($allowed_tags['input'])
+            ? array_merge((array) $allowed_tags['input'], $input)
+            : $input;
+
+        $div = [
+            'role' => true,
+            'aria-labelledby' => true,
+            'aria-describedby' => true,
+        ];
+        $allowed_tags['div'] = isset($allowed_tags['div'])
+            ? array_merge((array) $allowed_tags['div'], $div)
+            : $div;
+
+        $p = [
+            'id' => true,
+            'class' => true,
+        ];
+        $allowed_tags['p'] = isset($allowed_tags['p'])
+            ? array_merge((array) $allowed_tags['p'], $p)
+            : $p;
 
         return $allowed_tags;
     }
@@ -1064,9 +1091,8 @@ class Shortcode
         ob_start();
         ?>
         <div class="shorturl-qr-colors">
-            <p class="shorturl-qr-colors__heading"><strong><?php echo esc_html__('Foreground', 'rrze-shorturl'); ?></strong></p>
-            <fieldset class="shorturl-qr-colors__fieldset">
-                <legend class="screen-reader-text"><?php echo esc_html__('Foreground', 'rrze-shorturl'); ?></legend>
+            <p id="shorturl-qr-heading-fg" class="shorturl-qr-colors__heading"><strong><?php echo esc_html__('Foreground', 'rrze-shorturl'); ?></strong></p>
+            <div class="shorturl-qr-colors__fieldset" role="radiogroup" aria-labelledby="shorturl-qr-heading-fg">
                 <label class="shorturl-qr-colors__label">
                     <input type="radio" name="qr_foreground" value="white" <?php checked($foreground, 'white'); ?>>
                     <?php echo esc_html__('White', 'rrze-shorturl'); ?>
@@ -1079,11 +1105,10 @@ class Shortcode
                     <input type="radio" name="qr_foreground" value="fau" <?php checked($foreground, 'fau'); ?>>
                     <?php echo esc_html__('FAU blue', 'rrze-shorturl'); ?>
                 </label>
-            </fieldset>
+            </div>
 
-            <p class="shorturl-qr-colors__heading"><strong><?php echo esc_html__('Background', 'rrze-shorturl'); ?></strong></p>
-            <fieldset class="shorturl-qr-colors__fieldset">
-                <legend class="screen-reader-text"><?php echo esc_html__('Background', 'rrze-shorturl'); ?></legend>
+            <p id="shorturl-qr-heading-bg" class="shorturl-qr-colors__heading"><strong><?php echo esc_html__('Background', 'rrze-shorturl'); ?></strong></p>
+            <div class="shorturl-qr-colors__fieldset" role="radiogroup" aria-labelledby="shorturl-qr-heading-bg">
                 <label class="shorturl-qr-colors__label">
                     <input type="radio" name="qr_background" value="white" <?php checked($background, 'white'); ?>>
                     <?php echo esc_html__('White', 'rrze-shorturl'); ?>
@@ -1100,7 +1125,7 @@ class Shortcode
                     <input type="radio" name="qr_background" value="transparent" <?php checked($background, 'transparent'); ?>>
                     <?php echo esc_html__('Transparent', 'rrze-shorturl'); ?>
                 </label>
-            </fieldset>
+            </div>
         </div>
         <?php
         return ob_get_clean();

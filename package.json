@@ -1,11 +1,12 @@
 {
   "name": "rrze-shorturl",
-  "version": "3.1.4",
+  "version": "3.1.5",
   "main": "build/js/index.js",
   "scripts": {
     "lint:css": "wp-scripts lint-style --fix",
     "lint:js": "wp-scripts lint-js",
     "build-css": "sass --style=compressed src/sass:build/css",
+    "build-mo": "node scripts/po-to-mo.js",
     "watch-css": "sass --watch src/sass:build/css",
     "increment-version": "node increment-version.js patch",
     "build": "npm run lint:css && npm run increment-version && wp-scripts build && npm run build-css",
@@ -14,6 +15,7 @@
   },
   "devDependencies": {
     "@wordpress/scripts": "^30.3.0",
+    "gettext-parser": "^7.0.1",
     "sass": "^1.80.1",
     "webpack": "^5.88.2",
     "webpack-cli": "^5.1.4"
@@ -21,8 +23,8 @@
   "dependencies": {
     "clipboard": "latest",
     "jquery": "latest",
+    "prismjs": "^1.29.0",
     "use-clipboard-copy": "latest",
-    "webpack-dev-middleware": "latest",
-    "prismjs": "^1.29.0"
+    "webpack-dev-middleware": "latest"
   }
 }
