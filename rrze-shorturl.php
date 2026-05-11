@@ -4,7 +4,7 @@
 Plugin Name:     RRZE ShortURL
 Plugin URI:      https://gitlab.rrze.fau.de/rrze-webteam/rrze-shorturl
 Description:     Plugin, um URLs zu verkürzen. 
-Version: 3.1.4
+Version: 3.1.5
 Requires at least: 6.4
 Requires PHP:      8.2
 Author:          RRZE Webteam
@@ -137,8 +137,9 @@ function deactivation()
  */
 function loaded()
 {
-    // Sprachdateien werden eingebunden.
+    // Sprachdateien (früh + erneut auf init, damit Nutzer-/Site-Locale greift).
     load_textdomain();
+    add_action('init', __NAMESPACE__ . '\load_textdomain', 1);
 
     // Überprüft die minimal erforderliche PHP- u. WP-Version.
     if ($error = system_requirements()) {
