@@ -2,17 +2,50 @@
 
 
 jQuery(document).ready(function ($) {
-    // Make some fancy QR
-    var inputField = document.getElementById("shortened_url");
-    var qrValue = inputField ? inputField.value : "https://www.fau.de";
+    function shorturlQrColorOptionsFromSelection() {
+        var fgToken = $('input[name="qr_foreground"]:checked').val() || 'black';
+        var bgToken = $('input[name="qr_background"]:checked').val() || 'transparent';
+        var css = {
+            white: 'white',
+            black: 'black',
+            fau: '#036'
+        };
+        var options = {
+            foreground: css[fgToken] || 'black',
+            background: 'white',
+            backgroundAlpha: 0
+        };
 
-    var qr = new QRious({
-        element: document.getElementById("qr"),
-        value: qrValue,
-        size: 200,
-        background: "transparent",
-        backgroundAlpha: 0
-    });
+        if (bgToken !== 'transparent') {
+            options.background = css[bgToken] || 'white';
+            options.backgroundAlpha = 1;
+        }
+
+        return options;
+    }
+
+    // Make some fancy QR
+    var qr = null;
+    function renderShorturlQrPreview() {
+        var canvas = document.getElementById('qr');
+        if (!canvas || typeof QRious === 'undefined') {
+            return;
+        }
+        var inputField = document.getElementById('shortened_url');
+        var qrValue = inputField ? inputField.value : 'https://www.fau.de';
+        qr = new QRious(
+            Object.assign(
+                {
+                    element: canvas,
+                    value: qrValue,
+                    size: 200
+                },
+                shorturlQrColorOptionsFromSelection()
+            )
+        );
+    }
+    renderShorturlQrPreview();
+    $('input[name="qr_foreground"], input[name="qr_background"]').on('change', renderShorturlQrPreview);
 
     function handleFormSubmission() {
         // If the delete action is triggered
