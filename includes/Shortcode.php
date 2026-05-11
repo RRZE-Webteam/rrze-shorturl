@@ -479,6 +479,8 @@ class Shortcode
             'utm_campaign' => (!empty($_POST['utm_campaign']) ? sanitize_text_field(wp_unslash($_POST['utm_campaign'])) : ''),
             'utm_term' => (!empty($_POST['utm_term']) ? sanitize_text_field(wp_unslash($_POST['utm_term'])) : ''),
             'utm_content' => (!empty($_POST['utm_content']) ? sanitize_text_field(wp_unslash($_POST['utm_content'])) : ''),
+            'qr_foreground' => self::sanitize_qr_foreground_token($_POST['qr_foreground'] ?? ''),
+            'qr_background' => self::sanitize_qr_background_token($_POST['qr_background'] ?? ''),
         ];
 
         $result_message = ''; // Initialize result message
@@ -523,6 +525,8 @@ class Shortcode
         if (self::$rights['allow_utm']) {
             $form .= self::display_shorturl_utm($aParams);
         }
+        $form .= '<h6 class="handle">' . esc_html__('QR Code', 'rrze-shorturl') . '</h6>';
+        $form .= self::display_shorturl_qr_colors($aParams['qr_foreground'], $aParams['qr_background']);
         $form .= '<h6 class="handle">' . esc_html__('Categories', 'rrze-shorturl') . '</h6>';
         $form .= self::display_shorturl_category($aParams['categories']);
         $form .= '</div>';
@@ -1031,6 +1035,67 @@ class Shortcode
             </div>
             <?php
             return ob_get_clean();
+    }
+
+    private static function sanitize_qr_foreground_token($value): string
+    {
+        $value = is_string($value) ? strtolower(trim(wp_unslash($value))) : '';
+        $allowed = ['white', 'black', 'fau'];
+        return in_array($value, $allowed, true) ? $value : 'black';
+    }
+
+    private static function sanitize_qr_background_token($value): string
+    {
+        $value = is_string($value) ? strtolower(trim(wp_unslash($value))) : '';
+        $allowed = ['white', 'black', 'fau', 'transparent'];
+        return in_array($value, $allowed, true) ? $value : 'transparent';
+    }
+
+    public static function display_shorturl_qr_colors(string $foreground, string $background): string
+    {
+        ob_start();
+        ?>
+        <div class="shorturl-qr-colors">
+            <p class="shorturl-qr-colors__heading"><strong><?php echo esc_html__('Foreground', 'rrze-shorturl'); ?></strong></p>
+            <fieldset class="shorturl-qr-colors__fieldset">
+                <legend class="screen-reader-text"><?php echo esc_html__('Foreground', 'rrze-shorturl'); ?></legend>
+                <label class="shorturl-qr-colors__label">
+                    <input type="radio" name="qr_foreground" value="white" <?php checked($foreground, 'white'); ?>>
+                    <?php echo esc_html__('White', 'rrze-shorturl'); ?>
+                </label>
+                <label class="shorturl-qr-colors__label">
+                    <input type="radio" name="qr_foreground" value="black" <?php checked($foreground, 'black'); ?>>
+                    <?php echo esc_html__('Black', 'rrze-shorturl'); ?>
+                </label>
+                <label class="shorturl-qr-colors__label">
+                    <input type="radio" name="qr_foreground" value="fau" <?php checked($foreground, 'fau'); ?>>
+                    <?php echo esc_html__('FAU blue', 'rrze-shorturl'); ?>
+                </label>
+            </fieldset>
+
+            <p class="shorturl-qr-colors__heading"><strong><?php echo esc_html__('Background', 'rrze-shorturl'); ?></strong></p>
+            <fieldset class="shorturl-qr-colors__fieldset">
+                <legend class="screen-reader-text"><?php echo esc_html__('Background', 'rrze-shorturl'); ?></legend>
+                <label class="shorturl-qr-colors__label">
+                    <input type="radio" name="qr_background" value="white" <?php checked($background, 'white'); ?>>
+                    <?php echo esc_html__('White', 'rrze-shorturl'); ?>
+                </label>
+                <label class="shorturl-qr-colors__label">
+                    <input type="radio" name="qr_background" value="black" <?php checked($background, 'black'); ?>>
+                    <?php echo esc_html__('Black', 'rrze-shorturl'); ?>
+                </label>
+                <label class="shorturl-qr-colors__label">
+                    <input type="radio" name="qr_background" value="fau" <?php checked($background, 'fau'); ?>>
+                    <?php echo esc_html__('FAU blue', 'rrze-shorturl'); ?>
+                </label>
+                <label class="shorturl-qr-colors__label">
+                    <input type="radio" name="qr_background" value="transparent" <?php checked($background, 'transparent'); ?>>
+                    <?php echo esc_html__('Transparent', 'rrze-shorturl'); ?>
+                </label>
+            </fieldset>
+        </div>
+        <?php
+        return ob_get_clean();
     }
 
 

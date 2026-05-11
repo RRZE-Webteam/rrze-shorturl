@@ -222,6 +222,24 @@ label {
 		display: none;
 		position: relative;
 		top: -2px;
+
+		.shorturl-qr-colors {
+			margin-bottom: 1em;
+		}
+
+		.shorturl-qr-colors__heading {
+			margin: 0 0 0.5em;
+		}
+
+		.shorturl-qr-colors__fieldset {
+			border: 0;
+			padding: 0;
+			margin: 0 0 1em;
+		}
+
+		.shorturl-qr-colors__label {
+			margin-bottom: 0.35em;
+		}
 	}
 }
 
