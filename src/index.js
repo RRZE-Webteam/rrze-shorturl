@@ -24,29 +24,6 @@ jQuery(document).ready(function ($) {
         return options;
     }
 
-    // Main QR canvas (only present after successful shortening).
-    var qr = null;
-    function renderShorturlQrPreview() {
-        var canvas = document.getElementById('qr');
-        if (!canvas || typeof QRious === 'undefined') {
-            return;
-        }
-        var shortenedEl = document.getElementById('shortened_url');
-        var qrValue = shortenedEl && shortenedEl.value ? $.trim(shortenedEl.value) : 'https://www.fau.de';
-        qr = new QRious(
-            Object.assign(
-                {
-                    element: canvas,
-                    value: qrValue,
-                    size: 200
-                },
-                shorturlQrColorOptionsFromSelection()
-            )
-        );
-    }
-    renderShorturlQrPreview();
-    $('input[name="qr_foreground"], input[name="qr_background"]').on('change', renderShorturlQrPreview);
-
     function handleFormSubmission() {
         // If the delete action is triggered
         if ($(this).find('input[type="checkbox"]:checked').length > 0) {
