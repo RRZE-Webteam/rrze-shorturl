@@ -91,6 +91,14 @@ msgstr ""
 msgid "Basis is not valid."
 msgstr ""
 
+#: includes/Shortcode.php:1076 includes/Shortcode.php:1078
+msgid "Background"
+msgstr ""
+
+#: includes/Shortcode.php:1068 includes/Shortcode.php:1085
+msgid "Black"
+msgstr ""
+
 #: includes/Shortcode.php:219 includes/Shortcode.php:332
 msgid "Cancel"
 msgstr ""
@@ -210,6 +218,10 @@ msgstr ""
 msgid "External Domains"
 msgstr ""
 
+#: includes/Shortcode.php:1072 includes/Shortcode.php:1089
+msgid "FAU blue"
+msgstr ""
+
 #: includes/Shortcode.php:187
 msgid "Failed to add category."
 msgstr ""
@@ -228,6 +240,10 @@ msgstr ""
 
 #: includes/Shortcode.php:682
 msgid "Filter"
+msgstr ""
+
+#: includes/Shortcode.php:1059 includes/Shortcode.php:1061
+msgid "Foreground"
 msgstr ""
 
 #: config/config.php:45
@@ -426,6 +442,10 @@ msgstr ""
 msgid "Prefix not allowed."
 msgstr ""
 
+#: includes/Shortcode.php:528
+msgid "QR Code"
+msgstr ""
+
 #: includes/Settings.php:436
 msgid "Regex"
 msgstr ""
@@ -496,6 +516,10 @@ msgstr ""
 
 #: includes/Settings.php:155
 msgid "Statistic"
+msgstr ""
+
+#: includes/Shortcode.php:1093
+msgid "Transparent"
 msgstr ""
 
 #: includes/CustomerDomains.php:68
@@ -579,6 +603,10 @@ msgstr ""
 msgid ""
 "You've tried to shorten a service domain. Services will automatically be "
 "shortened and redirected."
+msgstr ""
+
+#: includes/Shortcode.php:1064 includes/Shortcode.php:1081
+msgid "White"
 msgstr ""
 
 #: includes/Shortcode.php:510

@@ -90,6 +90,14 @@ msgstr "Basis"
 msgid "Basis is not valid."
 msgstr "Basis ist ungültig"
 
+#: includes/Shortcode.php:1076 includes/Shortcode.php:1078
+msgid "Background"
+msgstr "Hintergrund"
+
+#: includes/Shortcode.php:1068 includes/Shortcode.php:1085
+msgid "Black"
+msgstr "Schwarz"
+
 #: includes/Shortcode.php:219 includes/Shortcode.php:332
 msgid "Cancel"
 msgstr "Abbrechen"
@@ -209,6 +217,10 @@ msgstr "Fehler: die Kategorie konnte nicht aktualisiert werden"
 msgid "External Domains"
 msgstr "Externe Domains"
 
+#: includes/Shortcode.php:1072 includes/Shortcode.php:1089
+msgid "FAU blue"
+msgstr "FAU-Blau"
+
 #: includes/Shortcode.php:187
 msgid "Failed to add category."
 msgstr "Kategorie kann nicht hinzugefügt werden."
@@ -230,6 +242,10 @@ msgstr "Die Aktualisierung der Kategorie ist fehlgeschlagen."
 #: includes/Shortcode.php:682
 msgid "Filter"
 msgstr "Filter"
+
+#: includes/Shortcode.php:1059 includes/Shortcode.php:1061
+msgid "Foreground"
+msgstr "Vordergrund"
 
 #: config/config.php:45
 msgid "For more information"
@@ -430,6 +446,10 @@ msgstr "Das Präfix ist bereits in Verwendung."
 msgid "Prefix not allowed."
 msgstr "Prefix ist nicht erlaubt."
 
+#: includes/Shortcode.php:528
+msgid "QR Code"
+msgstr "QR-Code"
+
 #: includes/Settings.php:436
 msgid "Regex"
 msgstr "Regex"
@@ -501,6 +521,10 @@ msgstr "generierte shortURL"
 #: includes/Settings.php:155
 msgid "Statistic"
 msgstr "Statistik"
+
+#: includes/Shortcode.php:1093
+msgid "Transparent"
+msgstr "Transparent"
 
 #: includes/CustomerDomains.php:68
 msgid "the accessibility statement"
@@ -589,6 +613,10 @@ msgid ""
 msgstr ""
 "Sie haben versucht, einen Link einer Service Domain zu verkürzen. Service "
 "Links werden automatisch verkürzt und weitergeleitet."
+
+#: includes/Shortcode.php:1064 includes/Shortcode.php:1081
+msgid "White"
+msgstr "Weiß"
 
 #: includes/Shortcode.php:510
 msgid "Your link"
