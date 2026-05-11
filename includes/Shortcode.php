@@ -74,6 +74,13 @@ class Shortcode
                 'max' => true,
                 'step' => true,
             );
+
+            $allowed_tags['fieldset'] = [
+                'class' => true,
+            ];
+            $allowed_tags['legend'] = [
+                'class' => true,
+            ];
         }
 
         return $allowed_tags;
@@ -525,6 +532,7 @@ class Shortcode
         if (self::$rights['allow_utm']) {
             $form .= self::display_shorturl_utm($aParams);
         }
+        // QR colours: always offered here (not tied to allow_uri / allow_utm / idm).
         $form .= '<h6 class="handle">' . esc_html__('QR Code', 'rrze-shorturl') . '</h6>';
         $form .= self::display_shorturl_qr_colors($aParams['qr_foreground'], $aParams['qr_background']);
         $form .= '<h6 class="handle">' . esc_html__('Categories', 'rrze-shorturl') . '</h6>';
