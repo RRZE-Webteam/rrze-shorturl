@@ -24,28 +24,54 @@ jQuery(document).ready(function ($) {
         return options;
     }
 
-    // Make some fancy QR
+    // QR preview in advanced settings + main canvas after shortening
     var qr = null;
+    function shorturlQrPayloadValue() {
+        var shortenedEl = document.getElementById('shortened_url');
+        var longEl = document.getElementById('long_url');
+        var shortened = shortenedEl && shortenedEl.value ? $.trim(shortenedEl.value) : '';
+        var long = longEl && longEl.value ? $.trim(longEl.value) : '';
+        return shortened || long || 'https://www.fau.de';
+    }
+
     function renderShorturlQrPreview() {
-        var canvas = document.getElementById('qr');
-        if (!canvas || typeof QRious === 'undefined') {
+        if (typeof QRious === 'undefined') {
             return;
         }
-        var inputField = document.getElementById('shortened_url');
-        var qrValue = inputField ? inputField.value : 'https://www.fau.de';
-        qr = new QRious(
-            Object.assign(
-                {
-                    element: canvas,
-                    value: qrValue,
-                    size: 200
-                },
-                shorturlQrColorOptionsFromSelection()
-            )
-        );
+        var options = shorturlQrColorOptionsFromSelection();
+        var value = shorturlQrPayloadValue();
+
+        var previewCanvas = document.getElementById('shorturl-qr-preview');
+        if (previewCanvas) {
+            qr = new QRious(
+                Object.assign(
+                    {
+                        element: previewCanvas,
+                        value: value,
+                        size: 120
+                    },
+                    options
+                )
+            );
+        }
+
+        var mainCanvas = document.getElementById('qr');
+        if (mainCanvas) {
+            qr = new QRious(
+                Object.assign(
+                    {
+                        element: mainCanvas,
+                        value: value,
+                        size: 200
+                    },
+                    options
+                )
+            );
+        }
     }
     renderShorturlQrPreview();
     $('input[name="qr_foreground"], input[name="qr_background"]').on('change', renderShorturlQrPreview);
+    $('#long_url').on('input change', renderShorturlQrPreview);
 
     function handleFormSubmission() {
         // If the delete action is triggered
@@ -83,7 +109,9 @@ jQuery(document).ready(function ($) {
         console.log('Button clicked');
 
         // Toggle the visibility of the advanced settings
-        $('#shorturl-advanced-settings').slideToggle();
+        $('#shorturl-advanced-settings').slideToggle(function () {
+            renderShorturlQrPreview();
+        });
 
         // Log the current state of the button
         console.log('Button class:', $(this).hasClass('active'));
